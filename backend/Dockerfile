@@ -84,6 +84,14 @@ EXPOSE 80
 
 USER www-data
 
-RUN composer update --no-dev --optimize-autoloader --no-interaction
+# `install` y NUNCA `update`: install resuelve desde el composer.lock versionado,
+# que viaja en el COPY ./src de arriba. `update` reresuelve el arbol entero en cada
+# construccion, reescribe el lock dentro de la imagen y hace que dos builds del mismo
+# commit puedan llevar dependencias distintas; ademas desalinea el inventario de
+# sbom.json, que se genera a partir del lock. Aqui importa especialmente porque el lock
+# fija laravel/framework a 10.x-dev en un commit concreto: con `update` esa rama de
+# desarrollo deriva sola. Si el lock no concuerda con composer.json, install falla, que
+# es justo el aviso que se quiere.
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 USER root
