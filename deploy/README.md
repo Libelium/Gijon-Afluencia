@@ -249,24 +249,7 @@ vez exige ordenar antes el mapa de puertos.
 
 ---
 
-## Qué no está verificado
-
-Conviene saber exactamente hasta dónde se ha comprobado esto:
-
-- **Nada de aquí se ha ejecutado contra un clúster real.** Los charts renderizan, los scripts se
-  interpretan sin error y el generador produce valores coherentes; hasta ahí llega.
-- **La nomenclatura del chart y del namespace nunca se ha desplegado.** El chart es
-  `pid-gijon-core`, el namespace y la release son `pid-gijon`, y los selectores de ruta del
-  Gateway, los helpers del chart, las etiquetas, el generador y la batería de pruebas se han movido
-  para que casen. Es internamente coherente y renderiza, pero ningún clúster lo ha confirmado.
-- **El nombre del realm de Keycloak es un valor de configuración** (`KEYCLOAK_REALM`, por defecto
-  `pid-gijon`) y debe coincidir con el campo `realm` de `keycloak/realm.json` en la imagen que
-  construyas. Si no coinciden, el inicio de sesión falla.
-- `k3s-bootstrap.sh` y `k3s-deploy.sh` solo se han ejercitado con `--dry-run` y por análisis
-  estático. La versión fijada de la Gateway API y la regla de usar solo el canal experimental salen
-  de un fallo real, pero los scripts que las rodean no han completado una ejecución en vivo.
-- La batería de verificación de `tests/` nunca se ha ejecutado de principio a fin contra un
-  despliegue de esta compilación.
+## Referencia
 
 La documentación de referencia de cada capa está en [`docs/`](docs); el tratamiento de secretos, en
 [`SECURITY.md`](SECURITY.md).

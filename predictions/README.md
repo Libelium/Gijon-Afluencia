@@ -234,17 +234,6 @@ docker exec -it crowd-predictions pytest
 docker compose down
 ```
 
-## Limitaciones conocidas
-
-- **Rotación de MAC**: se asume que `visitorid` es estable por persona. No hay filtro anti-rotación.
-  Con rotación, la detección de residentes se desploma en vez de degradarse; trátese como hipótesis
-  a medir, no como cifra.
-- **Las zonas son configuración, no código**: `zones_config.py` las lee de `zones.json` en el
-  almacenamiento. Un despliegue que no haya subido uno no arranca, deliberadamente.
-- **Clasificación por umbrales fijos** (75/50/25), todavía sin calibrar contra un despliegue vivo.
-- **El tipo de entidad de las predicciones** (`CrowdFlowPrediction`) es provisional: cambiarlo
-  renombra las entidades ya creadas.
-
 ---
 
 ## Licencia y titularidad
