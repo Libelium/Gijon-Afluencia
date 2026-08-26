@@ -36,9 +36,9 @@ desechable, así que nunca toca los DAG de producción sincronizados por git. Se
 ajustes `TESTS_AIRFLOW_*` de `config.env` (como mínimo, la URL del api-server, unas credenciales de
 administración, y la apikey y el tenant del IoT Agent con los que hace el POST el DAG).
 
-Las etapas del flujo de dispositivo están adaptadas de la batería de pruebas de integración de la
-plataforma. **La ingesta por LoRaWAN y MQTT no se cubre, a propósito**: depende de componentes
-ajenos a este instalador.
+Las etapas del flujo de dispositivo recorren el camino que usa este despliegue: alta por la API de
+gestión, envío de medidas por HTTP a través de `fiware-manager` y el IoT Agent, y comprobación de
+que la entidad refleja el dato en Orion-LD.
 
 **Alcance: la plataforma, no la infraestructura.** La batería verifica el *despliegue* de
 pid-gijon: sus cargas de trabajo, sus endpoints públicos y su camino de datos. **No** comprueba

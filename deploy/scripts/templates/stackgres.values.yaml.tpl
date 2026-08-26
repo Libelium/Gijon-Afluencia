@@ -11,7 +11,5 @@ initScripts:
     platformdb: "${DB_PASSWORD_PLATFORMDB}"
     keycloak: "${DB_PASSWORD_KEYCLOAK}"
     realtime: "${DB_PASSWORD_REALTIME}"
-    chirpstack: "${DB_PASSWORD_CHIRPSTACK}"
-    scorpio: "${DB_PASSWORD_SCORPIO}"
     airflow: "${DB_PASSWORD_AIRFLOW}"
     geoportal: ""

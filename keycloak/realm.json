@@ -364,7 +364,6 @@
       "vue-frontend": [],
       "laravel-backend-client": [],
       "queues-consumer-client": [],
-      "chirpstack-client": [],
       "admin-cli": [],
       "apidog-client": [],
       "account": [
@@ -811,64 +810,6 @@
         "acr",
         "roles",
         "profile",
-        "email"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt"
-      ]
-    },
-    {
-      "id": "c0ab8bd3-6af3-4986-a073-64e8b462517d",
-      "clientId": "chirpstack-client",
-      "name": "chirpstack client",
-      "description": "",
-      "rootUrl": "",
-      "adminUrl": "",
-      "baseUrl": "",
-      "surrogateAuthRequired": false,
-      "enabled": true,
-      "alwaysDisplayInConsole": false,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
-      "redirectUris": [
-        "http://localhost:8080*",
-        "/*"
-      ],
-      "webOrigins": [
-        "http://localhost:8080*",
-        "/*"
-      ],
-      "notBefore": 0,
-      "bearerOnly": false,
-      "consentRequired": false,
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
-      "publicClient": false,
-      "frontchannelLogout": true,
-      "protocol": "openid-connect",
-      "attributes": {
-        "oidc.ciba.grant.enabled": "false",
-        "client.secret.creation.time": "1729764965",
-        "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "http://localhost:8080*",
-        "display.on.consent.screen": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "backchannel.logout.revoke.offline.tokens": "false"
-      },
-      "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": true,
-      "nodeReRegistrationTimeout": -1,
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "roles",
-        "profile",
-        "basic",
         "email"
       ],
       "optionalClientScopes": [

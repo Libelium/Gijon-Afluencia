@@ -76,10 +76,10 @@ de `genericConsumer` (`TELEGRAM_BOT_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `SMS_API_KE
 
 ## Cambia todos los valores por defecto antes de producción
 
-Las herramientas heredadas de la plataforma venían con valores por defecto débiles y reutilizados
-(una contraseña de administrador de Keycloak adivinable y un secreto de suplantación compartido).
-**Ninguno de ellos está en este repositorio**: aquí toda credencial es un marcador. Antes de pasar
-a producción, pon valores fuertes y únicos al menos en:
+**En este repositorio no hay ninguna credencial**: toda credencial es un marcador, y el generador
+de entornos crea valores aleatorios en la instalación. Aun así, revisa que ni la contraseña de
+administrador de Keycloak ni el secreto de suplantación se queden en un valor de ejemplo. Antes de
+pasar a producción, pon valores fuertes y únicos al menos en:
 
 - `keycloak`: `KEYCLOAK_ADMIN_PASSWORD`, `KC_DB_PASSWORD`.
 - `webBack`: `APP_KEY`, `FILE_ENCRYPTION_KEY`, `GENERIC_ENCRYPTION_KEY`, `KC_IMPERSONATION_*` y

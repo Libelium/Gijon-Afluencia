@@ -73,8 +73,6 @@ class Settings(BaseSettings):
 
     DAYS_OF_GRACE: int = os.getenv("DAYS_OF_GRACE", 10)
     AUTO_SYNC_INTERVAL: int = int(os.getenv("AUTO_SYNC_INTERVAL", 604800))  # weekly
-    CHIRPSTACK_URL: str = os.getenv("CHIRPSTACK_URL", "")
-    CHIRPSTACK_API_KEY: str = os.getenv("CHIRPSTACK_API_KEY", "")
     TILEMAPPER_URL: str = os.getenv("TILEMAPPER_URL", "")
     DEFAULT_EXTERNAL_REQUEST_TIMEOUT: int = int(
         os.getenv("DEFAULT_EXTERNAL_REQUEST_TIMEOUT", 5)

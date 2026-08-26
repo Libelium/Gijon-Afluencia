@@ -4,8 +4,7 @@ Este documento explica cómo el consumidor (el papel **cb-consumer**) mantiene a
 entre un dispositivo Smart Spot (SMSP) y las verticales que tiene conectadas, en cada notificación
 que llega del context broker.
 
-> El soporte del datalogger **LibeliumOne (ONE)** se retiró de la plataforma junto con su vía de
-> ingesta. Lo que queda es el camino de Smart Spot, que es el que este despliegue usa.
+> El único camino que cubre este documento es el de Smart Spot, que es el que usa este despliegue.
 
 ## 1. Visión general del proceso
 

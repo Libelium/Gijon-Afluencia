@@ -8,7 +8,7 @@ Walks the full IoT path a real device takes:
   roundtrip (API → device polling with getCmd=1) → delete device
 
 Each step is its own check so the report pinpoints which hop of the pipeline
-broke. LoRaWAN/MQTT paths are intentionally out of scope for this installer.
+broke. The HTTP path above is the one this deployment uses.
 """
 
 import json
