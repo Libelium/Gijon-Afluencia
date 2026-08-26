@@ -1,0 +1,38 @@
+{{- range $name, $component := .Values.components }}
+{{- if $component.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}-config
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+data:
+  {{- range $key, $value := $component.config }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+
+{{- if $component.configmapFiles }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $component.configmapFiles.name | quote }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+data:
+  {{- range $fileName, $fileContent := $component.configmapFiles.files }}
+  {{ $fileName }}: |-
+{{- $fileContent | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

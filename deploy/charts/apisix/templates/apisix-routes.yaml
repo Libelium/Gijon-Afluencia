@@ -1,0 +1,139 @@
+{{- include "apisix.validateCredentials" . }}
+{{- /*
+One ApisixRoute per fiware.services entry. Each route:
+  1. openid-connect           -> validates the Keycloak JWT (bearer_only).
+  2. serverless-pre-function  -> checks per-tenant write permission via web-back.
+  3. backends                 -> proxies to the FIWARE service.
+*/ -}}
+{{- range $serviceName, $config := .Values.fiware.services }}
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: {{ $serviceName | kebabcase }}
+  labels:
+    {{- include "apisix.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $serviceName | kebabcase }}
+spec:
+  ingressClassName: apisix
+  http:
+    - name: {{ $serviceName | kebabcase }}
+      match:
+        paths:
+          {{- range $config.paths }}
+          - {{ . }}
+          {{- end }}
+        methods:
+          {{- range $config.methods }}
+          - {{ . }}
+          {{- end }}
+      backends:
+        - serviceName: {{ $config.serviceName }}
+          servicePort: {{ $config.servicePort }}
+      plugins:
+        {{- if $config.pathRewrite }}
+        - name: proxy-rewrite
+          enable: true
+          config:
+            {{- toYaml $config.pathRewrite | nindent 12 }}
+        {{- end }}
+        - name: openid-connect
+          enable: true
+          config:
+            client_id: {{ $.Values.keycloak.clientId | quote }}
+            client_secret: {{ $.Values.keycloak.clientSecret | quote }}
+            discovery: {{ required "keycloak.discoveryUrl is required" $.Values.keycloak.discoveryUrl | quote }}
+            scope: "openid profile email"
+            bearer_only: true
+            realm: {{ $.Values.keycloak.realm | quote }}
+            set_userinfo_header: true
+            use_jwks: true
+            token_signing_alg_values_expected: "RS256"
+        # Per-tenant authorization. Runs in the rewrite phase so core.response.exit
+        # reliably terminates the request before it reaches the upstream — a bare
+        # `return code, body` from a serverless function is ignored by the plugin
+        # (it does NOT block), which is why exit + rewrite phase are used here.
+        - name: serverless-pre-function
+          enable: true
+          config:
+            phase: rewrite
+            functions:
+              - |
+                return function(conf, ctx)
+                  local core = require("apisix.core")
+                  local http = require("resty.http")
+                  local cjson = require("cjson")
+
+                  local function deny(status, message)
+                    return core.response.exit(status, cjson.encode({message = message}))
+                  end
+
+                  local headers = core.request.headers(ctx)
+                  local tenant_name, scope_name
+
+                  {{- if eq $config.headerType "ngsild" }}
+                  -- NGSI-LD uses the NGSILD-Tenant header (no scope)
+                  tenant_name = headers["NGSILD-Tenant"] or headers["ngsild-tenant"]
+
+                  if not tenant_name then
+                    return deny(400, "NGSILD-Tenant header is required")
+                  end
+                  {{- else }}
+                  -- FIWARE v2 uses Fiware-Service and Fiware-ServicePath headers
+                  tenant_name = headers["fiware-service"] or headers["Fiware-Service"]
+                  scope_name = headers["fiware-servicepath"] or headers["Fiware-ServicePath"]
+
+                  if not tenant_name then
+                    return deny(400, "fiware-service header is required")
+                  end
+
+                  if not scope_name then
+                    return deny(400, "fiware-servicepath header is required")
+                  end
+
+                  -- Remove leading '/' from servicepath
+                  if scope_name:sub(1,1) == "/" then
+                    scope_name = scope_name:sub(2)
+                  end
+                  {{- end }}
+
+                  local httpc = http.new()
+                  httpc:set_timeout(5000)
+
+                  local auth_header = headers["Authorization"] or headers["authorization"]
+                  local backend_url = "http://{{ $.Values.fiware.backend.serviceName }}.{{ $.Values.fiware.namespace }}.svc.cluster.local:{{ $.Values.fiware.backend.servicePort }}/api/internal/check-fiware-write-permission"
+
+                  {{- if eq $config.headerType "ngsild" }}
+                  local request_body = cjson.encode({tenant_name = tenant_name})
+                  {{- else }}
+                  local request_body = cjson.encode({tenant_name = tenant_name, scope_name = scope_name})
+                  {{- end }}
+
+                  local res, err = httpc:request_uri(backend_url, {
+                    method = "POST",
+                    body = request_body,
+                    headers = {
+                      ["Content-Type"] = "application/json",
+                      ["Authorization"] = auth_header,
+                    },
+                    ssl_verify = false
+                  })
+
+                  if not res then
+                    core.log.error("Failed to call permission check: ", err)
+                    return deny(503, "Permission service unavailable")
+                  end
+
+                  if res.status ~= 200 then
+                    local ok, error_body = pcall(cjson.decode, res.body or "{}")
+                    local message = (ok and error_body and error_body.message) or "Permission denied"
+                    return deny(res.status, message)
+                  end
+
+                  {{- if eq $config.headerType "ngsild" }}
+                  core.log.info("FIWARE LD permission granted on tenant ", tenant_name)
+                  {{- else }}
+                  core.log.info("FIWARE permission granted on ", tenant_name, "/", scope_name)
+                  {{- end }}
+                end
+{{- end }}

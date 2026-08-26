@@ -1,0 +1,24 @@
+{{/*
+Prometheus Operator ServiceMonitor. Only rendered for components that enable it;
+requires the Prometheus Operator CRDs to be installed in the cluster.
+*/}}
+{{- range $name, $component := .Values.components }}
+{{- if and $component.enabled $component.serviceMonitor $component.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+spec:
+  selector:
+    matchLabels:
+      service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+  endpoints:
+    - port: {{ $component.serviceMonitor.port | default "metrics" }}
+      path: {{ $component.serviceMonitor.path | default "/metrics" }}
+      interval: {{ $component.serviceMonitor.interval | default "30s" }}
+{{- end }}
+{{- end }}

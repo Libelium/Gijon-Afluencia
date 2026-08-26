@@ -1,0 +1,26 @@
+apiVersion: v2
+name: apisix
+description: >-
+  Optional Apache APISIX API gateway that fronts the FIWARE endpoints
+  (IoT Agent JSON, Orion-LD) with Keycloak JWT authentication and per-tenant
+  write authorization against web-back. Wraps the upstream apisix chart and
+  adds the FIWARE routes, the permission Lua module and Gateway API exposure.
+type: application
+# Chart version (semver). Bumped independently of the bundled APISIX appVersion.
+version: 1.0.0
+# Bundled Apache APISIX gateway version (from the apisix subchart).
+appVersion: "3.9"
+kubeVersion: ">=1.26.0-0"
+keywords:
+  - apisix
+  - api-gateway
+  - fiware
+  - ngsi-ld
+  - keycloak
+annotations:
+  category: Gateway
+dependencies:
+  - name: apisix
+    version: "2.12.5"
+    repository: "https://charts.apiseven.com"
+    condition: apisix.enabled

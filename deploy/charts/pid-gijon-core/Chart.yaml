@@ -1,0 +1,17 @@
+apiVersion: v2
+name: pid-gijon-core
+description: >-
+  Infrastructure-agnostic Helm chart that deploys the PID Gijón platform
+  application components on any Kubernetes distribution. Databases, brokers and
+  the Gateway controller are provisioned separately (see docs/).
+type: application
+# Chart version (semver). Bumped independently of the platform appVersion.
+version: 1.0.0
+# Platform application version this chart targets.
+appVersion: "1.0.0"
+kubeVersion: ">=1.26.0-0"
+keywords:
+  - pid-gijon
+  - fiware
+  - ngsi-ld
+  - iot

@@ -1,0 +1,64 @@
+# Levantar la imagen en local:
+#
+#   cp .env.example .env    # y rellenar los valores del entorno contra el que se prueba
+#   docker compose up --build
+#
+# La aplicacion queda en http://localhost:8080. Compose lee el fichero .env del directorio
+# para resolver las ${...} de abajo, asi que el mismo fichero sirve para `npm run dev` y
+# para el contenedor.
+#
+# Recordatorio: http://localhost:8080 tiene que estar dado de alta en los origenes CORS de
+# la API y en las URI de retorno del cliente OIDC, o la aplicacion no pasara del login.
+# Ver docs/deployment.md.
+
+name: pid-gijon
+
+services:
+  web:
+    build:
+      context: .
+      # Los VITE_* se incrustan al compilar. Se pasan tambien aqui para que la imagen
+      # funcione con el codigo actual, que todavia no lee config.js.
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+        VITE_OIDC_URL: ${VITE_OIDC_URL:-}
+        VITE_OIDC_REALM: ${VITE_OIDC_REALM:-}
+        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-}
+        VITE_OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-http://localhost:8080/login}
+        VITE_MAP_TILES_URL: ${VITE_MAP_TILES_URL:-https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png}
+        VITE_MAP_TILES_ATTRIBUTION: ${VITE_MAP_TILES_ATTRIBUTION:-&copy; colaboradores de OpenStreetMap}
+        VITE_MAP_DEFAULT_CENTER: ${VITE_MAP_DEFAULT_CENTER:-43.5322,-5.6611}
+        VITE_MAP_DEFAULT_ZOOM: ${VITE_MAP_DEFAULT_ZOOM:-13}
+        VITE_REALTIME_URL: ${VITE_REALTIME_URL:-}
+        VITE_DATA_SCOPE_PREFERENCE_KEY: ${VITE_DATA_SCOPE_PREFERENCE_KEY:-}
+        VITE_ALARM_ENTITY_TYPE: ${VITE_ALARM_ENTITY_TYPE:-}
+
+    image: pid-gijon:local
+    ports:
+      - "8080:8080"
+
+    # Las mismas claves, ahora en tiempo de ejecucion: el entrypoint las escribe en
+    # config.js en cada arranque. Cambiar un valor aqui es `docker compose up -d`, no
+    # reconstruir la imagen.
+    environment:
+      API_BASE_URL: ${VITE_API_BASE_URL:-}
+      OIDC_URL: ${VITE_OIDC_URL:-}
+      OIDC_REALM: ${VITE_OIDC_REALM:-}
+      OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-}
+      OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-http://localhost:8080/login}
+      MAP_TILES_URL: ${VITE_MAP_TILES_URL:-https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png}
+      MAP_TILES_ATTRIBUTION: ${VITE_MAP_TILES_ATTRIBUTION:-&copy; colaboradores de OpenStreetMap}
+      MAP_DEFAULT_CENTER: ${VITE_MAP_DEFAULT_CENTER:-43.5322,-5.6611}
+      MAP_DEFAULT_ZOOM: ${VITE_MAP_DEFAULT_ZOOM:-13}
+      REALTIME_URL: ${VITE_REALTIME_URL:-}
+      DATA_SCOPE_PREFERENCE_KEY: ${VITE_DATA_SCOPE_PREFERENCE_KEY:-}
+      ALARM_ENTITY_TYPE: ${VITE_ALARM_ENTITY_TYPE:-}
+
+    restart: unless-stopped
+
+    # El contenedor no necesita mas que leer su propio dist/, escribir config.js y su pid.
+    # No hace falta ninguna capacidad: escucha en 8080 y no corre como root.
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,18 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery voltage,Battery voltage,r,float,V,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_pm1_0,PM1.0,PM1.0 mass concentration,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,pm1
+r_pm2_5,PM2.5,PM2.5 mass concentration,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,pm25
+r_pm4,PM4,PM4 mass concentration,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,pm4
+r_pm10,PM10,PM10 mass concentration,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,pm10
+r_particle_size,Particle size,Typical measured particle size,r,float,nm,300,10000,No,Sensors.Air Quality,AirQualityObserved,particleSize
+r_pm0_5_num,PM0.5 number concentration,PM0.5 particle number concentration,r,float,particles/m3,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,pm05Num
+r_pm1_0_num,PM1.0 number concentration,PM1.0 particle number concentration,r,float,particles/m3,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,pm1Num
+r_pm2_5_num,PM2.5 number concentration,PM2.5 particle number concentration,r,float,particles/m3,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,pm25Num
+r_pm4_num,PM4 number concentration,PM4 particle number concentration,r,float,particles/m3,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,pm4Num
+r_pm10_num,PM10 number concentration,PM10 particle number concentration,r,float,particles/m3,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,pm10Num
+r_temp,Temperature,Ambient temperature,r,float,Celsius,-40,125,No,Sensors.Air Quality,AirQualityObserved,temperature
+r_hum,Relative humidity,Relative humidity,r,float,%,0,100,No,Sensors.Air Quality,AirQualityObserved,relativeHumidity
+r_pressure,Atmospheric pressure,Atmospheric pressure,r,float,hPa,300,1100,No,Sensors.Air Quality,AirQualityObserved,pressure

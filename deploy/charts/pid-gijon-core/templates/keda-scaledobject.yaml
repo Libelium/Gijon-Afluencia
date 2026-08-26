@@ -1,0 +1,48 @@
+{{- if and .Values.KedaAutoscale (hasKey .Values.KedaAutoscale "Services") }}
+{{- range $serviceName, $config := .Values.KedaAutoscale.Services }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ $serviceName }}-scaler
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $serviceName }}
+spec:
+  scaleTargetRef:
+    name: {{ $serviceName }}
+
+  {{- if $config.pollingInterval }}
+  pollingInterval: {{ $config.pollingInterval }}
+  {{- end }}
+  {{- if $config.cooldownPeriod }}
+  cooldownPeriod: {{ $config.cooldownPeriod }}
+  {{- end }}
+  {{- if $config.minReplicaCount }}
+  minReplicaCount: {{ $config.minReplicaCount }}
+  {{- end }}
+  {{- if $config.maxReplicaCount }}
+  maxReplicaCount: {{ $config.maxReplicaCount }}
+  {{- end }}
+
+  {{- if $config.advanced }}
+  advanced:
+    {{- toYaml $config.advanced | nindent 4 }}
+  {{- end }}
+
+  {{- if $config.triggers }}
+  triggers:
+    {{- range $trigger := $config.triggers }}
+    - type: {{ $trigger.type }}
+      {{- if $trigger.metadata }}
+      metadata:
+        {{- toYaml $trigger.metadata | nindent 8 }}
+      {{- end }}
+      {{- if $trigger.authenticationRef }}
+      authenticationRef:
+        name: {{ $trigger.authenticationRef.name }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,1136 @@
+# =============================================================================
+# pid-gijon-core — default values
+# =============================================================================
+# These are sane, infrastructure-agnostic defaults. They render a valid release
+# but DO NOT contain any credentials and DO NOT point at real infrastructure.
+#
+# Convention used throughout:
+#   - Values that point at OTHER pid-gijon-core services use stable in-cluster
+#     names (e.g. http://orion-ld:1026) and are left as-is.
+#   - Values that point at EXTERNAL services (databases, broker, storage, mail,
+#     public URLs) are <CHANGE_ME> placeholders.
+#   - Optional integrations are commented out with a `# TODO:` marker.
+#   - Every `secrets:` map is empty — fill it in your own values file or use the
+#     external secret strategy. NEVER commit real secret values.
+#
+# The fastest path is to run scripts/generate-env.sh, which renders a complete
+# overlay for you (environments/<name>/pid-gijon-core.values.yaml). See README.md.
+# =============================================================================
+
+nameOverride: ""
+fullnameOverride: ""
+
+# -----------------------------------------------------------------------------
+# Global settings shared by every component.
+# -----------------------------------------------------------------------------
+global:
+  # Optional container registry prepended to each component's image.repository.
+  # Leave empty to use the repository as-is. Public images (FIWARE)
+  # pin their own registry per component (image.registry) and are unaffected.
+  # Example: registry.example.com/pid-gijon
+  imageRegistry: ""
+
+  # Image pull secrets (names of pre-created docker-registry Secrets) added to
+  # every pod. Configure registry auth out-of-band; do not put credentials here.
+  imagePullSecrets: []
+  # - name: registry-credentials
+
+  # Free-form environment identifier added as an `environment` label to every
+  # resource (e.g. dev, staging, prod, or a customer name).
+  environment: pid-gijon
+
+  labels:
+    app: pid-gijon-core
+
+# -----------------------------------------------------------------------------
+# Gateway API exposure.
+#
+# This chart only emits standard Gateway API objects (HTTPRoute / TCPRoute). The
+# Gateways themselves are owned by your cluster's gateway controller (Traefik,
+# Istio, NGINX Gateway, Envoy Gateway, Cilium, ...) and must already exist.
+# Per-component routes attach to those Gateways by name. See docs/04-gateway-api.md.
+# -----------------------------------------------------------------------------
+gateway:
+  enabled: true
+  # Namespace where the parent Gateways live (overridable per route).
+  namespace: gateway
+  # Listener section name used when a route sets httpsOnly: true.
+  httpsSectionName: https
+
+# -----------------------------------------------------------------------------
+# Secret management strategy.
+#   values   - this chart renders Secrets from each component's `secrets:` map.
+#   external - you provide Secrets out-of-band (External Secrets Operator,
+#              Sealed Secrets, SOPS, ...); the chart references them by the names
+#              configured below. Components' `secrets:` maps are ignored.
+# See docs/05-secrets.md.
+# -----------------------------------------------------------------------------
+secretsStrategy:
+  type: values
+  externalSecrets:
+    aetherLink: external-aether-link
+    fiwareManager: external-fiware-manager
+    iotAgentJson: external-iot-agent-json
+    keycloak: external-keycloak
+    orionLd: external-orion-ld
+    cbConsumer: external-cb-consumer
+    genericConsumer: external-generic-consumer
+    carrot: external-carrot
+    webBack: external-web-back
+
+# =============================================================================
+# COMPONENTS
+#
+# Each key becomes a Deployment + Service named after its kebab-cased key
+# (aetherLink -> aether-link). Components address each other over those stable
+# in-cluster names, so URLs in `config` such as http://orion-ld:1026 resolve
+# automatically. Set `enabled: false` to skip a component.
+# =============================================================================
+components:
+
+  # ---------------------------------------------------------------------------
+  # aether-link — NGSI-LD subscription manager / data-link service.
+  # ---------------------------------------------------------------------------
+  aetherLink:
+    enabled: true
+    image:
+      repository: aether-link
+      tag: ""                   # TODO: pin the platform image tag before deploying
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    ports:
+      - containerPort: 8000
+        protocol: TCP
+        name: aether
+    service:
+      - port: 8000
+        name: aether
+    livenessProbe:
+      httpGet:
+        path: /hchk
+        port: aether
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /hchk
+        port: aether
+      initialDelaySeconds: 5
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - route:
+      #       gateway: internal-gateway
+      #       hostnames: ["aether-link.example.com"]
+      #       backendPort: 8000
+    config:
+      CONTEXT_BROKER_TYPE: orionld
+      CONTEXT_URL: https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld   # NGSI-LD @context URL served to clients
+      DATA_SOURCE_TYPE: timescale
+      DEFAULT_TENANT: pidgijon
+      IOTA_JSON_URL: http://iot-agent-json:4041
+      IOTA_TYPE: iotajsonLd
+      PLATFORM_SUBSCRIPTION_CONSUMER: http://carrot:8001/orion-ld/subscription
+      PLATFORM_SUBSCRIPTION_URN: urn:ngsi-ld:subscription:pid-gijon:main
+      PLATFORM_TS_DB_HOST: <CHANGE_ME>        # TimescaleDB host
+      PLATFORM_TS_DB_NAME: <CHANGE_ME>        # TimescaleDB database name
+      PLATFORM_TS_DB_PORT: "5432"
+      ORION_LD_SERVICE: http://orion-ld:1026
+      QUEUES_CONSUMER_API: http://carrot:8001
+      GUNICORN_BIND: 0.0.0.0:8000
+      GUNICORN_TIMEOUT: "0"
+      GUNICORN_WORKER_CLASS: uvicorn.workers.UvicornWorker
+      GUNICORN_LOGLEVEL: info
+      GUNICORN_RELOAD: "false"
+      GUNICORN_WORKERS: "3"
+      GUNICORN_FORWARDED_ALLOW_IPS: "*"
+    secrets: {}
+    #   PLATFORM_TS_DB_USER: ""   # TODO: set (TimescaleDB user)
+    #   PLATFORM_TS_DB_PASS: ""   # TODO: set (TimescaleDB password)
+
+  # ---------------------------------------------------------------------------
+  # fiware-manager — FIWARE entity management + data ingestion.
+  # ---------------------------------------------------------------------------
+  fiwareManager:
+    enabled: true
+    image:
+      repository: fiware-manager
+      tag: ""                   # TODO: pin the platform image tag
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    ports:
+      - containerPort: 8000
+        protocol: TCP
+        name: fiware
+    service:
+      - port: 8000
+        name: fiware
+    livenessProbe:
+      httpGet:
+        path: /hchk
+        port: fiware
+      initialDelaySeconds: 45
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /hchk
+        port: fiware
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - route:
+      #       gateway: public-gateway
+      #       hostnames: ["fiware-manager.example.com"]
+      #       backendPort: 8000
+    config:
+      IOTA_SOUTH_SERVICE: http://iot-agent-json:7896
+      MONGO_DB_DATABASE: iotajson
+      MONGO_DB_HOST: <CHANGE_ME>          # MongoDB host
+      MONGO_DB_PORT: "27017"
+      GUNICORN_WORKER_CLASS: uvicorn.workers.UvicornWorker
+      GUNICORN_BIND: 0.0.0.0:8000
+      GUNICORN_KEEPALIVE: "30"
+      GUNICORN_WORKERS: "2"
+    secrets: {}
+    #   MONGO_DB_USERNAME: ""    # TODO: set
+    #   MONGO_DB_PASSWORD: ""    # TODO: set
+
+  # ---------------------------------------------------------------------------
+  # frontend — interfaz web (Vue + nginx). Estática: se configura en arranque.
+  # ---------------------------------------------------------------------------
+  frontend:
+    enabled: true
+    image:
+      repository: frontend
+      tag: ""                   # TODO: pin the platform image tag
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    ports:
+      - containerPort: 8080
+        protocol: TCP
+        name: http
+    service:
+      - port: 8080
+        name: http
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 30
+      timeoutSeconds: 5
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - route:
+      #       gateway: public-gateway
+      #       hostnames: ["app.example.com"]
+      #       backendPort: 8080
+    # El entrypoint escribe config.js con estas variables, así que la MISMA imagen
+    # sirve para cualquier entorno. config.js lo descarga el navegador: aquí no va
+    # ninguna credencial ni secreto de cliente OIDC.
+    config:
+      API_BASE_URL: <CHANGE_ME>           # URL pública de la API de gestión
+      OIDC_URL: <CHANGE_ME>               # URL pública de Keycloak
+      OIDC_REALM: pid-gijon
+      OIDC_CLIENT_ID: pid-gijon-client
+      MAP_TILES_URL: https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+      # Obligatoria por los términos de uso de OpenStreetMap: si cambias el
+      # proveedor de teselas, cambia también este texto (ver NOTICE.md).
+      MAP_TILES_ATTRIBUTION: "&copy; colaboradores de OpenStreetMap"
+      MAP_DEFAULT_CENTER: 43.5322,-5.6611
+      MAP_DEFAULT_ZOOM: "13"
+    secrets: {}
+
+  # ---------------------------------------------------------------------------
+  # iot-agent-json — FIWARE IoT Agent for JSON (MQTT/HTTP -> NGSI-LD). Public image.
+  # ---------------------------------------------------------------------------
+  iotAgentJson:
+    enabled: true
+    image:
+      registry: quay.io
+      repository: fiware/iotagent-json
+      tag: "3.3.0"
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    ports:
+      - containerPort: 7896
+        protocol: TCP
+        name: iota-south
+      - containerPort: 4041
+        protocol: TCP
+        name: iota-north
+    service:
+      - port: 7896
+        name: iota-south
+      - port: 4041
+        name: iota-north
+    livenessProbe:
+      httpGet:
+        path: /iot/about
+        port: iota-north
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /iot/about
+        port: iota-north
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:                            # south (7896) and/or north (4041)
+      #   - route:
+      #       gateway: internal-gateway
+      #       hostnames: ["iota-json.example.com"]
+      #       backendPort: 7896
+    config:
+      IOTA_NORTH_PORT: "4041"
+      IOTA_HTTP_PORT: "7896"
+      IOTA_LOG_LEVEL: INFO
+      IOTA_TIMESTAMP: "true"
+      IOTA_AUTOCAST: "true"
+      IOTA_CB_HOST: orion-ld
+      IOTA_CB_PORT: "1026"
+      IOTA_CB_NGSI_VERSION: ld
+      IOTA_PROVIDER_URL: http://iot-agent-json:4041
+      IOTA_JSON_LD_CONTEXT: https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld   # NGSI-LD @context URL
+      IOTA_REGISTRY_TYPE: mongodb
+      IOTA_MONGO_HOST: <CHANGE_ME>        # MongoDB host
+      IOTA_MONGO_PORT: "27017"
+      IOTA_MONGO_DB: iotajson
+      IOTA_FALLBACK_TENANT: pidgijon
+      IOTA_MONGO_AUTH_SOURCE: admin
+      IOTA_AMQP_DISABLED: "true"
+      # -- MQTT transport (optional; only if devices publish over MQTT).
+      # Off by default: this chart deploys no MQTT broker (see docs/03-infrastructure.md).
+      # Uncomment the four and set the host to enable it.
+      # IOTA_MQTT_PROTOCOL: mqtt
+      # IOTA_MQTT_HOST: <CHANGE_ME>       # MQTT broker host
+      # IOTA_MQTT_PORT: "1883"
+      # IOTA_MQTT_QOS: "1"
+      # IOTA_MQTT_KEEPALIVE: "120"
+    secrets: {}
+    #   IOTA_MONGO_USER: ""      # TODO: set
+    #   IOTA_MONGO_PASSWORD: ""  # TODO: set
+    #   IOTA_MQTT_USERNAME: ""   # TODO: set (only if MQTT is used)
+    #   IOTA_MQTT_PASSWORD: ""   # TODO: set (only if MQTT is used)
+
+  # ---------------------------------------------------------------------------
+  # orion-ld — FIWARE Orion-LD context broker (NGSI-LD). Public image.
+  # ---------------------------------------------------------------------------
+  orionLd:
+    enabled: true
+    image:
+      registry: quay.io
+      repository: fiware/orion-ld
+      tag: "1.4.0"
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    ports:
+      - containerPort: 1026
+        protocol: TCP
+        name: orion-ld
+      - containerPort: 8000
+        protocol: TCP
+        name: orion-ld-http
+    service:
+      - port: 8000
+        name: orion-ld-http
+      - port: 1026
+        name: orion-ld
+    livenessProbe:
+      httpGet:
+        path: /
+        port: orion-ld-http
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /
+        port: orion-ld-http
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - httpsOnly: true
+      #     route:
+      #       gateway: internal-gateway
+      #       hostnames: ["orion-ld.example.com"]
+      #       backendPort: 1026
+    config:
+      ORIONLD_TROE: "FALSE"
+      ORIONLD_MULTI_SERVICE: "TRUE"
+      ORIONLD_FORWARDING: "TRUE"
+      ORIONLD_MONGO_HOST: <CHANGE_ME>      # MongoDB host
+      ORIONLD_MONGO_PORT: "27017"
+      ORIONLD_MONGO_DB: orion             # data database name (Orion-LD -db)
+      ORIONLD_MONGO_POOL_SIZE: "300"
+      # Must be EMPTY on Orion-LD 1.4.0. Orion builds its Mongo URI as
+      # mongodb://<user>:<pass>@<ORIONLD_MONGO_HOST>?<ORIONLD_MONGO_AUTH_SOURCE>
+      # with no "/" before the "?", which the mongoc driver rejects outright:
+      #   Unable to connect to mongo(...): Invalid host string in URI
+      # Adding the slash to the host fixes mongoc but breaks the legacy C++
+      # driver, which then parses the port as "27017/" and aborts. There is no
+      # value of this variable that yields a valid URI for both drivers.
+      # Left empty, the URI carries no database, and the driver defaults
+      # authSource to admin — which is where the generator creates the user.
+      ORIONLD_MONGO_AUTH_SOURCE: ""
+    # Orion-LD connects to MongoDB through the fragmented ORIONLD_MONGO_HOST/_PORT/
+    # _USER/_PASSWORD fields (above + below), the same configuration the production
+    # on-prem installs use. Do NOT use the single-URI -dbURI / ORIONLD_MONGO_URI
+    # form — it has proven unreliable. scripts/generate-env.sh fills the credentials
+    # in automatically.
+    secrets: {}
+    #   ORIONLD_MONGO_USER: ""       # TODO: set
+    #   ORIONLD_MONGO_PASSWORD: ""   # TODO: set
+    args:
+      - "-logLevel"
+      - INFO
+      - "-troePoolSize"
+      - "10"
+      - "-forwarding"
+      - "-insecureNotif"
+    # --- Active/standby HA (optional) ---------------------------------------
+    # Run multiple replicas with only one active, using a leader-elector sidecar.
+    # When leaderElection is true the chart creates a ServiceAccount + Role/
+    # RoleBinding and the sidecar coordinates via a Lease. Then add the sidecar
+    # and the POD_NAME env below.
+    # leaderElection: true
+    # env:
+    #   - name: POD_NAME
+    #     valueFrom:
+    #       fieldRef:
+    #         fieldPath: metadata.name
+    # initContainers:
+    #   - name: leader-elector
+    #     image: gleez/leader-elector
+    #     tag: "0.9"
+    #     restartPolicy: Always          # native sidecar (K8s >= 1.28)
+    #     args:
+    #       - "--election=orion-ld-leader"
+    #       - "--http=0.0.0.0:4040"
+    #       - "--ttl=10s"
+    #     ports:
+    #       - containerPort: 4040
+    #         name: leader-http
+
+  # ---------------------------------------------------------------------------
+  # cb-consumer — processes context-broker notifications from RabbitMQ, persists
+  # data and feeds the processing queues.
+  # ---------------------------------------------------------------------------
+  cbConsumer:
+    enabled: true
+    image:
+      repository: queues-consumer
+      tag: ""                   # TODO: pin the platform image tag
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    serviceMonitor:
+      enabled: false
+      port: metrics
+      path: /metrics
+      interval: 15s
+    ports:
+      - containerPort: 8001
+        protocol: TCP
+        name: cb-consumer
+      - containerPort: 8000
+        protocol: TCP
+        name: metrics
+    service:
+      - port: 8001
+        name: cb-consumer
+      - port: 8000
+        name: metrics
+    livenessProbe:
+      httpGet:
+        path: /hchk
+        port: cb-consumer
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /hchk
+        port: cb-consumer
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+    config:
+      AETHER_LINK_URL: http://aether-link:8000
+      IOTA_URL: http://iot-agent-json:7896
+      # Object storage: "s3" for an S3-compatible service, "local" for in-cluster
+      # MinIO. Set the matching keys below. See docs/03-infrastructure.md.
+      STORAGE_TYPE: <CHANGE_ME>           # s3 | local
+      # -- STORAGE_TYPE: s3
+      # AWS_S3_BUCKET: <CHANGE_ME>
+      # AWS_S3_REGION: <CHANGE_ME>
+      # AWS_S3_IMAGES_BUCKET: <CHANGE_ME>
+      # AWS_S3_IMAGES_REGION: <CHANGE_ME>
+      # -- STORAGE_TYPE: local (MinIO)
+      # LOCAL_ENDPOINT: <CHANGE_ME>       # e.g. minio.minio.svc.cluster.local:9000
+      # LOCAL_BUCKET: pid-gijon-storage
+      # LOCAL_IMAGES_ENDPOINT: <CHANGE_ME>
+      # LOCAL_IMAGES_BUCKET: pid-gijon-storage
+      DB_DATABASE: <CHANGE_ME>            # main PostgreSQL database name
+      DB_HOST: <CHANGE_ME>                # PostgreSQL host
+      DB_PORT: "5432"
+      DB_REALTIME_DATABASE: realtime
+      DB_REALTIME_HOST: <CHANGE_ME>       # PostgreSQL host (may be the same)
+      DB_REALTIME_PORT: "5432"
+      TIMESERIES_TYPE: timescale
+      TS_DB_DATABASE: <CHANGE_ME>         # TimescaleDB database name
+      TS_DB_HOST: <CHANGE_ME>             # TimescaleDB host
+      TS_DB_PORT: "5432"
+      DEFAULT_NOTIFICATION_FORMAT: ngsild
+      KEYCLOAK_CLIENT_ID: queues-consumer-client
+      KEYCLOAK_URL: http://keycloak:8080
+      RABBITMQ_HOST: <CHANGE_ME>          # RabbitMQ host
+      RABBITMQ_PORT: <CHANGE_ME>          # 5672 (amqp) or 5671 (amqps)
+      RABBITMQ_SECURITY: <CHANGE_ME>      # amqp | amqps
+      RABBITMQ_VHOST: pid-gijon
+      # Container-internal working dirs (do not change).
+      QUEUE_CONSUMER_WORKERS: "1"
+      UVICORN_WORKERS: "1"
+      WORKER_CONCURRENCY: "4"
+      LAUNCH_CELERY_SCHEDULER: "false"
+      LAUNCH_UVICORN: "true"
+      WORKER_TYPE: cb_processor
+      # Queue task priorities / timeouts (tuning; safe defaults).
+      QUEUE_TASK_CONFIG_DEFAULT_PRIORITY: "10"
+      QUEUE_TASK_CONFIG_DEFAULT_TIMEOUT: "5"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_CB_NOTIFICATION_PRIORITY: "20"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_CB_NOTIFICATION_TIMEOUT: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_PRIORITY: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_TIMEOUT: "5"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_PRIORITY: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_TIMEOUT: "5"
+      # -- Optional integrations
+      # GRID_WRF_URL: <CHANGE_ME>         # TODO: weather grid service
+      # TILEMAPPER_URL: <CHANGE_ME>       # TODO: tile-mapper service
+    secrets: {}
+    #   DB_USERNAME / DB_PASSWORD                       # TODO: set
+    #   TS_DB_USERNAME / TS_DB_PASSWORD                 # TODO: set
+    #   DB_REALTIME_USERNAME / DB_REALTIME_PASSWORD     # TODO: set
+    #   RABBITMQ_USER / RABBITMQ_PASSWORD               # TODO: set
+    #   KEYCLOAK_USER / KEYCLOAK_PASSWORD               # TODO: set (consumer service account)
+    #   MAIL_USERNAME / MAIL_PASSWORD                   # TODO: set
+    #   STORAGE_TYPE s3:    AWS_S3_ACCESS_ID / AWS_S3_SECRET_KEY (+ *_IMAGES_*)
+    #   STORAGE_TYPE local: LOCAL_ACCESS_ID / LOCAL_SECRET_KEY (+ *_IMAGES_*)
+
+  # ---------------------------------------------------------------------------
+  # generic-consumer — generic queue worker (crowd ETLs, data cache and the
+  # data importation job).
+  # ---------------------------------------------------------------------------
+  genericConsumer:
+    enabled: true
+    image:
+      repository: queues-consumer
+      tag: ""                   # TODO: pin (same image as cb-consumer)
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    serviceMonitor:
+      enabled: false
+      port: metrics
+      path: /metrics
+      interval: 30s
+    ports:
+      - containerPort: 8001
+        protocol: TCP
+        name: generic
+      - containerPort: 8000
+        protocol: TCP
+        name: metrics
+    service:
+      - port: 8001
+        name: generic
+      - port: 8000
+        name: metrics
+    livenessProbe:
+      httpGet:
+        path: /hchk
+        port: generic
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    resources: {}
+    gatewayAPI:
+      enabled: false
+    config:
+      AETHER_LINK_URL: http://aether-link:8000
+      IOTA_URL: http://iot-agent-json:7896
+      STORAGE_TYPE: <CHANGE_ME>           # s3 | local (same options as cb-consumer)
+      # -- storage keys: same as cb-consumer (AWS_S3_* or LOCAL_*)
+      DB_DATABASE: <CHANGE_ME>
+      DB_HOST: <CHANGE_ME>
+      DB_PORT: "5432"
+      DB_REALTIME_DATABASE: realtime
+      DB_REALTIME_HOST: <CHANGE_ME>
+      DB_REALTIME_PORT: "5432"
+      TIMESERIES_TYPE: timescale
+      TS_DB_DATABASE: <CHANGE_ME>
+      TS_DB_HOST: <CHANGE_ME>
+      TS_DB_PORT: "5432"
+      DEFAULT_NOTIFICATION_FORMAT: ngsild
+      KEYCLOAK_CLIENT_ID: queues-consumer-client
+      KEYCLOAK_URL: http://keycloak:8080
+      RABBITMQ_HOST: <CHANGE_ME>
+      RABBITMQ_PORT: <CHANGE_ME>
+      RABBITMQ_SECURITY: <CHANGE_ME>
+      RABBITMQ_VHOST: pid-gijon
+      QUEUE_CONSUMER_WORKERS: "1"
+      UVICORN_WORKERS: "1"
+      WORKER_CONCURRENCY: "8"
+      LAUNCH_CELERY_SCHEDULER: "true"
+      LAUNCH_UVICORN: "true"
+      WORKER_TYPE: generic_processor
+      DATA_CACHE_DELETE_AFTER_UPLOAD: "true"
+      QUEUE_TASK_CONFIG_DEFAULT_PRIORITY: "10"
+      QUEUE_TASK_CONFIG_DEFAULT_TIMEOUT: "5"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_CB_NOTIFICATION_PRIORITY: "20"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_CB_NOTIFICATION_TIMEOUT: "10"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_PRIORITY: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_TIMEOUT: "5"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_PRIORITY: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_TIMEOUT: "5"
+      # -- Optional integrations (uncomment + set the matching secrets)
+      # WEB_FRONT_URL: <CHANGE_ME>   # TODO: public frontend URL
+      # GRID_WRF_URL: <CHANGE_ME>         # TODO: weather grid service
+      # TILEMAPPER_URL: <CHANGE_ME>       # TODO: tile-mapper service
+      # WHATSAPP_PROVIDER: meta
+      # WHATSAPP_PHONE_NUMBER_ID: <CHANGE_ME>
+      # SMS_PROVIDER: aws_sns
+      # SMS_FROM: PIDGIJON
+      # SMS_AWS_REGION: <CHANGE_ME>
+      # POLYGON_ENABLED: "false"          # blockchain anchoring (optional)
+    secrets: {}
+    #   Same base keys as cb-consumer. # TODO: set
+    #   Optional integrations (only if the matching config above is enabled):
+    #   TELEGRAM_BOT_TOKEN, WHATSAPP_ACCESS_TOKEN, SMS_API_KEY, SMS_API_SECRET,
+    #   POLYGON_RPC_URL, POLYGON_CHAIN_ID, POLYGON_PRIVATE_KEY, POLYGON_GAS_LIMIT,
+    #   POLYGON_TX_EXPLORER_BASE, POLYGON_TX_RECEIPT_TIMEOUT, BLOCKCHAIN_AETHER_LINK_TIMEOUT
+
+  # ---------------------------------------------------------------------------
+  # carrot — receives context-broker notifications and routes them to RabbitMQ.
+  # ---------------------------------------------------------------------------
+  carrot:
+    enabled: true
+    image:
+      repository: queues-consumer
+      tag: ""                   # TODO: pin (same image as cb-consumer)
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    serviceMonitor:
+      enabled: false
+      port: metrics
+      path: /metrics
+      interval: 30s
+    ports:
+      - containerPort: 8001
+        protocol: TCP
+        name: carrot
+      - containerPort: 8000
+        protocol: TCP
+        name: metrics
+    service:
+      - port: 8001
+        name: carrot
+      - port: 8000
+        name: metrics
+    livenessProbe:
+      httpGet:
+        path: /hchk
+        port: carrot
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /hchk
+        port: carrot
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - httpsOnly: true
+      #     route:
+      #       gateway: internal-gateway
+      #       hostnames: ["carrot.example.com"]
+      #       backendPort: 8001
+    config:
+      AETHER_LINK_URL: http://aether-link:8000
+      DEFAULT_NOTIFICATION_FORMAT: ngsild
+      QUEUE_CONSUMER_WORKERS: "0"
+      RABBITMQ_HOST: <CHANGE_ME>
+      RABBITMQ_PORT: <CHANGE_ME>
+      RABBITMQ_SECURITY: <CHANGE_ME>      # amqp | amqps
+      RABBITMQ_VHOST: pid-gijon
+      TIMESERIES_TYPE: timescale
+      UVICORN_WORKERS: "3"
+      WORKER_CONCURRENCY: "10"
+      LAUNCH_CELERY_SCHEDULER: "false"
+      LAUNCH_UVICORN: "true"
+      WORKER_TYPE: universal
+      QUEUE_TASK_CONFIG_DEFAULT_PRIORITY: "10"
+      QUEUE_TASK_CONFIG_DEFAULT_TIMEOUT: "5"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_CB_NOTIFICATION_PRIORITY: "20"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_CB_NOTIFICATION_TIMEOUT: "20"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_PRIORITY: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_TIMEOUT: "5"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_PRIORITY: "15"
+      QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_TIMEOUT: "5"
+    secrets: {}
+    #   RABBITMQ_USER / RABBITMQ_PASSWORD   # TODO: set
+
+  # ---------------------------------------------------------------------------
+  # web-back — main backend API (Laravel). Runs DB migrations via an init container.
+  # ---------------------------------------------------------------------------
+  webBack:
+    enabled: true
+    image:
+      repository: web-back
+      tag: ""                   # TODO: pin the platform image tag
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    ports:
+      - containerPort: 80
+        protocol: TCP
+        name: web-back
+    service:
+      - port: 80
+        name: web-back
+    # Runs database migrations before the main container starts. It inherits the
+    # component's config + secrets (envFrom). Keep its tag aligned with the main image.
+    initContainers:
+      - name: web-back-migrations
+        image: web-back
+        tag: ""                 # TODO: pin (same tag as web-back)
+        command: ["sh", "-c", "/var/www/html/migration.sh||true"]
+    livenessProbe:
+      httpGet:
+        path: /api/hchk
+        port: web-back
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /api/hchk
+        port: web-back
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - httpsOnly: true
+      #     route:
+      #       gateway: public-gateway
+      #       hostnames: ["api.example.com"]
+      #       backendPort: 80
+    config:
+      AETHER_LINK_URL: http://aether-link:8000
+      COMMANDS_ENDPOINT: http://fiware-manager:8000/api/v1
+      DATA_REPORT: http://fiware-manager:8000
+      QUEUES_CONSUMER_API_URL: http://carrot:8001
+      APP_DEBUG: "false"
+      APP_ENV: prod
+      APP_NAME: PID Gijón
+      APP_URL: http://localhost
+      BROADCAST_DRIVER: log
+      CACHE_DRIVER: database
+      DB_CONNECTION: pgsql
+      DB_DATABASE: <CHANGE_ME>            # main PostgreSQL database name
+      DB_DEVICE_MANAGER_DATABASE: device_manager
+      DB_HOST: <CHANGE_ME>                # PostgreSQL host
+      DB_PORT: "5432"
+      DB_REALTIME_DATABASE: realtime
+      DB_REALTIME_HOST: <CHANGE_ME>       # PostgreSQL host
+      DB_REALTIME_PORT: "5432"
+      FILESYSTEM_DISK: local
+      # Object storage (mirror the consumers' STORAGE_TYPE choice).
+      # AWS_S3_BUCKET: <CHANGE_ME>
+      # AWS_S3_REGION: <CHANGE_ME>
+      # AWS_S3_IMAGES_BUCKET: <CHANGE_ME>
+      # AWS_S3_IMAGES_REGION: <CHANGE_ME>
+      # -- For MinIO (local) also set:
+      # AWS_ENDPOINT: <CHANGE_ME>         # e.g. http://minio.minio.svc.cluster.local:9000
+      # AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      FRONTEND_URL: <CHANGE_ME>           # public frontend URL
+      KEYCLOAK_URL: http://keycloak:8080  # internal Keycloak service
+      KEYCLOAK_REDIRECT_URI: <CHANGE_ME>  # public Keycloak URL
+      KC_IMPERSONATION_REALM: pid-gijon
+      KC_IMPERSONATION_URL: http://keycloak:8080
+      KC_IMPERSONATION_CLIENT_ID: pid-gijon-client
+      LOG_CHANNEL: stack
+      LOG_DEPRECATIONS_CHANNEL: "null"
+      LOG_LEVEL: info
+      LOG_QUERIES: "0"
+      MAIL_ENCRYPTION: tls
+      MAIL_FROM_ADDRESS: <CHANGE_ME>
+      MAIL_FROM_NAME: PID Gijón
+      MAIL_HOST: <CHANGE_ME>
+      MAIL_MAILER: smtp
+      MAIL_PORT: "587"
+      MEMCACHED_HOST: 127.0.0.1
+      ON_PREMISE: "false"
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: "120"
+      TELEGRAM_ENABLED: "false"
+      SMS_ENABLED: "false"
+      WHATSAPP_ENABLED: "false"
+      # -- Optional external integrations (uncomment + set matching secrets)
+      # DEVICE_MANAGER_URL: <CHANGE_ME>   # TODO: device-manager service
+      # DLM_BASE_URL: <CHANGE_ME>         # TODO: device lifecycle manager
+      # DLM_TIMEOUT: "15"
+      # CHATBOT_API_URL: <CHANGE_ME>      # TODO: chatbot service
+      # SMS_AWS_REGION: <CHANGE_ME>
+      # SMS_FROM: PIDGIJON
+    secrets: {}
+    #   DB_PASSWORD                              # TODO: set
+    #   DB_REALTIME_USERNAME / DB_REALTIME_PASSWORD
+    #   APP_KEY                                  # TODO: set (Laravel base64: key)
+    #   FILE_ENCRYPTION_KEY / GENERIC_ENCRYPTION_KEY
+    #   KEYCLOAK_REALM (pid-gijon) / KEYCLOAK_ENCRYPTION_ALGORITHM (RS256)
+    #   KEYCLOAK_CLIENT_ID (laravel-backend)
+    #   KEYCLOAK_CLIENT_SECRET                   # TODO: from Keycloak (docs/06-post-install.md)
+    #   KEYCLOAK_PUBLIC_KEY                      # TODO: realm RS256 key (docs/06-post-install.md)
+    #   KC_ADMIN_CLIENT (change-password-client) / KC_MASTER_REALM (master)
+    #   KC_ADMIN_USER / KC_ADMIN_PASSWORD        # TODO: set a STRONG password
+    #   KC_IMPERSONATION_CLIENT_SECRET / KC_IMPERSONATION_USERNAME / KC_IMPERSONATION_PASSWORD
+    #   MAIL_USERNAME / MAIL_PASSWORD
+    #   Object storage:  AWS_S3_KEY / AWS_S3_SECRET (+ *_IMAGES_*)
+    #   Optional integrations: DLM_TOKEN, STATUSCAKE_API_KEY, OPENWEATHERMAP_API_KEY,
+    #     TELEGRAM_CLIENT_ID, SMS_AWS_KEY, SMS_AWS_SECRET
+
+  # ---------------------------------------------------------------------------
+  # keycloak — Identity & Access Management. Uses the platform's Keycloak image.
+  # ---------------------------------------------------------------------------
+  keycloak:
+    enabled: true
+    image:
+      repository: keycloak
+      tag: ""                   # TODO: pin the platform image tag
+      pullPolicy: IfNotPresent
+    replicas: 1
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: false
+      minAvailable: 1
+    # Clustered cache via JGroups DNS discovery (works with 1+ replicas; required
+    # for HA when replicas > 1).
+    args:
+      - "--cache=ispn"
+      - "--cache-stack=kubernetes"
+    ports:
+      - containerPort: 8080
+        protocol: TCP
+        name: keycloak
+      - containerPort: 9000
+        protocol: TCP
+        name: keycloak-admin
+      - containerPort: 7800
+        protocol: TCP
+        name: jgroups-tcp
+      - containerPort: 57800
+        protocol: TCP
+        name: jgroups-tcp-fd
+    service:
+      - port: 8080
+        name: keycloak
+      - port: 9000
+        name: keycloak-admin
+    # Headless service for JGroups discovery (DNS_PING).
+    headless:
+      enabled: true
+      publishNotReadyAddresses: true
+      ports:
+        - port: 7800
+          name: jgroups-tcp
+          protocol: TCP
+        - port: 57800
+          name: jgroups-tcp-fd
+          protocol: TCP
+    livenessProbe:
+      httpGet:
+        path: /health/live
+        port: keycloak-admin
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 15
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /health/ready
+        port: keycloak-admin
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+    resources: {}
+    gatewayAPI:
+      enabled: false
+      # routes:
+      #   - httpsOnly: true
+      #     route:
+      #       gateway: public-gateway
+      #       hostnames: ["kc.example.com"]
+      #       backendPort: 8080
+    config:
+      KC_DB: postgres
+      KC_DB_URL_HOST: <CHANGE_ME>         # PostgreSQL host (keycloak database)
+      KC_DB_URL_PORT: "5432"
+      KC_DB_URL_DATABASE: keycloak
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_FEATURES: token-exchange
+      KC_LOG_LEVEL: "warn,org.keycloak.events:info"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      PROXY_ADDRESS_FORWARDING: "true"
+      KC_PROXY_ADDRESS_FORWARDING: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HOSTNAME: <CHANGE_ME>            # public Keycloak URL (https://kc.example.com)
+      KC_HOSTNAME_ADMIN: <CHANGE_ME>      # public Keycloak admin URL (usually same as KC_HOSTNAME)
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin  # bootstrap admin username (password is a secret)
+      BACKEND_URL: http://web-back        # internal backend service
+      # JGroups discovery + heap. Keeps the headless service name in sync.
+      JAVA_OPTS_APPEND: "-Djava.net.preferIPv4Stack=true -Djgroups.dns.query=keycloak-headless -Xmx1g"
+    secrets: {}
+    #   KC_DB_USERNAME: ""              # TODO: set
+    #   KC_DB_PASSWORD: ""              # TODO: set
+    #   KEYCLOAK_ADMIN: ""             # TODO: set bootstrap admin username
+    #   KEYCLOAK_ADMIN_PASSWORD: ""    # TODO: set a STRONG password (never reuse defaults)
+    #   KC_LARAVEL_BACKEND_SECRET: ""  # TODO: set (openssl rand -base64 24)
+    #   KC_REALM_MANAGEMENT_SECRET: "" # TODO: set (openssl rand -base64 24)
+    # The last two are REQUIRED: the realm export ships placeholders for the
+    # laravel-backend and realm-management client secrets, and the image's
+    # entrypoint refuses to start unless both variables are present.
+
+# =============================================================================
+# KEDA autoscaling (optional). Requires the KEDA operator in the cluster.
+# Provide RabbitMQ credentials via your own values override — do not commit them.
+# When enabled, configure your GitOps tool to ignore Deployment spec/replicas.
+# =============================================================================
+# KedaAutoscale:
+#   rabbitmq:
+#     username: ""    # TODO: set
+#     password: ""    # TODO: set
+#     host: amqps://<RABBITMQ_HOST>:5671/
+#   Services:
+#     cb-consumer:
+#       pollingInterval: 60
+#       cooldownPeriod: 600
+#       minReplicaCount: 1
+#       maxReplicaCount: 5
+#       triggers:
+#         - type: rabbitmq
+#           metadata:
+#             protocol: auto
+#             mode: QueueLength
+#             value: "5000"
+#             queueName: platform.sync.cb_notification
+#             vhostName: pid-gijon
+#           authenticationRef:
+#             name: rabbitmq-trigger-auth
+#     generic-consumer:
+#       pollingInterval: 60
+#       cooldownPeriod: 600
+#       minReplicaCount: 1
+#       maxReplicaCount: 5
+#       triggers:
+#         - type: rabbitmq
+#           metadata:
+#             protocol: auto
+#             mode: QueueLength
+#             value: "10000"
+#             queueName: platform.sync.realtime
+#             vhostName: pid-gijon
+#           authenticationRef:
+#             name: rabbitmq-trigger-auth

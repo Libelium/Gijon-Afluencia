@@ -1,0 +1,222 @@
+# =====================================================================
+# APISIX chart — default values   (OPTIONAL, opt-in component)
+# =====================================================================
+# Apache APISIX as an API gateway in front of the FIWARE endpoints. It
+# authenticates each request against Keycloak (JWT) and authorizes every write
+# against web-back's per-tenant permission API, then proxies to the FIWARE
+# backends (iot-agent-json / orion-ld).
+#
+# This is a WRAPPER around the upstream apisix chart (https://charts.apiseven.com).
+# Before installing, pull the dependency:
+#   helm dependency update charts/apisix
+#
+# It is NOT part of the default platform install — FIWARE protection is handled
+# by fiware-manager / web-back directly. Enable it per environment with
+# APISIX_ENABLED=true in config.env (see docs/07-apisix.md).
+#
+# IMPORTANT: do NOT commit credentials. keycloak.clientSecret and the APISIX
+# admin API key are EMPTY here on purpose. Provide them at deploy time via
+# scripts/generate-env.sh, --set, or an external secret manager.
+# =====================================================================
+
+# --- FIWARE backends this gateway protects ---------------------------------
+# Deploy this chart INTO the same namespace as the pid-gijon-core services
+# (`pid-gijon`). ApisixRoute backends are namespace-local — the route and the
+# Service it targets must share a namespace — so co-locating lets the routes
+# reference iot-agent-json / orion-ld / web-back directly.
+fiware:
+  # Namespace where the pid-gijon-core services run = this chart's release namespace.
+  namespace: pid-gijon
+
+  # Each entry becomes one ApisixRoute. headerType selects the tenancy headers:
+  #   fiware  -> Fiware-Service + Fiware-ServicePath (v2 style, with scope)
+  #   ngsild  -> NGSILD-Tenant   (LD style, no scope)
+  services:
+    iotaDevices:
+      serviceName: iot-agent-json
+      servicePort: 4041
+      paths:
+        - /iot/devices
+        - /iot/devices/*
+      methods: [GET, POST, PUT, DELETE]
+      headerType: fiware
+    iotaServices:
+      serviceName: iot-agent-json
+      servicePort: 4041
+      paths:
+        - /iot/services
+        - /iot/services/*
+      methods: [GET, POST, PUT, DELETE]
+      headerType: fiware
+    orionld:
+      serviceName: orion-ld
+      servicePort: 1026
+      paths:
+        - /ngsi-ld/v1/*
+      methods: [GET, POST, PUT, PATCH, DELETE]
+      headerType: ngsild
+
+  # web-back endpoint that validates per-tenant write permission.
+  backend:
+    serviceName: web-back
+    servicePort: 80
+
+# --- Keycloak OIDC (openid-connect plugin) ---------------------------------
+keycloak:
+  # Reuses the same client as web-back.
+  clientId: "laravel-backend"
+  # IMPORTANT: leave empty. Supplied at deploy time — the SAME value as
+  # web-back's KEYCLOAK_CLIENT_SECRET. NEVER commit a real value.
+  clientSecret: ""
+  realm: "pid-gijon"
+  # OIDC discovery URL:
+  #   https://<keycloak-host>/realms/<realm>/.well-known/openid-configuration
+  discoveryUrl: ""
+
+  # When true, render an ExternalSecret (External Secrets Operator) instead of a
+  # plain Secret. Recommended for GitOps / production.
+  useExternalSecret: false
+  secretStoreName: "aws-secrets-manager"
+  secretStoreKind: "SecretStore"
+  externalSecretName: "apisix/keycloak-credentials"
+  secretRefreshInterval: "1h"
+  # Name of the Secret holding the client credentials (rendered or external).
+  secretName: "apisix-secrets"
+
+# --- Exposure via the Kubernetes Gateway API -------------------------------
+# Consistent with pid-gijon-core: the chart attaches an HTTPRoute to a Gateway
+# that ALREADY exists; it never creates Gateways. See docs/04-gateway-api.md.
+# Deployed in the pid-gijon namespace, the route reuses the allowedRoutes that the
+# public-gateway listener already grants to pid-gijon — no Gateway change needed.
+gatewayAPI:
+  enabled: true
+  gateway: public-gateway          # parent Gateway name (required when enabled)
+  gatewayNamespace: gateway        # parent Gateway namespace
+  httpsOnly: true                  # attach to the HTTPS listener section
+  httpsSectionName: https          # listener section name on the Gateway
+  hostnames: []                    # e.g. ["fiware-secured.demo.example.com"]
+  # Service of the bundled APISIX data plane to route to (<release>-gateway).
+  backendService: apisix-gateway
+  backendPort: 80
+
+# --- Legacy plain Ingress (off; the repo standard is the Gateway API) ------
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+# =====================================================================
+# Values passed to the upstream apisix subchart (key MUST be "apisix").
+# Full reference: https://github.com/apache/apisix-helm-chart
+# =====================================================================
+apisix:
+  # Set false to NOT deploy the bundled data plane / ingress controller (e.g.
+  # you run your own APISIX). The FIWARE routes/Lua/Secret are still rendered.
+  enabled: true
+
+  # Built-in etcd is fine for a standalone gateway. Bring your own for prod HA.
+  etcd:
+    enabled: false
+
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 50%
+
+  updateStrategy:
+    type: RollingUpdate
+
+  # Fronted by the Gateway API — no direct external LoadBalancer.
+  service:
+    type: ClusterIP
+    externalTrafficPolicy: null
+
+  metrics:
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+
+  # Values nested under apisix.apisix.* configure the APISIX data plane itself.
+  apisix:
+    deployment:
+      role: traditional
+      role_traditional:
+        config_provider: yaml
+    admin:
+      credentials:
+        # APISIX Admin API key. EMPTY by default — supply at deploy time.
+        # IMPORTANT: never commit a real value.
+        admin: ""
+      allow:
+        # ClusterIP service, so reachable in-cluster only. Tighten in prod.
+        ipList:
+          - 0.0.0.0/0
+    prometheus:
+      enabled: true
+
+  # Plugins the FIWARE routes rely on. An explicit list overrides APISIX's
+  # defaults, so every plugin used by the routes must appear here.
+  plugins:
+    - openid-connect
+    - proxy-rewrite
+    - response-rewrite
+    - request-validation
+    - prometheus
+    - serverless-pre-function
+
+  # Mount the FIWARE permission Lua module rendered by this chart.
+  extraVolumes:
+    - name: lua-modules
+      configMap:
+        name: apisix-fiware-lua-modules
+  extraVolumeMounts:
+    - name: lua-modules
+      mountPath: /usr/local/apisix/apisix/fiware_permissions.lua
+      subPath: fiware_permissions.lua
+      readOnly: true
+
+  # APISIX ingress controller (reads the ApisixRoute CRDs this chart renders).
+  ingress-controller:
+    enabled: true
+    deployment:
+      replicas: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    config:
+      provider:
+        type: apisix-standalone
+    # The subchart owns the `apisix` IngressClass and its GatewayProxy
+    # (<release>-config). createDefault links them so the ApisixRoutes resolve.
+    gatewayProxy:
+      createDefault: true
+      provider:
+        type: ControlPlane
+        controlPlane:
+          # Admin API service of the bundled data plane. Assumes the release is
+          # named "apisix" (the documented name) -> service "apisix-admin".
+          service:
+            name: apisix-admin
+            port: 9180
+          auth:
+            type: AdminKey
+            adminKey:
+              # MUST equal apisix.apisix.admin.credentials.admin. EMPTY by
+              # default — supplied at deploy time. Never commit a real value.
+              value: ""
+    serviceMonitor:
+      enabled: false

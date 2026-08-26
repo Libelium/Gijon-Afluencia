@@ -1,0 +1,38 @@
+# =============================================================================
+# Secrets — NEVER commit credentials to this repository.
+# =============================================================================
+# Generated environments hold real, freshly-created secrets. Everything under
+# environments/ is ignored EXCEPT the committed example template.
+environments/*
+!environments/example/
+
+# Master secret file written by scripts/generate-env.sh
+SECRETS.env
+**/SECRETS.env
+
+# Generic credential / env-var patterns
+.env
+.env.*
+*.env
+!**/config.env.example
+# ...but the committed templates stay: .env.example feeds docker-compose.core.yml.
+!.env.example
+!**/.env.example
+*-secrets-local.yaml
+**/secrets-*.yaml
+
+# Verification suite artifacts
+tests/.venv/
+__pycache__/
+
+# Helm build artifacts
+charts/*/charts/
+charts/*/*.lock
+*.tgz
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

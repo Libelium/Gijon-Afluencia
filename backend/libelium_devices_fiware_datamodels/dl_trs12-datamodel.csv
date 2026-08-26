@@ -1,0 +1,9 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery voltage,Battery voltage,r,float,V,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_vwc,Volumetric water content,Soil volumetric water content (fraction 0-1),r,float,m3/m3,0,1,No,Sensors.Soil,AgriParcelRecord,soilMoistureVwc
+r_permittivity,Permittivity,Soil dielectric permittivity,r,float,dimensionless,1,80,No,Sensors.Soil,AgriParcelRecord,permittivity
+r_soil_temp,Soil temperature,Soil temperature,r,float,Celsius,-40,60,No,Sensors.Soil,AgriParcelRecord,soilTemperature
+r_ec,Electrical conductivity,Soil pore water electrical conductivity,r,float,uS/cm,0,20000,No,Sensors.Soil,AgriParcelRecord,soilMoistureEC

@@ -1,0 +1,175 @@
+{{- range $name, $component := .Values.components }}
+{{- if $component.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+    {{- if $component.deploymentLabels }}
+    {{- toYaml $component.deploymentLabels | nindent 4 }}
+    {{- end }}
+  {{- if $component.deploymentAnnotations }}
+  annotations:
+    {{- toYaml $component.deploymentAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ $component.replicas | default 1 }}
+  selector:
+    matchLabels:
+      service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+  {{- if $component.strategy }}
+  strategy:
+    {{- toYaml $component.strategy | nindent 4 }}
+  {{- else }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+        {{- if $.Values.global.environment }}
+        environment: {{ $.Values.global.environment }}
+        {{- end }}
+        {{- if $component.podLabels }}
+        {{- toYaml $component.podLabels | nindent 8 }}
+        {{- end }}
+      {{- if $component.podAnnotations }}
+      annotations:
+        {{- toYaml $component.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if $.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      {{- if $component.leaderElection }}
+      serviceAccountName: {{ include "pid-gijon-core.kebabcase" $name }}
+      {{- end }}
+      {{- if $component.hostAliases }}
+      hostAliases:
+        {{- toYaml $component.hostAliases | nindent 8 }}
+      {{- end }}
+      {{- if $component.antiAffinity }}
+      affinity:
+        podAntiAffinity:
+          {{- toYaml $component.antiAffinity | nindent 10 }}
+      {{- end }}
+      {{- if $component.initContainers }}
+      initContainers:
+      {{- range $initContainer := $component.initContainers }}
+        - name: {{ $initContainer.name }}
+          image: {{ include "pid-gijon-core.rawImageRef" (list $initContainer $) }}
+          imagePullPolicy: {{ $initContainer.pullPolicy | default "IfNotPresent" }}
+          {{- if $initContainer.restartPolicy }}
+          restartPolicy: {{ $initContainer.restartPolicy }}
+          {{- end }}
+          {{- if $initContainer.args }}
+          args:
+            {{- toYaml $initContainer.args | nindent 12 }}
+          {{- end }}
+          {{- if $initContainer.command }}
+          command:
+            {{- toYaml $initContainer.command | nindent 12 }}
+          {{- end }}
+          {{- if $initContainer.ports }}
+          ports:
+            {{- toYaml $initContainer.ports | nindent 12 }}
+          {{- end }}
+          {{- if $initContainer.env }}
+          env:
+            {{- toYaml $initContainer.env | nindent 12 }}
+          {{- end }}
+          {{- if $initContainer.resources }}
+          resources:
+            {{- toYaml $initContainer.resources | nindent 12 }}
+          {{- end }}
+          {{- if or $component.config $component.secrets }}
+          envFrom:
+            {{- if $component.config }}
+            - configMapRef:
+                name: {{ include "pid-gijon-core.kebabcase" $name }}-config
+            {{- end }}
+            {{- if and (eq $.Values.secretsStrategy.type "values") $component.secrets }}
+            - secretRef:
+                name: {{ include "pid-gijon-core.kebabcase" $name }}-secret
+            {{- else if and (eq $.Values.secretsStrategy.type "external") $.Values.secretsStrategy.externalSecrets (index $.Values.secretsStrategy.externalSecrets $name) }}
+            - secretRef:
+                name: {{ index $.Values.secretsStrategy.externalSecrets $name }}
+            {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ include "pid-gijon-core.kebabcase" $name }}
+          image: {{ include "pid-gijon-core.imageRef" (list $component $) }}
+          imagePullPolicy: {{ $component.image.pullPolicy | default "IfNotPresent" }}
+          {{- if $component.args }}
+          args:
+            {{- toYaml $component.args | nindent 12 }}
+          {{- end }}
+          {{- if $component.command }}
+          command:
+            {{- toYaml $component.command | nindent 12 }}
+          {{- end }}
+          {{- if $component.env }}
+          env:
+            {{- toYaml $component.env | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "pid-gijon-core.kebabcase" $name }}-config
+            {{- if and (eq $.Values.secretsStrategy.type "values") $component.secrets }}
+            - secretRef:
+                name: {{ include "pid-gijon-core.kebabcase" $name }}-secret
+            {{- else if and (eq $.Values.secretsStrategy.type "external") $.Values.secretsStrategy.externalSecrets (index $.Values.secretsStrategy.externalSecrets $name) }}
+            - secretRef:
+                name: {{ index $.Values.secretsStrategy.externalSecrets $name }}
+            {{- end }}
+          {{- if $component.ports }}
+          ports:
+            {{- range $port := $component.ports }}
+            - containerPort: {{ $port.containerPort }}
+              protocol: {{ $port.protocol | default "TCP" }}
+              {{- if $port.name }}
+              name: {{ $port.name }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if $component.livenessProbe }}
+          livenessProbe:
+            {{- toYaml $component.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if $component.readinessProbe }}
+          readinessProbe:
+            {{- toYaml $component.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if $component.startupProbe }}
+          startupProbe:
+            {{- toYaml $component.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if $component.resources }}
+          resources:
+            {{- toYaml $component.resources | nindent 12 }}
+          {{- end }}
+          {{- if $component.volumeMounts }}
+          volumeMounts:
+            {{- toYaml $component.volumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if $component.volumes }}
+      volumes:
+        {{- toYaml $component.volumes | nindent 8 }}
+      {{- end }}
+      hostname: {{ include "pid-gijon-core.kebabcase" $name }}
+      restartPolicy: Always
+{{- end }}
+{{- end }}

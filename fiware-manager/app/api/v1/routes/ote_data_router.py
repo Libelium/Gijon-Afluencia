@@ -1,0 +1,47 @@
+"""Receiver for the LIDAR Object Tracking Events (AMORPH.senses) push API.
+
+The sensor treats any non-2xx as a failed delivery, so this answers 200 at once and
+queues the body for core/ote/raw_ote_archiver.py. Never parsed here: a parse error must
+not become a non-2xx, and the vendor may add fields without notice.
+"""
+
+import hmac
+
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse, Response
+
+from app.core.config.config import settings
+from app.core.config.logging import appLogging as log
+from app.core.ote.raw_ote_archiver import archiver
+
+router = APIRouter()
+
+
+def _authorised(request: Request, token: str | None) -> bool:
+    """
+    Shared secret from the `X-OTE-Token` header, or from the `t=` query param for
+    senders that cannot add custom headers, only the destination URL.
+    """
+    expected = settings.OTE_WEBHOOK_TOKEN
+    if not expected:
+        return True  # not configured: local/dev only
+    received = request.headers.get("x-ote-token") or token or ""
+    return hmac.compare_digest(received, expected)
+
+
+@router.post("/{device_id}", status_code=200)
+async def ote_ingest(device_id: str, request: Request, t: str | None = None):
+    """Queues one tracking frame for `device_id`, the free label that partitions the
+    archive. One URL per sensor, so the body never has to be parsed to know who sent it."""
+    if not _authorised(request, t):
+        log.error("OTE ingest: bad token for device %r from %s", device_id,
+                  request.client.host if request.client else "unknown")
+        return Response(status_code=401)
+
+    try:
+        archiver.add(device_id, await request.body())
+    except Exception as e:
+        # 200 even on failure: a non-2xx makes the sender retry and duplicate the frame.
+        log.error("OTE ingest: could not queue frame for %s: %s", device_id, e)
+
+    return Response(status_code=200)

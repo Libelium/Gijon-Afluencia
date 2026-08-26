@@ -1,0 +1,375 @@
+# Generado desde el esquema que expone FastAPI (app.openapi()) y enriquecido a mano.
+# Regenerar tras tocar fiware-manager/app/api/v1/routes/.
+openapi: 3.1.0
+info:
+  title: PID Gijón — API de ingesta
+  version: 0.1.17
+  description: 'Puente de entrada para las fuentes que **no hablan FIWARE de forma nativa**. Cubre dos
+    caminos, y solo dos:
+
+
+    1. **LIDAR (OTE)** — recibe las tramas crudas de los sensores de conteo y las archiva verbatim en
+    lotes NDJSON comprimidos sobre S3/MinIO. No se parsean aquí.
+
+    2. **Dispositivos HTTP** — reenvía las medidas al IoT Agent y, de paso, resuelve la entrega de comandos
+    al dispositivo, que el camino nativo de FIWARE no hace de forma fiable.
+
+
+    El resto de la plataforma (entidades, cuadros de mando, alarmas) vive en la API de gestión, descrita
+    en `openapi-gestion.yaml`.
+
+
+    **Autenticación**: no hay JWT. El endpoint LIDAR es público y se protege con un secreto compartido
+    (`OTE_WEBHOOK_TOKEN`); los endpoints del IoT Agent van por red interna y llevan la apikey de aprovisionamiento
+    en el parámetro `k`.'
+  license:
+    name: EUPL-1.2
+    url: https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+paths:
+  /hchk:
+    get:
+      summary: Health check
+      description: Devuelve `{"status":"OK"}`. Es la sonda de *liveness* y *readiness* del despliegue.
+      operationId: hchk
+      responses:
+        '200':
+          description: El servicio responde
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+              example:
+                status: OK
+      tags:
+      - Servicio
+  /api/v1/notify/command/{serial}:
+    post:
+      tags:
+      - Dispositivos HTTP
+      summary: Encolar un comando para un dispositivo
+      operationId: notify_command
+      parameters:
+      - name: serial
+        in: path
+        required: true
+        schema:
+          title: Serial
+        description: Serial del dispositivo. Se normaliza a mayúsculas.
+      - name: fiware-service
+        in: header
+        required: true
+        schema:
+          type: string
+          title: Fiware-Service
+        description: Tenant FIWARE.
+      - name: fiware-servicepath
+        in: header
+        required: true
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Fiware-Servicepath
+        description: Scope FIWARE dentro del tenant.
+      requestBody:
+        required: true
+        description: Mapa comando → valor.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            example:
+              reboot: '1'
+      responses:
+        '200':
+          description: Comandos encolados. Se devuelve su estado.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: PENDING
+                    value: {}
+              example:
+                reboot:
+                  status: PENDING
+                  value: '1'
+        '422':
+          description: Faltan las cabeceras FIWARE o el cuerpo no es válido.
+      description: 'El IoT Agent entrega aquí el comando destinado al dispositivo. Se guarda como **pendiente**
+        en MongoDB y el dispositivo lo recoge en la respuesta de su siguiente envío de medidas (`/api/v1/command-proxy/...?getCmd=1`).
+
+
+        Esta URL es la que el aprovisionamiento registra en el IoT Agent como endpoint del dispositivo.'
+  /api/v1/command-proxy/{resource}:
+    put:
+      tags:
+      - Dispositivos HTTP
+      summary: Enviar medidas al IoT Agent y recoger comandos pendientes
+      description: 'Reenvía el cuerpo al IoT Agent (`{IOTA_SOUTH_SERVICE}/{resource}`, típicamente `iot/json`)
+        y, si se pide, devuelve los comandos que el dispositivo tenga pendientes.
+
+
+        Antes de reenviar traduce a `TimeInstant` los atributos de marca temporal listados en `TIMESTAMP_ATTRS`
+        (`r_ts`, `r_dev_ts`, …), porque NGSI-LD no admite `TimeInstant` en las expresiones de traducción.
+        Un *timestamp* numérico se convierte a ISO-8601.
+
+
+        Acepta un objeto o una lista de objetos.'
+      operationId: command_proxy_put
+      parameters:
+      - name: resource
+        in: path
+        required: true
+        schema:
+          title: Resource
+        description: Ruta del IoT Agent a la que se reenvía. En la práctica, `iot/json`.
+      - name: i
+        in: query
+        required: true
+        schema:
+          title: I
+        description: Identificador de la entidad en el IoT Agent (normalmente el serial del dispositivo).
+      - name: k
+        in: query
+        required: true
+        schema:
+          title: K
+        description: Apikey de aprovisionamiento del servicio en el IoT Agent.
+      - name: getCmd
+        in: query
+        required: false
+        schema:
+          default: 0
+          title: Getcmd
+        description: Mayor que 0 para que la respuesta traiga los comandos pendientes del dispositivo.
+      - name: flatten_depth
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Flatten Depth
+        description: Niveles de diccionarios anidados que se disuelven en el payload antes de reenviarlo.
+      requestBody:
+        required: true
+        description: 'Medidas del dispositivo: un objeto, o una lista de objetos.'
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+                description: Un envío.
+              - type: array
+                items:
+                  type: object
+                description: Varios envíos.
+            example:
+              temperature: 21.5
+              r_ts: 1700000000
+      responses:
+        '200':
+          description: 'Hay comandos pendientes (solo con `getCmd>0`): se devuelven como mapa comando
+            → valor.'
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+              example:
+                reboot: '1'
+        '204':
+          description: Medidas aceptadas y sin comandos pendientes. Es la respuesta normal.
+        '422':
+          description: Faltan `i` o `k`, o el cuerpo no es JSON válido.
+    post:
+      tags:
+      - Dispositivos HTTP
+      summary: Enviar medidas al IoT Agent y recoger comandos pendientes
+      description: 'Reenvía el cuerpo al IoT Agent (`{IOTA_SOUTH_SERVICE}/{resource}`, típicamente `iot/json`)
+        y, si se pide, devuelve los comandos que el dispositivo tenga pendientes.
+
+
+        Antes de reenviar traduce a `TimeInstant` los atributos de marca temporal listados en `TIMESTAMP_ATTRS`
+        (`r_ts`, `r_dev_ts`, …), porque NGSI-LD no admite `TimeInstant` en las expresiones de traducción.
+        Un *timestamp* numérico se convierte a ISO-8601.
+
+
+        Acepta un objeto o una lista de objetos.'
+      operationId: command_proxy_post
+      parameters:
+      - name: resource
+        in: path
+        required: true
+        schema:
+          title: Resource
+        description: Ruta del IoT Agent a la que se reenvía. En la práctica, `iot/json`.
+      - name: i
+        in: query
+        required: true
+        schema:
+          title: I
+        description: Identificador de la entidad en el IoT Agent (normalmente el serial del dispositivo).
+      - name: k
+        in: query
+        required: true
+        schema:
+          title: K
+        description: Apikey de aprovisionamiento del servicio en el IoT Agent.
+      - name: getCmd
+        in: query
+        required: false
+        schema:
+          default: 0
+          title: Getcmd
+        description: Mayor que 0 para que la respuesta traiga los comandos pendientes del dispositivo.
+      - name: flatten_depth
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Flatten Depth
+        description: Niveles de diccionarios anidados que se disuelven en el payload antes de reenviarlo.
+      requestBody:
+        required: true
+        description: 'Medidas del dispositivo: un objeto, o una lista de objetos.'
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+                description: Un envío.
+              - type: array
+                items:
+                  type: object
+                description: Varios envíos.
+            example:
+              temperature: 21.5
+              r_ts: 1700000000
+      responses:
+        '200':
+          description: 'Hay comandos pendientes (solo con `getCmd>0`): se devuelven como mapa comando
+            → valor.'
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+              example:
+                reboot: '1'
+        '204':
+          description: Medidas aceptadas y sin comandos pendientes. Es la respuesta normal.
+        '422':
+          description: Faltan `i` o `k`, o el cuerpo no es JSON válido.
+  /api/v1/ote/{device_id}:
+    post:
+      tags:
+      - LIDAR (OTE)
+      summary: Ingesta de una trama LIDAR
+      description: 'Encola el cuerpo **sin parsearlo** para el archivador de fondo, que lo escribe verbatim.
+
+
+        Responde `200` de inmediato y **también cuando el encolado falla**: el sensor trata cualquier
+        respuesta que no sea 2xx como entrega fallida y reintenta, lo que duplicaría la trama. El cuerpo
+        es JSON libre — el fabricante puede añadir campos sin avisar.
+
+
+        `device_id` es la etiqueta que particiona el archivo: una URL por sensor, así no hay que abrir
+        el cuerpo para saber quién lo envía. Se sanea para que una ruta manipulada no escape del prefijo.'
+      operationId: ote_ingest
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+        description: Identificador del sensor. Acaba en la clave del objeto archivado.
+      - name: X-OTE-Token
+        in: header
+        required: false
+        schema:
+          type: string
+        description: 'Secreto compartido (`OTE_WEBHOOK_TOKEN`). Si el servicio no lo tiene configurado,
+          se acepta todo: solo para desarrollo.'
+      - name: t
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: T
+        description: Secreto compartido, alternativa a la cabecera `X-OTE-Token` para emisores que solo
+          permiten configurar la URL.
+      responses:
+        '200':
+          description: Trama aceptada. También se devuelve si el encolado interno falló, para que el sensor
+            no reintente.
+        '401':
+          description: Secreto compartido ausente o incorrecto.
+      requestBody:
+        required: true
+        description: Trama tal cual la manda el sensor. Se archiva sin tocar.
+        content:
+          application/json:
+            schema:
+              description: JSON libre, no validado.
+components:
+  schemas:
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+servers:
+- url: http://fiware-manager:8000
+  description: Servicio interno del clúster
+- url: http://localhost:30006
+  description: Docker Compose local
+tags:
+- name: LIDAR (OTE)
+  description: Ingesta y archivado de los Object Tracking Events.
+- name: Dispositivos HTTP
+  description: Medidas hacia el IoT Agent y ciclo de comandos.
+- name: Servicio
+  description: Health check.

@@ -1,0 +1,595 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Sensor name,Datamodel,Mapping,Template
+r_ts,Timestamp,Timestamp at the time of taking the sensor reading (GMT+0),r,uint32_t,dimensionless,N/A,N/A,No,ALL_ONE_PROBES,,,No
+r_loop,Sending loop number,Sending loop number,r,uint32_t,dimensionless,1,N/A,No,ALL_ONE_PROBES,,,Yes
+r_1_tmp,Temperature (BME280),Atmospheric Temperature,r,float,celsius,-40,85,No,BME280,,,Yes
+r_1_hum,Humidity (BME280),Relative Humidity,r,float,%,0,100,No,BME280,,,Yes
+r_1_pres,Pressure (BME280),Barometric Pressure,r,float,hPa,300,1100,No,BME280,,,Yes
+r_2_tmp,Temperature (SI411),Temperature of the measured surface,r,float,celsius,-50,80,No,SI411,,,Yes
+r_3_tmpbd,Bud Temperature (SF421),Temperature of the bud,r,float,celsius,-50,70,No,SF421,,,Yes
+r_3_tmpfl,Leaf Temperature (SF421),Temperature of the leaf,r,float,celsius,-50,70,No,SF421,,,No
+r_4_ox,Oxygen (SO411),Gaseous Oxygen readed,r,float,%,0,100,No,SO411,,,Yes
+r_4_tmp,Temperature (SO411),Atmospheric Temperature,r,float,celsius,-20,60,No,SO411,,,Yes
+r_4_volt,Millivolts (SO411),Millivolts of the sensor readed,r,float,millivolts,N/A,N/A,No,SO411,,,No
+r_5_rwc,Raw Water Content (TEROS11),The VWC range depends on the substrate for which the sensor is calibrated. A custom calibration will accommodate the ranges required for most substrates.,r,float,dimensionless,N/A,N/A,No,TEROS11,,,Yes
+r_5_tmp,Temperature (TEROS11),"Soil Temperature. May not be accurate if the sensor is not fully immersed in the medium of interest, due to a longer equilibration time",r,float,celsius,-40,60,No,TEROS11,,,Yes
+r_6_rwc,Raw Water Content (TEROS12),The VWC range depends on the substrate for which the sensor is calibrated. A custom calibration will accommodate the ranges required for most substrates.,r,float,dimensionless,N/A,N/A,No,TEROS12,,,Yes
+r_6_cond,Conductivity (TEROS12),Conductivity is the measure of a material's ability to conduct an electric current or transfer heat,r,float,µS/cm,0,20000,No,TEROS12,,,Yes
+r_6_tmp,Temperature (TEROS12),"Soil Temperature. May not be accurate if the sensor is not fully immersed in the medium of interest, due to a longer equilibration time",r,float,celsius,-40,60,No,TEROS12,,,Yes
+r_7_wp,Water Potential (TEROS21),Water Potential,r,float,kPa,0,100000,No,TEROS21,,,Yes
+r_7_tmp,Temperature (TEROS21),"Soil Temperature. May not be accurate if the sensor is not fully immersed in the medium of interest, due to a longer equilibration time",r,float,celsius,-40,60,No,TEROS21,,,Yes
+r_8_vp,Vapor Pressure (ATMOS14),Vapor Pressure,r,float,kPa,0,47,No,ATMOS14,,,Yes
+r_8_tmp,Temperature (ATMOS14),Atmospheric Temperature,r,float,celsius,-40,80,No,ATMOS14,,,Yes
+r_8_hum,Humidity (ATMOS14),Relative Humidity,r,float,%RH,0,100,No,ATMOS14,,,Yes
+r_8_pres,Pressure (ATMOS14),Barometric Pressure,r,float,kPa,1,120,No,ATMOS14,,,Yes
+r_9_pres,Pressure (GMX240),Barometric Pressure,r,float,kPa,N/A,N/A,No,GMX240,,,Yes
+r_9_wd,Wind Direction (GMX240),Wind Direction,r,uint16_t,degrees,0,360,No,GMX240,,,Yes
+r_9_ws,Wind Speed (GMX240),Wind Speed,r,float,m/s,0,60,No,GMX240,,,Yes
+r_9_wcd,Wind Corrected Direction (GMX240),Wind Corrected Direction,r,uint16_t,degrees,0,360,No,GMX240,,,No
+r_9_wad,Wind Average Direction (GMX240),Wind Average Direction,r,uint16_t,degrees,0,360,No,GMX240,,,No
+r_9_was,Wind Average Speed (GMX240),Wind Average Speed,r,float,m/s,0,60,No,GMX240,,,No
+r_9_wagd,Wind Average Gust Direction (GMX240),Wind Average Gust Direction,r,uint16_t,degrees,0,360,No,GMX240,,,No
+r_9_wags,Wind Average Gust Speed (GMX240),Wind Average Gust Speed,r,float,m/s,0,60,No,GMX240,,,No
+r_9_wacd,Wind Average Corrected Direction (GMX240),Wind Average Corrected Direction,r,uint16_t,degrees,0,360,No,GMX240,,,No
+r_9_wss,Wind Sensor Status (GMX240),Wind Sensor Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX240,,,No
+r_9_pt,Precipitation Total (GMX240),Precipitation Total,r,float,mm,N/A,N/A,No,GMX240,,,Yes
+r_9_pi,Precipitation Intensity (GMX240),Precipitation Intensity,r,float,mm,N/A,N/A,No,GMX240,,,No
+r_9_pss,Precipitation Sensor Status (GMX240),Precipitation Sensor Status,r,bool,dimensionless,N/A,N/A,No,GMX240,,,No
+r_9_cmp,Compass (GMX240),Compass,r,uint16_t,degrees,N/A,N/A,No,GMX240,,,No
+r_9_x,X Tilt (GMX240),X Tilt,r,int8_t,degrees,N/A,N/A,No,GMX240,,,No
+r_9_y,Y Tilt (GMX240),Y Tilt,r,int8_t,degrees,N/A,N/A,No,GMX240,,,No
+r_9_z,Z Orient (GMX240),Z Orient,r,int8_t,degrees,N/A,N/A,No,GMX240,,,No
+r_9_ts,Timestamp (GMX240),Timestamp,r,uint32_t,seconds,N/A,N/A,No,GMX240,,,No
+r_9_volt,Supply Voltage (GMX240),Supply Voltage,r,float,volts,5,30,No,GMX240,,,No
+r_9_stat,Status (GMX240),Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX240,,,No
+r_9_spd,GPS Speed (GMX240),GPS Speed,r,float,m/s,N/A,N/A,No,GMX240,,,No
+r_9_cspd,GPS Corrected Speed (GMX240),GPS Corrected Speed,r,float,m/s,N/A,N/A,No,GMX240,,,No
+r_9_acspd,GPS Average Corrected Speed (GMX240),GPS Average Corrected Speed,r,float,m/s,N/A,N/A,No,GMX240,,,No
+r_9_cgspd,GPS Corrected Gust Speed (GMX240),GPS Corrected Gust Speed,r,float,m/s,N/A,N/A,No,GMX240,,,No
+r_9_cgdir,GPS Corrected Gust Direction (GMX240),GPS Corrected Gust Direction,r,uint16_t,degrees,N/A,N/A,No,GMX240,,,No
+r_9_lat,GPS Latitude (GMX240),GPS Latitude,r,float,degrees,N/A,N/A,No,GMX240,,,No
+r_9_lon,GPS Longitude (GMX240),GPS Longitude,r,float,degrees,N/A,N/A,No,GMX240,,,No
+r_9_heig,GPS Height (GMX240),GPS Height,r,float,degrees,N/A,N/A,No,GMX240,,,No
+r_9_head,GPS Heading (GMX240),GPS Heading,r,uint16_t,degrees,N/A,N/A,No,GMX240,,,No
+r_9_gstat,GPS Status (GMX240),GPS Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX240,,,No
+r_10_wd,Wind Direction (GMX550),Wind Direction,r,uint16_t,degrees,0,360,No,GMX550,,,Yes
+r_10_ws,Wind Speed (GMX550),Wind Speed,r,float,m/s,0,60,No,GMX550,,,Yes
+r_10_wcd,Wind Corrected Direction (GMX550),Wind Corrected Direction,r,uint16_t,degrees,0,360,No,GMX550,,,No
+r_10_wad,Wind Average Direction (GMX550),Wind Average Direction,r,uint16_t,degrees,0,360,No,GMX550,,,No
+r_10_was,Wind Average Speed (GMX550),Wind Average Speed,r,float,m/s,0,60,No,GMX550,,,No
+r_10_wagd,Wind Average Gust Direction (GMX550),Wind Average Gust Direction,r,uint16_t,degrees,0,360,No,GMX550,,,No
+r_10_wags,Wind Average Gust Speed (GMX550),Wind Average Gust Speed,r,float,m/s,0,60,No,GMX550,,,No
+r_10_wacd,Wind Average Corrected Direction (GMX550),Wind Average Corrected Direction,r,uint16_t,degrees,0,360,No,GMX550,,,No
+r_10_wss,Wind Sensor Status (GMX550),Wind Sensor Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX550,,,No
+r_10_pres,Pressure (GMX550),Barometric Pressure,r,float,hPa,300,1250,No,GMX550,,,Yes
+r_10_psl,Pressure Sea Level (GMX550),Pressure at Sea Level,r,float,hPa,300,1250,No,GMX550,,,No
+r_10_ps,Pressure Station (GMX550),Pressure Station,r,float,hPa,300,1250,No,GMX550,,,No
+r_10_hr,Relative Humidity (GMX550),Relative Humidity,r,uint8_t,%,0,100,No,GMX550,,,Yes
+r_10_tmp,Temperature (GMX550),Temperature,r,float,celsius,-40,70,No,GMX550,,,Yes
+r_10_dp,Dew Point (GMX550),Dew Point,r,float,degrees,N/A,N/A,No,GMX550,,,No
+r_10_ha,Absolute Humidity (GMX550),Absolute Humidity,r,float,g/m3,0,100,No,GMX550,,,No
+r_10_pt,Precipitation Total (GMX550),Precipitation Total,r,float,mm,N/A,N/A,No,GMX550,,,Yes
+r_10_pi,Precipitation Intensity (GMX550),Precipitation Intensity,r,float,mm,N/A,N/A,No,GMX550,,,No
+r_10_pss,Precipitation Sensor Status (GMX550),Precipitation Sensor Status,r,bool,dimensionless,N/A,N/A,No,GMX550,,,Yes
+r_10_cmp,Compass (GMX550),Compass,r,uint16_t,degrees,N/A,N/A,No,GMX550,,,No
+r_10_wc,Wind Chill (GMX550),Wind Chill,r,float,celsius,N/A,N/A,No,GMX550,,,No
+r_10_hi,Heat Index (GMX550),Heat Index,r,float,celsius,N/A,N/A,No,GMX550,,,No
+r_10_ad,Air Density (GMX550),Air Density,r,float,Kg/m3,N/A,N/A,No,GMX550,,,No
+r_10_tb,Temperature Bulb (GMX550),Temperature Bulb,r,float,celsius,N/A,N/A,No,GMX550,,,No
+r_10_hsr,Hour Sunrise (GMX550),Hour Sunrise,r,uint16_t,hours,N/A,N/A,No,GMX550,,,No
+r_10_msr,Minute Sunrise (GMX550),Minute Sunrise,r,uint16_t,minutes,N/A,N/A,No,GMX550,,,No
+r_10_hn,Hour Noon (GMX550),Hour Noon,r,uint16_t,hours,N/A,N/A,No,GMX550,,,No
+r_10_mn,Minute Noon (GMX550),Minute Noon,r,uint16_t,minutes,N/A,N/A,No,GMX550,,,No
+r_10_hss,Hour Sunset (GMX550),Hour Sunset,r,uint16_t,hours,N/A,N/A,No,GMX550,,,No
+r_10_mss,Minute Sunset (GMX550),Minute Sunset,r,uint16_t,minutes,N/A,N/A,No,GMX550,,,No
+r_10_azi,Sun Position Azimut (GMX550),Sun Position Azimut,r,float,degrees,N/A,N/A,No,GMX550,,,No
+r_10_spa,Sun Position Altitude (GMX550),Sun Position Altitude,r,float,degrees,N/A,N/A,No,GMX550,,,No
+r_10_tch,Twilight Civil Hour (GMX550),Twilight Civil Hour,r,uint16_t,hours,N/A,N/A,No,GMX550,,,No
+r_10_tcm,Twilight Civil Minute (GMX550),Twilight Civil Minute,r,uint16_t,minutes,N/A,N/A,No,GMX550,,,No
+r_10_tnh,Twilight Nautical Hour (GMX550),Twilight Nautical Hour,r,uint16_t,hours,N/A,N/A,No,GMX550,,,No
+r_10_tnm,Twilight Nautical Minute (GMX550),Twilight Nautical Minute,r,uint16_t,minutes,N/A,N/A,No,GMX550,,,No
+r_10_tah,Twilight Astronomical Hour (GMX550),Twilight Astronomical Hour,r,uint16_t,hours,N/A,N/A,No,GMX550,,,No
+r_10_tam,Twilight Astronomical Minute (GMX550),Twilight Astronomical Minute,r,uint16_t,minutes,N/A,N/A,No,GMX550,,,No
+r_10_x,X Tilt (GMX550),X Tilt,r,int8_t,degrees,N/A,N/A,No,GMX550,,,No
+r_10_y,Y Tilt (GMX550),Y Tilt,r,int8_t,degrees,N/A,N/A,No,GMX550,,,No
+r_10_z,Z Orient (GMX550),Z Orient,r,int8_t,degrees,N/A,N/A,No,GMX550,,,No
+r_10_ts,Timestamp (GMX550),Timestamp,r,uint32_t,seconds,N/A,N/A,No,GMX550,,,No
+r_10_volt,Supply Voltage (GMX550),Supply Voltage,r,float,volts,5,30,No,GMX550,,,No
+r_10_stat,gmx550_status (GMX550),gmx550_status,r,uint16_t,dimensionless,N/A,N/A,No,GMX550,,,No
+r_10_spd,GPS Speed (GMX550),GPS Speed,r,float,m/s,N/A,N/A,No,GMX550,,,No
+r_10_cspd,GPS Corrected Speed (GMX550),GPS Corrected Speed,r,float,m/s,N/A,N/A,No,GMX550,,,No
+r_10_acspd,GPS Average Corrected Speed (GMX550),GPS Average Corrected Speed,r,float,m/s,N/A,N/A,No,GMX550,,,No
+r_10_cgspd,GPS Corrected Gust Speed (GMX550),GPS Corrected Gust Speed,r,float,m/s,N/A,N/A,No,GMX550,,,No
+r_10_cgdir,GPS Corrected Gust Direction (GMX550),GPS Corrected Gust Direction,r,uint16_t,degrees,N/A,N/A,No,GMX550,,,No
+r_10_lat,GPS Latitude (GMX550),GPS Latitude,r,float,degrees,N/A,N/A,No,GMX550,,,No
+r_10_lon,GPS Longitude (GMX550),GPS Longitude,r,float,degrees,N/A,N/A,No,GMX550,,,No
+r_10_heig,GPS Height (GMX550),GPS Height,r,float,degrees,N/A,N/A,No,GMX550,,,No
+r_10_head,GPS Heading (GMX550),GPS Heading,r,uint16_t,degrees,N/A,N/A,No,GMX550,,,No
+r_10_stat,GPS Status (GMX550),GPS Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX550,,,No
+r_11_wd,Wind Direction (GMX551),Wind Direction,r,uint16_t,degrees,0,360,No,GMX551,,,Yes
+r_11_ws,Wind Speed (GMX551),Wind Speed,r,float,m/s,0,60,No,GMX551,,,Yes
+r_11_wcd,Wind Corrected Direction (GMX551),Wind Corrected Direction,r,uint16_t,degrees,0,360,No,GMX551,,,No
+r_11_wad,Wind Average Direction (GMX551),Wind Average Direction,r,uint16_t,degrees,0,360,No,GMX551,,,No
+r_11_was,Wind Average Speed (GMX551),Wind Average Speed,r,float,m/s,0,60,No,GMX551,,,No
+r_11_wagd,Wind Average Gust Direction (GMX551),Wind Average Gust Direction,r,uint16_t,degrees,0,360,No,GMX551,,,No
+r_11_wags,Wind Average Gust Speed (GMX551),Wind Average Gust Speed,r,float,m/s,0,60,No,GMX551,,,No
+r_11_wacd,Wind Average Corrected Direction (GMX551),Wind Average Corrected Direction,r,uint16_t,degrees,0,360,No,GMX551,,,No
+r_11_wss,Wind Sensor Status (GMX551),Wind Sensor Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX551,,,No
+r_11_pt,Precipitation Total (GMX551),Precipitation Total,r,float,mm,N/A,N/A,No,GMX551,,,Yes
+r_11_pi,Precipitation Intensity (GMX551),Precipitation Intensity,r,float,mm,N/A,N/A,No,GMX551,,,No
+r_11_pss,Precipitation Sensor Status (GMX551),Precipitation Sensor Status,r,bool,dimensionless,N/A,N/A,No,GMX551,,,Yes
+r_11_cmp,Compass (GMX551),Compass,r,uint16_t,degrees,N/A,N/A,No,GMX551,,,No
+r_11_pres,Pressure (GMX551),Barometric Pressure,r,float,hPa,300,1250,No,GMX551,,,Yes
+r_11_psl,Pressure Sea Level (GMX551),Pressure at Sea Level,r,float,hPa,300,1250,No,GMX551,,,No
+r_11_ps,Pressure Station (GMX551),Pressure Station,r,float,hPa,300,1250,No,GMX551,,,No
+r_11_hr,Relative Humidity (GMX551),Relative Humidity,r,uint8_t,%,0,100,No,GMX551,,,Yes
+r_11_tmp,Temperature (GMX551),Temperature,r,float,celsius,-40,70,No,GMX551,,,Yes
+r_11_dp,Dew Point (GMX551),Dew Point,r,float,degrees,N/A,N/A,No,GMX551,,,No
+r_11_ha,Absolute Humidity (GMX551),Absolute Humidity,r,float,g/m3,0,100,No,GMX551,,,No
+r_11_sr,Solar Radiation (GMX551),Solar Radiation,r,uint16_t,W/m2,0,1600,No,GMX551,,,Yes
+r_11_sh,Sunshine Hours (GMX551),Sunshine Hours,r,float,hours,N/A,N/A,No,GMX551,,,No
+r_11_wc,Wind Chill (GMX551),Wind Chill,r,float,celsius,N/A,N/A,No,GMX551,,,No
+r_11_hi,Heat Index (GMX551),Heat Index,r,float,celsius,N/A,N/A,No,GMX551,,,No
+r_11_ad,Air Density (GMX551),Air Density,r,float,Kg/m3,N/A,N/A,No,GMX551,,,No
+r_11_tmpb,Temperature Bulb (GMX551),Temperature Bulb,r,float,celsius,N/A,N/A,No,GMX551,,,No
+r_11_hs,Hour Sunrise (GMX551),Hour Sunrise,r,uint16_t,hours,N/A,N/A,No,GMX551,,,No
+r_11_ms,Minute Sunrise (GMX551),Minute Sunrise,r,uint16_t,minutes,N/A,N/A,No,GMX551,,,No
+r_11_hn,Hour Noon (GMX551),Hour Noon,r,uint16_t,hours,N/A,N/A,No,GMX551,,,No
+r_11_mn,Minute Noon (GMX551),Minute Noon,r,uint16_t,minutes,N/A,N/A,No,GMX551,,,No
+r_11_hs,Hour Sunset (GMX551),Hour Sunset,r,uint16_t,hours,N/A,N/A,No,GMX551,,,No
+r_11_ms,Minute Sunset (GMX551),Minute Sunset,r,uint16_t,minutes,N/A,N/A,No,GMX551,,,No
+r_11_azi,Sun Position Azimut (GMX551),Sun Position Azimut,r,float,degrees,N/A,N/A,No,GMX551,,,No
+r_11_spa,Sun Position Altitude (GMX551),Sun Position Altitude,r,float,degrees,N/A,N/A,No,GMX551,,,No
+r_11_tch,Twilight Civil Hour (GMX551),Twilight Civil Hour,r,uint16_t,hours,N/A,N/A,No,GMX551,,,No
+r_11_tcm,Twilight Civil Minute (GMX551),Twilight Civil Minute,r,uint16_t,minutes,N/A,N/A,No,GMX551,,,No
+r_11_tnh,Twilight Nautical Hour (GMX551),Twilight Nautical Hour,r,uint16_t,hours,N/A,N/A,No,GMX551,,,No
+r_11_tnm,Twilight Nautical Minute (GMX551),Twilight Nautical Minute,r,uint16_t,minutes,N/A,N/A,No,GMX551,,,No
+r_11_tah,Twilight Astronomical Hour (GMX551),Twilight Astronomical Hour,r,uint16_t,hours,N/A,N/A,No,GMX551,,,No
+r_11_tam,Twilight Astronomical Minute (GMX551),Twilight Astronomical Minute,r,uint16_t,minutes,N/A,N/A,No,GMX551,,,No
+r_11_x,X Tilt (GMX551),X Tilt,r,int8_t,degrees,N/A,N/A,No,GMX551,,,No
+r_11_y,Y Tilt (GMX551),Y Tilt,r,int8_t,degrees,N/A,N/A,No,GMX551,,,No
+r_11_z,Z Orient (GMX551),Z Orient,r,int8_t,degrees,N/A,N/A,No,GMX551,,,No
+r_11_ts,Timestamp (GMX551),Timestamp,r,uint32_t,seconds,N/A,N/A,No,GMX551,,,No
+r_11_volt,Supply Voltage (GMX551),Supply Voltage,r,float,volts,5,30,No,GMX551,,,No
+r_11_stat,gmx551_status (GMX551),gmx551_status,r,uint16_t,dimensionless,N/A,N/A,No,GMX551,,,No
+r_11_spd,GPS Speed (GMX551),GPS Speed,r,float,m/s,N/A,N/A,No,GMX551,,,No
+r_11_cspd,GPS Corrected Speed (GMX551),GPS Corrected Speed,r,float,m/s,N/A,N/A,No,GMX551,,,No
+r_11_acspd,GPS Average Corrected Speed (GMX551),GPS Average Corrected Speed,r,float,m/s,N/A,N/A,No,GMX551,,,No
+r_11_cgspd,GPS Corrected Gust Speed (GMX551),GPS Corrected Gust Speed,r,float,m/s,N/A,N/A,No,GMX551,,,No
+r_11_cgdir,GPS Corrected Gust Direction (GMX551),GPS Corrected Gust Direction,r,uint16_t,degrees,N/A,N/A,No,GMX551,,,No
+r_11_lat,GPS Latitude (GMX551),GPS Latitude,r,float,degrees,N/A,N/A,No,GMX551,,,No
+r_11_lon,GPS Longitude (GMX551),GPS Longitude,r,float,degrees,N/A,N/A,No,GMX551,,,No
+r_11_heig,GPS Height (GMX551),GPS Height,r,float,degrees,N/A,N/A,No,GMX551,,,No
+r_11_head,GPS Heading (GMX551),GPS Heading,r,uint16_t,degrees,N/A,N/A,No,GMX551,,,No
+r_11_stat,GPS Status (GMX551),GPS Status,r,uint16_t,dimensionless,N/A,N/A,No,GMX551,,,No
+r_12_rad,Solar Radiation (Datasol MET2),Solar Radiation,r,uint16_t,W/m2,0,1400,No,MET2,,,Yes
+r_12_rad1,Semicell Radiation One (Datasol MET2),Semicell Radiation One,r,uint16_t,W/m2,0,1400,No,MET2,,,No
+r_12_rad2,Semicell Radiation Two (Datasol MET2),Semicell Radiation Two,r,uint16_t,W/m2,0,1400,No,MET2,,,No
+r_12_tenv,Temperature (Datasol MET2),Temperature of the environment,r,float,celsius,-20,100,No,MET2,,,No
+r_12_tpan,Temperature of the panel (Datasol MET2),Temperature of the panel,r,float,celsius,-20,100,No,MET2,,,Yes
+r_12_psh,Peak Sun Hours (Datasol MET2),Peak Sun Hours,r,float,hours,N/A,N/A,No,MET2,,,No
+r_12_cn,Cleaning Notice (Datasol MET2),Cleaning Notice,r,uint16_t,dimensionless,N/A,N/A,No,MET2,,,No
+r_12_ws,Wind Speed (Datasol MET2),Wind Speed,r,float,m/s,0,200,No,MET2,,,No
+r_13_tmp,Temperature (OPTOD),Temperature,r,float,celsius,-10,60,No,OPTOD,,,Yes
+r_13_oxsat,Oxygen Saturation (OPTOD),Oxygen Saturation percentage,r,float,%,0,200,No,OPTOD,,,Yes
+r_13_oxmpl,Dissolved Oxygen (OPTOD),Dissolved Oxygen in milligrams per liter,r,float,mg/L,0,20,No,OPTOD,,,No
+r_13_oxppm,Dissolved Oxygen (OPTOD),Dissolved Oxygen in PPM,r,float,ppm,0,20,No,OPTOD,,,No
+r_14_tmp,Temperature (PHEHT),Temperature,r,float,celsius,0,50,No,PHEHT,,,Yes
+r_14_ph,PH (PHEHT),PH,r,float,pH,0,14,No,PHEHT,,,Yes
+r_14_volt,PH (PHEHT),PH in millivolts,r,float,millivolts,N/A,N/A,No,PHEHT,,,No
+r_14_redox,Redox (PHEHT),Redox,r,float,millivolts,-1000,1000,No,PHEHT,,,Yes
+r_15_tmp,Temperature (C4E),Water Temperature,r,float,celsius,0,50,No,C4E,,,Yes
+r_15_cond,Conductivity (C4E),Conductivity,r,float,µS/cm,0,2000,No,C4E,,,Yes
+r_15_sal,Salinity (C4E),Salinity,r,float,ppt,5,60,No,C4E,,,Yes
+r_15_ds,Dissolved Solids (C4E),Dissolved Solids,r,float,ppm,0,133000,No,C4E,,,Yes
+r_16_tmp,Temperature (CTZN),Water Temperature,r,float,celsius,0,50,No,CTZN,,,Yes
+r_16_cond,Conductivity (CTZN),Conductivity,r,float,mS/cm,0,100,No,CTZN,,,Yes
+r_16_sal,Salinity (CTZN),Salinity,r,float,ppt,5,60,No,CTZN,,,Yes
+r_16_cnc,Conductivity not compensated (CTZN),Conductivity not compensated,r,float,mS/cm,0,100,No,CTZN,,,No
+r_17_tmp,Temperature (NTU),Water Temperature,r,float,celsius,0,50,No,NTU,,,Yes
+r_17_tntu,Turbidity (NTU),Turbidity in NTU,r,float,NTU,0,4000,No,NTU,,,Yes
+r_17_tmgl,Turbidity (NTU),Turbidity in mgl,r,float,mg/L,0,4500,No,NTU,,,No
+r_18_tmp,Temperature (MES5),Water Temperature,r,float,celsius,-5,60,No,MES5,,,Yes
+r_18_s,Sludge (MES5),Sludge,r,float,%,0,100,No,MES5,,,Yes
+r_18_ss,Suspended_Solids (MES5),Suspended_Solids,r,float,g/L,0,50,No,MES5,,,Yes
+r_18_tfau,Turbidity in FAU (MES5),Turbidity in FAU,r,float,FAU,0,4000,No,MES5,,,No
+r_19_tmp,Temperature (SAC),Temperature,r,float,celsius,0,50,No,SAC,,,Yes
+r_19_sac,SAC (SAC),"Spectral Absorption Coefficient SAC254, based on absorbance at 254 and 530nm",r,float,m-1,0,750,No,SAC,,,No
+r_19_cod,COD (SAC),Chemical Oxygen Demand (COD) equivalent,r,float,mg/L,0,1300,No,SAC,,,Yes
+r_19_bod,BOD (SAC),Biological Oxygen Demand (BOD) equivalent,r,float,mg/L,0,350,No,SAC,,,Yes
+r_19_toc,TOC (SAC),Total Organic Carbon (TOC) equivalent,r,float,mg/L,0,500,No,SAC,,,Yes
+r_19_uvab,UV Absorbance (SAC),UV Absorbance,r,float,[],N/A,N/A,No,SAC,,,No
+r_19_grab,GR Absorbance (SAC),GR Absorbance,r,float,[],N/A,N/A,No,SAC,,,No
+r_19_tfau,Turbidity  (SAC),Turbidity of the fluid based on absorbance at 530 nm of formazine aqueous suspension,r,float,FAU,0,500,No,SAC,,,No
+r_19_uvtr,UV Transmittance (SAC),UV Transmittance,r,float,[],N/A,N/A,No,SAC,,,No
+r_19_grtr,GR Transmittance (SAC),GR Transmittance,r,float,[],N/A,N/A,No,SAC,,,No
+r_20_stag,Stage (Vegapuls C21),"The stage reference is the reference level the sensor will use to calculate the stage level during operation. To have a coherent stage level, the stage reference must be set once the sensor is installed. It can be done either with or without liquid.
+If done with liquid, the stage reference will be set to the height or level of liquid at the moment it is set. When set without liquid, the stage will be set to 0.",r,float,meters,N/A,N/A,No,C21,,,No
+r_20_dist,Distance (Vegapuls C21),Distance readed by the sensor depending of the stage reference.,r,float,meters,0,15,No,C21,,,No
+r_20_tmp,Temperature (Vegapuls C21),Atmospheric Temperature,r,float,celsius,-40,80,No,C21,,,No
+r_20_rel,Reliability (Vegapuls C21),Reliability,r,float,dB,N/A,N/A,No,C21,,,No
+r_20_stat,Status (Vegapuls C21),Status,r,float,dimensionless,N/A,N/A,No,C21,,,No
+r_21_laf,LAF (NLS2),LAF,r,float,dB,25,136,No,NLS2,,,No
+r_21_las,LAS (NLS2),LAS,r,float,dB,25,136,No,NLS2,,,No
+r_21_lai,LAI (NLS2),LAI,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbf,LBF (NLS2),LBF,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbs,LBS (NLS2),LBS,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbi,LBI (NLS2),LBI,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcf,LCF (NLS2),LCF,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcs,LCS (NLS2),LCS,r,float,dB,25,136,No,NLS2,,,No
+r_21_lci,LCI (NLS2),LCI,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzf,LZF (NLS2),LZF,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzs,LZS (NLS2),LZS,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzi,LZI (NLS2),LZI,r,float,dB,25,136,No,NLS2,,,No
+r_21_lafsd,LAFSD (NLS2),LAFSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lassd,LASSD (NLS2),LASSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_laisd,LAISD (NLS2),LAISD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbfsd,LBFSD (NLS2),LBFSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbssd,LBSSD (NLS2),LBSSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbisd,LBISD (NLS2),LBISD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcfsd,LCFSD (NLS2),LCFSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcssd,LCSSD (NLS2),LCSSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcisd,LCISD (NLS2),LCISD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzfsd,LZFSD (NLS2),LZFSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzssd,LZSSD (NLS2),LZSSD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzisd,LZISD (NLS2),LZISD,r,float,dB,25,136,No,NLS2,,,No
+r_21_lasel,LASEL (NLS2),LASEL,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbsel,LBSEL (NLS2),LBSEL,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcsel,LCSEL (NLS2),LCSEL,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzsel,LZSEL (NLS2),LZSEL,r,float,dB,25,136,No,NLS2,,,No
+r_21_lae,LAE (NLS2),LAE,r,float,dimensionless,N/A,N/A,No,NLS2,,,No
+r_21_lbe,LBE (NLS2),LBE,r,float,dimensionless,N/A,N/A,No,NLS2,,,No
+r_21_lce,LCE (NLS2),LCE,r,float,dimensionless,N/A,N/A,No,NLS2,,,No
+r_21_lze,LZE (NLS2),LZE,r,float,dimensionless,N/A,N/A,No,NLS2,,,No
+r_21_lafmax,LAF max (NLS2),LAF max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lasmax,LAS max (NLS2),LAS max,r,float,dB,25,136,No,NLS2,,,No
+r_21_laimax,LAI max (NLS2),LAI max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbfmax,LBF max (NLS2),LBF max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbsmax,LBS max (NLS2),LBS max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbimax,LBI max (NLS2),LBI max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcfmax,LCF max (NLS2),LCF max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcsmax,LCS max (NLS2),LCS max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcimax,LCI max (NLS2),LCI max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzfmax,LZF max (NLS2),LZF max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzsmax,LZS max (NLS2),LZS max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzimax,LZI max (NLS2),LZI max,r,float,dB,25,136,No,NLS2,,,No
+r_21_lafmin,LAF min (NLS2),LAF min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lasmin,LAS min (NLS2),LAS min,r,float,dB,25,136,No,NLS2,,,No
+r_21_laimin,LAI min (NLS2),LAI min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbfmin,LBF min (NLS2),LBF min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbsmin,LBS min (NLS2),LBS min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbimin,LBI min (NLS2),LBI min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcfmin,LCF min (NLS2),LCF min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcsmin,LCS min (NLS2),LCS min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcimin,LCI min (NLS2),LCI min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzfmin,LZF min (NLS2),LZF min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzsmin,LZS min (NLS2),LZS min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzimin,LZI min (NLS2),LZI min,r,float,dB,25,136,No,NLS2,,,No
+r_21_lapk,LA peak (NLS2),LA peak,r,float,dB,25,136,No,NLS2,,,No
+r_21_lbpk,LB peak (NLS2),LB peak,r,float,dB,25,136,No,NLS2,,,No
+r_21_lcpk,LC peak (NLS2),LC peak,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzpk,LZ peak (NLS2),LZ peak,r,float,dB,25,136,No,NLS2,,,No
+r_21_laeq,LA eq (NLS2),LA eq,r,float,dB,25,136,No,NLS2,,,Yes
+r_21_lbeq,LB eq (NLS2),LB eq,r,float,dB,25,136,No,NLS2,,,No
+r_21_lceq,LC eq (NLS2),LC eq,r,float,dB,25,136,No,NLS2,,,No
+r_21_lzeq,LZ eq (NLS2),LZ eq,r,float,dB,25,136,No,NLS2,,,No
+r_21_l10,L10 (NLS2),L10,r,float,dB,25,136,No,NLS2,NoiseLevelObserved,LA10,No
+r_21_l20,L20 (NLS2),L20,r,float,dB,25,136,No,NLS2,,,No
+r_21_l30,L30 (NLS2),L30,r,float,dB,25,136,No,NLS2,,,No
+r_21_l40,L40 (NLS2),L40,r,float,dB,25,136,No,NLS2,,,No
+r_21_l50,L50 (NLS2),L50,r,float,dB,25,136,No,NLS2,NoiseLevelObserved,LA50,No
+r_21_l60,L60 (NLS2),L60,r,float,dB,25,136,No,NLS2,,,No
+r_21_l70,L70 (NLS2),L70,r,float,dB,25,136,No,NLS2,,,No
+r_21_l80,L80 (NLS2),L80,r,float,dB,25,136,No,NLS2,,,No
+r_21_l90,L90 (NLS2),L90,r,float,dB,25,136,No,NLS2,NoiseLevelObserved,LA90,No
+r_21_l99,L99 (NLS2),L99,r,float,dB,25,136,No,NLS2,NoiseLevelObserved,LA99,No
+r_23_pm1,PM 1 (OPCN3),Particulate matter on the air with diameters that are generally 1 micrometers and smaller.,r,float,µg/m3,0,2000,No,OPCN3,,,Yes
+r_23_pm25,PM 2.5 (OPCN3),Particulate matter on the air with diameters that are generally 2.5 micrometers and smaller.,r,float,µg/m3,0,2000,No,OPCN3,,,Yes
+r_23_pm10,PM 10 (OPCN3),Particulate matter on the air with diameters that are generally 10 micrometers and smaller.,r,float,µg/m3,0,2000,No,OPCN3,,,Yes
+r_23_temp,Internal Temperature (OPCN3),Internal temperature inside the sensor,r,float,celsius,0,125,No,OPCN3,,,Yes
+r_23_hum,Internal Humidity (OPCN3),Internal absolute humidity,r,float,%,0,100,No,OPCN3,,,Yes
+r_23_bin0,Bin 0 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin1,Bin 1 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin2,Bin 2 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin3,Bin 3 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin4,Bin 4 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin5,Bin 5 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin6,Bin 6 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin7,Bin 7 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin8,Bin 8 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin9,Bin 9 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin10,Bin 10 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin11,Bin 11 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin12,Bin 12 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin13,Bin 13 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin14,Bin 14 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin15,Bin 15 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin16,Bin 16 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin17,Bin 17 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin18,Bin 18 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin19,Bin 19 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin20,Bin 20 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin21,Bin 21 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin22,Bin 22 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin23,Bin 23 (OPCN3),Raw count of particles detected in this specific size bin.,r,uint16_t,dimensionless,0,65535,Yes,OPCN3,,,No
+r_23_bin1_tof,Bin 1 ToF (OPCN3),"Average time required for particles to transit the laser beam, in microseconds.",r,uint8_t,µs,0,255,Yes,OPCN3,,,No
+r_23_bin3_tof,Bin 3 ToF (OPCN3),"Average time required for particles to transit the laser beam, in microseconds.",r,uint8_t,µs,0,255,Yes,OPCN3,,,No
+r_23_bin5_tof,Bin 5 ToF (OPCN3),"Average time required for particles to transit the laser beam, in microseconds.",r,uint8_t,µs,0,255,Yes,OPCN3,,,No
+r_23_bin7_tof,Bin 7 ToF (OPCN3),"Average time required for particles to transit the laser beam, in microseconds.",r,uint8_t,µs,0,255,Yes,OPCN3,,,No
+r_23_pc,Period Count (OPCN3),Measure of the histogram's actual sampling period.,r,float,seconds,N/A,N/A,Yes,OPCN3,,,No
+r_23_ls,Laser DAC (OPCN3),Laser Status,r,uint16_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_fs,Fan DAC (OPCN3),Fan Status,r,uint16_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_sfr,Sample Flow Rate (OPCN3),The speed at which the sensor's internal fan draws ambient air through its sensing chamber to measure airborne particles. ,r,float,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_rcg,Reject Count Glitch (OPCN3),"The number of particles detected by the sensor that were excluded from the final concentration calculation, typically due to errors, overlaps, or invalid data during the sampling process",r,uint16_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_rcltof,Reject Count LongTOF (OPCN3),Number of particles rejected because they took too long to pass through the laser beam,r,uint16_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_rcr,Reject Count Ratio (OPCN3),Proportion of particles detected by the sensor that were rejected because they could not be accurately sized or counted,r,uint16_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_rcoor,Reject Count OutOfRange (OPCN3),"Number of particles rejected by the sensor’s onboard algorithm exceeds the expected or allowed limit, often due to high particle concentration (saturation) or flow issues",r,uint16_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_fw,Firmware,Firmware Version of the PM Uart Adapter,r,uint8_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_23_model,Sensor model(OPCN3),Sensor model. N3 o N2,r,uint8_t,dimensionless,N/A,N/A,Yes,OPCN3,,,No
+r_22_tmp,Temperature (MANTA),Water Temperature,r,float,celsius,-5,50,No,MANTA3,,,Yes
+r_22_ph,PH (MANTA),Water PH,r,float,pH,0,14,No,MANTA3,,,Yes
+r_22_orp,ORP (MANTA),Water ORP,r,float,millivolts,-999,999,No,MANTA3,,,Yes
+r_22_turb,Turbidity (MANTA),Turbidity of the fluid,r,float,FNU,0,4000,No,MANTA3,,,Yes
+r_22_trns,Transmissivity (MANTA),Transmissivity,r,float,%,N/A,N/A,No,MANTA3,,,No
+r_22_conc,Dissolved Oxygen Concentration (MANTA),Dissolved Oxygen Concentration,r,float,mg/l,0,50,No,MANTA3,,,No
+r_22_sat,Dissolved Oxygen Saturation (MANTA),Dissolved Oxygen Saturation,r,float,%,0,500,No,MANTA3,,,No
+r_22_cuscm,Specific Conductance of conductivity (MANTA),Specific Conductance of conductivity,r,float,µS/cm,0,5000,No,MANTA3,,,No
+r_22_cmscm,Specific Conductance of conductivity (MANTA),Specific Conductance of conductivity,r,float,mS/cm,0,275,No,MANTA3,,,No
+r_22_sal,Salinity (MANTA),Salinity of the water,r,float,PSU,0,70,No,MANTA3,,,No
+r_22_tds,Total Dissolved Solids (MANTA),Total Dissolved Solids (TDS) in the Water,r,float,g/l,0,65,No,MANTA3,,,No
+r_22_dpt,Depth (MANTA),Depth,r,float,m,0,200,No,MANTA3,,,No
+r_22_vd,Vented Depth (MANTA),Vented Depth,r,float,m,0,10,No,MANTA3,,,No
+r_22_bp,Barometric Pressure (MANTA),Barometric Pressure,r,float,mmHg,400,900,No,MANTA3,,,No
+r_22_tdg,Total Dissolved Gas (MANTA),Total Dissolved Gas (TDG),r,float,mmHg,400,1400,No,MANTA3,,,No
+r_22_cab,Chlorophyll a-blue (MANTA),Chlorophyll a-blue,r,float,µg/l,0,100,No,MANTA3,,,No
+r_22_car,Chlorophyll a- (MANTA),Chlorophyll a-red,r,float,µg/l,0,500,No,MANTA3,,,No
+r_22_rd,Rhodamine Dye (MANTA),Rhodamine Dye,r,float,ppb,0,200,No,MANTA3,,,No
+r_22_phycoc,Phycocyanin (MANTA),Phycocyanin (freshwater BGA),r,float,ppb,0,4500,No,MANTA3,,,No
+r_22_phycoe,Phycoerythrin (MANTA),Phycoerythrin (marine BGA),r,float,ppb,0,700,No,MANTA3,,,No
+r_22_cfdom,CDOM/FDOM (MANTA),CDOM/FDOM,r,float,ppb,0,500,No,MANTA3,,,No
+r_22_ob,Optical Brightener (MANTA),Optical Brightener,r,float,ppb,0,300,No,MANTA3,,,No
+r_22_tryp,Tryptophan (MANTA),Tryptophan,r,float,ppb,0,5000,No,MANTA3,,,No
+r_22_fuor,Fuorescein Dye (MANTA),Fuorescein Dye,r,float,ppb,0,150,No,MANTA3,,,No
+r_22_ptsa,PTSA (MANTA),PTSA,r,float,ppb,0,650,No,MANTA3,,,No
+r_22_roil,Refined Oil (MANTA),Refined Oil,r,float,ppb,0,20,No,MANTA3,,,No
+r_22_coil,Crude Oil (MANTA),Crude Oil,r,float,ppb,0,300,No,MANTA3,,,No
+r_22_amn,Ammonium (MANTA),Concentration of Ammonium in the Water,r,float,mg/l,0,100,No,MANTA3,,,No
+r_22_ntr,Nitrate (MANTA),Concentration of Nitrate in the Water,r,float,mg/l,0,100,No,MANTA3,,,No
+r_22_chl,Chloride (MANTA),Concentration of Cloride in the Water,r,float,mg/l,0,18000,No,MANTA3,,,No
+r_22_sod,Sodium (MANTA),Concentration of Sodium in the Water,r,float,mg/l,0,20000,No,MANTA3,,,No
+r_22_cal,Calcium (MANTA),Concentration of Calcium in the Water,r,float,mg/l,0,40000,No,MANTA3,,,No
+r_22_bro,Bromide (MANTA),Concentration of Bromide in the Water,r,float,mg/l,0,80000,No,MANTA3,,,No
+r_22_photo,Photometric PAR (MANTA),Photometric PAR,r,float,µmol/cm2,N/A,N/A,No,MANTA3,,,No
+r_22_co2,Carbon Dioxide (MANTA),Concentration of Carbon Dioxide(CO2) in the Water,r,float,ppm,0,10000,No,MANTA3,,,No
+r_27_tmp,Temperature (BGT-WSD2),Atmospheric Temperature,r,float,celsius,-20,70,No,WSD2,,,Yes
+r_27_hum,Humidity (BGT-WSD2),Atmospheric Relative Humidity,r,float,%,0,100,No,WSD2,,,Yes
+r_28_rad,Radiation (SQ421,Solar Radiation,r,float,µmol/m2*s,N/A,N/A,No,SQ421,,,Yes
+r_28_volt,Millivolts (SQ421,Millivolts of the sensor readed,r,float,V,N/A,N/A,No,SQ421,,,No
+r_28_radi,Radiation Immersed (SQ421,Radiation value read when sensor is immersed in a fluid,r,float,µmol/m2*s,N/A,N/A,No,SQ421,,,No
+r_29_hum,Humidity (LEAF WETNESS),Relative Humidity,r,float,%,N/A,N/A,No,LEAF-WETNESS,,,Yes
+r_29_tmp,Temperature (LEAF WETNESS),Atmospheric Temperature,r,float,celsius,N/A,N/A,No,LEAF-WETNESS,,,Yes
+r_30_las,LAS (NLSV2),Level A-weighted Slow,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_lasmin,LAS MIN (NLSV2),Level A-weighted Slow MIN value,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_lasmax,LAS MAX (NLSV2),Level A-weighted Slow MAX value,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_laf,LAF (NLSV2),Level A-weighted Fast,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_lafmin,LAF MIN (NLSV2),Level A-weighted Fast MIN value,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_lafmax,LAF MAX (NLSV2),Level A-weighted Fast MAX value,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_lamin,LA min (NLSV2),Level A-weighted MIN value,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_lamax,LA max (NLSV2),Level A-weighted MAX value,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_laeq,LA Eq (NLSV2),Level A-weighted Equivalent,r,float,dBA,40,115,No,NLSV2,NoiseLevelObserved,LAeq,Yes
+r_30_la10,LA10 (NLSV2),Background Noise Level wich exceeded for 10% of a measurement period,r,float,dBA,40,115,No,NLSV2,NoiseLevelObserved,LA10,No
+r_30_la20,LA20 (NLSV2),Background Noise Level wich exceeded for 20% of a measurement period,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_la30,LA30 (NLSV2),Background Noise Level wich exceeded for 30% of a measurement period,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_la40,LA40 (NLSV2),Background Noise Level wich exceeded for 40% of a measurement period,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_la50,LA50 (NLSV2),Background Noise Level wich exceeded for 50% of a measurement period,r,float,dBA,40,115,No,NLSV2,NoiseLevelObserved,LA50,No
+r_30_la60,LA60 (NLSV2),Background Noise Level wich exceeded for 60% of a measurement period,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_la70,LA70 (NLSV2),Background Noise Level wich exceeded for 70% of a measurement period,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_la80,LA80 (NLSV2),Background Noise Level wich exceeded for 80% of a measurement period,r,float,dBA,40,115,No,NLSV2,,,No
+r_30_la90,LA90 (NLSV2),Background Noise Level wich exceeded for 90% of a measurement period,r,float,dBA,40,115,No,NLSV2,NoiseLevelObserved,LA90,No
+r_30_la99,LA99 (NLSV2),Background Noise Level wich exceeded for 99% of a measurement period,r,float,dBA,40,115,No,NLSV2,NoiseLevelObserved,LA99,No
+r_31_ws,Wind Speed (WS3000),Wind Speed,r,float,m/s,0,50,No,WS3000,,,No
+r_31_vd,Vane Direction (WS3000),Vane Direction,r,float,degrees,0,360,No,WS3000,,,No
+r_31_pre,Precipitation (WS3000),Precipitation,r,float,l/m2,N/A,N/A,No,WS3000,,,No
+r_32_msd0,Moisture With Salinity Depth 0 (ENVIROPRO),Moisture With Salinity Depth 0,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd1,Moisture With Salinity Depth 1 (ENVIROPRO),Moisture With Salinity Depth 1,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd2,Moisture With Salinity Depth 2 (ENVIROPRO),Moisture With Salinity Depth 2,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd3,Moisture With Salinity Depth 3 (ENVIROPRO),Moisture With Salinity Depth 3,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd4,Moisture With Salinity Depth 4 (ENVIROPRO),Moisture With Salinity Depth 4,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd5,Moisture With Salinity Depth 5 (ENVIROPRO),Moisture With Salinity Depth 5,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd6,Moisture With Salinity Depth 6 (ENVIROPRO),Moisture With Salinity Depth 6,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_msd7,Moisture With Salinity Depth 7 (ENVIROPRO),Moisture With Salinity Depth 7,r,float,%,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_sd0,Salinity Depth 0 (ENVIROPRO),Salinity Depth 0,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd1,Salinity Depth 1 (ENVIROPRO),Salinity Depth 1,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd2,Salinity Depth 2 (ENVIROPRO),Salinity Depth 2,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd3,Salinity Depth 3 (ENVIROPRO),Salinity Depth 3,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd4,Salinity Depth 4 (ENVIROPRO),Salinity Depth 4,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd5,Salinity Depth 5 (ENVIROPRO),Salinity Depth 5,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd6,Salinity Depth 6 (ENVIROPRO),Salinity Depth 6,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_sd7,Salinity Depth 7 (ENVIROPRO),Salinity Depth 7,r,float,ds/m,N/A,N/A,No,ENVIROPRO,,,No
+r_32_td0,Temperature depth 0 (ENVIROPRO),Temperature depth 0,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td1,Temperature depth 1 (ENVIROPRO),Temperature depth 1,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td2,Temperature depth 2 (ENVIROPRO),Temperature depth 2,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td3,Temperature depth 3 (ENVIROPRO),Temperature depth 3,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td4,Temperature depth 4 (ENVIROPRO),Temperature depth 4,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td5,Temperature depth 5 (ENVIROPRO),Temperature depth 5,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td6,Temperature depth 6 (ENVIROPRO),Temperature depth 6,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_td7,Temperature depth 7 (ENVIROPRO),Temperature depth 7,r,float,celsius,N/A,N/A,No,ENVIROPRO,,,Yes
+r_32_mwosd0,Moisture without salinity depth 0 (ENVIROPRO),Moisture without salinity depth 0,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd1,Moisture without salinity depth 1 (ENVIROPRO),Moisture without salinity depth 1,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd2,Moisture without salinity depth 2 (ENVIROPRO),Moisture without salinity depth 2,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd3,Moisture without salinity depth 3 (ENVIROPRO),Moisture without salinity depth 3,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd4,Moisture without salinity depth 4 (ENVIROPRO),Moisture without salinity depth 4,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd5,Moisture without salinity depth 5 (ENVIROPRO),Moisture without salinity depth 5,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd6,Moisture without salinity depth 6 (ENVIROPRO),Moisture without salinity depth 6,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_32_mwosd7,Moisture without salinity depth 7 (ENVIROPRO),Moisture without salinity depth 7,r,float,%,N/A,N/A,No,ENVIROPRO,,,No
+r_33_td0,Temperature depth 0 (ENVIROPRO_L),Temperature depth 0,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td1,Temperature depth 1 (ENVIROPRO_L),Temperature depth 1,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td2,Temperature depth 2 (ENVIROPRO_L),Temperature depth 2,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td3,Temperature depth 3 (ENVIROPRO_L),Temperature depth 3,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td4,Temperature depth 4 (ENVIROPRO_L),Temperature depth 4,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td5,Temperature depth 5 (ENVIROPRO_L),Temperature depth 5,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td6,Temperature depth 6 (ENVIROPRO_L),Temperature depth 6,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_td7,Temperature depth 7 (ENVIROPRO_L),Temperature depth 7,r,float,celsius,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd0,Moisture without salinity depth 0,Moisture without salinity depth 0,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd1,Moisture without salinity depth 1,Moisture without salinity depth 1,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd2,Moisture without salinity depth 2,Moisture without salinity depth 2,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd3,Moisture without salinity depth 3,Moisture without salinity depth 3,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd4,Moisture without salinity depth 4,Moisture without salinity depth 4,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd5,Moisture without salinity depth 5,Moisture without salinity depth 5,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd6,Moisture without salinity depth 6,Moisture without salinity depth 6,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_33_mwosd7,Moisture without salinity depth 7,Moisture without salinity depth 7,r,float,%,N/A,N/A,No,ENVIROPRO_L,,,No
+r_34_swt,Soil Water Tension (WATERMARK),Soil Water Tension,r,float,centibars,0,255,No,WATERMARK,,,Yes
+r_35_dist,Distance (DENDROMETER),Diameter of the measured item,r,uint32_t,µm,N/A,N/A,No,DENDROMETER,,,Yes
+r_36_rad,Radiation (SP510),Solar Radiation,r,float,W/m2,0,2000,No,SP510,,,Yes
+r_37_hi,Humidity Index (LWS),Humidity Index,r,float,dimensionless,N/A,N/A,No,LWS,,,Yes
+r_41_nh3,NH2 Concentration (CCG10_NH3),Concentration of NH2 in the air,r,uint32_t,ppm,N/A,N/A,No,CCG10_NH3,,,Yes
+r_42_ch4,CH4 Concentration (CCG10_CH4),Concentration of CH4 in the air,r,uint32_t,ppm,N/A,N/A,No,CCG10_CH4,,,Yes
+r_43_tmp,Temperature (SIL411),Water Temperature,r,float,celsius,N/A,N/A,No,SIL411,,,Yes
+r_44_rad,Radiation (SQ100X),Solar Radiation,r,float,µmol/m2*s,N/A,N/A,No,SQ100X,,,Yes
+r_44_volt,Millivolts (SQ100X),Millivolts of the sensor readed,r,float,V,N/A,N/A,No,SQ100X,,,No
+r_44_radi,Radiation Immersed (SQ100X),Radiation Immersed,r,float,µmol/m2*s,N/A,N/A,No,SQ100X,,,No
+r_45_wp,Water Potential (FLORAPULSE),Water Potential,r,float,bar,0,100,No,FLORAPULSE,,,Yes
+r_45_volt,Millivolts (FLORAPULSE),Millivolts of the sensor readed,r,float,mV,N/A,N/A,No,FLORAPULSE,,,Yes
+r_45_tr,Thermoresistance (FLORAPULSE),Thermoresistance,r,float,ohms,N/A,N/A,No,FLORAPULSE,,,Yes
+r_46_tmp,Temperature (CCM05),Atmospheric Temperature,r,float,celsius,-40,85,No,CCM05,,,Yes
+r_46_hum,Humidity (CCM05),Atmospheric Humidity,r,float,%,0,100,No,CCM05,,,Yes
+r_46_pres,Pressure (CCM05),Barometric Pressure,r,float,hPa,300,1100,No,CCM05,,,Yes
+r_46_ws,Wind Speed (CCM05),Wind Speed,r,float,m/s,0,60,No,CCM05,,,Yes
+r_46_wd,Wind Direction (CCM05),Wind Direction,r,float,degrees,0,360,No,CCM05,,,Yes
+r_47_co2,CO2 Concentration (CCG10_C02),Concentration of CO2 in the water,r,uint32_t,ppm,N/A,N/A,No,CCG10_C02,,,Yes
+r_48_type,Device Type (SMP10),Device Type,r,string,dimensionless,N/A,N/A,No,SMP10,,,No
+r_48_mode,Operational Mode (SMP10),Operational Mode,r,string,dimensionless,N/A,N/A,No,SMP10,,,No
+r_48_err,Error Code (SMP10),Error Code,r,uint8_t ,dimensionless,N/A,N/A,No,SMP10,,,No
+r_48_scale,Scale Factor (SMP10),Scale Factor,r,int8_t ,dimensionless,N/A,N/A,No,SMP10,,,No
+r_48_rad,Radiation (SMP10),Solar Radiation,r,float,W/m2,-400,4000,No,SMP10,,,Yes
+r_48_stddv,Standard Deviation (SMP10),Standard Deviation,r,float ,dimensionless,N/A,N/A,No,SMP10,,,No
+r_48_btmp,Body Temperature (SMP10),Body Temperature,r,float,degrees,-40,70,No,SMP10,,,Yes
+r_48_epwr,External Power (SMP10),Voltage to power the sensor detected,r,float,volts,5,30,No,SMP10,,,No
+r_49_tmp,Temperature (NESA TA),Atmospheric Temperature,r,float,celsius,-40,60,No,NESA_TA,,,Yes
+r_50_ws,Wind Speed (THIES),Wind Speed,r,float,m/s,0,85,No,THIES,,,Yes
+r_50_wd,Wind Direction (THIES),Wind Direction,r,uint16_t,degrees,0,360,No,THIES,,,Yes
+r_50_vtmp,Virtual Temperature (THIES),Virtual Temperature,r,float,celsius,-50,80,No,THIES,,,Yes
+r_50_gs,Gust Speed (THIES),Gust Speed,r,float,m/s,0,85,No,THIES,,,No
+r_50_gd,Gust Direction (THIES),Gust Direction,r,uint16_t,degrees,0,360,No,THIES,,,No
+r_50_epwr,External Power (THIES),Voltage to power the sensor detected,r,uint16_t,volts,8,78,No,THIES,,,No
+r_50_fw,Firmware Version (THIES),Firmware Version of the sensor,r,float,dimensionless,N/A,N/A,No,THIES,,,No
+r_50_itmp,Internal Temperature (THIES),Internal Temperature,r,float,celsius,-50,80,No,THIES,,,No
+r_50_sn,Serial Number (THIES),Serial Number,r,string,dimensionless,N/A,N/A,No,THIES,,,No
+r_50_stat,Status (THIES),Status,r,uint8_t ,dimensionless,N/A,N/A,No,THIES,,,No
+r_51_tmp,Temperature (KELLER),Water Temperature,r,float,celsius,0,50,No,KELLER_PR36XW,,,Yes
+r_51_pres,Pressure (KELLER),Water Pressure,r,float ,bar,0,30,No,KELLER_PR36XW,,,Yes
+r_52_msd0,Moisture With Salinity Depth 0 (ENVIROPRO120),Moisture With Salinity Depth 0,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd1,Moisture With Salinity Depth 1 (ENVIROPRO120),Moisture With Salinity Depth 1,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd2,Moisture With Salinity Depth 2 (ENVIROPRO120),Moisture With Salinity Depth 2,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd3,Moisture With Salinity Depth 3 (ENVIROPRO120),Moisture With Salinity Depth 3,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd4,Moisture With Salinity Depth 4 (ENVIROPRO120),Moisture With Salinity Depth 4,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd5,Moisture With Salinity Depth 5 (ENVIROPRO120),Moisture With Salinity Depth 5,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd6,Moisture With Salinity Depth 6 (ENVIROPRO120),Moisture With Salinity Depth 6,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd7,Moisture With Salinity Depth 7 (ENVIROPRO120),Moisture With Salinity Depth 7,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd8,Moisture With Salinity Depth 8 (ENVIROPRO120),Moisture With Salinity Depth 8,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd9,Moisture With Salinity Depth 9 (ENVIROPRO120),Moisture With Salinity Depth 9,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd10,Moisture With Salinity Depth 10 (ENVIROPRO120),Moisture With Salinity Depth 10,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_msd11,Moisture With Salinity Depth 11 (ENVIROPRO120),Moisture With Salinity Depth 11,r,float,%,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_sd0,Salinity Depth 0 (ENVIROPRO120),Salinity Depth 0,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd1,Salinity Depth 1 (ENVIROPRO120),Salinity Depth 1,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd2,Salinity Depth 2 (ENVIROPRO120),Salinity Depth 2,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd3,Salinity Depth 3 (ENVIROPRO120),Salinity Depth 3,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd4,Salinity Depth 4 (ENVIROPRO120),Salinity Depth 4,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd5,Salinity Depth 5 (ENVIROPRO120),Salinity Depth 5,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd6,Salinity Depth 6 (ENVIROPRO120),Salinity Depth 6,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd7,Salinity Depth 7 (ENVIROPRO120),Salinity Depth 7,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd8,Salinity Depth 8 (ENVIROPRO120),Salinity Depth 8,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd9,Salinity Depth 9 (ENVIROPRO120),Salinity Depth 9,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd10,Salinity Depth 10 (ENVIROPRO120),Salinity Depth 10,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_sd11,Salinity Depth 11  (ENVIROPRO120),Salinity Depth 11,r,float,ds/m,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_td0,Temperature depth 0 (ENVIROPRO120),Temperature depth 0,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td1,Temperature depth 1 (ENVIROPRO120),Temperature depth 1,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td2,Temperature depth 2 (ENVIROPRO120),Temperature depth 2,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td3,Temperature depth 3 (ENVIROPRO120),Temperature depth 3,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td4,Temperature depth 4 (ENVIROPRO120),Temperature depth 4,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td5,Temperature depth 5 (ENVIROPRO120),Temperature depth 5,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td6,Temperature depth 6 (ENVIROPRO120),Temperature depth 6,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td7,Temperature depth 7 (ENVIROPRO120),Temperature depth 7,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td8,Temperature depth 8 (ENVIROPRO120),Temperature depth 8,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td9,Temperature depth 9 (ENVIROPRO120),Temperature depth 9,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td10,Temperature depth 10 (ENVIROPRO120),Temperature depth 10,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_td11,Temperature depth 11 (ENVIROPRO120),Temperature depth 11,r,float,celsius,N/A,N/A,No,ENVIROPRO120,,,Yes
+r_52_mwosd0,Moisture without salinity depth 0 (ENVIROPRO120),Moisture without salinity depth 0,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd1,Moisture without salinity depth 1 (ENVIROPRO120),Moisture without salinity depth 1,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd2,Moisture without salinity depth 2 (ENVIROPRO120),Moisture without salinity depth 2,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd3,Moisture without salinity depth 3 (ENVIROPRO120),Moisture without salinity depth 3,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd4,Moisture without salinity depth 4 (ENVIROPRO120),Moisture without salinity depth 4,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd5,Moisture without salinity depth 5 (ENVIROPRO120),Moisture without salinity depth 5,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd6,Moisture without salinity depth 6 (ENVIROPRO120),Moisture without salinity depth 6,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd7,Moisture without salinity depth 7 (ENVIROPRO120),Moisture without salinity depth 7,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd8,Moisture without salinity depth 8 (ENVIROPRO120),Moisture without salinity depth 8,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd9,Moisture without salinity depth 9 (ENVIROPRO120),Moisture without salinity depth 9,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd10,Moisture without salinity depth 10 (ENVIROPRO120),Moisture without salinity depth 10,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_52_mwosd11,Moisture without salinity depth 11 (ENVIROPRO120),Moisture without salinity depth 11,r,float,%,N/A,N/A,No,ENVIROPRO120,,,No
+r_53_no3volt,Nitrate Voltage (NUTRISENS),Nitrate Voltage,r,float,mV,N/A,N/A,No,NUTRISENS,,,Yes
+r_53_kvolt,Potassium Voltage (NUTRISENS),Potassium Voltage,r,float,mV,N/A,N/A,No,NUTRISENS,,,Yes
+r_55_act8_pos,Position (RELAY),Position ON / OFF,r,uint8_t,dimensionless,N/A,N/A,No,ACTUATOR_8_RELAY,,,Yes
+r_56_rad,Solar Radiation (NETSENS),Solar Radiation,r,float,W/m2,0,2000,No,NETSENS_PS0085FF,,,No
+r_57_id,ID (GRATMA),ID,r,uint16_t,dimensionless,N/A,N/A,No,GRATMA,,,No
+r_57_lm,Last Measure (GRATMA),Last Measure,r,float,%,N/A,N/A,No,GRATMA,,,No
+r_58_id,ID (MPPT),ID,r,uint16_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_fw,Firmware Version (MPPT),Firmware Version of the MPPT,r,uint16_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_ser,Serial Number (MPPT),Serial Number,r,string,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_bv,Battery Voltage (MPPT),Voltage Level of the battery connected to MPPT,r,uint16_t,mV,0,100,No,MPPT,,,No
+r_58_bi,Battery Current (MPPT),Current consumption of the battery connected to MPPT,r,int16_t,mA,N/A,N/A,No,MPPT,,,No
+r_58_sv,Solar Voltage (MPPT),Voltage Level of the Solar Panel connected to MPPT,r,uint16_t,mV,N/A,N/A,No,MPPT,,,No
+r_58_sp,Solar Power (MPPT),Power generated by the Solar Panel connected to MPPT,r,uint16_t,W,N/A,N/A,No,MPPT,,,No
+r_58_cs,Charger State (MPPT),"State of operation of the MPPT (0: OFF, 2: Fault, 3: Bulk, 4: Absorption, 5: Float)",r,uint8_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_mode,Working Mode (MPPT),Working Mode of the MPPT,r,uint8_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_or,Off reason (MPPT),Description why a unit is switched off,r,uint16_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_err,Error Code (MPPT),Error Code of the MPPT ,r,uint8_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_load,Load State (MPPT),Load output state (ON/OFF),r,string,dimensionless,N/A,N/A,No,MPPT,,,No
+r_58_lc,Load Current (MPPT),Load current,r,int16_t,mA,N/A,N/A,No,MPPT,,,No
+r_58_y,Yield Total (MPPT),Total power produced (resettable),r,uint16_t,Wh,N/A,N/A,No,MPPT,,,No
+r_58_yt,Yield Today (MPPT),Power produced today,r,uint16_t,Wh,N/A,N/A,No,MPPT,,,No
+r_58_yy,Yield Yesterday (MPPT),Power produced yesterday,r,uint16_t,Wh,N/A,N/A,No,MPPT,,,No
+r_58_pt,Power Today (MPPT),Maximum power today,r,uint16_t,W,N/A,N/A,No,MPPT,,,No
+r_58_py,Power Yesterday (MPPT),Maximum power yesterday,r,uint16_t,W,N/A,N/A,No,MPPT,,,No
+r_58_dc,Day Sequence Number (MPPT),Historical data. A change in this number indicates a new day. This implies that the historical data has changed,r,uint32_t,dimensionless,N/A,N/A,No,MPPT,,,No
+r_59_temp ,Temperature (CC_3001_NVH),Temperature,r,float,celsius,-45,115,No,CC_3001_NVH,,,No
+r_59_speed_x,X axis speed (CC_3001_NVH),X axis speed,r,float,mm/s,0,200,No,CC_3001_NVH,,,No
+r_59_dist_x,X axis displacement (CC_3001_NVH),X axis displacement ,r,uint16_t,µm,0,2000,No,CC_3001_NVH,,,No
+r_59_speed_y,Y axis speed (CC_3001_NVH),Y axis speed,r,float,mm/s,0,200,No,CC_3001_NVH,,,No
+r_59_dist_y,Y axis displacement (CC_3001_NVH),Y axis displacement,r,uint16_t,µm,0,2000,No,CC_3001_NVH,,,No
+r_59_speed_z,Z axis speed (CC_3001_NVH),Z axis speed,r,float,mm/s,0,200,No,CC_3001_NVH,,,No
+r_59_dist_z,Z axis displacement (CC_3001_NVH),Z axis displacement,r,uint16_t,µm,0,2000,No,CC_3001_NVH,,,No
+r_62_sol_rad,Solar radiation (SQ522),Solar Radiation,r,float,µmol/m2*s,N/A,N/A,No,SQ522,,,No
+r_62_det_mv,Detector millivolts (SQ522),Detector millivolts,r,float,mV,N/A,N/A,No,SQ522,,,No
+r_62_imm_rad,Immersed radiation (SQ522),Immersed radiation ,r,float,µmol/m2*s,N/A,N/A,No,SQ522,,,No
+r_63_pre,Precipitation (PRONAMIC),"Precipitation readed 0,5 mm per tic",r,float,l/m²,N/A,N/A,No,PRONAMIC,,,No
+r_64_temp,Internal temperature (Unilux),Internal Temperature,r,float,celsius,N/A,N/A,No,UNILUX,,,No
+r_64_conc,Concentration (Unilux),Concentration,r,float,µg/l,N/A,N/A,No,UNILUX,,,No
+r_65_x,X axis tilt angle (CC_DIP_N1),X axis tilt angle,r,float,degrees,-180,180,No,CC_DIP_N1,,,No
+r_65_y,Y axis tilt angle (CC_DIP_N1),Y axis tilt angle,r,float,degrees,-90,90,No,CC_DIP_N1,,,No
+r_65_z,Z axis tilt angle (CC_DIP_N1),Z axis tilt angle,r,float,degrees,-180,180,No,CC_DIP_N1,,,No
+r_65_x_dev,X axis deviation value (CC_DIP_N1),X axis deviation value,r,float,degrees,-180,180,No,CC_DIP_N1,,,No
+r_65_y_dev,Y axis deviation value (CC_DIP_N1),Y axis deviation value,r,float,degrees,90,90,No,CC_DIP_N1,,,No
+r_65_z_dev,Z axis deviation value (CC_DIP_N1),Z axis deviation value,r,float,degrees,-180,180,No,CC_DIP_N1,,,No
+r_66_temp,Temperature (CC_YB100),Sensor output temperature,r,float,celsius,-55,125,No,CC_YB100,,,No
+r_66_def,Deformation value (CC_YB100),The physical quantity value,r,float,µStrain,N/A,N/A,No,CC_YB100,,,No
+r_66_freq,Frequency (CC_YB100),Sensor output frecuency,r,float,Hz,400,7000,No,CC_YB100,,,No
+r_66_res,Resistance (CC_YB100),The resistance value of the vibrating wire sensor is used to determine whether the sensor is working properly,r,float,ohms,N/A,N/A,No,CC_YB100,,,No
+r_66_t_cal_a,Temperature calibration factor A (CC_YB100),Temperature calibration factor A,r,float,celsius,N/A,N/A,No,CC_YB100,,,No
+r_66_t_cal_b,Temperature calibration factor B (CC_YB100),Temperature calibration factor B,r,float,celsius,N/A,N/A,No,CC_YB100,,,No
+r_66_p_coef,Calibration pressure coeficient (CC_YB100),Sensor calibration coefficient used to calculate the corresponding physical quantity of the sensor,r,double,dimensionless,N/A,N/A,No,CC_YB100,,,No
+r_66_t_coef,Calibration tensile coeficient (CC_YB100),Sensor calibration coefficient used to calculate the corresponding physical quantity of the sensor,r,double,dimensionless,N/A,N/A,No,CC_YB100,,,No
+r_66_t_corr,Temperature correction factor (CC_YB100),Sensor temperature compensation coefficient used to for temperature compensation when the sensor itself calculates physical quantities,r,double,dimensionless,N/A,N/A,No,CC_YB100,,,No
+r_66_i_f,Initial frequency (CC_YB100),Initial value of the recorded frequency used to calculate the corresponding physical quantity,r,float,Hz,400,7000,No,CC_YB100,,,No
+r_66_i_t,Initial temperature (CC_YB100),Referenced temperature provided by the sensor during temperature calibration,r,float,celsius,N/A,N/A,No,CC_YB100,,,No
+r_67_conc,Concentration (CC_W12_2),COD Concentration in water,r,float ,mg/l,0,1500,No,CC_W12_2,,,No
+r_67_id,Sensor Id (CC_W12_2),Sensor Identificator,r,uint8_t,dimensionless,N/A,N/A,No,CC_W12_2,,,No
+r_67_sf,Scale Factor (CC_W12_2),Scale Factor,r,uint16_t,dimensionless,N/A,N/A,No,CC_W12_2,,,No
+r_67_inc,Increment (CC_W12_2),Increment,r,uint16_t,dimensionless,N/A,N/A,No,CC_W12_2,,,No
+r_67_ci,Clean Interval (CC_W12_2),Clean Interval in minutes,r,uint16_t,minutes,N/A,N/A,No,CC_W12_2,,,No
+r_67_rlp,Range Low Point (CC_W12_2),Lowest Measure point,r,uint16_t,mg/l,0,1500,No,CC_W12_2,,,No
+r_67_rhp,Range High Point (CC_W12_2),Highest Mesaure point,r,uint16_t,mg/l,0,1500,No,CC_W12_2,,,No
+r_67_res,Resolution (CC_W12_2),Resolution,r,uint16_t,dimensionless,N/A,N/A,Yes,CC_W12_2,,,No
+r_68_amonium, Amonium (XYLEM_VARION),Ammonium nitrogen concentration in water,r,float,mg/L,0.0,2000.0,No,XYLEM_VARION,,,No
+r_68_nitrate,Nitrate (XYLEM_VARION),Nitrate nitrogen concentration in water,r,float,mg/L,0.0,1000.0,No,XYLEM_VARION,,,No
+r_68_potassium,Potassium (XYLEM_VARION), Potassium concentration in water (compensation electrode),r,float,mg/L,0.0,1000.0,No,XYLEM_VARION,,,No
+r_68_temp,Temperature(XYLEM_VARION),Water temperature for automatic compensation,r,float,celsius,-5.0,60.0,No,XYLEM_VARION,,,No
+

@@ -1,0 +1,17 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery level,Battery level,r,uint8_t,%,0,100,No,Device.Health,DeviceHealthObserved,batteryLevel
+r_temperature,Temperature,Ambient temperature,r,float,Celsius,-20,60,No,Sensors.Air Quality,AirQualityObserved,temperature
+r_humidity_rel,Relative humidity,Relative humidity,r,float,%,0,100,No,Sensors.Air Quality,AirQualityObserved,relativeHumidity
+r_pir,PIR,PIR motion detection status,r,bool,dimensionless,0,1,No,Sensors.Air Quality,AirQualityObserved,pir
+r_light_level,Light level,Ambient light level (6 discrete levels; sensor measures up to 60000 lux internally but reports the level index),r,uint8_t,dimensionless,0,5,No,Sensors.Air Quality,AirQualityObserved,lightLevel
+r_co2,CO2 concentration,CO2 concentration,r,uint16_t,ppm,400,2000,No,Sensors.Air Quality,AirQualityObserved,co2
+r_tvoc,TVOC,Total volatile organic compounds concentration,r,uint16_t,ug/m3,0,2000,No,Sensors.Air Quality,AirQualityObserved,volatileOrganicCompoundsTotal
+r_tvoc_iaq,TVOC IAQ rating,Indoor air quality rating derived from TVOC (1.00 Very Good to 5.00 Bad),r,float,dimensionless,1,5,No,Sensors.Air Quality,AirQualityObserved,tvocIaqRating
+r_pressure_atm,Atmospheric pressure,Atmospheric pressure,r,float,hPa,260,1260,No,Sensors.Air Quality,AirQualityObserved,pressure
+r_hcho,HCHO,Formaldehyde concentration,r,float,mg/m3,0,1.25,No,Sensors.Air Quality,AirQualityObserved,hcho
+r_pm2_5,PM2.5,PM2.5 mass concentration,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,pm25
+r_pm10,PM10,PM10 mass concentration,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,pm10
+r_buzzer_status,Buzzer status,Buzzer on/off status,r,bool,dimensionless,0,1,No,Device.Management,Device,buzzerStatus

@@ -1,0 +1,463 @@
+/* ======================================================================
+   BASE VARIABLES (Based on Vuetify light theme colors provided)
+   ====================================================================== */
+:root {
+    /* Primary Colors (Purple/Violet)
+       ⚠ These are the shipped DEFAULTS only. A white-label deployment overrides --kc-primary,
+       --kc-bg-color-start and --kc-bg-color-mid from its brand colours: login/template.ftl emits a
+       <style id="kc-brand"> AFTER this file, fed by the brand* keys in theme.properties (which
+       bootstrap-keycloak-backend.sh substitutes from KC_BRAND_*). Anything tinted with the brand
+       MUST go through one of these variables or it stays purple on every other instance. */
+    --kc-primary: #7D00F4;
+    --kc-primary-dark: #5D00B8;
+    /* pale brand tint (dropdown hover) + 25%-alpha brand hairline (locale pill border) */
+    --kc-primary-tint: #f3e9ff;
+    --kc-primary-faint: rgba(125, 0, 244, 0.25);
+
+    /* Background Gradient Colors (Deep Purple/Violet Spectrum) */
+    --kc-bg-color-start: #150d5f;
+    --kc-bg-color-mid: #5800c0;
+    --kc-bg-color-end: var(--kc-primary);
+
+    /* Card/Surface Colors */
+    --kc-surface: #FFFFFF;
+    --kc-on-surface: #2F2B3D;
+    /* Dark text */
+    --kc-input-bg: #F5F5F5;
+
+    /* Border/Outline Colors */
+    --kc-border-color: #CCCCCC;
+    --kc-focus-color: var(--kc-primary);
+
+    /* Spacing */
+    --kc-spacing-md: 10px;
+    --kc-spacing-lg: 30px;
+
+    /* Was a hand-picked 12-stop purple ramp, which cannot be re-tinted. Now the same three stops
+       the mobile app paints on its access screen (indigo → secondary 48% → primary), so the login
+       page and the app agree. With the defaults above the result is visually the same ramp. */
+    --kc-background-gradient: linear-gradient(to right,
+            var(--kc-bg-color-start) 0%,
+            var(--kc-bg-color-mid) 48%,
+            var(--kc-bg-color-end) 100%
+    );
+}
+
+/* Shades derived from the brand colour, so a white-label instance that only sets --kc-primary does
+   not keep a hard-coded purple hover state. Guarded: on a browser without color-mix() the literal
+   defaults above stay in effect (a hover fill and a pale tint — a minor, localised regression). */
+@supports (color: color-mix(in srgb, red, blue)) {
+    :root {
+        --kc-primary-dark: color-mix(in srgb, var(--kc-primary) 75%, #000);
+        --kc-primary-tint: color-mix(in srgb, var(--kc-primary) 8%, #fff);
+        --kc-primary-faint: color-mix(in srgb, var(--kc-primary) 25%, transparent);
+    }
+}
+
+.login-pf,
+.login-pf body,
+.login-pf .container {
+    background: none !important;
+    padding: 0 !important;
+}
+
+/* ======================================================================
+   GLOBAL / LAYOUT STYLES (Apply to Keycloak body wrappers)
+   ====================================================================== */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    color: var(--kc-primary);
+    height: 100vh;
+    overflow: hidden;
+    background-image: var(--kc-background-gradient) !important;
+    background-size: cover;
+}
+
+/* Keycloak's outermost wrapper - Applies the full gradient background */
+#kc-outer-wrapper {
+    background: none !important;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+}
+
+/* Keycloak's inner container - Used to center the logo and position the form area */
+#kc-container {
+    display: flex;
+    justify-content: flex-end;
+    /* Push content to the right edge */
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    position: relative;
+}
+
+/* --------------------------------------------------
+   HEADER / SUBTITLE STYLES (Targeting elements inside the card)
+   -------------------------------------------------- */
+/* NOTE: In the provided FTL, the h2/p are rendered inside the form section, 
+   so the VCard styling rules below will cover them. */
+
+/* --------------------------------------------------
+   CENTERED LOGO STYLES
+   -------------------------------------------------- */
+
+.kc-parallax-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.1s linear;
+}
+
+/* Gradient layer (depth 1), oversized by the parallax travel so it never uncovers a white edge. */
+.kc-parallax-layer.kc-bg-layer {
+    top: -24px;
+    left: -24px;
+    width: calc(100% + 48px);
+    height: calc(100% + 48px);
+    background-image: var(--kc-background-gradient);
+}
+
+.login-logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    opacity: 0.8;
+    z-index: 5;
+}
+
+.centered-image {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* --------------------------------------------------
+   FLOATING CARD STYLES
+   -------------------------------------------------- */
+.login-card.floating {
+    position: absolute;
+    top: 50%;
+    right: 40px;
+    margin-right: 80px;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 370px;
+
+    @media screen and (max-width: 990px) and (min-width: 530px) {
+        /* Define your breakpoint here */
+        position: fixed;
+        margin-left: 35px;
+        right: 35px;
+        max-width: 370px;
+        width: auto;
+
+    }
+
+    @media screen and (max-width: 530px) {
+        /* Define your breakpoint here */
+        position: fixed;
+        left: 5%;
+        right: 5%;
+        max-width: 370px;
+        min-width: 205px;
+        width: auto;
+        margin-right: 65px;
+
+    }
+}
+
+/* The equivalent of VCard */
+.v-card {
+    background-color: var(--kc-surface);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: var(--kc-spacing-lg);
+    max-width: 370px;
+    /* Optional, but safe */
+    /* 40px padding */
+    width: 100%;
+}
+
+/* --------------------------------------------------
+   TITLE AND SUBTITLE
+   -------------------------------------------------- */
+.v-card h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--kc-on-surface);
+    margin-bottom: 5px;
+}
+
+.v-card p {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* --------------------------------------------------
+   FORM / INPUT STYLES (Vuetify VTextField/VInput Emulation)
+   -------------------------------------------------- */
+.v-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+}
+
+.v-col-12 {
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 15px;
+}
+
+
+.v-col-10 {
+    flex: 0 0 83.3333333333%;
+    max-width: 83.3333333333%;
+}
+
+
+.offset-1 {
+    margin-left: 8.3333333333%;
+}
+
+.app-text-field {
+    width: 100%;
+}
+
+.v-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--kc-on-surface);
+    margin-bottom: 4px;
+    font-family: inherit !important;
+
+}
+
+/* VInput / VField Emulation */
+.v-field {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #666;
+    display: flex;
+    align-items: stretch;
+    min-height: 40px;
+    background: none;
+}
+
+/* Password show/hide button: fill the full field height, flush to the rounded
+   right edge, icon centered (overrides the inline height:100%/width/padding). */
+.v-field button[data-password-toggle] {
+    align-self: stretch;
+    height: auto !important;
+    width: 46px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    border-radius: 0 10px 10px 0;
+    cursor: pointer;
+}
+
+.v-field__input.form-control {
+    flex: 1;
+    padding: 12px;
+    height: auto !important;
+    border: none;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+.v-field:focus-within {
+    border-color: var(--kc-primary) !important;
+    box-shadow: 0 0 0 1px var(--kc-primary) !important;
+    outline: none !important;
+}
+
+/* --------------------------------------------------
+   LINKS AND BUTTONS
+   -------------------------------------------------- */
+.login-form__psw {
+    margin-bottom: 15px;
+    font-family: inherit !important;
+    text-align: left !important;
+
+}
+
+.login-form__psw a {
+    font-size: 0.75rem;
+    color: var(--kc-primary);
+    text-decoration: none;
+    margin-left: 0 !important;
+}
+
+.login-form__psw a:hover {
+    text-decoration: underline;
+}
+
+/* V-Btn Emulation */
+.v-btn {
+    background-color: var(--kc-primary);
+    color: #FFF;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+    height: 48px;
+    text-transform: uppercase;
+}
+
+.v-btn:hover {
+    background-color: var(--kc-primary-dark);
+}
+
+/* Outline variant — used by the "Register" button below "Sign in" */
+.kc-register-btn {
+    background-color: #FFF;
+    color: var(--kc-primary);
+    border: 1px solid var(--kc-primary);
+    box-sizing: border-box;
+    margin-top: 15px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kc-register-btn:hover {
+    background-color: var(--kc-primary);
+    color: #FFF;
+}
+
+/* --------------------------------------------------
+   INFO CARD (DISCOVER THE PLATFORM)
+   -------------------------------------------------- */
+.login-infocard-wrapper {
+    /* Aumentamos el margen superior para crear más espacio entre las dos tarjetas */
+    margin-top: 30px !important;
+    width: 100%;
+}
+
+.login-infocard-wrapper .v-card {
+    /* margin-top: 45px !important; */
+    background-color: var(--kc-surface);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.login-infocard {
+    text-align: center;
+}
+
+.login-infocard p {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: #666;
+    margin: 0 0 5px 0;
+}
+
+.login-infocard a {
+    text-transform: uppercase;
+    color: var(--kc-primary);
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: underline;
+    font-size: 0.75rem;
+}
+
+/* --------------------------------------------------
+   KEYCLOAK MESSAGE STYLES
+   -------------------------------------------------- */
+#kc-info-message {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.kcInputErrorMessageClass {
+    display: block;
+    color: #EA5455;
+    font-size: 0.75rem;
+    margin-top: 5px;
+    text-align: left;
+}
+
+.v-field.password-field-group {
+
+    height: auto !important;
+}
+
+#kc-locale {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 100;
+    font-family: Poppins, sans-serif;
+}
+#kc-locale #kc-current-locale-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--kc-primary-faint);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--kc-primary);
+    cursor: pointer;
+}
+#kc-locale #kc-current-locale-link::after {
+    content: "\25BE"; /* ▾ */
+    font-size: 12px;
+}
+#kc-locale ul#language-switch1 {
+    display: none;
+    position: absolute;
+    right: 0;
+    margin-top: 6px;
+    min-width: 180px;
+    list-style: none;
+    padding: 6px 0;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+#kc-locale-dropdown:focus-within ul#language-switch1,
+#kc-locale #kc-current-locale-link[aria-expanded="true"] + ul#language-switch1 {
+    display: block;
+}
+#kc-locale ul#language-switch1 li a {
+    display: block;
+    padding: 9px 16px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+}
+#kc-locale ul#language-switch1 li a:hover {
+    background: var(--kc-primary-tint);
+    color: var(--kc-primary);
+}

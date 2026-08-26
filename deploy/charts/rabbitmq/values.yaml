@@ -1,0 +1,48 @@
+# =====================================================================
+# RabbitMQ chart — default values
+# Requires the RabbitMQ Cluster Operator installed in the cluster:
+#   https://www.rabbitmq.com/kubernetes/operator/install-operator
+# =====================================================================
+
+cluster:
+  name: pid-gijon
+  replicas: 1
+
+  persistence:
+    storage: "8Gi"
+    storageClass: ""
+
+  # Uncomment to set resource requests/limits.
+  resources: {}
+  # requests:
+  #   cpu: 1000m
+  #   memory: 2Gi
+  # limits:
+  #   cpu: 1000m
+  #   memory: 2Gi
+
+  config:
+    # Consumer timeout in ms (90 minutes).
+    consumerTimeout: 5400000
+    # "none" disables the localhost-only restriction for the guest user.
+    loopbackUsers: "none"
+
+  additionalPlugins:
+    - rabbitmq_amqp1_0
+
+# Virtual host created for the platform. Must match pid-gijon-core's RABBITMQ_VHOST.
+vhost:
+  enabled: true
+  name: pid-gijon
+
+user:
+  enabled: true
+  tags:
+    - administrator
+
+credentials:
+  # IMPORTANT: do NOT commit these values. Provide them at deploy time via
+  # --set, an external secret manager, or scripts/generate-env.sh.
+  username: ""
+  password: ""
+  secretName: "rabbitmq-pid-gijon-credentials"

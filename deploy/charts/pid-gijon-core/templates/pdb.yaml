@@ -1,0 +1,20 @@
+{{- range $name, $component := .Values.components }}
+{{- if and $component.enabled $component.pdb $component.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}-pdb
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+spec:
+  minAvailable: {{ $component.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+{{- end }}
+{{- end }}

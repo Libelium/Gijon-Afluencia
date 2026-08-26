@@ -1,0 +1,115 @@
+apiVersion: stackgres.io/v1
+kind: SGScript
+metadata:
+  name: {{ .Values.cluster.script.name }}
+  labels:
+    {{- include "stackgres.labels" . | nindent 4 }}
+spec:
+  continueOnError: false
+  scripts:
+    - name: 002-init-realtime-role
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 002-init-realtime-role.sql
+    - name: 003-init-platformdb-role
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 003-init-platformdb-role.sql
+    - name: 004-init-keycloak-role
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 004-init-keycloak-role.sql
+    - name: 006-init-platformdb-db
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 006-init-platformdb-db.sql
+    - name: 007-init-realtime-db
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 007-init-realtime-db.sql
+    - name: 008-init-keycloak-db
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 008-init-keycloak-db.sql
+    - name: 010-timescale-extensions
+      retryOnError: true
+      database: platform_ts
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 010-timescale-extensions.sql
+    - name: 014-init-realtime-extensions
+      retryOnError: true
+      database: realtime
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 014-init-realtime-extensions.sql
+    - name: 015-init-platformdb-extension
+      retryOnError: true
+      database: platformdb
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 015-init-platformdb-extension.sql
+    {{- if .Values.initScripts.passwords.airflow }}
+    - name: 016-init-airflow-role
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 016-init-airflow-role.sql
+    - name: 017-create-airflow-db
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 017-create-airflow-db.sql
+    {{- if .Values.initScripts.passwords.geoportal }}
+    {{- end }}
+    - name: 018-init-geoportal-role
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 018-init-geoportal-role.sql
+    - name: 019-init-geoportal-db
+      retryOnError: true
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 019-init-geoportal-db.sql
+    - name: 020-init-geoportal-extensions
+      retryOnError: true
+      database: geoportal
+      version: 1
+      scriptFrom:
+        secretKeyRef:
+          name: {{ .Values.initScripts.secretName }}
+          key: 020-init-geoportal-extensions.sql
+    {{- end }}

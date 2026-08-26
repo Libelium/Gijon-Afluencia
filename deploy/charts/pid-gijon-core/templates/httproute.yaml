@@ -1,0 +1,77 @@
+{{/*
+Standard Kubernetes Gateway API routes (gateway.networking.k8s.io).
+
+This chart does NOT create Gateways or GatewayClasses — those belong to the
+cluster's gateway controller (Traefik, Istio, NGINX Gateway, Envoy Gateway,
+Cilium, ...), which the infrastructure team provisions beforehand. Each enabled
+route here attaches to a pre-existing Gateway by name + namespace.
+
+Per route fields (see values.yaml / docs/04-gateway-api.md):
+  route.gateway          parent Gateway name (e.g. public-gateway)
+  route.gatewayNamespace namespace of the parent Gateway (default .Values.gateway.namespace)
+  route.hostnames        list of hostnames (HTTPRoute only)
+  route.backendPort      Service port to route to (defaults to the first service port)
+  route.sectionName      parent Gateway listener section (TCPRoute only)
+  httpsOnly              attach to the HTTPS listener section (.Values.gateway.httpsSectionName)
+  gatewayKind            "HTTP" (default) or "TCP"
+*/}}
+{{- range $name, $component := .Values.components }}
+{{- if and $.Values.gateway.enabled $component.gatewayAPI $component.gatewayAPI.enabled }}
+{{- $gwNamespace := $.Values.gateway.namespace | default "gateway" }}
+{{- $httpsSection := $.Values.gateway.httpsSectionName | default "https" }}
+{{- range $idx, $routeConfig := $component.gatewayAPI.routes }}
+---
+{{- if eq ($routeConfig.gatewayKind | default "HTTP") "TCP" }}
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: {{ printf "%s-tcp-route-%d" (include "pid-gijon-core.kebabcase" $name) $idx | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+spec:
+  parentRefs:
+  - name: {{ required "gatewayAPI route needs route.gateway" $routeConfig.route.gateway }}
+    namespace: {{ $routeConfig.route.gatewayNamespace | default $gwNamespace }}
+    {{- if $routeConfig.route.sectionName }}
+    sectionName: {{ $routeConfig.route.sectionName }}
+    {{- end }}
+  rules:
+  - backendRefs:
+    - name: {{ include "pid-gijon-core.kebabcase" $name }}
+      port: {{ $routeConfig.route.backendPort | default (first $component.service).port }}
+{{- else }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ printf "%s-http-route-%d" (include "pid-gijon-core.kebabcase" $name) $idx | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+spec:
+  parentRefs:
+  - name: {{ required "gatewayAPI route needs route.gateway" $routeConfig.route.gateway }}
+    namespace: {{ $routeConfig.route.gatewayNamespace | default $gwNamespace }}
+    {{- if $routeConfig.httpsOnly }}
+    sectionName: {{ $httpsSection }}
+    {{- else if $routeConfig.sectionName }}
+    sectionName: {{ $routeConfig.sectionName }}
+    {{- end }}
+  {{- with $routeConfig.route.hostnames }}
+  hostnames:
+  {{- range . }}
+  - {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  rules:
+  - matches:
+    - path:
+        type: {{ $routeConfig.pathType | default "PathPrefix" }}
+        value: {{ $routeConfig.path | default "/" | quote }}
+    backendRefs:
+    - name: {{ include "pid-gijon-core.kebabcase" $name }}
+      port: {{ $routeConfig.route.backendPort | default (first $component.service).port }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

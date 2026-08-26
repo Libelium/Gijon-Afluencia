@@ -1,0 +1,6315 @@
+{
+  "info": {
+    "_postman_id": "c82d9c29-c119-5063-0910-9d9004481b72",
+    "name": "PID Gijón — API de gestión",
+    "description": "API de lectura y gestión de la Plataforma de Integración de Datos del Ayuntamiento de Gijón.\n\nEl dato **no entra por aquí**: la ingesta va por el núcleo FIWARE (sensor → IoT Agent → Orion-LD → RabbitMQ → consumidores). Esta API cubre entidades, dispositivos, series temporales, cuadros de mando, alarmas y preferencias.\n\nAutenticación por *bearer token* JWT emitido por Keycloak (`POST /V1/login`). Las rutas bajo `/internal` no llevan token: solo son accesibles desde la red interna y las consume el gateway APISIX para validar permiso de escritura por tenant.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Alarmas",
+      "item": [
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/actions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "actions"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Channels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/actions/channels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "actions",
+                "channels"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/actions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "actions"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Deletes all the actions of an alarm and call store to create the new ones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/actions/bulkUpdateCreate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "actions",
+                "bulkUpdateCreate"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/actions/{action}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "actions",
+                "{action}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "action",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "This method is used to update all the conditions on the report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions/bulkUpdateCreate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions",
+                "bulkUpdateCreate"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions/{condition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions",
+                "{condition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "condition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions/{condition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions",
+                "{condition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "condition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions/{condition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions",
+                "{condition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "condition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/conditions/{condition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "conditions",
+                "{condition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "condition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions/bulkUpdateCreate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions",
+                "bulkUpdateCreate"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions/{inactivityCondition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions",
+                "{inactivityCondition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "inactivityCondition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions/{inactivityCondition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions",
+                "{inactivityCondition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "inactivityCondition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions/{inactivityCondition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions",
+                "{inactivityCondition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "inactivityCondition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarmId}/inactivityConditions/{inactivityCondition}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarmId}",
+                "inactivityConditions",
+                "{inactivityCondition}"
+              ],
+              "variable": [
+                {
+                  "key": "alarmId",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "inactivityCondition",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarm}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarm}"
+              ],
+              "variable": [
+                {
+                  "key": "alarm",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarm}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarm}"
+              ],
+              "variable": [
+                {
+                  "key": "alarm",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarm}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarm}"
+              ],
+              "variable": [
+                {
+                  "key": "alarm",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/alarms/{alarm}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "alarms",
+                "{alarm}"
+              ],
+              "variable": [
+                {
+                  "key": "alarm",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/phone/verify/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "phone",
+                "verify",
+                "confirm"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/phone/verify/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "phone",
+                "verify",
+                "send"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Config",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/telegram/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "telegram",
+                "config"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Connect",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/telegram/connect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "telegram",
+                "connect"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Disconnect",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/telegram/disconnect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "telegram",
+                "disconnect"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/telegram/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "telegram",
+                "status"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auditoría",
+      "item": [
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/logs/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "logs",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Autenticación y usuario",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout user (Revoke the token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "logout"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/password/change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "password",
+                "change"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/password/change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "password",
+                "change"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/password/recovery",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "password",
+                "recovery"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Kc Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "refresh-token"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "To take detail of current user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user/{user}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user",
+                "{user}"
+              ],
+              "variable": [
+                {
+                  "key": "user",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PUT/PATCH Full or partial udpate over the resource",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user/{user}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user",
+                "{user}"
+              ],
+              "variable": [
+                {
+                  "key": "user",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT/PATCH Full or partial udpate over the resource",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user/{user}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user",
+                "{user}"
+              ],
+              "variable": [
+                {
+                  "key": "user",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ayuda",
+      "item": [
+        {
+          "name": "Download Documentation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/documentation/{lang}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "documentation",
+                "{lang}"
+              ],
+              "variable": [
+                {
+                  "key": "lang",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Changelog Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/help/changelog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "help",
+                "changelog"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Changelog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/help/changelog/{version}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "help",
+                "changelog",
+                "{version}"
+              ],
+              "variable": [
+                {
+                  "key": "version",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Returns the Markdown content of an existing file from the 'documentacion' folder in the S3 bucket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/help/content/{folder}/{filepath}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "help",
+                "content",
+                "{folder}",
+                "{filepath}"
+              ],
+              "variable": [
+                {
+                  "key": "folder",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "filepath",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Returns an image file linked from the documentation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/help/image/{folder}/{filepath}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "help",
+                "image",
+                "{folder}",
+                "{filepath}"
+              ],
+              "variable": [
+                {
+                  "key": "folder",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "filepath",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate the index for the given folder of the documentation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/help/index",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "help",
+                "index"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Search Content",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/help/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "help",
+                "search"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cuadros de mando",
+      "item": [
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Index Custom",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/custom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "custom"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create one or many custom dashboards from a single JSON document.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/from-json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "from-json"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Image",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/images/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "images",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Set Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/images/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "images",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Index",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Template Config",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/setTemplateConfig/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "setTemplateConfig",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Template Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/setTemplateDevices/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "setTemplateDevices",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Template Entities",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/setTemplateEntities/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "setTemplateEntities",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Template Groups",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/setTemplateGroups/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "setTemplateGroups",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Template Regulation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/setTemplateRegulation/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "setTemplateRegulation",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Template Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/setTemplateType/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "setTemplateType",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Uploaded Images",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/uploaded-images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "uploaded-images"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Uploaded Image",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/uploaded-images/{filename}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "uploaded-images",
+                "{filename}"
+              ],
+              "variable": [
+                {
+                  "key": "filename",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/{dashboard}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "{dashboard}"
+              ],
+              "variable": [
+                {
+                  "key": "dashboard",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/{dashboard}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "{dashboard}"
+              ],
+              "variable": [
+                {
+                  "key": "dashboard",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/{dashboard}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "{dashboard}"
+              ],
+              "variable": [
+                {
+                  "key": "dashboard",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/{dashboard}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "{dashboard}"
+              ],
+              "variable": [
+                {
+                  "key": "dashboard",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a custom dashboard's panels, series and layout from a single JSON",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/dashboards/{id}/from-json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "dashboards",
+                "{id}",
+                "from-json"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Image",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels/images/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels",
+                "images",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Set Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels/images/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels",
+                "images",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels/{panel}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels",
+                "{panel}"
+              ],
+              "variable": [
+                {
+                  "key": "panel",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels/{panel}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels",
+                "{panel}"
+              ],
+              "variable": [
+                {
+                  "key": "panel",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels/{panel}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels",
+                "{panel}"
+              ],
+              "variable": [
+                {
+                  "key": "panel",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/panels/{panel}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "panels",
+                "{panel}"
+              ],
+              "variable": [
+                {
+                  "key": "panel",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/public/dashboards/{slug}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "public",
+                "dashboards",
+                "{slug}"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Store a newly created resource in storage.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/regulations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "regulations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Display a listing of the resource. Paginated.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/regulations/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "regulations",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove the specified resource from storage.",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/regulations/{regulation}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "regulations",
+                "{regulation}"
+              ],
+              "variable": [
+                {
+                  "key": "regulation",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Display the specified resource.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/regulations/{regulation}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "regulations",
+                "{regulation}"
+              ],
+              "variable": [
+                {
+                  "key": "regulation",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update the specified resource in storage.",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/regulations/{regulation}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "regulations",
+                "{regulation}"
+              ],
+              "variable": [
+                {
+                  "key": "regulation",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update the specified resource in storage.",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/regulations/{regulation}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "regulations",
+                "{regulation}"
+              ],
+              "variable": [
+                {
+                  "key": "regulation",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "tags"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Modifications In Batch",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "tags"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/tags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "tags"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/tags/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "tags",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/tags/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "tags",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dispositivos",
+      "item": [
+        {
+          "name": "Devices By Entity Ids",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/devices/by-entity-ids",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "devices",
+                "by-entity-ids"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/devices/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "devices",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/devices/{device}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "devices",
+                "{device}"
+              ],
+              "variable": [
+                {
+                  "key": "device",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/devices/{id}/entities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "devices",
+                "{id}",
+                "entities"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Entidades",
+      "item": [
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Entities For Alarm Action By Ids",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/by-ids-for-alarm-action",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "by-ids-for-alarm-action"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate Entities With Commands",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/commands/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "commands",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate Datamodels",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/datamodels/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "datamodels",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all entities associated with a specific device.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/fromDevice/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "fromDevice",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entity Id Tenant Scope",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/getEntityIdTenantScope",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "getEntityIdTenantScope"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Data Timestamps",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/getLastDataTimestamps",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "getLastDataTimestamps"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate Healthchecks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/healthchecks/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "healthchecks",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "list"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Commands Bulk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/sendCommands",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "sendCommands"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create entities from a JSON/GeoJSON file upload.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/storeFromFile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "storeFromFile"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Data To Entity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/uploadData",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "uploadData"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/{entity}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "{entity}"
+              ],
+              "variable": [
+                {
+                  "key": "entity",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Updates or inserts properties for a given entity and handles related side effects.",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/{id}/properties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "{id}",
+                "properties"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletes a specific property from an entity.",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/{id}/properties/{attributeName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "{id}",
+                "properties",
+                "{attributeName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "attributeName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Send Commands",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/entities/{id}/sendCommands",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "entities",
+                "{id}",
+                "sendCommands"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "FIWARE: tenants y scopes",
+      "item": [
+        {
+          "name": "Get Scopes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareScopes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareScopes"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant Scope Services",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareScopes/services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareScopes",
+                "services"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant Scope Services Organization",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareScopes/services/{organizationId}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareScopes",
+                "services",
+                "{organizationId}"
+              ],
+              "variable": [
+                {
+                  "key": "organizationId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scope Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareScopes/{id}/tenant",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareScopes",
+                "{id}",
+                "tenant"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareTenants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareTenants"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareTenants/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareTenants",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Tenant Scopes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/fiwareTenants/{id}/scopes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "fiwareTenants",
+                "{id}",
+                "scopes"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Grupos de entidades",
+      "item": [
+        {
+          "name": "Store a newly created resource in storage.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove the specified resource from storage.",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups/{group}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups",
+                "{group}"
+              ],
+              "variable": [
+                {
+                  "key": "group",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Display the specified resource.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups/{group}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups",
+                "{group}"
+              ],
+              "variable": [
+                {
+                  "key": "group",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update the specified resource in storage.",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups/{group}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups",
+                "{group}"
+              ],
+              "variable": [
+                {
+                  "key": "group",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update the specified resource in storage.",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups/{group}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups",
+                "{group}"
+              ],
+              "variable": [
+                {
+                  "key": "group",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change an AssetIntervention's status and cascade it to all its member incidents (their status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/groups/{id}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "groups",
+                "{id}",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Interno (gateway)",
+      "item": [
+        {
+          "name": "Internal endpoint for APISIX to check FIWARE write permissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/internal/check-fiware-write-permission",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "internal",
+                "check-fiware-write-permission"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Internal endpoint for APISIX to check write permissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/internal/check-write-permission",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "internal",
+                "check-write-permission"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones",
+      "item": [
+        {
+          "name": "Get Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "notifications"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Count Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/notifications/countData",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "notifications",
+                "countData"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/notifications/deleteNotification/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "notifications",
+                "deleteNotification",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Read All",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/notifications/readAll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "notifications",
+                "readAll"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/notifications/updateRead/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "notifications",
+                "updateRead",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pantalla de inicio",
+      "item": [
+        {
+          "name": "Index",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atomically create a default layout with widgets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/create-default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "create-default"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{home_layout}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{home_layout}"
+              ],
+              "variable": [
+                {
+                  "key": "home_layout",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{home_layout}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{home_layout}"
+              ],
+              "variable": [
+                {
+                  "key": "home_layout",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{layoutId}",
+                "widgets"
+              ],
+              "variable": [
+                {
+                  "key": "layoutId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{layoutId}",
+                "widgets",
+                "batch"
+              ],
+              "variable": [
+                {
+                  "key": "layoutId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Store",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{layoutId}",
+                "widgets",
+                "batch"
+              ],
+              "variable": [
+                {
+                  "key": "layoutId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Batch Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{layoutId}",
+                "widgets",
+                "batch"
+              ],
+              "variable": [
+                {
+                  "key": "layoutId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-layouts",
+                "{layoutId}",
+                "widgets",
+                "paginate"
+              ],
+              "variable": [
+                {
+                  "key": "layoutId",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-widgets/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-widgets",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/home-widgets/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "home-widgets",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Preferencias",
+      "item": [
+        {
+          "name": "Get Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/organizations/{id}/preferences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "organizations",
+                "{id}",
+                "preferences"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Preference",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/organizations/{id}/preferences/{preferenceName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "organizations",
+                "{id}",
+                "preferences",
+                "{preferenceName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Preference",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/organizations/{id}/preferences/{preferenceName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "organizations",
+                "{id}",
+                "preferences",
+                "{preferenceName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update Preference",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/organizations/{id}/preferences/{preferenceName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "organizations",
+                "{id}",
+                "preferences",
+                "{preferenceName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/organizations/{organization}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "organizations",
+                "{organization}"
+              ],
+              "variable": [
+                {
+                  "key": "organization",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Preferences By Organization Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/publicOrganizations/{id}/preferences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "publicOrganizations",
+                "{id}",
+                "preferences"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Preference By Organization Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/publicOrganizations/{id}/preferences/{preferenceName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "publicOrganizations",
+                "{id}",
+                "preferences",
+                "{preferenceName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Serve an image-bearing organization preference (a theme icon) as an actual image.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/publicOrganizations/{id}/preferences/{preferenceName}/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "publicOrganizations",
+                "{id}",
+                "preferences",
+                "{preferenceName}",
+                "image"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user/{id}/preferences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user",
+                "{id}",
+                "preferences"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Preference",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user/{id}/preferences/{preferenceName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user",
+                "{id}",
+                "preferences",
+                "{preferenceName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update Preference",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/user/{id}/preferences/{preferenceName}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "user",
+                "{id}",
+                "preferences",
+                "{preferenceName}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                },
+                {
+                  "key": "preferenceName",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Series temporales",
+      "item": [
+        {
+          "name": "Unauthenticated timeseries request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/public/timeseries/{slug}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "public",
+                "timeseries",
+                "{slug}"
+              ],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Authenticated timeseries request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/timeseries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "timeseries"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Último dato",
+      "item": [
+        {
+          "name": "Get Device Data Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/devices/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "devices",
+                "{id}"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entities Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Measures Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities/measures/available",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities",
+                "measures",
+                "available"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Data Time Entities Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities/sorted",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities",
+                "sorted"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Data Time Entities Request Bulk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities/sortedBulk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities",
+                "sortedBulk"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Data Request Bulk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities/timeLastData",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities",
+                "timeLastData"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Data Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities/timeLastData/{urn}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities",
+                "timeLastData",
+                "{urn}"
+              ],
+              "variable": [
+                {
+                  "key": "urn",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entity Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/realtime/entities/{urn}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "realtime",
+                "entities",
+                "{urn}"
+              ],
+              "variable": [
+                {
+                  "key": "urn",
+                  "value": "",
+                  "description": ""
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+.venv/
+.python-version
+
+# Entorno y secretos
+.env
+.env.local
+.env_dev
+.env_prod
+
+# Salidas del pipeline
+predictions_per_zone/
+predictions_forecast/
+
+# Datos (nunca en git - ver README)
+*.csv
+
+# Modelos entrenados (viven en S3/Minio, no en git)
+crowd_xgboost_model.json
+*.columns.json
+*.spread.json
+*.pkl
+
+# Caches locales (viven en S3/Minio, no en git - ver weather.py/events_registry.py)
+weather_cache.json
+events_registry.csv
+
+# Documentos generados (los entregables se publican fuera del repo)
+*.docx
+*.pdf
+
+# Tests y herramientas
+.pytest_cache/
+
+# IDE / SO
+.vscode/
+.idea/
+*.swp
+.DS_Store

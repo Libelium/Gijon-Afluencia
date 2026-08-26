@@ -1,0 +1,17 @@
+services:
+  queues-consumer:
+    container_name: queues-consumer
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+      additional_contexts:
+        pylibs: ../pylibs
+    volumes:
+      - '.:/code'
+      - '../pylibs:/pylibs'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 20430:8001
+      - 20431:8000

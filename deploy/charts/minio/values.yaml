@@ -1,0 +1,78 @@
+# =====================================================================
+# MinIO chart — default values
+# Wrapper around the official chart: https://charts.min.io/
+#   helm repo add minio https://charts.min.io/
+#
+# Install the wrapper (run `helm dependency update charts/minio` first), or use
+# the official chart directly:
+#   helm install minio minio/minio -f <these values under the top-level keys> -n <ns>
+# =====================================================================
+
+minio:
+  mode: standalone
+  replicas: 1
+  drivesPerNode: 1
+
+  # IMPORTANT: do NOT commit these values. Provide them at deploy time via
+  # --set, an external secret manager, or scripts/generate-env.sh.
+  rootUser: "minioroot"
+  rootPassword: ""
+
+  users:
+    - accessKey: ""
+      secretKey: ""
+      policy: readwrite
+
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+  service:
+    type: ClusterIP
+    port: 9000
+
+  consoleService:
+    type: ClusterIP
+    port: 9001
+
+  ingress:
+    enabled: false
+
+  consoleIngress:
+    enabled: false
+
+  resources: null
+
+  securityContext:
+    enabled: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch"
+
+  buckets:
+    - name: pid-gijon-storage
+      policy: none
+      purge: false
+
+  environment:
+    MINIO_BROWSER: "on"
+    MINIO_REGION: "eu-west-1"
+    MINIO_PROMETHEUS_AUTH_TYPE: "public"
+
+  DeploymentUpdate:
+    type: RollingUpdate
+    maxUnavailable: 0
+    maxSurge: 100%
+
+  podDisruptionBudget:
+    enabled: false
+
+  tls:
+    enabled: false
+
+  metrics:
+    serviceMonitor:
+      enabled: false

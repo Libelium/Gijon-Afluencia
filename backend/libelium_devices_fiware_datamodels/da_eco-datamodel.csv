@@ -1,0 +1,7 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery voltage,Battery voltage,r,float,V,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_latitude,Latitude,GPS latitude,r,float,degrees,0,90,No,Sensors.Animal Tracker,AnimalTrackerObserved,latitude
+r_longitude,Longitude,GPS longitude,r,float,degrees,-99.99999,0,No,Sensors.Animal Tracker,AnimalTrackerObserved,longitude

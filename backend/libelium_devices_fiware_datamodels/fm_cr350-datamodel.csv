@@ -1,0 +1,6 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_fuel_moisture,Fuel moisture,Dead fuel moisture content measured by the CS506 sensor (10-hour fuel stick, TDR technology),r,float,%,0,70,No,Sensors.Fuel Moisture,FuelMoistureObserved,fuelMoisture
+r_temperature,Temperature,Temperature measured by the Campbell Scientific 107 probe,r,float,Celsius,-35,50,No,Sensors.Fuel Moisture,FuelMoistureObserved,temperature

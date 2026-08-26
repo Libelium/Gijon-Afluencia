@@ -1,0 +1,22 @@
+export default {
+  'templates.heatmap.statTotal': 'Total del periodo',
+  'templates.heatmap.statTotalHint': 'Suma de las lecturas agregadas del periodo',
+  'templates.heatmap.statPeakHour': 'Hora punta',
+  'templates.heatmap.statPeakDay': 'Día punta',
+  'templates.heatmap.statPeakHint': 'Media de {value}',
+  'templates.heatmap.statTopPoint': 'Punto más transitado',
+  'templates.heatmap.statTopPointHint': 'Total de {value}',
+  'templates.heatmap.weekTitle': 'Intensidad por día y hora',
+  'templates.heatmap.weekSubtitle': 'Últimos {days} días del rango, media por hora',
+  'templates.heatmap.weekSubtitleOne': 'Último día del rango, media por hora',
+  'templates.heatmap.hourMean': 'Media por hora',
+  'templates.heatmap.mapTitle': 'Concentración por punto',
+  'templates.heatmap.mapSubtitle': 'Círculo proporcional al total del periodo',
+  'templates.heatmap.calendarTitle': 'Calendario del periodo',
+  'templates.heatmap.calendarSubtitle': 'Total diario',
+  'templates.heatmap.calendarFootnote':
+    'El valor de cada día es la suma de sus lecturas agregadas: la medida cuenta personas por intervalo, no es un contador acumulado.',
+  'templates.heatmap.dayTotal': 'Total del día',
+  'templates.heatmap.mapWithoutLocation': '{count} puntos sin ubicación no se muestran en el mapa',
+  'templates.heatmap.emptyMap': 'Ningún punto de medida tiene ubicación',
+} as const

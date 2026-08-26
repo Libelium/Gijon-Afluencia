@@ -1,0 +1,42 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,v2 naming
+r_fw,Firmware version,Device Firmware Version,r,string,dimensionless,N/A,N/A,No,firmware_version
+rw_slp_m,Time sleep min,Minutes to sleep between measurements,rw,uint8_t,minutes,0,20,No,time_sleep_min
+rw_slp_s,Time sleep secs,Seconds to sleep between measurements,rw,uint8_t,seconds,0,59,No,time_sleep_secs
+rw_ka_h,Time keep alive,Time to send keep-alive,rw,uint8_t,hours,0,24,No,time_keep_alive
+rw_nm,Night mode,Night-mode working mode (0: Disabled / 1: Light / 2: Deep),rw,uint8_t,dimensionless,0,5,No,nm_mode
+rw_nm_start,Night mode start hour (UTC),Night Mode Start Hour (UTC),rw,uint8_t,hours,0,23,No,nm_start_hour
+rw_nm_dur_h,Night mode duration,Night Mode Duration,rw,uint8_t,hours,1,12,No,nm_duration
+rw_nm_slp_m,Night mode time to sleep,Night Mode Sleep Time,rw,uint8_t,minutes,1,20,No,nm_sleep_time
+rw_rdr_st,Radar range start,Radar Range Start,rw,uint8_t,centimeters,20,40,Yes,radar_range_start
+rw_rdr_len,Radar range length,Radar Range Length,rw,uint8_t,centimeters,40,100,Yes,radar_range_length
+rw_rdr_th,Radar threshold,Radar Threshold,rw,uint16_t,db,1000,5000,Yes,radar_threshold
+rw_rpt_days,Sync report frequency,Days to send sync report,rw,uint8_t,days,0,30,No,
+rw_nm_ka_h,Night mode keep alive hours,Night mode keep alive hours,rw,uint8_t,hours,0,8,No,nm_keep_alive
+rw_lw_join,LoRaWAN join mode,LoRaWAN join mode,rw,uint8_t,dimensionless,0,1,No,lora_join_mode
+rw_lw_adr,LoRaWAN ADR,LoRaWAN Adaptative Data Rate,rw,uint8_t,dimensionless,0,1,No,lora_adr
+rw_lw_ts_hh,LoRaWAN timestamp hours,LoRaWAN timestamp hours,rw,uint8_t,hours,0,23,No,timestamp_hh
+rw_lw_ts_mm,LoRaWAN timestamp minutes,LoRaWAN timestamp minutes,rw,uint8_t,minutes,0,60,No,timestamp_mm
+rw_lw_adr,LoRaWAN ADR,LoRaWAN ADR flag,r,bool,dimensionless,N/A,N/A,No,adr
+r_snd_ctr,Send counter,Sending loop number,r,uint8_t,dimensionless,0,255,No,sequence_number
+r_bat,Battery voltage,Battery voltage,r,float,millivolts,N/A,N/A,No,battery
+r_bat_warn,Low battery warning,Low battery voltage warning,r,bool,dimensionless,N/A,N/A,No,batteryLow
+r_prk_slot,Slot status,Parking slot status,r,uint8_t,dimensionless,N/A,N/A,No,occupied
+r_rdr_error,Radar error,Radar sensor error (if occurs),r,uint8_t,dimensionless,N/A,N/A,No,radar_error
+r_rdr_refs,Radar reflections,Radar sensor number of reflections,r,uint8_t,dimensionless,N/A,N/A,No,n_reflections
+r_rdr_amp,Radar amplitude,Radar sensor signal amplitude,r,float,db,N/A,N/A,No,a1
+r_rdr_dis,Radar distance,Radar sensor distance measured,r,uint8_t,centimeters,N/A,N/A,No,d1
+r_rdr_sens,Radar sensitivity,Radar sensor sensitivity (x100000),r,uint16_t,dimensionless,N/A,N/A,No,normalization_factor
+r_doubt,Doubtful detection,Doubtful detection flag,r,bool,dimensionless,N/A,N/A,No,doubt
+r_temp,Internal temperature,Device internal temperature in celsius,r,float,celsius degrees,N/A,N/A,No,temperature
+r_rst_cause,Last reset cause,Device last reset cause,r,uint8_t,dimensionless,N/A,N/A,No,reset_bitmap
+r_lw_ack,LoRaWAN ACK,LoRaWAN acknowledgment (0) or NACK (1),r,uint8_t,dimensionless,0,1,No,ack
+r_lw_frame,LoRaWAN frame type,LoRaWAN frame type,r,uint8_t,dimensionless,0,10,No,frame_typr
+r_lw_rtc_sync_flag,LoRaWAN RTC sync flag,LoRaWAN RTC sync flag (0: not sync),r,uint8_t,dimensionless,0,1,No,flag_rtc
+reconfigure,Reconfigure,Reconfigure device parameters,w,string,dimensionless,N/A,N/A,Yes,reconfigure
+r_lw_dr,LoRaWAN Data Rate,LoRaWAN Data Rate,r,uint8_t,dimensionless,0,10,No,dr
+r_lw_fcnt,LoRaWAN frame counter,LoRaWAN frame counter,r,uint32_t,dimensionless,0,4294967295,No,fcnt
+r_lw_fport,LoRaWAN port,LoRaWAN port,r,uint8_t,dimensionless,1,223,No,fport
+r_lw_confirmed,Confirmed flag,Confirmed flag,r,bool,dimensionless,N/A,N/A,No,confirmed
+r_lw_gw_id,Gateway Id,Gateway Identifier,r,string,dimensionless,N/A,N/A,No,gw_id
+r_rssi,RSSI,RSSI signal quality,r,int8_t,dbm,N/A,N/A,No,rssi
+r_snr,SNR,SNR signal quality,r,int8_t,db,N/A,N/A,No,snr

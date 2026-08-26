@@ -1,0 +1,67 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal
+r_serial,MCU Serial,Serial of the device,r,string,dimensionless,N/A,N/A,No
+rw_case_id,Serial Number,Case id,rw,string,dimensionless,N/A,N/A,No
+r_ts,Timestamp,Timestamp (GMT+0),r,uint32_t,dimensionless,N/A,N/A,No
+r_boot_fw,Bootloader Firmware Version,Device Bootloader Firmware Version,r,string,dimensionless,N/A,N/A,No
+r_app_fw,Application Firmware Version,Device Application Firmware Version,r,string,dimensionless,N/A,N/A,No
+r_radio_fw,Radio Firmware Version,Radio Firmware Version,r,string,dimensionless,N/A,N/A,No
+r_sim_iccid,SIM ICCID,SIM ICCID,r,string,dimensionless,N/A,N/A,No
+r_radio_imei,Radio IMEI,Radio IMEI,r,string,dimensionless,N/A,N/A,No
+r_status_a,Socket A presence,Sensor socket A presence status (present/not present),r,bool,dimensionless,N/A,N/A,No
+r_status_b,Socket B presence,Sensor socket B presence status (present/not present),r,bool,dimensionless,N/A,N/A,No
+r_status_c,Socket C presence,Sensor socket C presence status (present/not present),r,bool,dimensionless,N/A,N/A,No
+r_status_d,Socket D presence,Sensor socket D presence status (present/not present),r,bool,dimensionless,N/A,N/A,No
+r_serial_a,Socket A sensor Serial,Serial of the device connected to socket A,r,string,dimensionless,N/A,N/A,No
+r_serial_b,Socket B sensor Serial,Serial of the device connected to socket B,r,string,dimensionless,N/A,N/A,No
+r_serial_c,Socket C sensor Serial,Serial of the device connected to socket C,r,string,dimensionless,N/A,N/A,No
+r_serial_d,Socket D sensor Serial,Serial of the device connected to socket D,r,string,dimensionless,N/A,N/A,No
+r_mal_a,Socket A malfunction,Socket A malfunction,r,bool,dimensionless,N/A,N/A,No
+r_mal_b,Socket B malfunction,Socket B malfunction,r,bool,dimensionless,N/A,N/A,No
+r_mal_c,Socket C malfunction,Socket C malfunction,r,bool,dimensionless,N/A,N/A,No
+r_mal_d,Socket D malfunction,Socket D malfunction,r,bool,dimensionless,N/A,N/A,No
+rw_loop_time,Loop time,Loop time,rw,uint16_t,minutes,5,N/A,No
+rw_loops,Loops between sendings,Number of loops between sendings,rw,uint8_t,dimensionless,1,10,No
+rw_socket_a,Enable socket A,Enable socket A sensor,rw,bool,dimensionless,N/A,N/A,No
+rw_socket_b,Enable socket B ,Enable socket B sensor,rw,bool,dimensionless,N/A,N/A,No
+rw_socket_c,Enable socket C ,Enable socket C sensor,rw,bool,dimensionless,N/A,N/A,No
+rw_socket_d,Enable socket D,Enable socket D sensor,rw,bool,dimensionless,N/A,N/A,No
+r_fw_a,Socket A sensor fw version,Socket A sensor fw version,r,string,dimensionless,N/A,N/A,No
+r_fw_b,Socket B sensor fw version,Socket B sensor fw version,r,string,dimensionless,N/A,N/A,No
+r_fw_c,Socket C sensor fw version,Socket C sensor fw version,r,string,dimensionless,N/A,N/A,No
+r_fw_d,Socket D sensor fw version,Socket D sensor fw version,r,string,dimensionless,N/A,N/A,No
+r_hw_a,Socket A sensor hw version,Socket A sensor hw version,r,string,dimensionless,N/A,N/A,No
+r_hw_b,Socket B sensor hw version,Socket B sensor hw version,r,string,dimensionless,N/A,N/A,No
+r_hw_c,Socket C sensor hw version,Socket C sensor hw version,r,string,dimensionless,N/A,N/A,No
+r_hw_d,Socket D sensor hw version,Socket D sensor hw version,r,string,dimensionless,N/A,N/A,No
+rw_gps,GPS enable/disable,GPS enable/disable,rw,bool,dimensionless,N/A,N/A,No
+rw_bat_save,Battery saving modes enable/disable,Battery saving mode enable/disable,rw,bool,dimensionless,N/A,N/A,No
+r_bat_mode,Battery saving mode,Battery saving mode status,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_mod_a,Modbus error in socket A,Modbus error in socket A,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_mod_b,Modbus error in socket B,Modbus error in socket B,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_mod_c,Modbus error in socket C,Modbus error in socket C,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_mod_d,Modbus error in socket D,Modbus error in socket D,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_meas_a,Measurement error in socket A,Measurement error in socket A,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_meas_b,Measurement error in socket B,Measurement error in socket B,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_meas_d,Measurement error in socket C,Measurement error in socket C,r,uint8_t,dimensionless,N/A,N/A,No
+r_err_meas_c,Measurement error in socket D,Measurement error in socket D,r,uint8_t,dimensionless,N/A,N/A,No
+r_charger_status,Battery charger status,Battery charger status,r,uint8_t,dimensionless,N/A,N/A,No
+rw_apn,APN,Context APN,rw,string,dimensionless,N/A,N/A,No
+rw_dns,DNS server IP,DNS server IP,rw,string,dimensionless,N/A,N/A,No
+r_loop,Current loop,Sending loop number,r,uint32_t,dimensionless,1,N/A,No
+r_bat_voltage,Battery voltage,Battery voltage,r,float,millivolts,3300,4200,No
+r_bat_percentage,Battery percentage,Battery percentage,r,float,%,0,100,No
+r_charging_conditions,Charging conditions,Charging conditions status (Normal or Insufficient),r,uint8_t,dimensionless,N/A,N/A,No
+r_error_msg,Errors ,Errors stored in flash,r,string array,dimensionless,N/A,N/A,No
+r_rst_cause,Last reset cause,Last reset cause,r,uint32_t,dimensionless,N/A,N/A,No
+r_sc_rssi,RSSI,Serving cell RSSI,r,int8_t,dbm,N/A,N/A,No
+w_snd_con_stat,Send connection status,Send connection status,w,bool,dimensionless,N/A,N/A,No
+w_headers,Boostrap Headers,Headers,w,string,dimensionless,N/A,N/A,No
+w_snd_cfg,Send Configuration,Send Config,w,bool,dimensionless,N/A,N/A,No
+w_snd_rpt,Send Sync Report,Force to send node sync report,w,bool,dimensionless,N/A,N/A,No
+w_bstrap,Force bootstrap,Force bootstrap connection,w,byte array,dimensionless,N/A,N/A,No
+w_ota,OTA Check,OTA Check,w,bool,dimensionless,N/A,N/A,No
+w_ota_radio,OTA Radio Check,OTA Radio Check,w,bool,dimensionless,N/A,N/A,No
+w_rbt,Reboot Device,Reboot Device,w,bool,dimensionless,N/A,N/A,No
+rw_apn_login,APN login,apn login,rw,string,dimensionless,N/A,N/A,No
+rw_apn_password,APN password,apn password,rw,string,dimensionless,N/A,N/A,No
+r_operator_selected,Current Telco Operator,Operador seleccionado,r,uint8_t,dimensionless,N/A,N/A,No

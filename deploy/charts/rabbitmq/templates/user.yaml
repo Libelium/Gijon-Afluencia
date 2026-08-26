@@ -1,0 +1,52 @@
+{{- if .Values.user.enabled }}
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: {{ .Values.credentials.username }}
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  tags:
+    {{- range .Values.user.tags }}
+    - {{ . }}
+    {{- end }}
+  rabbitmqClusterReference:
+    name: {{ .Values.cluster.name }}
+  importCredentialsSecret:
+    name: {{ .Values.credentials.secretName }}
+---
+# Permissions on the application vhost
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: {{ .Values.credentials.username }}-vhost-permission
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  vhost: {{ .Values.vhost.name | quote }}
+  user: {{ .Values.credentials.username }}
+  permissions:
+    write: ".*"
+    configure: ".*"
+    read: ".*"
+  rabbitmqClusterReference:
+    name: {{ .Values.cluster.name }}
+---
+# Permissions on the default "/" vhost
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: {{ .Values.credentials.username }}-default-vhost-permission
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  vhost: "/"
+  user: {{ .Values.credentials.username }}
+  permissions:
+    write: ".*"
+    configure: ".*"
+    read: ".*"
+  rabbitmqClusterReference:
+    name: {{ .Values.cluster.name }}
+{{- end }}

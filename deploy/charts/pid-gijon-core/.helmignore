@@ -1,0 +1,11 @@
+# Patterns to ignore when packaging the chart.
+.git/
+.gitignore
+*.tgz
+*.bak
+*.tmp
+*~
+.DS_Store
+# Project docs and example values live outside the chart package.
+../docs/
+../values/

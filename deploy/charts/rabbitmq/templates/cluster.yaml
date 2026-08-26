@@ -1,0 +1,27 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.cluster.replicas }}
+  persistence:
+    storage: {{ .Values.cluster.persistence.storage | quote }}
+    {{- if .Values.cluster.persistence.storageClass }}
+    storageClassName: {{ .Values.cluster.persistence.storageClass | quote }}
+    {{- end }}
+  resources:
+    {{- if .Values.cluster.resources }}
+    {{- toYaml .Values.cluster.resources | nindent 4 }}
+    {{- else }}
+    {}
+    {{- end }}
+  rabbitmq:
+    additionalConfig: |
+      consumer_timeout = {{ .Values.cluster.config.consumerTimeout | int64 }}
+      loopback_users = {{ .Values.cluster.config.loopbackUsers }}
+    additionalPlugins:
+      {{- range .Values.cluster.additionalPlugins }}
+      - {{ . | quote }}
+      {{- end }}

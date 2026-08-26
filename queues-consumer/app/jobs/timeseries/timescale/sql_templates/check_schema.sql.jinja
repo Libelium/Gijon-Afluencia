@@ -1,0 +1,68 @@
+do $$
+declare
+    schema_exists BOOLEAN;
+    table_needs_migration BOOLEAN;
+    major_version INTEGER;
+begin
+
+--- Check if schema exists
+select exists (
+        select 1
+        from information_schema.schemata
+        where schema_name = '{{ schema }}'
+    ) into schema_exists;
+
+--- Create schema if it does not exist
+--- Create:
+--- - schema
+--- - tables (hypertables)
+--- - indexes
+if not schema_exists then
+    CREATE SCHEMA {{ schema }};
+    CREATE TABLE {{ schema }}.entity_data (
+        time TIMESTAMPTZ NOT NULL,
+        entity_id TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        attr_id TEXT NOT NULL,
+        scope_id TEXT NOT NULL,
+        attr_value_type TEXT NULL,
+        attr_double_value DOUBLE PRECISION NULL,
+        attr_string_value TEXT NULL,
+        attr_boolean_value BOOLEAN NULL,
+        attr_json_value JSONB NULL
+    );
+
+    SELECT INTO major_version split_part(split_part(version(), ' ', 2), '.', 1)::int;
+
+    IF major_version >= 15 THEN
+        PERFORM create_hypertable('{{ schema }}.entity_data', by_range('time'));
+    ELSE
+        SELECT create_hypertable('{{ schema }}.entity_data', by_range('time'));
+    END IF;
+
+    CREATE UNIQUE INDEX ix_scope_id_entity_id_attr_id_time ON {{ schema }}.entity_data (scope_id, entity_id, attr_id, time);
+
+else
+    --- Schema exists: Single optimized check for migration necessity
+    --- Checks if table exists AND has 'id' column AND lacks primary key
+    --- Uses pg_catalog for fastest lookup (all cached in memory)
+    SELECT EXISTS (
+        SELECT 1 
+        FROM pg_attribute 
+        WHERE attrelid = to_regclass('{{ schema }}.entity_data') 
+        AND attname = 'id' 
+        AND NOT attisdropped
+    ) into table_needs_migration;
+
+    if table_needs_migration then
+        --- Perform one-time migration: Remove id column and set composite primary key
+        --- SAFETY VALVE: Abort if locks cannot be acquired within 2 seconds
+        SET lock_timeout = '2s';
+
+        --- Drop the 'id' column
+        --- Metadata-only change, no heap rewrite
+        ALTER TABLE {{ schema }}.entity_data
+            DROP COLUMN id;
+    end if;
+end if;
+END $$;

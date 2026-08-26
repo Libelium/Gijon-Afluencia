@@ -1,0 +1,16 @@
+.devcontainer
+.vscode
+.pytest_cache
+
+.env
+.env.*
+!.env.example
+
+app/domains/temp/*
+app/tmp/
+app/celerybeat-schedule
+
+/**/.venv
+.python-version
+
+__pycache__

@@ -1,0 +1,21 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery level,Battery level,r,uint8_t,%,0,100,No,Device.Health,DeviceHealthObserved,batteryLevel
+r_temperature,Temperature,Measured temperature,r,float,Celsius,-40,125,No,Sensors.Animal Tracker,AnimalTrackerObserved,temperature
+r_temperature_alarm,Temperature alarm,Temperature alarm flag,r,bool,dimensionless,0,1,No,Sensors.Animal Tracker,AnimalTrackerObserved,temperatureAlarm
+r_latitude,Latitude,GPS latitude,r,float,degrees,-90,90,No,Sensors.Animal Tracker,AnimalTrackerObserved,latitude
+r_longitude,Longitude,GPS longitude,r,float,degrees,-180,180,No,Sensors.Animal Tracker,AnimalTrackerObserved,longitude
+r_motion_status,Motion status,Motion status (unknown/start/moving/stop),r,string,dimensionless,N/A,N/A,No,Sensors.Animal Tracker,AnimalTrackerObserved,motionStatus
+r_geofence_status,Geofence status,Geofence status (inside/outside/unset/unknown),r,string,dimensionless,N/A,N/A,No,Sensors.Animal Tracker,AnimalTrackerObserved,geofenceStatus
+r_device_position,Device position,Device position status (normal/tilt),r,string,dimensionless,N/A,N/A,No,Sensors.Animal Tracker,AnimalTrackerObserved,devicePosition
+r_tamper_status,Tamper status,Tamper status (install/uninstall),r,string,dimensionless,N/A,N/A,No,Sensors.Animal Tracker,AnimalTrackerObserved,tamperStatus
+r_dev_hw_v,Hardware version,Device hardware version,r,uint16_t,dimensionless,N/A,N/A,No,Device.Information,Device,hardwareVersion
+r_dev_fw_v,Firmware version,Device firmware version,r,uint16_t,dimensionless,N/A,N/A,No,Device.Information,Device,firmwareVersion
+r_dev_serial,Serial number,Serial number of the device,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,serialNumber
+r_dev_ipso_v,IPSO version,IPSO alliance object model version,r,uint8_t,dimensionless,N/A,N/A,No,Device.Information,Device,ipsoVersion
+r_dev_tsl_v,TSL version,TSL (sensor object model) version,r,uint16_t,dimensionless,N/A,N/A,No,Device.Information,Device,tslVersion
+r_dev_lwan_class,LoRaWAN class,LoRaWAN device class (0=A, 1=B, 2=C, 3=CtoB),r,uint8_t,dimensionless,0,3,No,Device.Information,Device,lorawanClass
+r_dev_status,Device status,Device operational status,r,uint8_t,dimensionless,N/A,N/A,No,Device.Management,Device,deviceState
+r_dev_reset_event,Reset event,Last reset/reboot event cause,r,uint8_t,dimensionless,N/A,N/A,No,Device.Management,Device,rebootReason

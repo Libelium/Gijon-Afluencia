@@ -1,0 +1,9 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery level,Battery level,r,uint8_t,%,0,100,No,Device.Health,DeviceHealthObserved,batteryLevel
+r_co2,CO2 concentration,CO2 concentration measured by the sensor,r,uint16_t,ppm,400,5000,No,Sensors.Air Quality,AirQualityObserved,co2
+r_temperature,Temperature,Ambient temperature,r,float,Celsius,-30,70,No,Sensors.Air Quality,AirQualityObserved,temperature
+r_humidity_rel,Relative humidity,Relative humidity,r,float,%,0,100,No,Sensors.Air Quality,AirQualityObserved,relativeHumidity
+r_presion_atmosferica,Atmospheric pressure,Atmospheric pressure,r,float,hPa,300,1100,No,Sensors.Air Quality,AirQualityObserved,pressure

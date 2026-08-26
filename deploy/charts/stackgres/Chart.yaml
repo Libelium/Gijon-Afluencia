@@ -1,0 +1,15 @@
+apiVersion: v2
+name: stackgres
+description: PostgreSQL (HA-capable) for pid-gijon via the StackGres Operator
+type: application
+version: 1.0.0
+appVersion: "15.15"
+keywords:
+  - postgresql
+  - postgres
+  - database
+  - stackgres
+  - timescaledb
+annotations:
+  category: Database
+  operator: stackgres.io/v1

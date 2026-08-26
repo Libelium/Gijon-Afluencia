@@ -1,0 +1,98 @@
+# =====================================================================
+# StackGres chart — default values
+# Requires the StackGres Operator installed in the cluster:
+#   https://stackgres.io/doc/latest/install/
+# =====================================================================
+
+cluster:
+  name: pid-gijon-postgres
+
+  # Number of PostgreSQL instances (1 = standalone, 2+ = HA).
+  instances: 1
+
+  postgres:
+    version: "15.15"
+
+  storage:
+    size: "50Gi"
+    # Leave empty to use the cluster's default StorageClass.
+    storageClass: ""
+
+  # Disable StackGres' built-in connection pooler (use an external one if needed).
+  disableConnectionPooling: true
+
+  # SGPostgresConfig resource name.
+  postgresConfig:
+    name: pid-gijon-postgres-config
+
+  # SGScript (init scripts) resource name.
+  script:
+    name: pid-gijon-init
+
+# -----------------------------------------------------------------------
+# Instance profile (SGInstanceProfile)
+# Enables CPU/memory requests and limits on the PostgreSQL pods.
+# -----------------------------------------------------------------------
+instanceProfile:
+  enabled: false
+  name: pid-gijon-instance-profile
+  cpu:
+    limit: "2"
+    request: "1"
+  memory:
+    limit: "4Gi"
+    request: "2Gi"
+
+# -----------------------------------------------------------------------
+# PostgreSQL configuration (postgresql.conf)
+# -----------------------------------------------------------------------
+postgresqlConf:
+  maxConnections: "200"
+  sharedPreloadLibraries: "pg_stat_statements,auto_explain,timescaledb,pg_cron"
+  # Optional tuning for larger clusters (uncomment as needed):
+  # sharedBuffers: "512MB"
+  # effectiveCacheSize: "1GB"
+  # workMem: "4MB"
+  # maintenanceWorkMem: "128MB"
+  # maxWorkerProcesses: "10"
+  # timescaledbTelemetry: "off"
+  # maxWalSize: "4GB"
+  # checkpointCompletionTarget: "0.9"
+  # walLevel: "logical"
+  # synchronousCommit: "on"
+  # timescaledbMaxBackgroundWorkers: "4"
+
+# -----------------------------------------------------------------------
+# PostgreSQL extensions installed on each instance.
+# -----------------------------------------------------------------------
+extensions:
+  - name: pgsodium
+  - name: pg_graphql
+  - name: pg_stat_statements
+  - name: pgcrypto
+  - name: pgjwt
+  - name: uuid-ossp
+  - name: timescaledb
+  - name: pg_cron
+  - name: wal2json
+  - name: pg_trgm
+  - name: hstore
+  - name: postgis
+
+# -----------------------------------------------------------------------
+# Passwords for the PostgreSQL roles created by the init scripts.
+# IMPORTANT: do NOT commit these values. Provide them at deploy time via
+# --set, an external secret manager, or scripts/generate-env.sh.
+#
+# Roles created: realtime, platformdb, keycloak (siempre); airflow y geoportal (opcionales)
+# platformdb, keycloak and realtime are always created: the platform uses them.
+# airflow and geoportal are optional add-ons, created only when their password is set.
+# -----------------------------------------------------------------------
+initScripts:
+  secretName: pid-gijon-postgres-init-scripts
+  passwords:
+    realtime: ""
+    platformdb: ""
+    keycloak: ""
+    airflow: ""
+    geoportal: ""

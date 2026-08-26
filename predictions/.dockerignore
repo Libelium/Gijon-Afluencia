@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# NOTE: tests/ is deliberately NOT excluded. There is one single image and it
+# carries the suite inside, so the CI can run `docker run $IMG pytest` against the
+# very image it deploys.
+
+# Local data and outputs (mounted as a volume or sent to S3, not into the image)
+predictions_per_zone/
+predictions_forecast/
+*.csv
+
+# Documentacion
+README.md
+
+# Entorno
+.env
+.env.local

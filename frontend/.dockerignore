@@ -1,0 +1,48 @@
+# Lo que NO entra en el contexto de construccion de la imagen.
+# Cuanto mas pequeno es el contexto, mas rapido construye y menos riesgo hay de
+# arrastrar dentro de la imagen algo que no deberia publicarse.
+
+# Se instalan y se generan dentro de la imagen
+node_modules
+dist
+dist-ssr
+
+# Historia y metadatos de git
+.git
+.gitignore
+.gitattributes
+
+# Configuracion local. Critico: si un .env entrara en el contexto, Vite lo leeria al
+# compilar y la imagen quedaria atada a ese entorno. La configuracion se pasa como
+# argumentos de construccion (ver Dockerfile) o como variables de entorno del
+# contenedor (ver deploy/entrypoint.sh).
+.env
+.env.*
+*.local
+
+# Documentacion y ficheros de proyecto: no participan en la compilacion
+docs
+*.md
+LICENSE
+NOTICE
+THIRD-PARTY-LICENSES*
+
+# Integracion continua y ficheros de la propia imagen.
+# deploy/ NO se excluye: el Dockerfile lo copia de forma explicita.
+.github
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Editores, cachés y salidas de herramientas
+.vscode
+.idea
+.DS_Store
+*.log
+.playwright-mcp
+playwright-report
+test-results
+coverage
+.npm
+.cache

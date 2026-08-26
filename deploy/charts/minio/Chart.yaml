@@ -1,0 +1,16 @@
+apiVersion: v2
+name: minio
+description: MinIO object storage for pid-gijon (wrapper around the official minio/minio chart)
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - minio
+  - s3
+  - object-storage
+annotations:
+  category: Storage
+dependencies:
+  - name: minio
+    version: "5.x.x"
+    repository: "https://charts.min.io/"

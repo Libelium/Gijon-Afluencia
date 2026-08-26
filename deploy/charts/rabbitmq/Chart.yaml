@@ -1,0 +1,13 @@
+apiVersion: v2
+name: rabbitmq
+description: RabbitMQ cluster for pid-gijon via the RabbitMQ Cluster Operator
+type: application
+version: 1.0.0
+appVersion: "3.13"
+keywords:
+  - rabbitmq
+  - messaging
+  - amqp
+annotations:
+  category: Messaging
+  operator: rabbitmq.com/v1beta1

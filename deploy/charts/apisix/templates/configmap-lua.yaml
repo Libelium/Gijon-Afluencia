@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-fiware-lua-modules
+  labels:
+    {{- include "apisix.labels" . | nindent 4 }}
+data:
+  fiware_permissions.lua: |
+    --
+    -- FIWARE Permission Validation Module for APISIX
+    --
+    -- Shared functions to validate FIWARE permissions against the web-back
+    -- backend after Keycloak JWT authentication. The JWT is forwarded via the
+    -- Authorization header; the backend extracts the user from the token.
+    --
+
+    local core = require("apisix.core")
+    local http = require("resty.http")
+    local cjson = require("cjson")
+
+    local _M = {}
+
+    -- Extract FIWARE headers (v2 style: fiware-service + fiware-servicepath)
+    function _M.get_fiware_v2_headers(ctx)
+      local headers = core.request.headers(ctx)
+
+      local tenant_name = headers["fiware-service"] or headers["Fiware-Service"]
+      local scope_name = headers["fiware-servicepath"] or headers["Fiware-ServicePath"]
+
+      if not tenant_name then
+        return nil, nil, {status = 400, message = "fiware-service header is required"}
+      end
+
+      if not scope_name then
+        return nil, nil, {status = 400, message = "fiware-servicepath header is required"}
+      end
+
+      -- Remove leading '/' from servicepath if present
+      if scope_name:sub(1,1) == "/" then
+        scope_name = scope_name:sub(2)
+      end
+
+      return tenant_name, scope_name, nil
+    end
+
+    -- Extract FIWARE headers (LD style: NGSILD-Tenant only, no scope)
+    function _M.get_fiware_ld_headers(ctx)
+      local headers = core.request.headers(ctx)
+
+      local tenant_name = headers["NGSILD-Tenant"] or headers["ngsild-tenant"]
+
+      if not tenant_name then
+        return nil, {status = 400, message = "NGSILD-Tenant header is required"}
+      end
+
+      return tenant_name, nil
+    end
+
+    -- Call the backend to check FIWARE permissions
+    function _M.check_fiware_permission(ctx, tenant_name, scope_name, backend_url)
+      local httpc = http.new()
+      httpc:set_timeout(5000)
+
+      local request_body = {
+        tenant_name = tenant_name
+      }
+
+      -- Only include scope_name if provided (LD endpoints don't have scope)
+      if scope_name then
+        request_body.scope_name = scope_name
+      end
+
+      -- Forward the Authorization header to the backend
+      local headers = core.request.headers(ctx)
+      local auth_header = headers["Authorization"] or headers["authorization"]
+
+      local res, err = httpc:request_uri(backend_url, {
+        method = "POST",
+        body = cjson.encode(request_body),
+        headers = {
+          ["Content-Type"] = "application/json",
+          ["Authorization"] = auth_header,
+        },
+        ssl_verify = false
+      })
+
+      if not res then
+        core.log.error("Failed to call FIWARE permission check: ", err)
+        return nil, {status = 503, message = "Permission service unavailable"}
+      end
+
+      if res.status ~= 200 then
+        local error_body = cjson.decode(res.body)
+        return nil, {
+          status = res.status,
+          message = error_body.message or "Permission denied"
+        }
+      end
+
+      return true, nil
+    end
+
+    -- Validate FIWARE v2 permissions (tenant + scope)
+    function _M.validate_fiware_v2(conf, ctx)
+      local tenant_name, scope_name, err = _M.get_fiware_v2_headers(ctx)
+      if err then
+        return err.status, {message = err.message}
+      end
+
+      local backend_url = conf.backend_url .. "/api/internal/check-fiware-write-permission"
+      local allowed, err = _M.check_fiware_permission(ctx, tenant_name, scope_name, backend_url)
+      if err then
+        return err.status, {message = err.message, allowed = false}
+      end
+
+      core.log.info("FIWARE permission granted on ", tenant_name, "/", scope_name)
+    end
+
+    -- Validate FIWARE LD permissions (tenant only, no scope)
+    function _M.validate_fiware_ld(conf, ctx)
+      local tenant_name, err = _M.get_fiware_ld_headers(ctx)
+      if err then
+        return err.status, {message = err.message}
+      end
+
+      local backend_url = conf.backend_url .. "/api/internal/check-fiware-write-permission"
+      local allowed, err = _M.check_fiware_permission(ctx, tenant_name, nil, backend_url)
+      if err then
+        return err.status, {message = err.message, allowed = false}
+      end
+
+      core.log.info("FIWARE LD permission granted on tenant ", tenant_name)
+    end
+
+    return _M

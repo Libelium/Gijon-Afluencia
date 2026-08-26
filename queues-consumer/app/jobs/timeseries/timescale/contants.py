@@ -1,0 +1,1 @@
+SCHEMA_PREFIX = 'platformts_'

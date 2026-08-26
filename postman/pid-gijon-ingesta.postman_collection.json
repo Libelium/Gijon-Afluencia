@@ -1,0 +1,318 @@
+{
+  "info": {
+    "_postman_id": "ce89fbc0-4550-4cd6-656f-5c21af6a9479",
+    "name": "PID Gijón — API de ingesta",
+    "description": "Puente de entrada para las fuentes que **no hablan FIWARE de forma nativa**. Cubre dos caminos, y solo dos:\n\n1. **LIDAR (OTE)** — recibe las tramas crudas de los sensores de conteo y las archiva verbatim en lotes NDJSON comprimidos sobre S3/MinIO. No se parsean aquí.\n2. **Dispositivos HTTP** — reenvía las medidas al IoT Agent y, de paso, resuelve la entrega de comandos al dispositivo, que el camino nativo de FIWARE no hace de forma fiable.\n\nEl resto de la plataforma (entidades, cuadros de mando, alarmas) vive en la API de gestión, descrita en `openapi-gestion.yaml`.\n\n**Autenticación**: no hay JWT. El endpoint LIDAR es público y se protege con un secreto compartido (`OTE_WEBHOOK_TOKEN`); los endpoints del IoT Agent van por red interna y llevan la apikey de aprovisionamiento en el parámetro `k`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Dispositivos HTTP",
+      "item": [
+        {
+          "name": "Encolar un comando para un dispositivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "",
+                "description": "Tenant FIWARE.",
+                "disabled": false
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "",
+                "description": "Scope FIWARE dentro del tenant.",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ingestUrl}}/api/v1/notify/command/{serial}",
+              "host": [
+                "{{ingestUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notify",
+                "command",
+                "{serial}"
+              ],
+              "variable": [
+                {
+                  "key": "serial",
+                  "value": "",
+                  "description": "Serial del dispositivo. Se normaliza a mayúsculas."
+                }
+              ]
+            },
+            "description": "El IoT Agent entrega aquí el comando destinado al dispositivo. Se guarda como **pendiente** en MongoDB y el dispositivo lo recoge en la respuesta de su siguiente envío de medidas (`/api/v1/command-proxy/...?getCmd=1`).\n\nEsta URL es la que el aprovisionamiento registra en el IoT Agent como endpoint del dispositivo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reboot\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar medidas al IoT Agent y recoger comandos pendientes",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ingestUrl}}/api/v1/command-proxy/{resource}",
+              "host": [
+                "{{ingestUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "command-proxy",
+                "{resource}"
+              ],
+              "query": [
+                {
+                  "key": "i",
+                  "value": "",
+                  "description": "Identificador de la entidad en el IoT Agent (normalmente el serial del dispositivo).",
+                  "disabled": false
+                },
+                {
+                  "key": "k",
+                  "value": "",
+                  "description": "Apikey de aprovisionamiento del servicio en el IoT Agent.",
+                  "disabled": false
+                },
+                {
+                  "key": "getCmd",
+                  "value": "",
+                  "description": "Mayor que 0 para que la respuesta traiga los comandos pendientes del dispositivo.",
+                  "disabled": true
+                },
+                {
+                  "key": "flatten_depth",
+                  "value": "",
+                  "description": "Niveles de diccionarios anidados que se disuelven en el payload antes de reenviarlo.",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "resource",
+                  "value": "",
+                  "description": "Ruta del IoT Agent a la que se reenvía. En la práctica, `iot/json`."
+                }
+              ]
+            },
+            "description": "Reenvía el cuerpo al IoT Agent (`{IOTA_SOUTH_SERVICE}/{resource}`, típicamente `iot/json`) y, si se pide, devuelve los comandos que el dispositivo tenga pendientes.\n\nAntes de reenviar traduce a `TimeInstant` los atributos de marca temporal listados en `TIMESTAMP_ATTRS` (`r_ts`, `r_dev_ts`, …), porque NGSI-LD no admite `TimeInstant` en las expresiones de traducción. Un *timestamp* numérico se convierte a ISO-8601.\n\nAcepta un objeto o una lista de objetos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 21.5,\n  \"r_ts\": 1700000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar medidas al IoT Agent y recoger comandos pendientes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ingestUrl}}/api/v1/command-proxy/{resource}",
+              "host": [
+                "{{ingestUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "command-proxy",
+                "{resource}"
+              ],
+              "query": [
+                {
+                  "key": "i",
+                  "value": "",
+                  "description": "Identificador de la entidad en el IoT Agent (normalmente el serial del dispositivo).",
+                  "disabled": false
+                },
+                {
+                  "key": "k",
+                  "value": "",
+                  "description": "Apikey de aprovisionamiento del servicio en el IoT Agent.",
+                  "disabled": false
+                },
+                {
+                  "key": "getCmd",
+                  "value": "",
+                  "description": "Mayor que 0 para que la respuesta traiga los comandos pendientes del dispositivo.",
+                  "disabled": true
+                },
+                {
+                  "key": "flatten_depth",
+                  "value": "",
+                  "description": "Niveles de diccionarios anidados que se disuelven en el payload antes de reenviarlo.",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "resource",
+                  "value": "",
+                  "description": "Ruta del IoT Agent a la que se reenvía. En la práctica, `iot/json`."
+                }
+              ]
+            },
+            "description": "Reenvía el cuerpo al IoT Agent (`{IOTA_SOUTH_SERVICE}/{resource}`, típicamente `iot/json`) y, si se pide, devuelve los comandos que el dispositivo tenga pendientes.\n\nAntes de reenviar traduce a `TimeInstant` los atributos de marca temporal listados en `TIMESTAMP_ATTRS` (`r_ts`, `r_dev_ts`, …), porque NGSI-LD no admite `TimeInstant` en las expresiones de traducción. Un *timestamp* numérico se convierte a ISO-8601.\n\nAcepta un objeto o una lista de objetos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 21.5,\n  \"r_ts\": 1700000000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "LIDAR (OTE)",
+      "item": [
+        {
+          "name": "Ingesta de una trama LIDAR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-OTE-Token",
+                "value": "",
+                "description": "Secreto compartido (`OTE_WEBHOOK_TOKEN`). Si el servicio no lo tiene configurado, se acepta todo: solo para desarrollo.",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ingestUrl}}/api/v1/ote/{device_id}",
+              "host": [
+                "{{ingestUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ote",
+                "{device_id}"
+              ],
+              "query": [
+                {
+                  "key": "t",
+                  "value": "",
+                  "description": "Secreto compartido, alternativa a la cabecera `X-OTE-Token` para emisores que solo permiten configurar la URL.",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "device_id",
+                  "value": "",
+                  "description": "Identificador del sensor. Acaba en la clave del objeto archivado."
+                }
+              ]
+            },
+            "description": "Encola el cuerpo **sin parsearlo** para el archivador de fondo, que lo escribe verbatim.\n\nResponde `200` de inmediato y **también cuando el encolado falla**: el sensor trata cualquier respuesta que no sea 2xx como entrega fallida y reintenta, lo que duplicaría la trama. El cuerpo es JSON libre — el fabricante puede añadir campos sin avisar.\n\n`device_id` es la etiqueta que particiona el archivo: una URL por sensor, así no hay que abrir el cuerpo para saber quién lo envía. Se sanea para que una ruta manipulada no escape del prefijo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Servicio",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ingestUrl}}/hchk",
+              "host": [
+                "{{ingestUrl}}"
+              ],
+              "path": [
+                "hchk"
+              ]
+            },
+            "description": "Devuelve `{\"status\":\"OK\"}`. Es la sonda de *liveness* y *readiness* del despliegue."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "ingestUrl",
+      "value": "http://localhost:30006",
+      "type": "string"
+    }
+  ]
+}

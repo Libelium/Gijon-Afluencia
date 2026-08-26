@@ -1,0 +1,10 @@
+apiVersion: v2
+name: mongodb
+description: Standalone MongoDB for pid-gijon (StatefulSet + services)
+type: application
+version: 1.0.0
+appVersion: "5.0.31"
+keywords:
+  - mongodb
+  - database
+  - nosql

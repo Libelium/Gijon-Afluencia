@@ -1,0 +1,29 @@
+# Configuración local resuelta a partir de los .env.example
+.env
+.env-*
+!.env.example
+!*.env.example
+
+# Dependencias y artefactos de construcción
+node_modules/
+vendor/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Entornos generados por el despliegue (contienen credenciales)
+deploy/**/environments/*/
+!deploy/**/environments/example/
+
+# Registros y cachés de ejecución
+*.log
+.phpunit.result.cache
+# Volcados del navegador de pruebas: llevan las URL del despliegue.
+.playwright-mcp/
+
+# Editor y sistema operativo
+.idea/
+.vscode/
+.DS_Store

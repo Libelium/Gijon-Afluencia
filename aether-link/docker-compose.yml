@@ -1,0 +1,15 @@
+services:
+  aether-link:
+    container_name: aether-link
+    build:
+      context: .
+      target: dev
+      additional_contexts:
+        pylibs: ../pylibs
+    volumes:
+      - '.:/code'
+      - '../pylibs:/pylibs'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 22000:8000

@@ -1,0 +1,14 @@
+{{- if .Values.instanceProfile.enabled }}
+apiVersion: stackgres.io/v1
+kind: SGInstanceProfile
+metadata:
+  name: {{ .Values.instanceProfile.name }}
+  labels:
+    {{- include "stackgres.labels" . | nindent 4 }}
+spec:
+  cpu: {{ .Values.instanceProfile.cpu.limit | quote }}
+  memory: {{ .Values.instanceProfile.memory.limit | quote }}
+  requests:
+    cpu: {{ .Values.instanceProfile.cpu.request | quote }}
+    memory: {{ .Values.instanceProfile.memory.request | quote }}
+{{- end }}

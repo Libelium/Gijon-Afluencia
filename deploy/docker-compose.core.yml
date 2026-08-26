@@ -1,0 +1,162 @@
+# The upstream dependencies the platform needs, and nothing of ours.
+#
+# This is the FIWARE core plus the datastores: all official images, no code of
+# ours. It exists because assembling this correctly is the fiddliest part of
+# starting from scratch, and it is the same for everyone.
+#
+# It does NOT run the platform services — each component's own compose file
+# does that, against these dependencies.
+#
+#   docker compose -f deploy/docker-compose.core.yml up -d
+#   docker compose -f deploy/docker-compose.core.yml ps
+#
+# Credentials come from deploy/.env.example. They are development defaults.
+
+name: pid-gijon-deps
+
+services:
+  # ---------------------------------------------------------------- FIWARE ---
+  # Pinned to 5.0 on purpose. Orion-LD 1.4.0 still uses the legacy C++ driver,
+  # which speaks OP_QUERY; MongoDB 6 removed it and Orion aborts on startup with
+  # "Unsupported OP_QUERY command: listDatabases". Do not bump this without
+  # bumping Orion-LD too.
+  mongo:
+    image: mongo:5.0
+    container_name: pid-gijon-mongo
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  orion:
+    image: quay.io/fiware/orion-ld:1.4.0
+    container_name: pid-gijon-orion
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: -dbhost mongo -logLevel WARN -forwarding -experimental
+    ports:
+      - "${ORION_PORT:-1026}:1026"
+    # No healthcheck: the image ships neither curl nor wget, and running the
+    # orionld binary to probe it starts a second broker. Check it from outside
+    # with `curl localhost:1026/version`.
+
+  iot-agent:
+    image: quay.io/fiware/iotagent-json:3.3.0
+    container_name: pid-gijon-iot-agent
+    depends_on:
+      mongo:
+        condition: service_healthy
+      orion:
+        condition: service_started
+    environment:
+      IOTA_CB_HOST: orion
+      IOTA_CB_PORT: 1026
+      IOTA_CB_NGSI_VERSION: ld
+      IOTA_AUTOCAST: "true"
+      IOTA_NORTH_PORT: 4041
+      IOTA_REGISTRY_TYPE: mongodb
+      IOTA_MONGO_HOST: mongo
+      IOTA_MONGO_PORT: 27017
+      IOTA_MONGO_DB: iotajson
+      IOTA_HTTP_PORT: 7896
+      IOTA_PROVIDER_URL: http://iot-agent:4041
+      IOTA_JSON_LD_CONTEXT: "${NGSI_LD_CONTEXT:-https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld}"
+      IOTA_FALLBACK_TENANT: "${DEFAULT_TENANT:-pidgijon}"
+      IOTA_LOG_LEVEL: WARN
+    ports:
+      - "${IOTA_NORTH_PORT:-4041}:4041"
+      - "${IOTA_SOUTH_PORT:-7896}:7896"
+
+  # ------------------------------------------------------------- Datastores ---
+  # The platform model: organizations, devices, entities, alarms, dashboards.
+  # PostGIS is required — some of the backend's migrations need it.
+  postgres:
+    image: postgis/postgis:15-3.4-alpine
+    container_name: pid-gijon-postgres
+    environment:
+      POSTGRES_USER: "${DB_USERNAME:-platform}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-changeme}"
+      POSTGRES_DB: "${DB_DATABASE:-platformdb}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-platform} -d ${DB_DATABASE:-platformdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Timeseries. Kept separate from the platform database on purpose: they scale
+  # differently, and RDS-style managed Postgres often lacks the timescale
+  # extension, so they end up apart in real deployments anyway.
+  timescale:
+    image: timescale/timescaledb:2.14.2-pg15
+    container_name: pid-gijon-timescale
+    environment:
+      POSTGRES_USER: "${TS_DB_USERNAME:-platform}"
+      POSTGRES_PASSWORD: "${TS_DB_PASSWORD:-changeme}"
+      POSTGRES_DB: "${TS_DB_DATABASE:-platformdb_ts}"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    ports:
+      - "${TS_DB_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TS_DB_USERNAME:-platform} -d ${TS_DB_DATABASE:-platformdb_ts}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: pid-gijon-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-platform}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-changeme}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # Object storage for exports and uploads. The services address it with
+  # STORAGE_TYPE=local; STORAGE_TYPE=s3 points them at AWS instead.
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    container_name: pid-gijon-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${LOCAL_ACCESS_ID:-minioadmin}"
+      MINIO_ROOT_PASSWORD: "${LOCAL_SECRET_KEY:-minioadmin}"
+    volumes:
+      - minio_data:/data
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  mongo_data:
+  postgres_data:
+  timescale_data:
+  rabbitmq_data:
+  minio_data:
+
+networks:
+  default:
+    name: pid-gijon-deps

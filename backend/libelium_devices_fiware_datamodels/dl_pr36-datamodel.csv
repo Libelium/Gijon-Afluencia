@@ -1,0 +1,8 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery voltage,Battery voltage,r,float,V,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_water_pressure,Water pressure,Relative pressure measured at the sensor head,r,float,bar,0,1,No,Sensors.Water Quality,WaterQualityObserved,pressure
+r_water_level,Water level,Water level calculated from pressure ,r,float,m,0,10,No,,WaterObserved,waterLevel
+r_water_temperature,Water temperature,Sensor head temperature,r,float,Celsius,-40,125,No,Sensors.Water Quality,WaterQualityObserved,temperature

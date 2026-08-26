@@ -1,0 +1,31 @@
+[project]
+name = "aether-link"
+version = "0.7.1"
+description = "Timeseries + NGSI abstraction API"
+authors = [{ name = "Libelium Comunicaciones Distribuidas, S.L." }]
+license = "EUPL-1.2"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0,<1",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2,<3",
+    "uvicorn>=0.20.0,<0.21.0",
+    "gunicorn>=21,<24",
+    "sqlalchemy>=2.0.2,<3",
+    "python-dotenv>=0.21.1,<0.22.0",
+    "pytest>=8.0.0,<9",
+    "psycopg2-binary>=2.9.9,<3",
+    "pandas>=2.0.0,<3",
+    "requests",
+    "isodate",
+    "freezegun",
+    "aether-pylib>=0.7.0,<0.8.0",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv.sources]
+aether-pylib = { path = "../pylibs/aether-pylib", editable = true }

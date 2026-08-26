@@ -1,0 +1,12 @@
+# Ignore .env
+**.vscode
+**.pytest_cache
+**.devcontainer
+**config/.env
+app/.env
+**/.env
+**/.venv
+
+# Python cache
+__pycache__/
+*.py[cod]

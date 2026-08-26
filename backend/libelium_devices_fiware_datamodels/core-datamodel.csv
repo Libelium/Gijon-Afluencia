@@ -1,0 +1,70 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal
+r_serial,Device serial,Serial of the device,r,string,dimensionless,N/A,N/A,No
+r_ts,Reported timestamp,Timestamp reported by the device,r,uint32_t,dimensionless,N/A,N/A,No
+r_loop,Loop number,Counter of loops done,r,uint32_t,dimensionless,N/A,N/A,No
+r_fw,Firmware version,Device Firmware Version,r,string,dimensionless,N/A,N/A,No
+r_radio_fw,Radio firmware version,Radio Firmware Version,r,string,dimensionless,N/A,N/A,No
+rw_slp_m,Time sleep min,Minutes to sleep between measurements,rw,uint8_t,minutes,0,20,No
+rw_slp_s,Time sleep secs,Seconds to sleep between measurements,rw,uint8_t,seconds,0,59,No
+rw_ka_h,Time keep alive,Time to send keep-alive,rw,uint8_t,hours,0,24,No
+rw_radio_timeout_s,Connection timeout,Timeout in seconds for radio send,rw,uint8_t,seconds,15,50,No
+rw_tau_ref_m,NB-IoT TAU refresh frequency,Máx NB-IoT timer in minutes required to refresh manually psm tau timer,rw,uint8_t,minutes,0,255,Yes
+rw_op_code_pre,Preset operator code,Preset operator code,rw,uint32_t,dimensionless,0,999999,No
+rw_apn,Context APN,NB-IoT context APN. Login and password can ve added by commas,rw,string,dimensionless,N/A,N/A,No
+rw_dns,DNS,DNS server IP,rw,string,dimensionless,N/A,N/A,No
+rw_nb_rel,NB-IoT Release,NB-IoT Release 13 or 14,rw,uint8_t,dimensionless,13,14,Yes
+rw_band_pre,NB-IoT  preset band,NB-IoT band to use. This command will only take effect after the country code is set. No band will be selected otherwise. This precaution ensures that the selected band is authorized and available in the country where the device is operating.,rw,uint8_t,dimensionless,0,85,Yes
+rw_tau_tmr_s_pre,NB-IoT preset TAU timer,Desired PSM TAU timer in seconds,rw,uint32_t,seconds,3600,35712000,Yes
+rw_act_tmr_s_pre,NB-IoT preset active timer,Desired PSM active timer in seconds,rw,uint8_t,seconds,0,12,Yes
+r_snd_ctr,Send counter,Sending loop number,r,uint32_t,dimensionless,N/A,N/A,No
+rw_loops,Loops between sendings,Number of loops between sendings,rw,uint8_t,dimensionless,1,10,No
+rw_loops_ka,Loops between sendings (Keep Alive),Number of loops between sendings in keep Alive mode,rw,uint8_t,dimensionless,1,10,No
+r_bat,Battery voltage,Battery voltage,r,float,millivolts,N/A,N/A,No
+rw_is_rechar, Rechargeable active, Indicates if the battery is rechargeable,rw,bool,dimensionless,N/A,N/A,No
+r_bat_warn,Low battery warning,Low battery voltage warning,r,bool,dimensionless,N/A,N/A,No
+r_bat_mode,Battery saving mode,Battery saving mode status,r,uint8_t,dimensionless,N/A,N/A,No
+r_bat_percentage,Battery percentage,Battery percentage,r,float,+ACU-,0,100,No
+r_charger_status,Battery charger status,Battery charger status,r,uint8_t,dimensionless,N/A,N/A,No
+r_charging_conditions,Charging conditions,Charging conditions status (Normal or Insufficient),r,uint8_t,dimensionless,N/A,N/A,No
+r_rpt_loops,Report loops,Number of program loops (during last report period),r,uint32_t,dimensionless,N/A,N/A,No
+r_rpt_ps_loops,Report power saving loops,Report of number of power saving detection loops executed (during last report period),r,uint32_t,dimensionless,N/A,N/A,No
+r_rpt_snds,Report sendings,Report of number of accumulated sendings done by the device (during last report period),r,uint16_t,dimensionless,N/A,N/A,No
+r_rpt_cfgs,Report reconfigurations,Report of number of accumulated reconfigs done by the device (during last report period),r,uint16_t,dimensionless,N/A,N/A,No
+r_rpt_snd_tmr_s,Report sending timer,Report of accumulated send state time in seconds (during last report period),r,uint32_t,seconds,N/A,N/A,No
+r_rpt_slp_tmr_s,Report sleep timer,Report of accumulated sleep state time in seconds (during last report period),r,uint32_t,seconds,N/A,N/A,No
+r_rpt_run_tmr_s,Report run timer,Report of accumulated run state time in seconds (during last report period),r,uint32_t,seconds,N/A,N/A,No
+r_rpt_radio_rbts,Report radio reboots,Report of number of accumulated radio reboots (during last report period),r,uint16_t,seconds,N/A,N/A,No
+r_errors,Errors log,Errors stored in flash,r,string,dimensionless,N/A,N/A,No
+r_rst_cause,Last reset cause,Device’s last reset cause,r,uint8_t,dimensionless,N/A,N/A,No
+r_sc_rsrp,Serving cell RSRP,Serving cell Reference signal received power,r,int16_t,dbm,N/A,N/A,No
+r_sc_rsrq,Serving cell RSRQ,Serving cell Reference signal received quality,r,int8_t,db,N/A,N/A,No
+r_sc_cell_id,Serving cell cell ID,Serving cell cell identifier,r,string,dimensionless,N/A,N/A,No
+r_sc_ecl,Serving cell ECL,Last Enhanced Coverage Level value for the serving cell,r,uint8_t,dimensionless,N/A,N/A,No
+r_rssi,RSSI,RSSI signal quality,r,int8_t,dbm,N/A,N/A,No
+r_sinr,SINR,SINR signal quality,r,int8_t,db,N/A,N/A,No
+r_sc_band,Serving cell band,Serving cell band in use,r,uint8_t,dimensionless,N/A,N/A,No
+r_op_code,Operating operator code,Operator code used by the device,r,uint32_t,dimensionless,N/A,N/A,No
+r_snd_mean_tmr_ms,Sending mean timer,Mean timer in milliseconds of last sendings,r,uint16_t,milliseconds,N/A,N/A,No
+r_snd_mean_tmr_warn,Sending timer warning,Warning: sending timer is near timeout. Value: r_snd_mean_tmr,r,uint16_t,milliseconds,N/A,N/A,No
+r_tau_tmr_s,PSM TAU timer,NB-IoT PSM TAU timer in seconds provided by network,r,uint32_t,seconds,N/A,N/A,No
+r_sim_iccid,SIM ICCID,SIM ICCID,r,string,dimensionless,N/A,N/A,No
+r_radio_imei,IMEI,Radio module IMEI,r,string,dimensionless,N/A,N/A,No
+w_snd_con_stat,Request connection status,Send connection status,w,bool,dimensionless,N/A,N/A,No
+w_new_ts,Set new timestamp,Update timestamp,w,uint32_t,timestamp,N/A,N/A,No
+w_snd_cfg,Request configuration,Send device configuration,w,bool,dimensionless,N/A,N/A,No
+w_snd_rpt,Report request,Force to send node sync report,w,bool,dimensionless,N/A,N/A,No
+w_bstrap, Force device bootstrap, Force the device to execute a bootstrap process, w, bool, dimensionless, N/A, N/A, No
+w_ota,Check device OTA,Check for device OTA update,w,bool,dimensionless,N/A,N/A,Yes
+w_ota_radio,Check radio OTA,Check for radio OTA update,w,bool,dimensionless,N/A,N/A,Yes
+w_rbt,Reboot device,Reboot the device,w,bool,dimensionless,N/A,N/A,No
+w_radio_rbt,Reboot radio,Reboot the radio module,w,bool,dimensionless,N/A,N/A,No
+w_ble_mode,Enter in BLE mode,This command enters in BLE mode during 2 minutes to allow the configuration of the device,w,bool,dimensionless,N/A,N/A,No
+rw_gps,GPS enable/disable,GPS enable/disable,rw,bool,dimensionless,N/A,N/A,No
+r_eg25lat,GPS latitude,GPS latitude,r,float,degrees,N/A,N/A,No
+r_eg25lon,GPS longitude,GPS longitude,r,float,degrees,N/A,N/A,No
+r_eg25hdop,GPS hdop,GPS hdop,r,float,dimensionless,N/A,N/A,No
+r_eg25spd,GPS speed,GPS speed,r,float,km/h,N/A,N/A,No
+r_eg25crs,GPS course,GPS course,r,float,degrees,N/A,N/A,No
+r_eg25sat,GPS num. Satellites,GPS num. Satellites,r,uint8_t,dimensionless,N/A,N/A,No
+r_free_RAM,Free RAM,Current device's memory RAM available,r,uint32_t,Bytes,N/A,N/A,No
+r_2_tmp, SI411 temperature, Infrared sensor temperature,r,float,grades,N/A,N/A,No

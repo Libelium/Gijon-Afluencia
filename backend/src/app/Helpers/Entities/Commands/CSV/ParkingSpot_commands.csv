@@ -1,0 +1,103 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal
+r_serial,Device serial,Serial of the device,r,string,dimensionless,N/A,N/A,No
+r_ts,Reported timestamp,Timestamp reported by the device,r,uint32_t,dimensionless,N/A,N/A,No
+r_fw,Firmware version,Device Firmware Version,r,string,dimensionless,N/A,N/A,No
+r_radio_fw,Radio firmware version,Radio Firmware Version,r,string,dimensionless,N/A,N/A,No
+rw_slp_m,Time Sleep Min,Minutes to sleep between measurements,rw,uint8_t,minutes,0,20,No
+rw_slp_s,Time Sleep Secs,Seconds to sleep between measurements,rw,uint8_t,seconds,0,59,No
+rw_ka_h,Time Keep Alive,Time to send keep-alive,rw,uint8_t,hours,0,24,No
+rw_nm,Night mode,"Night-mode working mode (0: Disabled, 1: Light, 2: Deep)",rw,uint8_t,dimensionless,0,2,No
+rw_nm_start,Night mode start hour (UTC),Night Mode Start Hour (UTC),rw,uint8_t,hours,0,23,No
+rw_nm_dur_h,Night mode duration,Night Mode Duration,rw,uint8_t,hours,1,12,No
+rw_nm_slp_m,Night mode time to sleep,Night Mode Sleep Time,rw,uint8_t,minutes,1,20,No
+rw_rdr_st,Radar range start,Radar Range Start,rw,uint8_t,centimeters,20,40,Yes
+rw_rdr_len,Radar range lenth,Radar Range Length,rw,uint8_t,centimeters,40,100,Yes
+rw_rdr_th,Radar threshold,Radar Threshold,rw,uint8_t,db,10,50,Yes
+rw_sec_snd,Secondary sending,Flag to enable/disable secondary sending,rw,bool,dimensionless,N/A,N/A,Yes
+rw_rpt_days,Report frequency,Days to send sync report (0: Disabled),rw,uint8_t,days,0,30,No
+rw_h_snd_limit,Hourly sendings limit,Hourly Sendings Limit,rw,uint8_t,dimensionless,10,255,No
+rw_radio_timeout_s,Connection timeout,Timeout in seconds for radio send,rw,uint8_t,seconds,15,50,No
+rw_tau_ref_m,NB-IoT TAU refresh frequency,Máx NB-IoT timer in minutes required to refresh manually psm tau timer,rw,uint8_t,minutes,0,255,Yes
+rw_op_code_pre,Preset operator code,Preset operator code,rw,uint32_t,dimensionless,0,999999,No
+rw_apn,Context APN,NB-IoT context APN. Login and password can ve added by commas,rw,string,dimensionless,N/A,N/A,No
+rw_dns,DNS,DNS server IP,rw,string,dimensionless,N/A,N/A,No
+rw_nb_rel,NB-IoT Release,NB-IoT Release 13 or 14,rw,uint8_t,dimensionless,13,14,Yes
+rw_ps_detection,Power saving detection (PS),Enable/disable power saving detection algorithm using magnetic field variations,rw,bool,dimensionless,N/A,N/A,No
+rw_ps_mg_single_delta,PS single delta limit,Magnetic field single axis delta variation to launch radar reading,rw,uint16_t,milligauss,0,100,Yes
+rw_ps_mg_total_delta,PS total delta limit,Magnetic field total delta variation to launch radar reading,rw,uint16_t,milligauss,0,300,Yes
+rw_ps_mg_mean_loops,PS mean loops,Number of loops to calculate magnetic field mean for ps detection algorithm,rw,uint8_t,dimensionless,1,10,Yes
+rw_ps_rdr_timeout_m,PS radar reading timeout,Maximum number of minutes without reading radar sensor,rw,uint8_t,minutes,0,20,Yes
+rw_diag_mode,Diagnostic mode,"Set the node in diagnostic mode (0:Disable, 1: 1 day, 2: 3 days, 3: 7 days, 4: Permanent, 5: Once)",rw,uint8_t,dimensionless,0,5,No
+rw_v_type_th,Vehicle type threshold,Limit distance in centimeters to determine vehicle type,rw,uint8_t,centimeters,30,80,No
+rw_v_info_lvl,Vehicle estimations report level,"Vehicle estimations report level (0: Disabled, 1: Light: 2: Extended)",rw,uint8_t,dimensionless,0,2,No
+rw_v_ctr_sens,Vehicle counter sensitivity,Sensitivity used to increment vehicle counter after mag. field variation (lower: less vehicle changes),rw,uint8_t,dimensionless,0,10,No
+rw_dchk_s,Double check delay,Seconds to wait before repeating radar measurement after occupied slot change to confirm it,rw,uint16_t,seconds,0,300,No
+rw_doubt_sens,Doubtful detection sensitivity,Sensitivity used to count detection as doubtful (lower: more doubtful detections),rw,uint8_t,dimensionless,0,10,No
+rw_slot_id,Parking slot ID,Parking slot configurable identifier,rw,string,dimensionless,N/A,N/A,No
+rw_band_pre,NB-IoT  preset band,NB-IoT band to use,rw,uint8_t,dimensionless,0,85,Yes
+rw_tau_tmr_s_pre,NB-IoT preset TAU timer,Desired PSM TAU timer in seconds,rw,uint32_t,seconds,3600,35712000,Yes
+rw_act_tmr_s_pre,NB-IoT preset active timer,Desired PSM active timer in seconds,rw,uint8_t,seconds,0,12,Yes
+rw_active,Remote activation,Parameter to control device remote activation,rw,bool,dimensionless,N/A,N/A,No
+rw_act_chk_days,Activation check period,Days to check if device is remotelyt activated,rw,uint8_t,dimensionless,N/A,N/A,No
+r_snd_ctr,Send counter,Sending loop number,r,uint32_t,dimensionless,N/A,N/A,No
+r_bat,Battery voltage,Battery voltage,r,float,millivolts,N/A,N/A,No
+r_bat_warn,Low battery warning,Low battery voltage warning,r,bool,dimensionless,N/A,N/A,No
+r_prk_slot,Slot status,Parking slot status,r,uint8_t,dimensionless,N/A,N/A,No
+r_rdr_error,Radar error,Radar sensor error (if occurs),r,uint8_t,dimensionless,N/A,N/A,No
+r_rdr_refs,Radar reflections,Radar sensor number of reflections,r,uint8_t,dimensionless,N/A,N/A,No
+r_rdr_amp,Radar amplitude,Radar sensor signal amplitude,r,float,db,N/A,N/A,No
+r_rdr_dis,Radar distance,Radar sensor distance measured,r,uint8_t,centimeters,N/A,N/A,No
+r_rdr_sens,Radar sensitivity,Radar sensor sensitivity,r,float,dimensionless,N/A,N/A,No
+r_doubt,Doubtful detection,Doubtful detection flag,r,bool,dimensionless,N/A,N/A,No
+r_v_type,Vehicle type estimation,"Estimation of vehicle type based on distance (0: Car, 1: Truck)",r,uint8_t,dimensionless,N/A,N/A,No
+r_v_ctr,Vehicle counter estimation,Estimation of different vehicles detected during occupied state,r,uint8_t,dimensionless,N/A,N/A,No
+r_temp,Temperature,Device internal temperature in celsius,r,float,celsius degrees,N/A,N/A,No
+r_mg_x,Magnefic field X,Magnetic Field X,r,float,milligauss,N/A,N/A,No
+r_mg_y,Magnefic field Y,Magnetic Field Y,r,float,milligauss,N/A,N/A,No
+r_mg_z,Magnefic field Z,Magnetic Field Z,r,float,milligauss,N/A,N/A,No
+r_rpt_loops,Report loops,Number of program loops (during last report period),r,uint32_t,dimensionless,N/A,N/A,No
+r_rpt_ps_loops,Report power saving loops,Report of number of power saving detection loops executed (during last report period),r,uint32_t,dimensionless,N/A,N/A,No
+r_rpt_snds,Report sendings,Report of number of accumulated sendings done by the device (during last report period),r,uint16_t,dimensionless,N/A,N/A,No
+r_rpt_cfgs,Report reconfigurations,Report of number of accumulated reconfigs done by the device (during last report period),r,uint16_t,dimensionless,N/A,N/A,No
+r_rpt_rcals,Report recalibrations,Report of number of accumulated recalibrations done by the device (during last report period),r,uint16_t,dimensionless,N/A,N/A,No
+r_rpt_slot_changes,Report slot changes,Report of number of accumulated slot status changes (during last report period),r,uint16_t,dimensionless,N/A,N/A,No
+r_rpt_snd_tmr_s,Report sending timer,Report of accumulated send state time in seconds (during last report period),r,uint32_t,seconds,N/A,N/A,No
+r_rpt_slp_tmr_s,Report sleep timer,Report of accumulated sleep state time in seconds (during last report period),r,uint32_t,seconds,N/A,N/A,No
+r_rpt_run_tmr_s,Report run timer,Report of accumulated run state time in seconds (during last report period),r,uint32_t,seconds,N/A,N/A,No
+r_rpt_radio_rbts,Report radio reboots,Report of number of accumulated radio reboots (during last report period),r,uint16_t,seconds,N/A,N/A,No
+r_errors,Errors log,Errors stored in flash,r,string,dimensionless,N/A,N/A,No
+r_rst_cause,Last reset cause,Device’s last reset cause,r,uint8_t,dimensionless,N/A,N/A,No
+r_sc_rsrp,Serving cell RSRP,Serving cell Reference signal received power,r,int16_t,dbm,N/A,N/A,No
+r_sc_rsrq,Serving cell RSRQ,Serving cell Reference signal received quality,r,int8_t,db,N/A,N/A,No
+r_sc_cell_id,Serving cell cell ID,Serving cell cell identifier,r,string,dimensionless,N/A,N/A,No
+r_sc_ecl,Serving cell ECL,Last Enhanced Coverage Level value for the serving cell,r,uint8_t,dimensionless,N/A,N/A,No
+r_rssi,RSSI,RSSI signal quality,r,int8_t,dbm,N/A,N/A,No
+r_sinr,SINR,SINR signal quality,r,int8_t,db,N/A,N/A,No
+r_sc_band,Serving cell band,Serving cell band in use,r,uint8_t,dimensionless,N/A,N/A,No
+r_op_code,Operating operator code,Operator code used by the device,r,uint32_t,dimensionless,N/A,N/A,No
+r_snd_mean_tmr_ms,Sending mean timer,Mean timer in milliseconds of last sendings,r,uint16_t,milliseconds,N/A,N/A,No
+r_snd_mean_tmr_warn,Sending timer warning,Warning: sending timer is near timeout. Value: r_snd_mean_tmr,r,uint16_t,milliseconds,N/A,N/A,No
+r_tau_tmr_s,PSM TAU timer,NB-IoT PSM TAU timer in seconds provided by network,r,uint32_t,seconds,N/A,N/A,No
+r_sim_iccid,SIM ICCID,SIM ICCID,r,string,dimensionless,N/A,N/A,No
+r_radio_imei,IMEI,Radio module IMEI,r,string,dimensionless,N/A,N/A,No
+r_op_list,Operators list,Available operator numeric codes,r,string,dimensionless,N/A,N/A,No
+r_ue_avg_rsrp,UE average RSRP,RSRP measured by the module in dBm,r,int16_t,dbm,N/A,N/A,No
+r_ue_avg_snr,UE average SNR,SNR measured by the module in dB,r,int8_t,db,N/A,N/A,No
+r_ue_phy_dl_tpt,UE downlink thoughput,Downlink throughput in physical channel in bps,r,uint16_t,bps,N/A,N/A,No
+r_ue_phy_ul_tpt,UE uplink thoughput,Uplink throughput in physical channel in bps,r,uint16_t,bps,N/A,N/A,No
+r_ue_dl_bler,UE downlink block error,Downlink block error rate (%) in physical channel,r,uint8_t,percentage,N/A,N/A,No
+r_ue_ul_bler,UE uplink block error,Uplink block error rate (%) in physical channel,r,uint8_t,percentage,N/A,N/A,No
+r_open_tmr_ms,Open connection timer,Open connection timer in milliseconds,r,uint32_t,milliseconds,N/A,N/A,No
+r_open_err_ctr,Open error counter,Error counter when trying to open in diagnostic mode,r,uint8_t,dimensionless,N/A,N/A,No
+w_snd_con_stat,Request connection status,Send connection status,w,bool,dimensionless,N/A,N/A,No
+w_headers,HTTP headers,HTTP headers for DLM,w,string,dimensionless,N/A,N/A,Yes
+w_new_ts,Set new timestamp,Update timestamp,w,uint32_t,timestamp,N/A,N/A,No
+w_snd_cfg,Request configuration,Send device configuration,w,bool,dimensionless,N/A,N/A,No
+w_snd_rpt,Report request,Force to send node sync report,w,bool,dimensionless,N/A,N/A,No
+w_bstrap,Launch bootstrapping,Force bootstrap connection,w,bool,dimensionless,N/A,N/A,Yes
+w_ota,Check device OTA,Check for device OTA update,w,bool,dimensionless,N/A,N/A,Yes
+w_ota_radio,Check radio OTA,Check for radio OTA update,w,bool,dimensionless,N/A,N/A,Yes
+w_rbt,Reboot device,Reboot the device,w,bool,dimensionless,N/A,N/A,No
+w_radio_rbt,Reboot radio,Reboot the radio module,w,bool,dimensionless,N/A,N/A,No
+w_off,Deactivate device,Node deactivation: permanent sleep until 3 resets,w,bool,dimensionless,N/A,N/A,No
+w_off_days,Deactivate device for X days,Node deactivation: permanent sleep until 3 resets or X days elapsed,w,uint8_t,dimensionless,N/A,N/A,No

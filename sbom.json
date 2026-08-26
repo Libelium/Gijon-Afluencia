@@ -1,0 +1,8083 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "tools": [
+      {
+        "vendor": "PID Gijón",
+        "name": "sbom-from-locks",
+        "version": "1.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "name": "pid-gijon",
+      "version": "1.0.0",
+      "description": "Plataforma de Integración de Datos del Ayuntamiento de Gijón",
+      "licenses": [
+        {
+          "license": {
+            "id": "EUPL-1.2"
+          }
+        }
+      ],
+      "supplier": {
+        "name": "Ayuntamiento de Gijón"
+      }
+    },
+    "supplier": {
+      "name": "Ayuntamiento de Gijón"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "EUPL-1.2"
+        }
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "aether_pylib",
+      "version": "0.7.3",
+      "purl": "pkg:pypi/aether_pylib@0.7.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "EUPL-1.2"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "purl": "pkg:pypi/annotated-doc@0.0.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fastapi",
+      "version": "0.141.1",
+      "purl": "pkg:pypi/fastapi@0.141.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "freezegun",
+      "version": "1.5.5",
+      "purl": "pkg:pypi/freezegun@1.5.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "greenlet",
+      "version": "3.5.5",
+      "purl": "pkg:pypi/greenlet@3.5.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT AND PSF-2.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "isodate",
+      "version": "0.7.2",
+      "purl": "pkg:pypi/isodate@0.7.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "numpy",
+      "version": "2.5.2",
+      "purl": "pkg:pypi/numpy@2.5.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pandas",
+      "version": "2.3.3",
+      "purl": "pkg:pypi/pandas@2.3.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psycopg2-binary",
+      "version": "2.9.12",
+      "purl": "pkg:pypi/psycopg2-binary@2.9.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL with exceptions"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic",
+      "version": "2.13.4",
+      "purl": "pkg:pypi/pydantic@2.13.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic-settings",
+      "version": "2.15.0",
+      "purl": "pkg:pypi/pydantic-settings@2.15.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic_core",
+      "version": "2.46.4",
+      "purl": "pkg:pypi/pydantic_core@2.46.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "Pygments",
+      "version": "2.21.0",
+      "purl": "pkg:pypi/pygments@2.21.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pytest",
+      "version": "8.4.2",
+      "purl": "pkg:pypi/pytest@8.4.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pytz",
+      "version": "2026.3.post1",
+      "purl": "pkg:pypi/pytz@2026.3.post1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "SQLAlchemy",
+      "version": "2.0.52",
+      "purl": "pkg:pypi/sqlalchemy@2.0.52",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "starlette",
+      "version": "1.6.0",
+      "purl": "pkg:pypi/starlette@1.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "purl": "pkg:pypi/typing-inspection@0.4.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tzdata",
+      "version": "2026.3",
+      "purl": "pkg:pypi/tzdata@2026.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-link"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "numpy",
+      "version": "2.4.6",
+      "purl": "pkg:pypi/numpy@2.4.6",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-pylib"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pandas",
+      "version": "3.0.5",
+      "purl": "pkg:pypi/pandas@3.0.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "aether-pylib"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "aws/aws-crt-php",
+      "version": "v1.2.7",
+      "purl": "pkg:composer/aws/aws-crt-php@v1.2.7",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "aws/aws-sdk-php",
+      "version": "3.394.0",
+      "purl": "pkg:composer/aws/aws-sdk-php@3.394.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "babenkoivan/elastic-adapter",
+      "version": "v3.5.0",
+      "purl": "pkg:composer/babenkoivan/elastic-adapter@v3.5.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "babenkoivan/elastic-client",
+      "version": "v2.1.0",
+      "purl": "pkg:composer/babenkoivan/elastic-client@v2.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "babenkoivan/elastic-scout-driver",
+      "version": "v3.2.0",
+      "purl": "pkg:composer/babenkoivan/elastic-scout-driver@v3.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "babenkoivan/elastic-scout-driver-plus",
+      "version": "v4.8.0",
+      "purl": "pkg:composer/babenkoivan/elastic-scout-driver-plus@v4.8.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "brick/math",
+      "version": "0.12.3",
+      "purl": "pkg:composer/brick/math@0.12.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "carbonphp/carbon-doctrine-types",
+      "version": "2.1.0",
+      "purl": "pkg:composer/carbonphp/carbon-doctrine-types@2.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "dflydev/dot-access-data",
+      "version": "v3.0.3",
+      "purl": "pkg:composer/dflydev/dot-access-data@v3.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "doctrine/inflector",
+      "version": "2.1.0",
+      "purl": "pkg:composer/doctrine/inflector@2.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "doctrine/lexer",
+      "version": "3.0.1",
+      "purl": "pkg:composer/doctrine/lexer@3.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "dragonmantank/cron-expression",
+      "version": "v3.6.0",
+      "purl": "pkg:composer/dragonmantank/cron-expression@v3.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "egulias/email-validator",
+      "version": "4.0.4",
+      "purl": "pkg:composer/egulias/email-validator@4.0.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "elastic/transport",
+      "version": "v8.11.0",
+      "purl": "pkg:composer/elastic/transport@v8.11.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "elasticsearch/elasticsearch",
+      "version": "v8.19.0",
+      "purl": "pkg:composer/elasticsearch/elasticsearch@v8.19.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ezyang/htmlpurifier",
+      "version": "v4.19.0",
+      "purl": "pkg:composer/ezyang/htmlpurifier@v4.19.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fakerphp/faker",
+      "version": "v1.24.1",
+      "purl": "pkg:composer/fakerphp/faker@v1.24.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "filp/whoops",
+      "version": "2.18.4",
+      "purl": "pkg:composer/filp/whoops@2.18.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "firebase/php-jwt",
+      "version": "v6.11.1",
+      "purl": "pkg:composer/firebase/php-jwt@v6.11.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fruitcake/php-cors",
+      "version": "v1.4.0",
+      "purl": "pkg:composer/fruitcake/php-cors@v1.4.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "graham-campbell/result-type",
+      "version": "v1.2.0",
+      "purl": "pkg:composer/graham-campbell/result-type@v1.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "guzzlehttp/guzzle",
+      "version": "7.15.5",
+      "purl": "pkg:composer/guzzlehttp/guzzle@7.15.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "guzzlehttp/promises",
+      "version": "2.5.3",
+      "purl": "pkg:composer/guzzlehttp/promises@2.5.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "guzzlehttp/psr7",
+      "version": "2.13.1",
+      "purl": "pkg:composer/guzzlehttp/psr7@2.13.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "guzzlehttp/uri-template",
+      "version": "v1.0.11",
+      "purl": "pkg:composer/guzzlehttp/uri-template@v1.0.11",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "hamcrest/hamcrest-php",
+      "version": "v3.0.0",
+      "purl": "pkg:composer/hamcrest/hamcrest-php@v3.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "jeroen-g/laravel-packager",
+      "version": "2.12.0",
+      "purl": "pkg:composer/jeroen-g/laravel-packager@2.12.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "EUPL-1.1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/framework",
+      "version": "10.x-dev 74e222c",
+      "purl": "pkg:composer/laravel/framework@10.x-dev 74e222c",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/pint",
+      "version": "v1.30.4",
+      "purl": "pkg:composer/laravel/pint@v1.30.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/prompts",
+      "version": "v0.1.25",
+      "purl": "pkg:composer/laravel/prompts@v0.1.25",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/sail",
+      "version": "v1.67.0",
+      "purl": "pkg:composer/laravel/sail@v1.67.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/sanctum",
+      "version": "v3.3.3",
+      "purl": "pkg:composer/laravel/sanctum@v3.3.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/scout",
+      "version": "v10.25.0",
+      "purl": "pkg:composer/laravel/scout@v10.25.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/serializable-closure",
+      "version": "v1.3.7",
+      "purl": "pkg:composer/laravel/serializable-closure@v1.3.7",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "laravel/tinker",
+      "version": "v2.11.1",
+      "purl": "pkg:composer/laravel/tinker@v2.11.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/commonmark",
+      "version": "2.10.0",
+      "purl": "pkg:composer/league/commonmark@2.10.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/config",
+      "version": "v1.2.0",
+      "purl": "pkg:composer/league/config@v1.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/csv",
+      "version": "9.28.0",
+      "purl": "pkg:composer/league/csv@9.28.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/flysystem",
+      "version": "3.35.3",
+      "purl": "pkg:composer/league/flysystem@3.35.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/flysystem-aws-s3-v3",
+      "version": "3.35.3",
+      "purl": "pkg:composer/league/flysystem-aws-s3-v3@3.35.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/flysystem-local",
+      "version": "3.35.3",
+      "purl": "pkg:composer/league/flysystem-local@3.35.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "league/mime-type-detection",
+      "version": "1.17.0",
+      "purl": "pkg:composer/league/mime-type-detection@1.17.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "mews/purifier",
+      "version": "3.4.4",
+      "purl": "pkg:composer/mews/purifier@3.4.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "mockery/mockery",
+      "version": "1.6.15",
+      "purl": "pkg:composer/mockery/mockery@1.6.15",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "monolog/monolog",
+      "version": "3.10.0",
+      "purl": "pkg:composer/monolog/monolog@3.10.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "mtdowling/jmespath.php",
+      "version": "2.9.2",
+      "purl": "pkg:composer/mtdowling/jmespath.php@2.9.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "myclabs/deep-copy",
+      "version": "1.14.0",
+      "purl": "pkg:composer/myclabs/deep-copy@1.14.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nesbot/carbon",
+      "version": "2.73.0",
+      "purl": "pkg:composer/nesbot/carbon@2.73.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nette/schema",
+      "version": "v1.3.6",
+      "purl": "pkg:composer/nette/schema@v1.3.6",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause OR GPL-2.0-only OR GPL-3.0-only"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nette/utils",
+      "version": "v4.1.5",
+      "purl": "pkg:composer/nette/utils@v4.1.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause OR GPL-2.0-only OR GPL-3.0-only"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nikic/php-parser",
+      "version": "v5.8.0",
+      "purl": "pkg:composer/nikic/php-parser@v5.8.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nunomaduro/collision",
+      "version": "v7.12.0",
+      "purl": "pkg:composer/nunomaduro/collision@v7.12.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nunomaduro/termwind",
+      "version": "v1.17.0",
+      "purl": "pkg:composer/nunomaduro/termwind@v1.17.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "open-telemetry/api",
+      "version": "1.10.0",
+      "purl": "pkg:composer/open-telemetry/api@1.10.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "open-telemetry/context",
+      "version": "1.5.0",
+      "purl": "pkg:composer/open-telemetry/context@1.5.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "owen-it/laravel-auditing",
+      "version": "v13.7.5",
+      "purl": "pkg:composer/owen-it/laravel-auditing@v13.7.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phar-io/manifest",
+      "version": "2.0.4",
+      "purl": "pkg:composer/phar-io/manifest@2.0.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phar-io/version",
+      "version": "3.2.1",
+      "purl": "pkg:composer/phar-io/version@3.2.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "php-http/discovery",
+      "version": "1.20.0",
+      "purl": "pkg:composer/php-http/discovery@1.20.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "php-http/httplug",
+      "version": "2.4.1",
+      "purl": "pkg:composer/php-http/httplug@2.4.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "php-http/promise",
+      "version": "1.3.1",
+      "purl": "pkg:composer/php-http/promise@1.3.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpoption/phpoption",
+      "version": "1.10.0",
+      "purl": "pkg:composer/phpoption/phpoption@1.10.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpunit/php-code-coverage",
+      "version": "10.1.16",
+      "purl": "pkg:composer/phpunit/php-code-coverage@10.1.16",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpunit/php-file-iterator",
+      "version": "4.1.0",
+      "purl": "pkg:composer/phpunit/php-file-iterator@4.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpunit/php-invoker",
+      "version": "4.0.0",
+      "purl": "pkg:composer/phpunit/php-invoker@4.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpunit/php-text-template",
+      "version": "3.0.1",
+      "purl": "pkg:composer/phpunit/php-text-template@3.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpunit/php-timer",
+      "version": "6.0.0",
+      "purl": "pkg:composer/phpunit/php-timer@6.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "phpunit/phpunit",
+      "version": "10.5.64",
+      "purl": "pkg:composer/phpunit/phpunit@10.5.64",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/clock",
+      "version": "1.0.0",
+      "purl": "pkg:composer/psr/clock@1.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/container",
+      "version": "2.0.2",
+      "purl": "pkg:composer/psr/container@2.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/event-dispatcher",
+      "version": "1.0.0",
+      "purl": "pkg:composer/psr/event-dispatcher@1.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/http-client",
+      "version": "1.0.3",
+      "purl": "pkg:composer/psr/http-client@1.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/http-factory",
+      "version": "1.1.0",
+      "purl": "pkg:composer/psr/http-factory@1.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/http-message",
+      "version": "2.0",
+      "purl": "pkg:composer/psr/http-message@2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/log",
+      "version": "3.0.2",
+      "purl": "pkg:composer/psr/log@3.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psr/simple-cache",
+      "version": "3.0.0",
+      "purl": "pkg:composer/psr/simple-cache@3.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psy/psysh",
+      "version": "v0.12.24",
+      "purl": "pkg:composer/psy/psysh@v0.12.24",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ralouphie/getallheaders",
+      "version": "3.0.3",
+      "purl": "pkg:composer/ralouphie/getallheaders@3.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ramsey/collection",
+      "version": "2.1.1",
+      "purl": "pkg:composer/ramsey/collection@2.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ramsey/uuid",
+      "version": "4.9.3",
+      "purl": "pkg:composer/ramsey/uuid@4.9.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "robsontenorio/laravel-keycloak-guard",
+      "version": "1.6.3",
+      "purl": "pkg:composer/robsontenorio/laravel-keycloak-guard@1.6.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/cli-parser",
+      "version": "2.0.1",
+      "purl": "pkg:composer/sebastian/cli-parser@2.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/code-unit",
+      "version": "2.0.0",
+      "purl": "pkg:composer/sebastian/code-unit@2.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/code-unit-reverse-lookup",
+      "version": "3.0.0",
+      "purl": "pkg:composer/sebastian/code-unit-reverse-lookup@3.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/comparator",
+      "version": "5.0.5",
+      "purl": "pkg:composer/sebastian/comparator@5.0.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/complexity",
+      "version": "3.2.0",
+      "purl": "pkg:composer/sebastian/complexity@3.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/diff",
+      "version": "5.1.1",
+      "purl": "pkg:composer/sebastian/diff@5.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/environment",
+      "version": "6.1.0",
+      "purl": "pkg:composer/sebastian/environment@6.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/exporter",
+      "version": "5.1.4",
+      "purl": "pkg:composer/sebastian/exporter@5.1.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/global-state",
+      "version": "6.0.2",
+      "purl": "pkg:composer/sebastian/global-state@6.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/lines-of-code",
+      "version": "2.0.2",
+      "purl": "pkg:composer/sebastian/lines-of-code@2.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/object-enumerator",
+      "version": "5.0.0",
+      "purl": "pkg:composer/sebastian/object-enumerator@5.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/object-reflector",
+      "version": "3.0.0",
+      "purl": "pkg:composer/sebastian/object-reflector@3.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/recursion-context",
+      "version": "5.0.2",
+      "purl": "pkg:composer/sebastian/recursion-context@5.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/type",
+      "version": "4.0.0",
+      "purl": "pkg:composer/sebastian/type@4.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sebastian/version",
+      "version": "4.0.1",
+      "purl": "pkg:composer/sebastian/version@4.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spatie/backtrace",
+      "version": "1.8.2",
+      "purl": "pkg:composer/spatie/backtrace@1.8.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spatie/error-solutions",
+      "version": "1.1.3",
+      "purl": "pkg:composer/spatie/error-solutions@1.1.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spatie/flare-client-php",
+      "version": "1.11.1",
+      "purl": "pkg:composer/spatie/flare-client-php@1.11.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spatie/ignition",
+      "version": "1.16.0",
+      "purl": "pkg:composer/spatie/ignition@1.16.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spatie/laravel-ignition",
+      "version": "2.9.1",
+      "purl": "pkg:composer/spatie/laravel-ignition@2.9.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "spatie/laravel-permission",
+      "version": "6.25.0",
+      "purl": "pkg:composer/spatie/laravel-permission@6.25.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/console",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/console@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/css-selector",
+      "version": "v7.4.17",
+      "purl": "pkg:composer/symfony/css-selector@v7.4.17",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/deprecation-contracts",
+      "version": "v3.7.1",
+      "purl": "pkg:composer/symfony/deprecation-contracts@v3.7.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/error-handler",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/error-handler@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/event-dispatcher",
+      "version": "v7.4.17",
+      "purl": "pkg:composer/symfony/event-dispatcher@v7.4.17",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/event-dispatcher-contracts",
+      "version": "v3.7.1",
+      "purl": "pkg:composer/symfony/event-dispatcher-contracts@v3.7.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/filesystem",
+      "version": "v7.4.17",
+      "purl": "pkg:composer/symfony/filesystem@v7.4.17",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/finder",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/finder@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/http-foundation",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/http-foundation@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/http-kernel",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/http-kernel@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/mailer",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/mailer@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/mime",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/mime@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-ctype",
+      "version": "v1.37.0",
+      "purl": "pkg:composer/symfony/polyfill-ctype@v1.37.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-intl-grapheme",
+      "version": "v1.41.0",
+      "purl": "pkg:composer/symfony/polyfill-intl-grapheme@v1.41.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-intl-idn",
+      "version": "v1.42.0",
+      "purl": "pkg:composer/symfony/polyfill-intl-idn@v1.42.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-intl-normalizer",
+      "version": "v1.42.0",
+      "purl": "pkg:composer/symfony/polyfill-intl-normalizer@v1.42.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-mbstring",
+      "version": "v1.38.2",
+      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.38.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-php80",
+      "version": "v1.37.0",
+      "purl": "pkg:composer/symfony/polyfill-php80@v1.37.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-php82",
+      "version": "v1.38.1",
+      "purl": "pkg:composer/symfony/polyfill-php82@v1.38.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-php83",
+      "version": "v1.41.0",
+      "purl": "pkg:composer/symfony/polyfill-php83@v1.41.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/polyfill-uuid",
+      "version": "v1.37.0",
+      "purl": "pkg:composer/symfony/polyfill-uuid@v1.37.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/process",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/process@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/routing",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/routing@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/service-contracts",
+      "version": "v3.7.1",
+      "purl": "pkg:composer/symfony/service-contracts@v3.7.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/string",
+      "version": "v7.4.15",
+      "purl": "pkg:composer/symfony/string@v7.4.15",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/translation",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/translation@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/translation-contracts",
+      "version": "v3.7.1",
+      "purl": "pkg:composer/symfony/translation-contracts@v3.7.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/uid",
+      "version": "v6.4.32",
+      "purl": "pkg:composer/symfony/uid@v6.4.32",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/var-dumper",
+      "version": "v6.4.44",
+      "purl": "pkg:composer/symfony/var-dumper@v6.4.44",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "symfony/yaml",
+      "version": "v7.4.17",
+      "purl": "pkg:composer/symfony/yaml@v7.4.17",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "theseer/tokenizer",
+      "version": "1.3.1",
+      "purl": "pkg:composer/theseer/tokenizer@1.3.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tijsverkoyen/css-to-inline-styles",
+      "version": "v2.4.0",
+      "purl": "pkg:composer/tijsverkoyen/css-to-inline-styles@v2.4.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vlucas/phpdotenv",
+      "version": "v5.7.0",
+      "purl": "pkg:composer/vlucas/phpdotenv@v5.7.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "voku/portable-ascii",
+      "version": "2.1.1",
+      "purl": "pkg:composer/voku/portable-ascii@2.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "backend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pytest",
+      "version": "9.1.1",
+      "purl": "pkg:pypi/pytest@9.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "deploy/tests"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "purl": "pkg:pypi/annotated-types@0.8.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "anyio",
+      "version": "4.14.2",
+      "purl": "pkg:pypi/anyio@4.14.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "argon2-cffi",
+      "version": "25.1.0",
+      "purl": "pkg:pypi/argon2-cffi@25.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "argon2-cffi-bindings",
+      "version": "26.1.0",
+      "purl": "pkg:pypi/argon2-cffi-bindings@26.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "attrs",
+      "version": "26.1.0",
+      "purl": "pkg:pypi/attrs@26.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "boto3",
+      "version": "1.43.80",
+      "purl": "pkg:pypi/boto3@1.43.80",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "botocore",
+      "version": "1.43.80",
+      "purl": "pkg:pypi/botocore@1.43.80",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "certifi",
+      "version": "2026.7.22",
+      "purl": "pkg:pypi/certifi@2026.7.22",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "cffi",
+      "version": "2.1.1",
+      "purl": "pkg:pypi/cffi@2.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT-0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "charset-normalizer",
+      "version": "3.5.1",
+      "purl": "pkg:pypi/charset-normalizer@3.5.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "click",
+      "version": "8.4.2",
+      "purl": "pkg:pypi/click@8.4.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "dnspython",
+      "version": "2.8.0",
+      "purl": "pkg:pypi/dnspython@2.8.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fastapi",
+      "version": "0.108.0",
+      "purl": "pkg:pypi/fastapi@0.108.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "gunicorn",
+      "version": "23.0.0",
+      "purl": "pkg:pypi/gunicorn@23.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "h11",
+      "version": "0.16.0",
+      "purl": "pkg:pypi/h11@0.16.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "idna",
+      "version": "3.19",
+      "purl": "pkg:pypi/idna@3.19",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "iniconfig",
+      "version": "2.3.0",
+      "purl": "pkg:pypi/iniconfig@2.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "jmespath",
+      "version": "1.1.0",
+      "purl": "pkg:pypi/jmespath@1.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minio",
+      "version": "7.2.20",
+      "purl": "pkg:pypi/minio@7.2.20",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "packaging",
+      "version": "26.3",
+      "purl": "pkg:pypi/packaging@26.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR BSD-2-Clause"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pluggy",
+      "version": "1.6.0",
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pycparser",
+      "version": "3.0",
+      "purl": "pkg:pypi/pycparser@3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pycryptodome",
+      "version": "3.23.0",
+      "purl": "pkg:pypi/pycryptodome@3.23.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD, Public Domain"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic",
+      "version": "2.4.2",
+      "purl": "pkg:pypi/pydantic@2.4.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic-settings",
+      "version": "2.2.1",
+      "purl": "pkg:pypi/pydantic-settings@2.2.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic_core",
+      "version": "2.10.1",
+      "purl": "pkg:pypi/pydantic_core@2.10.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pymongo",
+      "version": "4.4.1",
+      "purl": "pkg:pypi/pymongo@4.4.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pytest",
+      "version": "7.2.1",
+      "purl": "pkg:pypi/pytest@7.2.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "purl": "pkg:pypi/python-dateutil@2.9.0.post0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Dual License"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "python-dotenv",
+      "version": "0.21.1",
+      "purl": "pkg:pypi/python-dotenv@0.21.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "requests",
+      "version": "2.34.2",
+      "purl": "pkg:pypi/requests@2.34.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "s3transfer",
+      "version": "0.19.2",
+      "purl": "pkg:pypi/s3transfer@0.19.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache License 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "setuptools",
+      "version": "84.0.0",
+      "purl": "pkg:pypi/setuptools@84.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "six",
+      "version": "1.17.0",
+      "purl": "pkg:pypi/six@1.17.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "starlette",
+      "version": "0.32.0.post1",
+      "purl": "pkg:pypi/starlette@0.32.0.post1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "purl": "pkg:pypi/typing_extensions@4.16.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "PSF-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "urllib3",
+      "version": "2.7.0",
+      "purl": "pkg:pypi/urllib3@2.7.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "uvicorn",
+      "version": "0.20.0",
+      "purl": "pkg:pypi/uvicorn@0.20.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "fiware-manager"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@babel/helper-string-parser",
+      "version": "7.29.7",
+      "purl": "pkg:npm/@babel/helper-string-parser@7.29.7",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@babel/helper-validator-identifier",
+      "version": "7.29.7",
+      "purl": "pkg:npm/@babel/helper-validator-identifier@7.29.7",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@babel/parser",
+      "version": "7.29.8",
+      "purl": "pkg:npm/@babel/parser@7.29.8",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@babel/types",
+      "version": "7.29.8",
+      "purl": "pkg:npm/@babel/types@7.29.8",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@bufbuild/protobuf",
+      "version": "2.14.0",
+      "purl": "pkg:npm/@bufbuild/protobuf@2.14.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "(Apache-2.0 AND BSD-3-Clause)"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/aix-ppc64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/android-arm@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/android-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/android-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/darwin-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/darwin-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/freebsd-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/freebsd-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-arm@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ia32",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-ia32@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-loong64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-loong64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-mips64el@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-ppc64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-riscv64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-s390x",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-s390x@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/linux-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/netbsd-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/netbsd-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/netbsd-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openbsd-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/openbsd-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/openbsd-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openharmony-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/openharmony-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/sunos-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/sunos-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-arm64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/win32-arm64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-ia32",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/win32-ia32@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-x64",
+      "version": "0.25.12",
+      "purl": "pkg:npm/@esbuild/win32-x64@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.5.5",
+      "purl": "pkg:npm/@jridgewell/sourcemap-codec@1.5.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@mdi/font",
+      "version": "7.4.47",
+      "purl": "pkg:npm/@mdi/font@7.4.47",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@napi-rs/lzma-linux-x64-gnu",
+      "version": "1.5.1",
+      "purl": "pkg:npm/@napi-rs/lzma-linux-x64-gnu@1.5.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-android-arm64",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-android-arm64@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-darwin-arm64",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-darwin-arm64@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-darwin-x64",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-darwin-x64@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-freebsd-x64",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-freebsd-x64@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-linux-arm-glibc",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-linux-arm-glibc@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-linux-arm-musl",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-linux-arm-musl@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-linux-arm64-glibc",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-linux-arm64-glibc@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-linux-arm64-musl",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-linux-arm64-musl@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-linux-x64-glibc",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-linux-x64-glibc@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-linux-x64-musl",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-linux-x64-musl@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-win32-arm64",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-win32-arm64@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@parcel/watcher-win32-x64",
+      "version": "2.6.0",
+      "purl": "pkg:npm/@parcel/watcher-win32-x64@2.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-android-arm-eabi",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-android-arm-eabi@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-android-arm64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-android-arm64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-darwin-arm64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-darwin-arm64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-darwin-x64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-darwin-x64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-freebsd-arm64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-freebsd-arm64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-freebsd-x64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-freebsd-x64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm-gnueabihf",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm-gnueabihf@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm-musleabihf",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm-musleabihf@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm64-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm64-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm64-musl",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-arm64-musl@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-loong64-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-loong64-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-loong64-musl",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-loong64-musl@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-ppc64-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-ppc64-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-ppc64-musl",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-ppc64-musl@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-riscv64-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-riscv64-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-riscv64-musl",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-riscv64-musl@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-s390x-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-s390x-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-x64-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-linux-x64-musl@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-openbsd-x64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-openbsd-x64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-openharmony-arm64",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-openharmony-arm64@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-arm64-msvc",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-win32-arm64-msvc@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-ia32-msvc",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-win32-ia32-msvc@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-x64-gnu",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-win32-x64-gnu@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-x64-msvc",
+      "version": "4.63.0",
+      "purl": "pkg:npm/@rollup/rollup-win32-x64-msvc@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@types/estree",
+      "version": "1.0.9",
+      "purl": "pkg:npm/@types/estree@1.0.9",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@types/geojson",
+      "version": "7946.0.16",
+      "purl": "pkg:npm/@types/geojson@7946.0.16",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@types/leaflet",
+      "version": "1.9.22",
+      "purl": "pkg:npm/@types/leaflet@1.9.22",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue-leaflet/vue-leaflet",
+      "version": "0.10.1",
+      "purl": "pkg:npm/@vue-leaflet/vue-leaflet@0.10.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/compiler-core",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/compiler-core@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/compiler-dom",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/compiler-dom@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/compiler-sfc",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/compiler-sfc@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/compiler-ssr",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/compiler-ssr@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/devtools-api",
+      "version": "6.6.4",
+      "purl": "pkg:npm/@vue/devtools-api@6.6.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/reactivity",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/reactivity@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/runtime-core",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/runtime-core@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/runtime-dom",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/runtime-dom@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/server-renderer",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/server-renderer@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vue/shared",
+      "version": "3.5.41",
+      "purl": "pkg:npm/@vue/shared@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@vuetify/loader-shared",
+      "version": "2.1.2",
+      "purl": "pkg:npm/@vuetify/loader-shared@2.1.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "agent-base",
+      "version": "6.0.2",
+      "purl": "pkg:npm/agent-base@6.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "asynckit",
+      "version": "0.4.0",
+      "purl": "pkg:npm/asynckit@0.4.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "axios",
+      "version": "1.20.0",
+      "purl": "pkg:npm/axios@1.20.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "purl": "pkg:npm/call-bind-apply-helpers@1.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "chokidar",
+      "version": "5.0.0",
+      "purl": "pkg:npm/chokidar@5.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "colorjs.io",
+      "version": "0.7.1",
+      "purl": "pkg:npm/colorjs.io@0.7.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "combined-stream",
+      "version": "1.0.8",
+      "purl": "pkg:npm/combined-stream@1.0.8",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "csstype",
+      "version": "3.2.3",
+      "purl": "pkg:npm/csstype@3.2.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "debug",
+      "version": "4.4.3",
+      "purl": "pkg:npm/debug@4.4.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "delayed-stream",
+      "version": "1.0.0",
+      "purl": "pkg:npm/delayed-stream@1.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "purl": "pkg:npm/detect-libc@2.1.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "purl": "pkg:npm/dunder-proto@1.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "echarts",
+      "version": "5.6.0",
+      "purl": "pkg:npm/echarts@5.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "entities",
+      "version": "7.0.1",
+      "purl": "pkg:npm/entities@7.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "purl": "pkg:npm/es-define-property@1.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "es-errors",
+      "version": "1.3.0",
+      "purl": "pkg:npm/es-errors@1.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "purl": "pkg:npm/es-object-atoms@1.1.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "es-set-tostringtag",
+      "version": "2.1.0",
+      "purl": "pkg:npm/es-set-tostringtag@2.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "esbuild",
+      "version": "0.25.12",
+      "purl": "pkg:npm/esbuild@0.25.12",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "estree-walker",
+      "version": "2.0.2",
+      "purl": "pkg:npm/estree-walker@2.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fdir",
+      "version": "6.5.0",
+      "purl": "pkg:npm/fdir@6.5.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "follow-redirects",
+      "version": "1.16.0",
+      "purl": "pkg:npm/follow-redirects@1.16.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "form-data",
+      "version": "4.0.6",
+      "purl": "pkg:npm/form-data@4.0.6",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "purl": "pkg:npm/fsevents@2.3.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "function-bind",
+      "version": "1.1.2",
+      "purl": "pkg:npm/function-bind@1.1.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "purl": "pkg:npm/get-intrinsic@1.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "get-proto",
+      "version": "1.0.1",
+      "purl": "pkg:npm/get-proto@1.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "gopd",
+      "version": "1.2.0",
+      "purl": "pkg:npm/gopd@1.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "has-flag",
+      "version": "4.0.0",
+      "purl": "pkg:npm/has-flag@4.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "purl": "pkg:npm/has-symbols@1.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "has-tostringtag",
+      "version": "1.0.2",
+      "purl": "pkg:npm/has-tostringtag@1.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "hasown",
+      "version": "2.0.4",
+      "purl": "pkg:npm/hasown@2.0.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "https-proxy-agent",
+      "version": "5.0.1",
+      "purl": "pkg:npm/https-proxy-agent@5.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "immutable",
+      "version": "5.1.9",
+      "purl": "pkg:npm/immutable@5.1.9",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "is-extglob",
+      "version": "2.1.1",
+      "purl": "pkg:npm/is-extglob@2.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "is-glob",
+      "version": "4.0.3",
+      "purl": "pkg:npm/is-glob@4.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "keycloak-js",
+      "version": "26.2.4",
+      "purl": "pkg:npm/keycloak-js@26.2.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "leaflet",
+      "version": "1.9.4",
+      "purl": "pkg:npm/leaflet@1.9.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "leaflet.markercluster",
+      "version": "1.5.3",
+      "purl": "pkg:npm/leaflet.markercluster@1.5.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "luxon",
+      "version": "3.7.2",
+      "purl": "pkg:npm/luxon@3.7.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "magic-string",
+      "version": "0.30.21",
+      "purl": "pkg:npm/magic-string@0.30.21",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "purl": "pkg:npm/math-intrinsics@1.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "mime-db",
+      "version": "1.52.0",
+      "purl": "pkg:npm/mime-db@1.52.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "mime-types",
+      "version": "2.1.35",
+      "purl": "pkg:npm/mime-types@2.1.35",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ms",
+      "version": "2.1.3",
+      "purl": "pkg:npm/ms@2.1.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nanoid",
+      "version": "3.3.18",
+      "purl": "pkg:npm/nanoid@3.3.18",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "node-addon-api",
+      "version": "7.1.1",
+      "purl": "pkg:npm/node-addon-api@7.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "purl": "pkg:npm/picocolors@1.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "ISC"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "picomatch",
+      "version": "4.0.7",
+      "purl": "pkg:npm/picomatch@4.0.7",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pinia",
+      "version": "2.3.1",
+      "purl": "pkg:npm/pinia@2.3.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "postcss",
+      "version": "8.5.26",
+      "purl": "pkg:npm/postcss@8.5.26",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "proxy-from-env",
+      "version": "2.1.0",
+      "purl": "pkg:npm/proxy-from-env@2.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "readdirp",
+      "version": "5.1.1",
+      "purl": "pkg:npm/readdirp@5.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "rollup",
+      "version": "4.63.0",
+      "purl": "pkg:npm/rollup@4.63.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "rxjs",
+      "version": "7.8.2",
+      "purl": "pkg:npm/rxjs@7.8.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-all-unknown",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-all-unknown@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-android-arm",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-android-arm@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-android-arm64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-android-arm64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-android-riscv64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-android-riscv64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-android-x64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-android-x64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-darwin-arm64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-darwin-arm64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-darwin-x64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-darwin-x64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-arm",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-arm@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-arm64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-arm64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-musl-arm",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-musl-arm@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-musl-arm64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-musl-arm64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-musl-riscv64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-musl-riscv64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-musl-x64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-musl-x64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-riscv64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-riscv64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-linux-x64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-linux-x64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-unknown-all",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-unknown-all@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-win32-arm64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-win32-arm64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sass-embedded-win32-x64",
+      "version": "1.103.1",
+      "purl": "pkg:npm/sass-embedded-win32-x64@1.103.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "source-map-js",
+      "version": "1.2.1",
+      "purl": "pkg:npm/source-map-js@1.2.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "supports-color",
+      "version": "8.1.1",
+      "purl": "pkg:npm/supports-color@8.1.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sync-child-process",
+      "version": "1.0.2",
+      "purl": "pkg:npm/sync-child-process@1.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sync-message-port",
+      "version": "1.2.0",
+      "purl": "pkg:npm/sync-message-port@1.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tinyglobby",
+      "version": "0.2.17",
+      "purl": "pkg:npm/tinyglobby@0.2.17",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tslib",
+      "version": "2.3.0",
+      "purl": "pkg:npm/tslib@2.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "0BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "typescript",
+      "version": "5.9.3",
+      "purl": "pkg:npm/typescript@5.9.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "upath",
+      "version": "2.0.1",
+      "purl": "pkg:npm/upath@2.0.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "varint",
+      "version": "6.0.0",
+      "purl": "pkg:npm/varint@6.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vite",
+      "version": "6.4.3",
+      "purl": "pkg:npm/vite@6.4.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vite-plugin-vuetify",
+      "version": "2.1.3",
+      "purl": "pkg:npm/vite-plugin-vuetify@2.1.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vue",
+      "version": "3.5.41",
+      "purl": "pkg:npm/vue@3.5.41",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vue-demi",
+      "version": "0.14.10",
+      "purl": "pkg:npm/vue-demi@0.14.10",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vue-demi",
+      "version": "0.13.11",
+      "purl": "pkg:npm/vue-demi@0.13.11",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vue-echarts",
+      "version": "7.0.3",
+      "purl": "pkg:npm/vue-echarts@7.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vue-router",
+      "version": "4.6.4",
+      "purl": "pkg:npm/vue-router@4.6.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vuetify",
+      "version": "3.13.2",
+      "purl": "pkg:npm/vuetify@3.13.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "zrender",
+      "version": "5.6.1",
+      "purl": "pkg:npm/zrender@5.6.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "frontend"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "apisix",
+      "version": "2.12.5",
+      "purl": "pkg:helm/apisix@2.12.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "iotagent-json",
+      "version": "3.3.0",
+      "purl": "pkg:oci/iotagent-json@3.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "AGPL-3.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "keycloak",
+      "version": "25.0",
+      "purl": "pkg:oci/keycloak@25.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "keycloak-2fa-email-authenticator",
+      "version": "7dbcdf7",
+      "purl": "pkg:github/mesutpiskin/keycloak-2fa-email-authenticator@7dbcdf70d1dc862d49e567b46e66671dfaa7dff9",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "description": "Extensión de 2FA por correo compilada dentro de la imagen de Keycloak.",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "minio",
+      "version": "RELEASE.2024-06-13",
+      "purl": "pkg:oci/minio@RELEASE.2024-06-13",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "AGPL-3.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "mongodb",
+      "version": "5.0",
+      "purl": "pkg:oci/mongo@5.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "SSPL-1.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "orion-ld",
+      "version": "1.4.0",
+      "purl": "pkg:oci/orion-ld@1.4.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "AGPL-3.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "postgis",
+      "version": "15-3.4",
+      "purl": "pkg:oci/postgis@15-3.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "PostgreSQL"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "rabbitmq",
+      "version": "3.13",
+      "purl": "pkg:oci/rabbitmq@3.13",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "stackgres",
+      "version": "1.0.0",
+      "purl": "pkg:helm/stackgres@1.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "AGPL-3.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "timescaledb",
+      "version": "2.14.2",
+      "purl": "pkg:oci/timescaledb@2.14.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "infraestructura"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "holidays",
+      "version": "0.103",
+      "purl": "pkg:pypi/holidays@0.103",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "joblib",
+      "version": "1.5.3",
+      "purl": "pkg:pypi/joblib@1.5.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "numpy",
+      "version": "2.2.6",
+      "purl": "pkg:pypi/numpy@2.2.6",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nvidia-nccl-cu12",
+      "version": "2.31.2",
+      "purl": "pkg:pypi/nvidia-nccl-cu12@2.31.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LicenseRef-NVIDIA-Proprietary"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "python-dotenv",
+      "version": "1.2.3",
+      "purl": "pkg:pypi/python-dotenv@1.2.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "scikit-learn",
+      "version": "1.7.2",
+      "purl": "pkg:pypi/scikit-learn@1.7.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "scipy",
+      "version": "1.15.3",
+      "purl": "pkg:pypi/scipy@1.15.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "threadpoolctl",
+      "version": "3.6.0",
+      "purl": "pkg:pypi/threadpoolctl@3.6.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "xgboost",
+      "version": "3.2.0",
+      "purl": "pkg:pypi/xgboost@3.2.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "predictions"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "amqp",
+      "version": "5.3.1",
+      "purl": "pkg:pypi/amqp@5.3.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "billiard",
+      "version": "4.2.4",
+      "purl": "pkg:pypi/billiard@4.2.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "celery",
+      "version": "5.3.6",
+      "purl": "pkg:pypi/celery@5.3.6",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "click-didyoumean",
+      "version": "0.3.1",
+      "purl": "pkg:pypi/click-didyoumean@0.3.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "click-plugins",
+      "version": "1.1.1.2",
+      "purl": "pkg:pypi/click-plugins@1.1.1.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "New BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "click-repl",
+      "version": "0.3.0",
+      "purl": "pkg:pypi/click-repl@0.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ephem",
+      "version": "4.2.1",
+      "purl": "pkg:pypi/ephem@4.2.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "et_xmlfile",
+      "version": "2.0.0",
+      "purl": "pkg:pypi/et_xmlfile@2.0.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "exceptiongroup",
+      "version": "1.3.1",
+      "purl": "pkg:pypi/exceptiongroup@1.3.1",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "GeoAlchemy2",
+      "version": "0.14.2",
+      "purl": "pkg:pypi/geoalchemy2@0.14.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "Jinja2",
+      "version": "3.1.3",
+      "purl": "pkg:pypi/jinja2@3.1.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "kombu",
+      "version": "5.6.2",
+      "purl": "pkg:pypi/kombu@5.6.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "MarkupSafe",
+      "version": "3.0.3",
+      "purl": "pkg:pypi/markupsafe@3.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "minio",
+      "version": "7.2.4",
+      "purl": "pkg:pypi/minio@7.2.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "numpy",
+      "version": "1.24.4",
+      "purl": "pkg:pypi/numpy@1.24.4",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openpyxl",
+      "version": "3.1.5",
+      "purl": "pkg:pypi/openpyxl@3.1.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pandas",
+      "version": "2.0.3",
+      "purl": "pkg:pypi/pandas@2.0.3",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pika",
+      "version": "1.3.0",
+      "purl": "pkg:pypi/pika@1.3.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "prometheus_client",
+      "version": "0.26.0",
+      "purl": "pkg:pypi/prometheus_client@0.26.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0 AND BSD-2-Clause"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "prompt_toolkit",
+      "version": "3.0.53",
+      "purl": "pkg:pypi/prompt_toolkit@3.0.53",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "psycopg2-binary",
+      "version": "2.9.5",
+      "purl": "pkg:pypi/psycopg2-binary@2.9.5",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL with exceptions"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic",
+      "version": "2.10.6",
+      "purl": "pkg:pypi/pydantic@2.10.6",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pydantic_core",
+      "version": "2.27.2",
+      "purl": "pkg:pypi/pydantic_core@2.27.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "requests",
+      "version": "2.31.0",
+      "purl": "pkg:pypi/requests@2.31.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache 2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "SQLAlchemy",
+      "version": "2.0.2",
+      "purl": "pkg:pypi/sqlalchemy@2.0.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sqlalchemy_celery_beat",
+      "version": "0.9.0",
+      "purl": "pkg:pypi/sqlalchemy_celery_beat@0.9.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "vine",
+      "version": "5.1.0",
+      "purl": "pkg:pypi/vine@5.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "wcwidth",
+      "version": "0.8.2",
+      "purl": "pkg:pypi/wcwidth@0.8.2",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  ]
+}

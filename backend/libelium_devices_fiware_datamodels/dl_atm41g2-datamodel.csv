@@ -1,0 +1,21 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery voltage,Battery voltage,r,float,V,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_solar_radiation,Solar radiation,Solar radiation,r,float,W/m2,0,1750,No,,WeatherObserved,solarRadiation
+r_precipitation,Precipitation,Precipitation,r,float,mm,0,65535,No,,WeatherObserved,precipitation
+r_lightning_count,Lightning strike count,Number of lightning strikes detected,r,uint16_t,dimensionless,0,65535,No,,WeatherObserved,lightningCount
+r_lightning_distance,Lightning distance,Estimated distance to last detected lightning strike,r,float,km,0,40,No,,WeatherObserved,lightningDistance
+r_wind_speed,Wind speed,Wind speed,r,float,m/s,0,60,No,,WeatherObserved,windSpeed
+r_wind_direction,Wind direction,Wind direction,r,float,degrees,0,359,No,,WeatherObserved,windDirection
+r_wind_speed_max,Wind gust speed,Maximum wind gust speed,r,float,m/s,0,60,No,,WeatherObserved,gustSpeed
+r_temperature,Temperature,Ambient temperature,r,float,Celsius,-50,60,No,,WeatherObserved,temperature
+r_vapor_pressure,Vapor pressure,Atmospheric vapor pressure,r,float,kPa,0,47,No,,WeatherObserved,vaporPressure
+r_pressure,Atmospheric pressure,Atmospheric pressure,r,float,kPa,1,120,No,,WeatherObserved,atmosphericPressure
+r_humidity,Relative humidity,Relative humidity,r,float,%,0,100,No,,WeatherObserved,relativeHumidity
+r_internal_temperature,Internal temperature,Device internal temperature,r,float,Celsius,-40,50,No,,WeatherObserved,internalTemperature
+r_tilt_x,Tilt X,Sensor tilt on the X axis,r,float,degrees,0,180,No,,WeatherObserved,tiltX
+r_tilt_y,Tilt Y,Sensor tilt on the Y axis,r,float,degrees,0,180,No,,WeatherObserved,tiltY
+r_precipitation_ec,Precipitation EC,Electrical conductivity of collected precipitation,r,float,uS/cm,0,32767,No,,WeatherObserved,precipitationEc
+r_precipitation_cumulative,Cumulative precipitation,Cumulative precipitation,r,float,mm,0,1000,No,,WeatherObserved,precipitationCumulative

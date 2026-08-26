@@ -1,0 +1,78 @@
+{{- /*
+Exposes the APISIX data plane through the cluster's Kubernetes Gateway API,
+consistent with pid-gijon-core. This chart does NOT create the Gateway — it
+attaches to one that already exists (see docs/04-gateway-api.md). The parent
+Gateway listener must allow routes from the release namespace — deployed in
+pid-gijon (the documented namespace), the listener already permits it.
+*/ -}}
+{{- if .Values.gatewayAPI.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "apisix.name" . }}
+  labels:
+    {{- include "apisix.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ required "gatewayAPI.gateway is required when gatewayAPI.enabled" .Values.gatewayAPI.gateway }}
+      namespace: {{ .Values.gatewayAPI.gatewayNamespace | default "gateway" }}
+      {{- if .Values.gatewayAPI.httpsOnly }}
+      sectionName: {{ .Values.gatewayAPI.httpsSectionName | default "https" }}
+      {{- end }}
+  {{- with .Values.gatewayAPI.hostnames }}
+  hostnames:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ .Values.gatewayAPI.backendService | default "apisix-gateway" }}
+          port: {{ .Values.gatewayAPI.backendPort | default 80 }}
+{{- end }}
+{{- if .Values.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "apisix.name" . }}
+  labels:
+    {{- include "apisix.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls:
+    {{- range . }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $.Values.gatewayAPI.backendService | default "apisix-gateway" }}
+                port:
+                  number: {{ $.Values.gatewayAPI.backendPort | default 80 }}
+          {{- end }}
+    {{- end }}
+{{- end }}

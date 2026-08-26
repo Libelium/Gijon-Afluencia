@@ -1,0 +1,9 @@
+.git
+app/.env
+app/.env-local
+docker-compose.yml
+Dockerfile
+README.md
+**/__pycache__
+**/.pytest_cache
+.venv

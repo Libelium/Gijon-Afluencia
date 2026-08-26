@@ -1,0 +1,27 @@
+[project]
+name = "fiware-manager"
+version = "0.1.17"
+description = "FIWARE bridge for non-FIWARE-native data sources"
+authors = [{ name = "Libelium Comunicaciones Distribuidas, S.L." }]
+license = "EUPL-1.2"
+readme = "README.md"
+requires-python = ">=3.11.9"
+dependencies = [
+    "requests",
+    "fastapi==0.108.0",
+    "pydantic==2.4.2",
+    "pydantic-settings>=2,<3",
+    "uvicorn>=0.20.0,<0.21.0",
+    "gunicorn>=21,<24",
+    "python-dotenv==0.21.1",
+    "python-dateutil",
+    "pytest==7.2.1",
+    "pymongo==4.4.1",
+    "setuptools",
+    "boto3",
+    "minio",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

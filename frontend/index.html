@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>PID Gijón</title>
+    <meta name="description" content="Visualizador de datos de sensores urbanos: business intelligence y dashboards de análisis de datos." />
+  </head>
+  <body>
+    <div id="app"></div>
+    <!--
+      Script clasico y ANTES del modulo a proposito: el cliente OIDC y la instancia de axios
+      se construyen al evaluarse su modulo, no dentro de una funcion, asi que la
+      configuracion tiene que estar en window antes de que eso ocurra.
+    -->
+    <script src="/config.js"></script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+apiVersion: stackgres.io/v1
+kind: SGCluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  labels:
+    {{- include "stackgres.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.cluster.instances }}
+  pods:
+    disableConnectionPooling: {{ .Values.cluster.disableConnectionPooling }}
+    persistentVolume:
+      size: {{ .Values.cluster.storage.size | quote }}
+      {{- if .Values.cluster.storage.storageClass }}
+      storageClass: {{ .Values.cluster.storage.storageClass | quote }}
+      {{- end }}
+    resources:
+      containers:
+        limits: {}
+        requests: {}
+  {{- if .Values.instanceProfile.enabled }}
+  sgInstanceProfile: {{ .Values.instanceProfile.name }}
+  {{- end }}
+  configurations:
+    sgPostgresConfig: {{ .Values.cluster.postgresConfig.name }}
+  postgres:
+    version: {{ .Values.cluster.postgres.version | quote }}
+    extensions:
+      {{- range .Values.extensions }}
+      - name: {{ .name }}
+      {{- end }}
+  managedSql:
+    continueOnSGScriptError: false
+    scripts:
+      - sgScript: {{ .Values.cluster.script.name }}

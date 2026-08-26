@@ -1,0 +1,41 @@
+Thank you for installing {{ .Chart.Name }} (chart {{ .Chart.Version }}, app {{ .Chart.AppVersion }}).
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+Deployed components:
+{{- range $name, $component := .Values.components }}
+{{- if $component.enabled }}
+  - {{ include "pid-gijon-core.kebabcase" $name }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.gateway.enabled }}
+
+Components exposed via the Gateway API:
+{{- $any := false }}
+{{- range $name, $component := .Values.components }}
+{{- if and $component.enabled $component.gatewayAPI $component.gatewayAPI.enabled }}
+{{- range $component.gatewayAPI.routes }}
+{{- with .route.hostnames }}
+{{- range . }}
+  - https://{{ . }}  ->  {{ $name }}
+{{- $any = true }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if not $any }}
+  (no HTTP hostnames configured yet — set components.<name>.gatewayAPI.routes)
+{{- end }}
+{{- end }}
+
+Next steps:
+  1. Check rollout:   kubectl get pods -n {{ .Release.Namespace }}
+  2. Complete the manual post-install steps (Keycloak realm/clients, Realtime
+     tenant) described in docs/06-post-install.md — the platform is not fully
+     functional until these are done.
+
+External dependencies (PostgreSQL, MongoDB, RabbitMQ, object storage, Keycloak
+DB, Realtime DB) must already be running. See docs/03-infrastructure.md.

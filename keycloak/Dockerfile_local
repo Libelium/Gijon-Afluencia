@@ -1,0 +1,52 @@
+# =========================
+# Stage 1: Build the 2FA Email Authenticator extension
+# =========================
+FROM maven:3.9.9-eclipse-temurin-21 AS ext-builder
+
+WORKDIR /build
+
+# Pinned to this commit because it is the last version compatible with Keycloak 25.x.x
+RUN git clone https://github.com/mesutpiskin/keycloak-2fa-email-authenticator.git . \
+    && git checkout 7dbcdf70d1dc862d49e567b46e66671dfaa7dff9 \
+    && mvn clean package -DskipTests
+
+# # =========================
+# Stage 2: Build Keycloak with extension
+# =========================
+FROM quay.io/keycloak/keycloak:25.0.0 AS builder
+
+ENV KC_HEALTH_ENABLED=true
+ENV KC_METRICS_ENABLED=true
+ENV KC_FEATURES=token-exchange
+ENV KC_DB=postgres
+
+WORKDIR /opt/keycloak
+
+# Copy the built extension JAR
+COPY --from=ext-builder /build/target/*.jar /opt/keycloak/providers/
+
+# Rebuild Keycloak with provider
+RUN /opt/keycloak/bin/kc.sh build --db=postgres
+
+# =========================
+# Stage 3: Final runtime image
+# =========================
+FROM quay.io/keycloak/keycloak:25.0.0
+
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+
+# Login/e-mail themes. start-dev below serves them with caching disabled, so edits under
+# pidtheme/ show up on a browser reload without rebuilding.
+COPY ./pidtheme /opt/keycloak/themes/pidtheme
+COPY ./pidtheme-mobile /opt/keycloak/themes/pidtheme-mobile
+COPY realm.json /opt/keycloak/data/import/realm.json
+COPY change-password-client.json /opt/keycloak/data/import/client/change-password-client.json
+
+# NOTE: this image starts with `start-dev` and WITHOUT --import-realm, so the realm file above is
+# only staged in the image. Use the production Dockerfile when you need the import to run.
+
+# Copy entrypoint script
+COPY --chmod=755 ./bootstrap-keycloak-backend-local.sh /opt/keycloak/docker-entrypoint.d/bootstrap-keycloak-backend-local.sh
+
+# Use the custom script as entrypoint
+ENTRYPOINT ["/opt/keycloak/docker-entrypoint.d/bootstrap-keycloak-backend-local.sh"]

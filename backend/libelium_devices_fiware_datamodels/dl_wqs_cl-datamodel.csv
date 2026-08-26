@@ -1,0 +1,11 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_battery_voltage,Battery voltage,Battery voltage,r,float,V,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_dev_fw_v,Firmware Version,Firmware Version,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,firmwareVersion
+r_frequency_band,Frequency band,LoRaWAN frequency band used by the device,r,string,dimensionless,N/A,N/A,No,Device.Connectivity,Device,frequencyBand
+r_sub_band,Sub band,LoRaWAN sub-band used by the device,r,uint8_t,dimensionless,N/A,N/A,No,Device.Connectivity,Device,subBand
+r_model,Model,Hub model identifier (fixed WQS-LB),r,string,dimensionless,N/A,N/A,No,Device.Information,Device,model
+r_temperature,Temperature,DS18B20 probe temperature,r,float,Celsius,-55,125,No,Sensors.Water Quality,WaterQualityObserved,temperature
+r_free_chlorine,Free chlorine,Free chlorine concentration measured by the DR-CL-2ML probe,r,float,mg/L,0,2,No,Sensors.Water Quality,WaterQualityObserved,freeChlorine

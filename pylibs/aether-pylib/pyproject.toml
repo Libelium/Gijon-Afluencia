@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aether_pylib"
+version = "0.7.3"
+authors = [{ name = "Libelium Comunicaciones Distribuidas, S.L." }]
+license = "EUPL-1.2"
+readme = "README.md"
+dependencies = [
+    "pydantic>=2.0.0",
+    "pandas>=2.0.0",
+    "isodate>=0.6.1",
+    "freezegun>=1.5.1",
+]
+requires-python = ">=3.8"

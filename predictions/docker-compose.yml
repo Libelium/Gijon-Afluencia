@@ -1,0 +1,38 @@
+## Local development only: in PRE/PROD the Kubernetes CronJob is in charge (the
+## manifests live in deploy/). One service because there is one
+## image; the command is chosen at run time.
+##
+## Bring it up once and work inside it:
+##
+##   docker compose up -d
+##   docker exec -it crowd-predictions python scripts/main.py     # fusion ETL
+##   docker exec -it crowd-predictions python scripts/train.py    # training
+##   docker exec -it crowd-predictions python scripts/predict.py  # prediction (train first)
+##   docker exec -it crowd-predictions pytest              # the test suite
+##   docker exec -it crowd-predictions bash                # a shell inside
+##   docker compose down                       # when done
+##
+## Storage is NOT simulated: it writes to the S3 of the environment just like PRE
+## does, so the AWS_S3_* in .env have to be filled in.
+services:
+  crowd:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # The same image the CI publishes: the tests travel inside it.
+    image: predictions
+    # Fixed name so it is `docker exec -it crowd-predictions ...` and not the generated name.
+    container_name: crowd-predictions
+    command: bash
+    tty: true
+    stdin_open: true
+    env_file:
+      - .env
+    volumes:
+      # Code mounted to iterate without rebuilding the image (same pattern as
+      # the reference prediction ETL). Does not apply in PRE: there the image rules.
+      # The package is installed with `pip install .`, but editable-by-mount:
+      # the two directories cover everything, no file-by-file list any more.
+      - ./crowd_predictions:/app/crowd_predictions
+      - ./scripts:/app/scripts
+    restart: "no"

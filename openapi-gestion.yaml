@@ -1,0 +1,3860 @@
+# Generado desde las rutas reales del backend (php artisan route:list).
+# Regenerar tras tocar backend/src/routes/api.php.
+openapi: 3.0.3
+info:
+  title: PID Gijón — API de gestión
+  version: 1.0.0
+  description: 'API de lectura y gestión de la Plataforma de Integración de Datos del Ayuntamiento de
+    Gijón.
+
+
+    El dato **no entra por aquí**: la ingesta va por el núcleo FIWARE (sensor → IoT Agent → Orion-LD →
+    RabbitMQ → consumidores). Esta API cubre entidades, dispositivos, series temporales, cuadros de mando,
+    alarmas y preferencias.
+
+
+    Autenticación por *bearer token* JWT emitido por Keycloak (`POST /V1/login`). Las rutas bajo `/internal`
+    no llevan token: solo son accesibles desde la red interna y las consume el gateway APISIX para validar
+    permiso de escritura por tenant.'
+  license:
+    name: EUPL-1.2
+    url: https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+servers:
+- url: /api
+  description: Ruta base del servicio
+security:
+- bearerAuth: []
+tags:
+- name: Alarmas
+- name: Auditoría
+- name: Autenticación y usuario
+- name: Ayuda
+- name: Cuadros de mando
+- name: Dispositivos
+- name: Entidades
+- name: 'FIWARE: tenants y scopes'
+- name: Grupos de entidades
+- name: Interno (gateway)
+- name: Notificaciones
+- name: Pantalla de inicio
+- name: Preferencias
+- name: Series temporales
+- name: Último dato
+paths:
+  /V1/alarms:
+    post:
+      tags:
+      - Alarmas
+      summary: Store
+      operationId: Alarm_store_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                  - basic
+                  - inactivity
+                function:
+                  type: string
+                  enum:
+                  - AND
+                  - OR
+                  - XOR
+                up:
+                  type: boolean
+                disabled:
+                  type: boolean
+                entity_group_id:
+                  type: integer
+                conditions:
+                  type: array
+                  items: {}
+              required:
+              - conditions
+              - disabled
+              - function
+              - name
+              - type
+              - up
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/alarms/actions:
+    post:
+      tags:
+      - Alarmas
+      summary: Store
+      operationId: AlarmAction_store_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alarm_ids:
+                  type: array
+                  items: {}
+                actions:
+                  type: array
+                  items: {}
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/alarms/actions/channels:
+    get:
+      tags:
+      - Alarmas
+      summary: Channels
+      operationId: AlarmAction_channels_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/alarms/paginate:
+    post:
+      tags:
+      - Alarmas
+      summary: Paginate
+      operationId: Alarm_paginate_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paginationSize:
+                  type: integer
+                page:
+                  type: integer
+                orderBy:
+                  type: string
+                orderDirection:
+                  type: boolean
+                search:
+                  type: string
+              required:
+              - orderBy
+              - orderDirection
+              - page
+              - paginationSize
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/alarms/{alarmId}/actions:
+    get:
+      tags:
+      - Alarmas
+      summary: Index
+      operationId: AlarmAction_index_get
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/alarms/{alarmId}/actions/bulkUpdateCreate:
+    post:
+      tags:
+      - Alarmas
+      summary: Deletes all the actions of an alarm and call store to create the new ones
+      operationId: AlarmAction_bulkUpdate_post
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alarm_ids:
+                  type: array
+                  items: {}
+                actions:
+                  type: array
+                  items: {}
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/alarms/{alarmId}/actions/{action}:
+    delete:
+      tags:
+      - Alarmas
+      summary: Destroy
+      operationId: AlarmAction_destroy_delete
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: action
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/alarms/{alarmId}/conditions:
+    get:
+      tags:
+      - Alarmas
+      summary: Index
+      operationId: AlarmCondition_index_get
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    post:
+      tags:
+      - Alarmas
+      summary: Store
+      operationId: AlarmCondition_store_post
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity_id:
+                  type: integer
+                measure:
+                  type: string
+                condition:
+                  type: string
+                  enum:
+                  - gt
+                  - lt
+                  - eq
+                  - ne
+                  - ge
+                  - le
+                  - between
+                  - not_between
+                threshold:
+                  type: array
+                  items: {}
+                period:
+                  type: array
+                  items: {}
+              required:
+              - condition
+              - entity_id
+              - measure
+              - threshold
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/alarms/{alarmId}/conditions/bulkUpdateCreate:
+    post:
+      tags:
+      - Alarmas
+      summary: This method is used to update all the conditions on the report
+      operationId: AlarmCondition_bulkUpdate_post
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/alarms/{alarmId}/conditions/{condition}:
+    delete:
+      tags:
+      - Alarmas
+      summary: Destroy
+      operationId: AlarmCondition_destroy_delete
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: condition
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Alarmas
+      summary: Show
+      operationId: AlarmCondition_show_get
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: condition
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Alarmas
+      summary: Update
+      operationId: AlarmCondition_update_put
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: condition
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity_id:
+                  type: integer
+                measure:
+                  type: string
+                condition:
+                  type: string
+                  enum:
+                  - gt
+                  - lt
+                  - eq
+                  - ne
+                  - ge
+                  - le
+                  - between
+                  - not_between
+                threshold:
+                  type: array
+                  items: {}
+                period:
+                  type: array
+                  items: {}
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+    patch:
+      tags:
+      - Alarmas
+      summary: Update
+      operationId: AlarmCondition_update_patch
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: condition
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entity_id:
+                  type: integer
+                measure:
+                  type: string
+                condition:
+                  type: string
+                  enum:
+                  - gt
+                  - lt
+                  - eq
+                  - ne
+                  - ge
+                  - le
+                  - between
+                  - not_between
+                threshold:
+                  type: array
+                  items: {}
+                period:
+                  type: array
+                  items: {}
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/alarms/{alarmId}/inactivityConditions:
+    get:
+      tags:
+      - Alarmas
+      summary: Index
+      operationId: InactivityAlarmCondition_index_get
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    post:
+      tags:
+      - Alarmas
+      summary: Store
+      operationId: InactivityAlarmCondition_store_post
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entityId:
+                  type: integer
+                measure:
+                  type: string
+                timeoutS:
+                  type: integer
+              required:
+              - entityId
+              - timeoutS
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/alarms/{alarmId}/inactivityConditions/bulkUpdateCreate:
+    post:
+      tags:
+      - Alarmas
+      summary: Bulk Update
+      operationId: InactivityAlarmCondition_bulkUpdate_post
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/alarms/{alarmId}/inactivityConditions/{inactivityCondition}:
+    delete:
+      tags:
+      - Alarmas
+      summary: Destroy
+      operationId: InactivityAlarmCondition_destroy_delete
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inactivityCondition
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Alarmas
+      summary: Show
+      operationId: InactivityAlarmCondition_show_get
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inactivityCondition
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Alarmas
+      summary: Update
+      operationId: InactivityAlarmCondition_update_put
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inactivityCondition
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entityId:
+                  type: integer
+                measure:
+                  type: string
+                timeoutS:
+                  type: integer
+              required:
+              - entityId
+              - timeoutS
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+    patch:
+      tags:
+      - Alarmas
+      summary: Update
+      operationId: InactivityAlarmCondition_update_patch
+      parameters:
+      - name: alarmId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: inactivityCondition
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entityId:
+                  type: integer
+                measure:
+                  type: string
+                timeoutS:
+                  type: integer
+              required:
+              - entityId
+              - timeoutS
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/alarms/{alarm}:
+    delete:
+      tags:
+      - Alarmas
+      summary: Destroy
+      operationId: Alarm_destroy_delete
+      parameters:
+      - name: alarm
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Alarmas
+      summary: Show
+      operationId: Alarm_show_get
+      parameters:
+      - name: alarm
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Alarmas
+      summary: Update
+      operationId: Alarm_update_put
+      parameters:
+      - name: alarm
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                function:
+                  type: string
+                  enum:
+                  - AND
+                  - OR
+                  - XOR
+                up:
+                  type: boolean
+                disabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+    patch:
+      tags:
+      - Alarmas
+      summary: Update
+      operationId: Alarm_update_patch
+      parameters:
+      - name: alarm
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                function:
+                  type: string
+                  enum:
+                  - AND
+                  - OR
+                  - XOR
+                up:
+                  type: boolean
+                disabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/dashboards:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Store
+      operationId: Dashboard_store_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/dashboards/custom:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Index Custom
+      operationId: Dashboard_indexCustom_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/dashboards/from-json:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Create one or many custom dashboards from a single JSON document.
+      operationId: Dashboard_createFromJson_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/dashboards/images/{id}:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Get Image
+      operationId: Dashboard_getImage_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Image
+      operationId: Dashboard_setImage_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/paginate:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Index
+      operationId: Dashboard_index_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/dashboards/setTemplateConfig/{id}:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Template Config
+      operationId: Dashboard_setTemplateConfig_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/setTemplateDevices/{id}:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Template Devices
+      operationId: Dashboard_setTemplateDevices_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/setTemplateEntities/{id}:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Template Entities
+      operationId: Dashboard_setTemplateEntities_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/setTemplateGroups/{id}:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Template Groups
+      operationId: Dashboard_setTemplateGroups_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/setTemplateRegulation/{id}:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Template Regulation
+      operationId: Dashboard_setTemplateRegulation_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/setTemplateType/{id}:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Template Type
+      operationId: Dashboard_setTemplateType_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/uploaded-images:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Get Uploaded Images
+      operationId: Dashboard_getUploadedImages_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/dashboards/uploaded-images/{filename}:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Get Uploaded Image
+      operationId: Dashboard_getUploadedImage_get
+      parameters:
+      - name: filename
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/{dashboard}:
+    delete:
+      tags:
+      - Cuadros de mando
+      summary: Destroy
+      operationId: Dashboard_destroy_delete
+      parameters:
+      - name: dashboard
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Show
+      operationId: Dashboard_show_get
+      parameters:
+      - name: dashboard
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Cuadros de mando
+      summary: Update
+      operationId: Dashboard_update_put
+      parameters:
+      - name: dashboard
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    patch:
+      tags:
+      - Cuadros de mando
+      summary: Update
+      operationId: Dashboard_update_patch
+      parameters:
+      - name: dashboard
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/dashboards/{id}/from-json:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Replace a custom dashboard's panels, series and layout from a single JSON
+      operationId: Dashboard_updateFromJson_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/devices/by-entity-ids:
+    post:
+      tags:
+      - Dispositivos
+      summary: Devices By Entity Ids
+      operationId: Device_devicesByEntityIds_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/devices/paginate:
+    post:
+      tags:
+      - Dispositivos
+      summary: Paginate
+      operationId: Device_paginate_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paginationSize:
+                  type: integer
+                page:
+                  type: integer
+                orderBy:
+                  type: string
+                orderDirection:
+                  type: boolean
+                search:
+                  type: string
+              required:
+              - orderBy
+              - orderDirection
+              - page
+              - paginationSize
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/devices/{device}:
+    get:
+      tags:
+      - Dispositivos
+      summary: Show
+      operationId: Device_show_get
+      parameters:
+      - name: device
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/devices/{id}/entities:
+    get:
+      tags:
+      - Dispositivos
+      summary: Get Entities
+      operationId: Device_getEntities_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/documentation/{lang}:
+    get:
+      tags:
+      - Ayuda
+      summary: Download Documentation
+      operationId: Help_downloadDocumentation_get
+      parameters:
+      - name: lang
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /V1/entities:
+    post:
+      tags:
+      - Entidades
+      summary: Store
+      operationId: Entity_store_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entities:
+                  type: array
+                  items: {}
+              required:
+              - entities
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/entities/by-ids-for-alarm-action:
+    post:
+      tags:
+      - Entidades
+      summary: Entities For Alarm Action By Ids
+      operationId: Entity_entitiesForAlarmActionByIds_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/commands/paginate:
+    post:
+      tags:
+      - Entidades
+      summary: Paginate Entities With Commands
+      operationId: Entity_paginateEntitiesWithCommands_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/datamodels/paginate:
+    post:
+      tags:
+      - Entidades
+      summary: Paginate Datamodels
+      operationId: Entity_paginateDatamodels_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/fromDevice/{id}:
+    get:
+      tags:
+      - Entidades
+      summary: Get all entities associated with a specific device.
+      operationId: Entity_getEntitiesFromDeviceId_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/entities/getEntityIdTenantScope:
+    post:
+      tags:
+      - Entidades
+      summary: Get Entity Id Tenant Scope
+      operationId: Entity_getEntityIdTenantScope_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/getLastDataTimestamps:
+    post:
+      tags:
+      - Entidades
+      summary: Get Last Data Timestamps
+      operationId: Entity_getLastDataTimestamps_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/healthchecks/paginate:
+    post:
+      tags:
+      - Entidades
+      summary: Paginate Healthchecks
+      operationId: Entity_paginateHealthchecks_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/list:
+    post:
+      tags:
+      - Entidades
+      summary: List All
+      operationId: Entity_listAll_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/paginate:
+    post:
+      tags:
+      - Entidades
+      summary: Paginate
+      operationId: Entity_paginate_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/sendCommands:
+    post:
+      tags:
+      - Entidades
+      summary: Send Commands Bulk
+      operationId: Entity_sendCommandsBulk_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/storeFromFile:
+    post:
+      tags:
+      - Entidades
+      summary: Create entities from a JSON/GeoJSON file upload.
+      operationId: Entity_storeFromFile_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/uploadData:
+    post:
+      tags:
+      - Entidades
+      summary: Upload Data To Entity
+      operationId: Entity_uploadDataToEntity_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/entities/{entity}:
+    get:
+      tags:
+      - Entidades
+      summary: Show
+      operationId: Entity_show_get
+      parameters:
+      - name: entity
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/entities/{id}/properties:
+    patch:
+      tags:
+      - Entidades
+      summary: Updates or inserts properties for a given entity and handles related side effects.
+      operationId: Entity_upsertProperties_patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                geolocation:
+                  type: string
+                timestamp:
+                  type: string
+                units:
+                  type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/entities/{id}/properties/{attributeName}:
+    delete:
+      tags:
+      - Entidades
+      summary: Deletes a specific property from an entity.
+      operationId: Entity_deleteProperty_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attributeName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/entities/{id}/sendCommands:
+    post:
+      tags:
+      - Entidades
+      summary: Send Commands
+      operationId: Entity_sendCommands_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/fiwareScopes:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Scopes
+      operationId: FiwareTenantScope_getScopes_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/fiwareScopes/services:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Tenant Scope Services
+      operationId: FiwareTenantScope_getTenantScopeServices_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/fiwareScopes/services/{organizationId}:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Tenant Scope Services Organization
+      operationId: FiwareTenantScope_getTenantScopeServicesOrganization_get
+      parameters:
+      - name: organizationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/fiwareScopes/{id}/tenant:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Scope Tenant
+      operationId: FiwareTenantScope_getScopeTenant_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/fiwareTenants:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Tenants
+      operationId: FiwareTenantScope_getTenants_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/fiwareTenants/{id}:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Tenant
+      operationId: FiwareTenantScope_getTenant_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/fiwareTenants/{id}/scopes:
+    get:
+      tags:
+      - 'FIWARE: tenants y scopes'
+      summary: Get Tenant Scopes
+      operationId: FiwareTenantScope_getTenantScopes_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/groups:
+    post:
+      tags:
+      - Grupos de entidades
+      summary: Store a newly created resource in storage.
+      operationId: EntityGroup_store_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/groups/paginate:
+    post:
+      tags:
+      - Grupos de entidades
+      summary: Paginate
+      operationId: EntityGroup_paginate_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paginationSize:
+                  type: integer
+                page:
+                  type: integer
+                orderBy:
+                  type: string
+                orderDirection:
+                  type: boolean
+                search:
+                  type: string
+              required:
+              - orderBy
+              - orderDirection
+              - page
+              - paginationSize
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/groups/{group}:
+    delete:
+      tags:
+      - Grupos de entidades
+      summary: Remove the specified resource from storage.
+      operationId: EntityGroup_destroy_delete
+      parameters:
+      - name: group
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Grupos de entidades
+      summary: Display the specified resource.
+      operationId: EntityGroup_show_get
+      parameters:
+      - name: group
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Grupos de entidades
+      summary: Update the specified resource in storage.
+      operationId: EntityGroup_update_put
+      parameters:
+      - name: group
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    patch:
+      tags:
+      - Grupos de entidades
+      summary: Update the specified resource in storage.
+      operationId: EntityGroup_update_patch
+      parameters:
+      - name: group
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/groups/{id}/status:
+    patch:
+      tags:
+      - Grupos de entidades
+      summary: Change an AssetIntervention's status and cascade it to all its member incidents (their
+        status
+      operationId: EntityGroup_updateStatus_patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/home-layouts:
+    get:
+      tags:
+      - Pantalla de inicio
+      summary: Index
+      operationId: HomeLayout_index_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+    post:
+      tags:
+      - Pantalla de inicio
+      summary: Store
+      operationId: HomeLayout_store_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/home-layouts/create-default:
+    post:
+      tags:
+      - Pantalla de inicio
+      summary: Atomically create a default layout with widgets
+      operationId: HomeLayout_createDefaultLayout_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/home-layouts/{home_layout}:
+    delete:
+      tags:
+      - Pantalla de inicio
+      summary: Destroy
+      operationId: HomeLayout_destroy_delete
+      parameters:
+      - name: home_layout
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Pantalla de inicio
+      summary: Show
+      operationId: HomeLayout_show_get
+      parameters:
+      - name: home_layout
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/home-layouts/{id}:
+    patch:
+      tags:
+      - Pantalla de inicio
+      summary: Update
+      operationId: HomeLayout_update_patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/home-layouts/{layoutId}/widgets:
+    post:
+      tags:
+      - Pantalla de inicio
+      summary: Store
+      operationId: HomeWidget_store_post
+      parameters:
+      - name: layoutId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/home-layouts/{layoutId}/widgets/batch:
+    delete:
+      tags:
+      - Pantalla de inicio
+      summary: Batch Destroy
+      operationId: HomeWidget_batchDestroy_delete
+      parameters:
+      - name: layoutId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    post:
+      tags:
+      - Pantalla de inicio
+      summary: Batch Store
+      operationId: HomeWidget_batchStore_post
+      parameters:
+      - name: layoutId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Pantalla de inicio
+      summary: Batch Update
+      operationId: HomeWidget_batchUpdate_put
+      parameters:
+      - name: layoutId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/home-layouts/{layoutId}/widgets/paginate:
+    post:
+      tags:
+      - Pantalla de inicio
+      summary: Paginate
+      operationId: HomeWidget_paginate_post
+      parameters:
+      - name: layoutId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/home-widgets/{id}:
+    delete:
+      tags:
+      - Pantalla de inicio
+      summary: Destroy
+      operationId: HomeWidget_destroy_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    patch:
+      tags:
+      - Pantalla de inicio
+      summary: Update
+      operationId: HomeWidget_update_patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/login:
+    post:
+      tags:
+      - Autenticación y usuario
+      summary: Login
+      operationId: User_login_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+  /V1/logout:
+    post:
+      tags:
+      - Autenticación y usuario
+      summary: Logout user (Revoke the token)
+      operationId: User_logout_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/logs/paginate:
+    post:
+      tags:
+      - Auditoría
+      summary: Paginate
+      operationId: Logs_paginate_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paginationSize:
+                  type: integer
+                page:
+                  type: integer
+                orderBy:
+                  type: string
+                orderDirection:
+                  type: boolean
+                devices:
+                  type: integer
+                connector:
+                  type: integer
+                message:
+                  type: string
+                type:
+                  type: string
+                level:
+                  type: string
+                start_date:
+                  type: string
+                  format: date-time
+                end_date:
+                  type: string
+                  format: date-time
+                resource_type:
+                  type: string
+                resource_id:
+                  type: array
+                  items: {}
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/organizations/{id}/preferences:
+    get:
+      tags:
+      - Preferencias
+      summary: Get Preferences
+      operationId: Organization_getPreferences_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/organizations/{id}/preferences/{preferenceName}:
+    delete:
+      tags:
+      - Preferencias
+      summary: Delete Preference
+      operationId: Organization_deletePreference_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Preferencias
+      summary: Get Preference
+      operationId: Organization_getPreference_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Preferencias
+      summary: Update Preference
+      operationId: Organization_updatePreference_put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/organizations/{organization}:
+    get:
+      tags:
+      - Preferencias
+      summary: Show
+      operationId: Organization_show_get
+      parameters:
+      - name: organization
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/panels:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Index
+      operationId: Panel_index_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Store
+      operationId: Panel_store_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/panels/images/{id}:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Get Image
+      operationId: Panel_getImage_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Set Image
+      operationId: Panel_setImage_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/panels/{panel}:
+    delete:
+      tags:
+      - Cuadros de mando
+      summary: Destroy
+      operationId: Panel_destroy_delete
+      parameters:
+      - name: panel
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Show
+      operationId: Panel_show_get
+      parameters:
+      - name: panel
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Cuadros de mando
+      summary: Update
+      operationId: Panel_update_put
+      parameters:
+      - name: panel
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    patch:
+      tags:
+      - Cuadros de mando
+      summary: Update
+      operationId: Panel_update_patch
+      parameters:
+      - name: panel
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/password/change:
+    post:
+      tags:
+      - Autenticación y usuario
+      summary: Change Password
+      operationId: ResetPassword_changePassword_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+    put:
+      tags:
+      - Autenticación y usuario
+      summary: Update Password
+      operationId: ResetPassword_updatePassword_put
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/password/recovery:
+    post:
+      tags:
+      - Autenticación y usuario
+      summary: Reset Link
+      operationId: ResetPassword_resetLink_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+  /V1/phone/verify/confirm:
+    post:
+      tags:
+      - Alarmas
+      summary: Confirm
+      operationId: PhoneVerification_confirm_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/phone/verify/send:
+    post:
+      tags:
+      - Alarmas
+      summary: Send
+      operationId: PhoneVerification_send_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/public/dashboards/{slug}:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Get Public Dashboard
+      operationId: Dashboard_getPublicDashboard_get
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /V1/public/timeseries/{slug}:
+    post:
+      tags:
+      - Series temporales
+      summary: Unauthenticated timeseries request
+      operationId: TimeSeries_unauthenticated_timeseries_request_post
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /V1/publicOrganizations/{id}/preferences:
+    get:
+      tags:
+      - Preferencias
+      summary: Get Preferences By Organization Id
+      operationId: Organization_getPreferencesByOrganizationId_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /V1/publicOrganizations/{id}/preferences/{preferenceName}:
+    get:
+      tags:
+      - Preferencias
+      summary: Get Preference By Organization Id
+      operationId: Organization_getPreferenceByOrganizationId_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /V1/publicOrganizations/{id}/preferences/{preferenceName}/image:
+    get:
+      tags:
+      - Preferencias
+      summary: Serve an image-bearing organization preference (a theme icon) as an actual image.
+      operationId: Organization_getPreferenceImageByOrganizationId_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /V1/realtime/devices/{id}:
+    get:
+      tags:
+      - Último dato
+      summary: Get Device Data Request
+      operationId: RealtimeDevice_getDeviceDataRequest_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/realtime/entities:
+    post:
+      tags:
+      - Último dato
+      summary: Get Entities Request
+      operationId: RealtimeEntity_getEntitiesRequest_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/entities/measures/available:
+    get:
+      tags:
+      - Último dato
+      summary: Get Available Measures Request
+      operationId: RealtimeEntity_getAvailableMeasuresRequest_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/entities/sorted:
+    post:
+      tags:
+      - Último dato
+      summary: Get Last Data Time Entities Request
+      operationId: RealtimeEntity_getLastDataTimeEntitiesRequest_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/entities/sortedBulk:
+    post:
+      tags:
+      - Último dato
+      summary: Get Last Data Time Entities Request Bulk
+      operationId: RealtimeEntity_getLastDataTimeEntitiesRequestBulk_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/entities/timeLastData:
+    post:
+      tags:
+      - Último dato
+      summary: Get Last Data Request Bulk
+      operationId: RealtimeEntity_getLastDataRequestBulk_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/entities/timeLastData/{urn}:
+    get:
+      tags:
+      - Último dato
+      summary: Get Last Data Request
+      operationId: RealtimeEntity_getLastDataRequest_get
+      parameters:
+      - name: urn
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/realtime/entities/{urn}:
+    get:
+      tags:
+      - Último dato
+      summary: Get Entity Request
+      operationId: RealtimeEntity_getEntityRequest_get
+      parameters:
+      - name: urn
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/realtime/notifications:
+    get:
+      tags:
+      - Notificaciones
+      summary: Get Data
+      operationId: UserNotification_getData_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/notifications/countData:
+    get:
+      tags:
+      - Notificaciones
+      summary: Count Data
+      operationId: UserNotification_countData_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/notifications/deleteNotification/{id}:
+    delete:
+      tags:
+      - Notificaciones
+      summary: Delete Notification
+      operationId: UserNotification_deleteNotification_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/realtime/notifications/readAll:
+    post:
+      tags:
+      - Notificaciones
+      summary: Read All
+      operationId: UserNotification_readAll_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/realtime/notifications/updateRead/{id}:
+    put:
+      tags:
+      - Notificaciones
+      summary: Update Read
+      operationId: UserNotification_updateRead_put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/refresh-token:
+    post:
+      tags:
+      - Autenticación y usuario
+      summary: Refresh Kc Token
+      operationId: User_refreshKcToken_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+  /V1/regulations:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Store a newly created resource in storage.
+      operationId: Regulation_store_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/regulations/paginate:
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Display a listing of the resource. Paginated.
+      operationId: Regulation_paginate_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/regulations/{regulation}:
+    delete:
+      tags:
+      - Cuadros de mando
+      summary: Remove the specified resource from storage.
+      operationId: Regulation_destroy_delete
+      parameters:
+      - name: regulation
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Display the specified resource.
+      operationId: Regulation_show_get
+      parameters:
+      - name: regulation
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Cuadros de mando
+      summary: Update the specified resource in storage.
+      operationId: Regulation_update_put
+      parameters:
+      - name: regulation
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    patch:
+      tags:
+      - Cuadros de mando
+      summary: Update the specified resource in storage.
+      operationId: Regulation_update_patch
+      parameters:
+      - name: regulation
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/tags:
+    get:
+      tags:
+      - Cuadros de mando
+      summary: Index
+      operationId: Tag_index_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+    patch:
+      tags:
+      - Cuadros de mando
+      summary: Modifications In Batch
+      operationId: Tag_modificationsInBatch_patch
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+    post:
+      tags:
+      - Cuadros de mando
+      summary: Store
+      operationId: Tag_store_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Creado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/tags/{id}:
+    delete:
+      tags:
+      - Cuadros de mando
+      summary: Destroy
+      operationId: Tag_destroy_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Cuadros de mando
+      summary: Update
+      operationId: Tag_update_put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/telegram/config:
+    get:
+      tags:
+      - Alarmas
+      summary: Config
+      operationId: Telegram_config_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/telegram/connect:
+    post:
+      tags:
+      - Alarmas
+      summary: Connect
+      operationId: Telegram_connect_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/telegram/disconnect:
+    delete:
+      tags:
+      - Alarmas
+      summary: Disconnect
+      operationId: Telegram_disconnect_delete
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/telegram/status:
+    get:
+      tags:
+      - Alarmas
+      summary: Status
+      operationId: Telegram_status_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/timeseries:
+    post:
+      tags:
+      - Series temporales
+      summary: Authenticated timeseries request
+      operationId: TimeSeries_authenticated_timeseries_request_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/user:
+    get:
+      tags:
+      - Autenticación y usuario
+      summary: Get User
+      operationId: User_getUser_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /V1/user/{id}/preferences:
+    get:
+      tags:
+      - Preferencias
+      summary: Get Preferences
+      operationId: UserPreferences_getPreferences_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/user/{id}/preferences/{preferenceName}:
+    get:
+      tags:
+      - Preferencias
+      summary: Get Preference
+      operationId: UserPreferences_getPreference_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Preferencias
+      summary: Update Preference
+      operationId: UserPreferences_updatePreference_put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: preferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /V1/user/{user}:
+    get:
+      tags:
+      - Autenticación y usuario
+      summary: To take detail of current user
+      operationId: User_show_get
+      parameters:
+      - name: user
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    put:
+      tags:
+      - Autenticación y usuario
+      summary: PUT/PATCH Full or partial udpate over the resource
+      operationId: User_update_put
+      parameters:
+      - name: user
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+              - name
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+    patch:
+      tags:
+      - Autenticación y usuario
+      summary: PUT/PATCH Full or partial udpate over the resource
+      operationId: User_update_patch
+      parameters:
+      - name: user
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+              - name
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /help/changelog:
+    get:
+      tags:
+      - Ayuda
+      summary: Get Changelog Index
+      operationId: Help_getChangelogIndex_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /help/changelog/{version}:
+    get:
+      tags:
+      - Ayuda
+      summary: Get Changelog
+      operationId: Help_getChangelog_get
+      parameters:
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /help/content/{folder}/{filepath}:
+    get:
+      tags:
+      - Ayuda
+      summary: Returns the Markdown content of an existing file from the 'documentacion' folder in the
+        S3 bucket
+      operationId: Help_getFileContent_get
+      parameters:
+      - name: folder
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: filepath
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+  /help/image/{folder}/{filepath}:
+    get:
+      tags:
+      - Ayuda
+      summary: Returns an image file linked from the documentation
+      operationId: Help_getImage_get
+      parameters:
+      - name: folder
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: filepath
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: No encontrado
+  /help/index:
+    get:
+      tags:
+      - Ayuda
+      summary: Generate the index for the given folder of the documentation
+      operationId: Help_getFolderIndex_get
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /help/search:
+    post:
+      tags:
+      - Ayuda
+      summary: Search Content
+      operationId: Help_searchContent_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+  /internal/check-fiware-write-permission:
+    post:
+      tags:
+      - Interno (gateway)
+      summary: Internal endpoint for APISIX to check FIWARE write permissions
+      operationId: Permission_checkFiwareWritePermission_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+  /internal/check-write-permission:
+    post:
+      tags:
+      - Interno (gateway)
+      summary: Internal endpoint for APISIX to check write permissions
+      operationId: Permission_checkWritePermission_post
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      security: []
+      responses:
+        '200':
+          description: OK
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT de Keycloak. Se obtiene en `POST /V1/login` y se renueva en `POST /V1/refresh-token`.

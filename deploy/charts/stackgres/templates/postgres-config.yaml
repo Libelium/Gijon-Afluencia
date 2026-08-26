@@ -1,0 +1,44 @@
+apiVersion: stackgres.io/v1
+kind: SGPostgresConfig
+metadata:
+  name: {{ .Values.cluster.postgresConfig.name }}
+  labels:
+    {{- include "stackgres.labels" . | nindent 4 }}
+spec:
+  postgresVersion: "15"
+  postgresql.conf:
+    max_connections: {{ .Values.postgresqlConf.maxConnections | quote }}
+    shared_preload_libraries: {{ .Values.postgresqlConf.sharedPreloadLibraries | quote }}
+    {{- if .Values.postgresqlConf.sharedBuffers }}
+    shared_buffers: {{ .Values.postgresqlConf.sharedBuffers | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.effectiveCacheSize }}
+    effective_cache_size: {{ .Values.postgresqlConf.effectiveCacheSize | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.workMem }}
+    work_mem: {{ .Values.postgresqlConf.workMem | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.maintenanceWorkMem }}
+    maintenance_work_mem: {{ .Values.postgresqlConf.maintenanceWorkMem | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.maxWorkerProcesses }}
+    max_worker_processes: {{ .Values.postgresqlConf.maxWorkerProcesses | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.timescaledbTelemetry }}
+    timescaledb.telemetry_level: {{ .Values.postgresqlConf.timescaledbTelemetry | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.maxWalSize }}
+    max_wal_size: {{ .Values.postgresqlConf.maxWalSize | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.checkpointCompletionTarget }}
+    checkpoint_completion_target: {{ .Values.postgresqlConf.checkpointCompletionTarget | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.walLevel }}
+    wal_level: {{ .Values.postgresqlConf.walLevel | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.synchronousCommit }}
+    synchronous_commit: {{ .Values.postgresqlConf.synchronousCommit | quote }}
+    {{- end }}
+    {{- if .Values.postgresqlConf.timescaledbMaxBackgroundWorkers }}
+    timescaledb.max_background_workers: {{ .Values.postgresqlConf.timescaledbMaxBackgroundWorkers | quote }}
+    {{- end }}

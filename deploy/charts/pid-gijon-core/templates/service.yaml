@@ -1,0 +1,54 @@
+{{- range $name, $component := .Values.components }}
+{{- if and $component.enabled $component.service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+spec:
+  {{- $firstService := first $component.service }}
+  type: {{ $firstService.type | default "ClusterIP" }}
+  ports:
+    {{- range $portInfo := $component.service }}
+    - name: {{ $portInfo.name }}
+      port: {{ $portInfo.port }}
+      targetPort: {{ $portInfo.targetPort | default $portInfo.port }}
+      protocol: {{ $portInfo.protocol | default "TCP" }}
+      {{- if and (eq ($firstService.type | default "ClusterIP") "NodePort") $portInfo.nodePort }}
+      nodePort: {{ $portInfo.nodePort }}
+      {{- end }}
+    {{- end }}
+  selector:
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+{{- end }}
+{{- if and $component.enabled $component.headless $component.headless.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}-headless
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: {{ $component.headless.publishNotReadyAddresses | default true }}
+  ports:
+    {{- range $portInfo := $component.headless.ports }}
+    - name: {{ $portInfo.name }}
+      port: {{ $portInfo.port }}
+      protocol: {{ $portInfo.protocol | default "TCP" }}
+    {{- end }}
+  selector:
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+{{- end }}
+{{- end }}

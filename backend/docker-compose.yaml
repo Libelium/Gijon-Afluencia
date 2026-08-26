@@ -1,0 +1,20 @@
+services:
+  backend:
+    container_name: pid-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - WITH_XDEBUG=true
+    ports:
+      - '8000:80'
+    volumes:
+      - './src:/var/www/html'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - pid_network
+
+networks:
+  pid_network:
+    driver: bridge

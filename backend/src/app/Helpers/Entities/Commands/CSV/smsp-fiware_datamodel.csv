@@ -1,0 +1,244 @@
+Command,Name,Description,Operations,Data type,Units,Min,Max,Internal,Tab,Datamodel,Mapping
+r_dev_ts,Timestamp,Timestamp DEV (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Information,Device,dateObserved
+r_dev_serial,Serial,Serial of the device,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,serialNumber
+r_dev_fw_v,Firmware Version,Firmware Version,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,firmwareVersion
+r_dev_fw_frmw_v,Framework Version,Framework Version,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,osVersion
+r_dev_hw_config,Hardware Configuration,Model number of the device,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,hwConfig
+r_dev_hw_v,Hardware Version,Device Hardware Version,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,hardwareVersion
+r_dev_mem_int_free,Internal Free Memory,Internal free memory,r,float,kb,N/A,N/A,No,Device.Information.Memory,Device,internalMemoryFree
+r_dev_mem_ext_free,External Free Memory,External free memory,r,float,kb,N/A,N/A,No,Device.Information.Memory,Device,externalMemoryFree
+r_dev_mem_nvs_free,Storage Free Memory,NVS percentaje of free memory,r,float,%,0,100,No,Device.Information.Memory,Device,configurationStorageFree
+rw_dev_device_mode,Device Mode,Device Mode,rw,uint8_t,dimensionless,0,3,No,Device.Configuration,Device,deviceMode
+rw_dev_interval,Report Interval,Report Interval,rw,uint32_t,seconds,120,3600,No,Device.Configuration,Device,reportInterval
+r_dev_storage_days_cap,Internal Storage Capacity,Internal Storage Capacity,r,float,days,N/A,N/A,No,Device.Information.Memory,Device,internalStorageCapacity
+r_dev_storage_usage_percent,Internal Storage Usage,Internal Storage Usage,r,float,%,0,100,No,Device.Information.Memory,Device,internalStorageUsage
+w_dev_bstrap,Launch Bootstrapping,Force bootstrap connection,w,bool,dimensionless,N/A,N/A,Yes,Device.Management,Device,forceBootstrap
+w_dev_snd_cfg,Request Configuration,Send device configuration,w,bool,dimensionless,N/A,N/A,No,Device.Management,Device,forceSendConfig
+w_dev_snd_rpt,Request Report,Force to send one shot report,w,bool,dimensionless,N/A,N/A,No,Device.Management,Device,forceReport
+w_dev_rbt,Reboot Device,Reboot the device,w,bool,dimensionless,N/A,N/A,No,Device.Management,Device,forceReboot
+r_dev_rst_cause,Last Reset Cause,Last reset cause,r,uint64_t,dimensionless,N/A,N/A,No,Device.Management,Device,rebootReason
+w_dev_ota,OTA Check,Check for OTA update,w,bool,dimensionless,N/A,N/A,Yes,Device.Management,Device,forceOTACheck
+w_dev_ota_fix,OTA Fix,Fix OTA update,w,bool,dimensionless,N/A,N/A,Yes,Device.Management,Device,forceOTAFix
+r_dho_ts,Timestamp,Timestamp DHO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,dateObserved
+r_dho_int_temp,Internal Temperature,Internal temperature,r,float,Celsius,-40,125,No,Device.Health,DeviceHealthObserved,temperature
+r_dho_int_hum,Internal Humidity,Internal humidity,r,float,%,0,100,No,Device.Health,DeviceHealthObserved,humidity
+r_dho_bat_state,Battery State,Battery state,r,uint32_t,dimensionless,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryState
+r_dho_bat_voltage,Battery Voltage,Battery voltage,r,uint32_t,millivolts,9000,12600,No,Device.Health,DeviceHealthObserved,batteryVoltage
+r_dho_bat_current,Battery Current,Battery current,r,int32_t,mAh,N/A,N/A,No,Device.Health,DeviceHealthObserved,batteryCurrent
+r_dho_bat_temp,Battery Temperature,Battery temperature,r,float,Celsius,-36,84,No,Device.Health,DeviceHealthObserved,batteryTemperature
+rw_dho_upd_location,Use GNSS Location,Enables GNSS location reporting,rw,bool,dimensionless,N/A,N/A,No,Device.Location,Device,useGNSSLocation
+rw_dho_latitude,Latitude,Latitude,rw,float,degrees,-90,90,No,Device.Location,Device,latitude
+rw_dho_longitude,Longitude,Longitude,rw,float,degrees,-180,180,No,Device.Location,Device,longitude
+rw_dho_altitude,Altitude,Altitude,rw,float,meters,0,8000,No,Device.Location,Device,altitude
+rw_dho_speed,Speed,Speed,rw,float,km/h,0,300,No,Device.Location,Device,speed
+rw_dev_conn_dns_p,DNS Primary server,Primary DNS server IP,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity,Device,primaryDNS
+rw_dev_conn_dns_s,DNS Secondary server,Secondary DNS server IP,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity,Device,secondaryDNS
+r_dev_conn_bearer,Network Bearer,Connected technology,r,string,dimensionless,N/A,N/A,No,Device.Connectivity,Device,bearer
+r_dev_conn_ip,IP,IP address,r,string,dimensionless,N/A,N/A,No,Device.Connectivity,Device,ipAddress
+r_dev_conn_gw,Gateway,Gateway address,r,string,dimensionless,N/A,N/A,No,Device.Connectivity,Device,gwAddress
+r_dev_conn_rssi,RSSI,RSSI value,r,float,dBm,N/A,N/A,No,Device.Connectivity,Device,rssi
+r_dev_wifi_connected_ssid,Connected SSID,SSID of current AP,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,connectedWifiSSID
+r_dev_wifi_mac,MAC,MAC address,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,wifiMACAddress
+rw_dev_wifi_ssid,SSID,SSID of the AP to connect,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,wifiSSID
+rw_dev_wifi_password,Password,Password of the AP to connect,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,wifiPassword
+rw_dev_def_wifi_en,Enable Default WiFi,Enable Default WiFi AP Config,rw,bool,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,enableDefaultWiFi
+rw_dev_webserver_en,WebServer: AP Enable,WebServer AP Enable,rw,bool,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,webServerAPEnabled
+rw_dev_wifi_ap_channel,WebServer: WiFi AP Channel,WiFi AP Channel used for WebServer,rw,uint8_t,dimensionless,1,11,No,Device.Connectivity.WiFi,Device,webServerAPChannel
+rw_dev_wifi_ap_ssid,WebServer: WiFi AP SSID,WiFi AP SSID used for WebServer,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,webServerAPSSID
+rw_dev_wifi_ap_password,WebServer: WiFi AP password,WiFi AP password used for WebServer,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.WiFi,Device,webServerAPPassword
+rw_dev_m2m_apn,APN,APN,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,apn
+rw_dev_m2m_apn_login,APN Login,apn login,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,apnLogin
+rw_dev_m2m_apn_password,APN Password,apn password,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,apnPassword
+rw_dev_m2m_sim_pin,SIM PIN,apn login,rw,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,simPIN
+r_dev_m2m_tech,Modem Technology,Modem Technology,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,modemTechnolgy
+r_dev_m2m_model,Modem Model,Modem Model,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,modemModel
+r_dev_m2m_fw,Modem firmware version,Modem Firmware Version,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,modemFirmwareVersion
+r_dev_m2m_iccid,SIM ICCID,SIM ICCID,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,simICCID
+r_dev_m2m_imei,Modem IMEI,Modem IMEI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,modemIMEI
+r_dev_m2m_op,Operator,Operator,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.M2M,Device,operator
+r_dev_m2m_rsrq,RSRQ,RSRQ value,r,float,dB,N/A,N/A,No,Device.Connectivity.M2M,Device,rsrq
+r_dev_lwan_ver,Version,LoRaWAN Version,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,loraWANVersion
+r_dev_lwan_class,Class,Class,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,loraWANClass
+r_dev_lwan_deveui,DevEUI,DevEUI,r,string,dimensionless,N/A,N/A,No,Device.Connectivity.LoRaWAN,Device,devEUI
+r_dev_3p_reporting_status,Third Party Protocol Reporting Status,Third party protocol reporting status,r,string,dimensionless,N/A,N/A,No,Device.Information,Device,3pReportingStatus
+r_aqo_ts,Timestamp,Timestamp AQO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,dateObserved
+rw_aqo_core_ai_endpoint,Air Quality Endpoint,Air Quality AI Service Endpoint,rw,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,aqEnhancementEndpoint
+rw_aqo_core_ai_extra_params,Air Quality AI Extra Parameters,Air Quality AI Extra Parameters,rw,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,aqEnhancementExtraParams
+rw_aqo_core_pump_speed,Air Pump Speed,Air Pump Speed,rw,uint8_t,dimensionless,0,255,Yes,Sensors.Air Quality,AirQualityObserved,aqPumpSpeed
+r_aqo_core_pump_health,Pump Health Status,Pump health status,r,uint16_t,dimensionless,N/A,N/A,No,Sensors.Air Quality,AirQualityObserved,aqPumpHealth
+r_aqo_core_temp,Core Temperature,Core temperature,r,float,Celsius,-40,125,No,Sensors.Air Quality,AirQualityObserved,temperature
+r_aqo_core_hum,Core Humidity,Core humidity,r,float,%,0,100,No,Sensors.Air Quality,AirQualityObserved,relativeHumidity
+r_aqo_no2crdId,NO2 Cartridge ID,NO2 Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,no2CId
+r_aqo_no2temp,NO2 Sensor Temperature,NO2 Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,no2SenTemp
+r_aqo_no2we,NO2 WE,NO2 WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,no2We
+r_aqo_no2ae,NO2 AE,NO2 AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,no2Ae
+r_aqo_no2_devwe,NO2 WE deviation,NO2 WE deviation,r,float,mV,-1000,1000,Yes,Sensors.Air Quality,AirQualityObserved,no2WeDev
+r_aqo_no2_devae,NO2 AE deviation,NO2 AE deviation,r,float,mV,-1000,1000,Yes,Sensors.Air Quality,AirQualityObserved,no2AeDev
+rw_aqo_no2_eq,NO2 Source,NO2 Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,no2Source
+r_aqo_oxcrdId,OX Cartridge ID,OX Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,oxCId
+r_aqo_oxtemp,OX Sensor Temperature,OX Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,oxSenTemp
+r_aqo_oxwe,OX WE,OX WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,oxWe
+r_aqo_oxae,OX AE,OX AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,oxAe
+r_aqo_ox_devwe,OX WE deviation,OX WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,oxWeDev
+r_aqo_ox_devae,OX AE deviation,OX AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,oxAeDev
+rw_aqo_o3_eq,O3 Source,O3 Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,o3Source
+r_aqo_nocrdId,NO Cartridge ID,NO Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,noCId
+r_aqo_notemp,NO Sensor Temperature,NO Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,noSenTemp
+r_aqo_nowe,NO WE,NO WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,noWe
+r_aqo_noae,NO AE,NO AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,noAe
+r_aqo_no_devwe,NO WE deviation,NO WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,noWeDev
+r_aqo_no_devae,NO AE deviation,NO AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,noAeDev
+rw_aqo_no_eq,NO Source,NO Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,noSource
+r_aqo_cocrdId,CO Cartridge ID,CO Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,coCId
+r_aqo_cotemp,CO Sensor Temperature,CO Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,coSenTemp
+r_aqo_cowe,CO WE,CO WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,coWe
+r_aqo_coae,CO AE,CO AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,coAe
+r_aqo_co_devwe,CO WE deviation,CO WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,coWeDev
+r_aqo_co_devae,CO AE deviation,CO AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,coAeDev
+rw_aqo_co_eq,CO Source,CO Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,coSource
+r_aqo_so2crdId,SO2 Cartridge ID,SO2 Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,so2CId
+r_aqo_so2temp,SO2 Sensor Temperature,SO2 Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,so2SenTemp
+r_aqo_so2we,SO2 WE,SO2 WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,so2We
+r_aqo_so2ae,SO2 AE,SO2 AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,so2Ae
+r_aqo_so2_devwe,SO2 WE deviation,SO2 WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,so2WeDev
+r_aqo_so2_devae,SO2 AE deviation,SO2 AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,so2AeDev
+rw_aqo_so2_eq,SO2 Source,SO2 Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,so2Source
+r_aqo_h2scrdId,H2S Cartridge ID,H2S Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,h2sCId
+r_aqo_h2stemp,H2S Sensor Temperature,H2S Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,h2sSenTemp
+r_aqo_h2swe,H2S WE,H2S WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,h2sWe
+r_aqo_h2sae,H2S AE,H2S AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,h2sAe
+r_aqo_h2s_devwe,H2S WE deviation,H2S WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,h2sWeDev
+r_aqo_h2s_devae,H2S AE deviation,H2S AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,h2sAeDev
+rw_aqo_h2s_eq,H2S Source,H2S Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,h2sSource
+r_aqo_nh3crdId,NH3 Cartridge ID,NH3 Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,nh3CId
+r_aqo_nh3temp,NH3 Sensor Temperature,NH3 Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,nh3SenTemp
+r_aqo_nh3we,NH3 WE,NH3 WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,nh3We
+r_aqo_nh3ae,NH3 AE,NH3 AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,nh3Ae
+r_aqo_nh3_devwe,NH3 WE deviation,NH3 WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,nh3WeDev
+r_aqo_nh3_devae,NH3 AE deviation,NH3 AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,nh3AeDev
+rw_aqo_nh3_eq,NH3 Source,NH3 Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,nh3Source
+r_aqo_cl2crdId,CL2 Cartridge ID,CL2 Cartride ID,r,string,dimensionless,N/A,N/A,Yes,Sensors.Air Quality,AirQualityObserved,cl2CId
+r_aqo_cl2temp,CL2 Sensor Temperature,CL2 Sensor Temperature,r,float,Celsius,-30,50,Yes,Sensors.Air Quality,AirQualityObserved,cl2SenTemp
+r_aqo_cl2we,CL2 WE,CL2 WE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,cl2We
+r_aqo_cl2ae,CL2 AE,CL2 AE,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,cl2Ae
+r_aqo_cl2_devwe,CL2 WE deviation,CL2 WE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,cl2WeDev
+r_aqo_cl2_devae,CL2 AE deviation,CL2 AE deviation,r,float,mV,0,1000,Yes,Sensors.Air Quality,AirQualityObserved,cl2AeDev
+rw_aqo_cl2_eq,CL2 Source,CL2 Source,rw,uint8_t,dimensionless,0,7,Yes,Sensors.Air Quality,AirQualityObserved,cl2Source
+r_aqo_no2,NO2,NO2,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,no2
+rw_aqo_no2_off,NO2 Offset,NO2 Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,no2Offset
+rw_aqo_no2_gain,NO2 Gain,NO2 Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,no2Gain
+r_aqo_o3,O3,O3,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,o3
+rw_aqo_o3_off,O3 Offset,O3 Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,o3Offset
+rw_aqo_o3_gain,O3 Gain,O3 Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,o3Gain
+r_aqo_co,CO,CO,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,co
+rw_aqo_co_off,CO Offset,CO Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,coOffset
+rw_aqo_co_gain,CO Gain,CO Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,coGain
+r_aqo_so2,SO2,SO2,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,so2
+rw_aqo_so2_off,SO2 Offset,SO2 Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,so2Offset
+rw_aqo_so2_gain,SO2 Gain,SO2 Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,so2Gain
+r_aqo_no,NO,NO,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,no
+rw_aqo_no_off,NO Offset,NO Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,noOffset
+rw_aqo_no_gain,NO Gain,NO Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,noGain
+r_aqo_h2s,H2S,H2S,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,h2s
+rw_aqo_h2s_off,H2S Offset,H2S Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,h2sOffset
+rw_aqo_h2s_gain,H2S Gain,H2S Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,h2sGain
+r_aqo_nh3,NH3,NH3,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,nh3
+rw_aqo_nh3_off,NH3 Offset,NH3 Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,nh3Offset
+rw_aqo_nh3_gain,NH3 Gain,NH3 Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,nh3Gain
+r_aqo_cl2,CL2,CL2,r,float,ug/m3,0,1000,No,Sensors.Air Quality,AirQualityObserved,cl2
+rw_aqo_cl2_off,CL2 Offset,CL2 Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,cl2Offset
+rw_aqo_cl2_gain,CL2 Gain,CL2 Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,cl2Gain
+r_aqo_co2,CO2,CO2,r,float,ug/m3,0,5000,No,Sensors.Air Quality,AirQualityObserved,co2
+rw_aqo_co2_off,CO2 Offset,CO2 Offset,rw,float,ug/m3,-1000,1000,No,Sensors.Air Quality,AirQualityObserved,co2Offset
+rw_aqo_co2_gain,CO2 Gain,CO2 Gain,rw,float,dimensionless,0,1000,No,Sensors.Air Quality,AirQualityObserved,co2Gain
+r_aqo_voc,VOC,VOC,r,float,ug/m3,0,40000,No,Sensors.Air Quality,AirQualityObserved,volatileOrganicCompoundsTotal
+rw_aqo_voc_off,VOC Offset,VOC Offset,rw,float,mV,0,255,No,Sensors.Air Quality,AirQualityObserved,vocOffset
+rw_aqo_voc_sen,VOC Sensitivity,VOC Sensitivity,rw,float,dimensionless,0,10,No,Sensors.Air Quality,AirQualityObserved,vocSensitivity
+r_aqo_pm1,PM1,PM1,r,float,ug/m3,0,2000,No,Sensors.Air Quality,AirQualityObserved,pm1
+rw_aqo_pm1_off,PM1 Offset,PM1 Offset,rw,float,ug/m3,-500,500,No,Sensors.Air Quality,AirQualityObserved,pm1Offset
+rw_aqo_pm1_gain,PM1 Gain,PM1 Gain,rw,float,dimensionless,0,100,No,Sensors.Air Quality,AirQualityObserved,pm1Gain
+r_aqo_pm25,PM2.5,PM2.5,r,float,ug/m3,0,2000,No,Sensors.Air Quality,AirQualityObserved,pm25
+rw_aqo_pm25_off,PM2.5 Offset,PM2.5 Offset,rw,float,ug/m3,-500,500,No,Sensors.Air Quality,AirQualityObserved,pm25Offset
+rw_aqo_pm25_gain,PM2.5 Gain,PM2.5 Gain,rw,float,dimensionless,0,100,No,Sensors.Air Quality,AirQualityObserved,pm25Gain
+r_aqo_pm4,PM4,PM4,r,float,ug/m3,0,2000,No,Sensors.Air Quality,AirQualityObserved,pm4
+rw_aqo_pm4_off,PM4 Offset,PM4 Offset,rw,float,ug/m3,-500,500,No,Sensors.Air Quality,AirQualityObserved,pm4Offset
+rw_aqo_pm4_gain,PM4 Gain,PM4 Gain,rw,float,dimensionless,0,100,No,Sensors.Air Quality,AirQualityObserved,pm4Gain
+r_aqo_pm10,PM10,PM10,r,float,ug/m3,0,2000,No,Sensors.Air Quality,AirQualityObserved,pm10
+rw_aqo_pm10_off,PM10 Offset,PM10 Offset,rw,float,ug/m3,-500,500,No,Sensors.Air Quality,AirQualityObserved,pm10Offset
+rw_aqo_pm10_gain,PM10 Gain,PM10 Gain,rw,float,dimensionless,0,100,No,Sensors.Air Quality,AirQualityObserved,pm10Gain
+r_aqo_tsp,TSP,TSP,r,float,ug/m3,0,2000,No,Sensors.Air Quality,AirQualityObserved,tsp
+r_aqo_tpc,TPC,TPC,r,float,particles/cm3,0,2000,No,Sensors.Air Quality,AirQualityObserved,tpc
+r_aqo_pm_bin0,PM Bin 0 Count,PM Counted Bin 0,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin0
+r_aqo_pm_bin1,PM Bin 1 Count,PM Counted Bin 1,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin1
+r_aqo_pm_bin2,PM Bin 2 Count,PM Counted Bin 2,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin2
+r_aqo_pm_bin3,PM Bin 3 Count,PM Counted Bin 3,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin3
+r_aqo_pm_bin4,PM Bin 4 Count,PM Counted Bin 4,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin4
+r_aqo_pm_bin5,PM Bin 5 Count,PM Counted Bin 5,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin5
+r_aqo_pm_bin6,PM Bin 6 Count,PM Counted Bin 6,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin6
+r_aqo_pm_bin7,PM Bin 7 Count,PM Counted Bin 7,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin7
+r_aqo_pm_bin8,PM Bin 8 Count,PM Counted Bin 8,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin8
+r_aqo_pm_bin9,PM Bin 9 Count,PM Counted Bin 9,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin9
+r_aqo_pm_bin10,PM Bin 10 Count,PM Counted Bin 10,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin10
+r_aqo_pm_bin11,PM Bin 11 Count,PM Counted Bin 11,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin11
+r_aqo_pm_bin12,PM Bin 12 Count,PM Counted Bin 12,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin12
+r_aqo_pm_bin13,PM Bin 13 Count,PM Counted Bin 13,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin13
+r_aqo_pm_bin14,PM Bin 14 Count,PM Counted Bin 14,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin14
+r_aqo_pm_bin15,PM Bin 15 Count,PM Counted Bin 15,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin15
+r_aqo_pm_bin16,PM Bin 16 Count,PM Counted Bin 16,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin16
+r_aqo_pm_bin17,PM Bin 17 Count,PM Counted Bin 17,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin17
+r_aqo_pm_bin18,PM Bin 18 Count,PM Counted Bin 18,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin18
+r_aqo_pm_bin19,PM Bin 19 Count,PM Counted Bin 19,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin19
+r_aqo_pm_bin20,PM Bin 20 Count,PM Counted Bin 20,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin20
+r_aqo_pm_bin21,PM Bin 21 Count,PM Counted Bin 21,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin21
+r_aqo_pm_bin22,PM Bin 22 Count,PM Counted Bin 22,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin22
+r_aqo_pm_bin23,PM Bin 23 Count,PM Counted Bin 23,r,uint16_t,particles,0,2000,No,Sensors.Air Quality,AirQualityObserved,pmBin23
+r_wto_ts,Timestamp,Timestamp WTO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Sensors.Weather,WeatherObserved,dateObserved
+r_wto_humidity,Humidity,Humidity,r,float,%,0,100,No,Sensors.Weather,WeatherObserved,relativeHumidity
+r_wto_temperature,Temperature,Temperature,r,float,Celsius,-40,125,No,Sensors.Weather,WeatherObserved,temperature
+r_wto_pressure,Pressure,Pressure,r,float,hPa,300,1100,No,Sensors.Weather,WeatherObserved,atmosphericPressure
+r_wto_dewpoint,Dew Point,Dew point,r,float,Celsius,N/A,N/A,No,Sensors.Weather,WeatherObserved,dewPoint
+r_wto_windchill,Wind Chill,Wind chill,r,float,Celsius,N/A,N/A,No,Sensors.Weather,WeatherObserved,feelsLikeTemperature
+r_wto_rainrate,Rain,Rain,r,float,mm/h,N/A,N/A,No,Sensors.Weather,WeatherObserved,precipitation
+r_wto_rain15a,Rain 15m,Rain 15m,r,float,mm/h,N/A,N/A,No,Sensors.Weather,WeatherObserved,precipitation15a
+r_wto_rain24a,Rain 24h,Rain 24h,r,float,mm/h,N/A,N/A,No,Sensors.Weather,WeatherObserved,precipitation24a
+r_wto_raindaily,Rain Daily,Rain daily,r,float,mm/h,N/A,N/A,No,Sensors.Weather,WeatherObserved,precipitationDaily
+r_wto_windsp,Wind Speed,Wind speed,r,float,km/h,0,50,No,Sensors.Weather,WeatherObserved,windSpeed
+r_wto_winddir,Wind Direction,Wind direction,r,float,degrees,0,360,No,Sensors.Weather,WeatherObserved,windDirection
+r_wto_winddir_com,Wind Direction Compass,Wind direction compass,r,string,dimensionless,N/A,N/A,No,Sensors.Weather,WeatherObserved,windDirCompass
+r_wto_etdaily,Evapotranspiration Daily,Evapotranspiration daily,r,float,mm,N/A,N/A,No,Sensors.Weather,WeatherObserved,etDaily
+r_wto_solarrad,Solar Radiation,Solar radiation,r,float,W/m2,N/A,N/A,No,Sensors.Weather,WeatherObserved,solarRadiation
+r_wto_uv,UV,UV,r,float,dimensionless,0,15,No,Sensors.Weather,WeatherObserved,uVIndexMax
+r_wto_thswindex,THSW Index,THSW index,r,float,Celsius,N/A,N/A,No,Sensors.Weather,WeatherObserved,thswIndex
+r_nlo_ts,Timestamp,Timestamp NLO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Sensors.Sonometer,NoiseLevelObserved,dateObserved
+rw_nlo_calibrate,Calibrate Sonometer,Calibrate sonometer,rw,bool,dimensionless,N/A,N/A,No,Sensors.sonometer,NoiseLevelObserved,forceCalibration
+rw_nlo_reference,Calibration Reference,Calibration reference,rw,uint8_t,dB,40,120,No,Sensors.Sonometer,NoiseLevelObserved,calibrationReference
+rw_nlo_offset,Offset,Sonometer offset,rw,int8_t,dB,-30,80,No,Sensors.Sonometer,NoiseLevelObserved,offset
+r_nlo_laeq,LAeq,LAeq,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LAeq
+r_nlo_la1,LA1,LA1,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LA1
+r_nlo_la10,LA10,LA10,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LA10
+r_nlo_la50,LA50,LA50,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LA50
+r_nlo_la90,LA90,LA90,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LA90
+r_nlo_la99,LA99,LA99,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LA99
+r_nlo_lamax,LAMax,LAMax,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LAmax
+r_nlo_lamin,LAMin,LAMin,r,float,dB,10,140,No,Sensors.Sonometer,NoiseLevelObserved,LAmin
+r_cfo_ts,Timestamp,Timestamp CFO (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring,CrowdFlowObserved,dateObserved
+rw_cfo_shorti,Short Interval,Short Interval,rw,uint8_t,minutes,1,2,No,Sensors.Crowd Monitoring,CrowdFlowObserved,shortInterval
+rw_cfo_mediumi,Medium Interval,Medium Interval,rw,uint8_t,minutes,2,5,No,Sensors.Crowd Monitoring,CrowdFlowObserved,mediumInterval
+rw_cfo_longi,Long Interval,Long Interval,rw,uint8_t,minutes,10,10,No,Sensors.Crowd Monitoring,CrowdFlowObserved,longInterval
+rw_cfo_wifithr,Threshold WiFi,Threshold WiFi,rw,int32_t,dbm,0,-120,No,Sensors.Crowd Monitoring,CrowdFlowObserved,wifiRssiDetectThreshold
+rw_cfo_blethr,Threshold BLE,Threshold BLE,rw,int32_t,dbm,0,-120,No,Sensors.Crowd Monitoring,CrowdFlowObserved,bleRssiDetectThreshold
+rw_cfo_macfilter,MAC Filter,MAC Filter,rw,uint8_t,dimensionless,1,3,No,Sensors.Crowd Monitoring,CrowdFlowObserved,macFilter
+rw_cfo_techfilter,Technology Filter,Technology Filter,rw,uint8_t,dimensionless,0,2,No,Sensors.Crowd Monitoring,CrowdFlowObserved,techFilter
+r_cfo_counts,Count Short Interval,Count Short Interval,r,uint32_t,dimensionless,0,N/A,No,Sensors.Crowd Monitoring,CrowdFlowObserved,peopleCountShortInterval
+r_cfo_countm,Count Medium Interval,Count Medium Interval,r,uint32_t,dimensionless,0,N/A,No,Sensors.Crowd Monitoring,CrowdFlowObserved,peopleCountMediumInterval
+r_cfo_countl,Count Long Interval,Count Long Interval,r,uint32_t,dimensionless,0,N/A,No,Sensors.Crowd Monitoring,CrowdFlowObserved,peopleCountLongInterval
+r_cfe_ts,Timestamp,Timestamp CFE (GMT+0),r,uint64_t,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,dateObserved
+rw_cfe_enable,Enable Report MAC,Report MAC,rw,bool,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,enableReports
+r_cfe_block,MAC,MAC,r,Object,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,cfeBlock
+r_cfe_timeinstant,Detection Timestamp,Timestamp of detection,r,DateTime,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,timestamp
+r_cfe_detectType,Detection Type,Detection Type,r,string,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,detectionType
+r_cfe_visitorId,Visitor ID,Visitor ID,r,string,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,visitorId
+r_cfe_random,Random,Random MAC,r,uint8_t,dimensionless,0,2,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,random
+r_cfe_rssi,RSSI,RSSI,r,int16_t,dBm,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,rssi
+r_cfe_ssid,SSID,SSID,r,string,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,ssid
+r_cfe_signature,Signature,Signature,r,string,dimensionless,N/A,N/A,No,Sensors.Crowd Monitoring ID,CrowdFlowEvent,signature

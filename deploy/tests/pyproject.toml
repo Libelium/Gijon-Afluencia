@@ -1,0 +1,25 @@
+[project]
+name = "pid-gijon-platform-verification"
+authors = [{ name = "Libelium Comunicaciones Distribuidas, S.L." }]
+license = "EUPL-1.2"
+version = "1.0.0"
+description = "Post-install verification suite for pid-gijon on Kubernetes"
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=7.4",
+    "requests>=2.31",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
+addopts = "-p no:cacheprovider --tb=no -q -rN --no-header"
+filterwarnings = [
+    # Self-signed certs are the norm on a fresh install; TLS_VERIFY=false is deliberate.
+    "ignore:Unverified HTTPS request",
+]
+markers = [
+    "check(id, title, section): describe a verification check for the report",
+    "kubernetes: checks that need kubectl access to the cluster",
+    "api: checks that exercise the platform through its public API",
+]
