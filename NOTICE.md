@@ -11,8 +11,12 @@ la desarrolló y bajo qué licencia se entrega.
     Licensed under the EUPL
 
 La EUPL v1.2 pide que el licenciante coloque la leyenda «Licensed under the EUPL» inmediatamente
-después del aviso de copyright de la obra. Ese es el aviso de arriba, repetido en la cabecera de
-[`LICENSE`](LICENSE); el reparto entre ambos titulares es el que detallan las secciones 1 y 2.
+después del aviso de copyright de la obra. Ese es el aviso de arriba, y está también en
+[`COPYRIGHT`](COPYRIGHT); el reparto entre ambos titulares lo detallan las secciones 1 y 2.
+
+Va en `COPYRIGHT` y no en la cabecera de [`LICENSE`](LICENSE) a propósito: ese fichero se mantiene
+**verbatim**, porque cualquier texto añadido por delante impide que los detectores automáticos lo
+identifiquen como EUPL-1.2 y el repositorio se publica como «Other».
 
 ## Resumen
 
