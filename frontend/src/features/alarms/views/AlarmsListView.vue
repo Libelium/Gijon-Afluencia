@@ -103,7 +103,13 @@ function openAlarm(_event: unknown, row: { item: AlarmRow }) {
 </script>
 
 <template>
-  <PageHeader :title="t('alarms.list.title')" :subtitle="t('alarms.list.subtitle')" />
+  <PageHeader :title="t('alarms.list.title')" :subtitle="t('alarms.list.subtitle')">
+    <template #actions>
+      <VBtn to="/alarmas/nueva" color="primary" prepend-icon="mdi-plus">
+        {{ t('alarms.list.new') }}
+      </VBtn>
+    </template>
+  </PageHeader>
 
   <VCard>
     <div class="d-flex flex-wrap align-center ga-3 pa-4">
@@ -131,6 +137,9 @@ function openAlarm(_event: unknown, row: { item: AlarmRow }) {
       <template #empty-action>
         <VBtn v-if="appliedSearch" variant="tonal" @click="clearSearch">
           {{ t('alarms.list.clearSearch') }}
+        </VBtn>
+        <VBtn v-else to="/alarmas/nueva" color="primary" prepend-icon="mdi-plus">
+          {{ t('alarms.list.new') }}
         </VBtn>
       </template>
 

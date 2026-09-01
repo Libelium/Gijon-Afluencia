@@ -130,6 +130,10 @@ phase_core() {
   # KC_LARAVEL_BACKEND_SECRET is also the `laravel-backend` client secret the
   # realm import installs, i.e. exactly the value the post-install step asks you
   # to copy into webBack.secrets.KEYCLOAK_CLIENT_SECRET.
+  #
+  # BACKEND_URL ya NO se pasa aqui: lo pone el values renderizado con la URL publica de la API.
+  # El --set que habia aqui fijaba `http://web-back:80`, ganaba al values y rompia el logotipo
+  # por organizacion del tema de login, que lo resuelve el navegador.
   local kc_secrets="$ENV_DIR/keycloak-secrets.env"
   if [[ ! -f "$kc_secrets" ]]; then
     {
@@ -148,7 +152,6 @@ phase_core() {
     --set components.webBack.enabled=false \
     --set "components.keycloak.secrets.KC_LARAVEL_BACKEND_SECRET=$KC_LARAVEL_BACKEND_SECRET" \
     --set "components.keycloak.secrets.KC_REALM_MANAGEMENT_SECRET=$KC_REALM_MANAGEMENT_SECRET" \
-    --set "components.keycloak.config.BACKEND_URL=http://web-back:80" \
     --wait --timeout 20m
 
   cat <<EOF
@@ -184,7 +187,6 @@ phase_webback() {
     -f "$ENV_DIR/pid-gijon-core.values.yaml" \
     --set "components.keycloak.secrets.KC_LARAVEL_BACKEND_SECRET=$KC_LARAVEL_BACKEND_SECRET" \
     --set "components.keycloak.secrets.KC_REALM_MANAGEMENT_SECRET=$KC_REALM_MANAGEMENT_SECRET" \
-    --set "components.keycloak.config.BACKEND_URL=http://web-back:80" \
     --wait --timeout 20m
 
   cat <<EOF

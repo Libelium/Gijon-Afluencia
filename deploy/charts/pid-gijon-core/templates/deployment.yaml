@@ -43,10 +43,18 @@ spec:
         {{- if $component.podLabels }}
         {{- toYaml $component.podLabels | nindent 8 }}
         {{- end }}
-      {{- if $component.podAnnotations }}
       annotations:
+        # Checksum de la config y de los secretos del componente.
+        #
+        # `envFrom` lee el ConfigMap y el Secret UNA VEZ, al arrancar el contenedor: sin esta
+        # anotacion, un `helm upgrade` que solo cambie `config:` o `secrets:` actualiza los
+        # objetos y deja los pods corriendo con los valores viejos, sin avisar. Termina en verde
+        # y nada ha cambiado, que es el peor de los resultados posibles. Al meter el checksum en
+        # la plantilla del pod, cambiar un valor cambia el spec y Kubernetes rueda el Deployment.
+        checksum/config: {{ toYaml (dict "config" $component.config "secrets" $component.secrets) | sha256sum }}
+        {{- if $component.podAnnotations }}
         {{- toYaml $component.podAnnotations | nindent 8 }}
-      {{- end }}
+        {{- end }}
     spec:
       {{- if $.Values.global.imagePullSecrets }}
       imagePullSecrets:

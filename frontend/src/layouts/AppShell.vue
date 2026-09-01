@@ -2,8 +2,9 @@
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import { brand } from '@/brand'
 import { t } from '@/i18n'
+import BrandLogo from '@/components/BrandLogo.vue'
+import AppFooter from '@/components/AppFooter.vue'
 import { useUiStore } from '@/stores/ui'
 import { useSessionStore } from '@/stores/session'
 import { logout } from '@/auth/keycloak'
@@ -55,14 +56,8 @@ const initials = computed(() => {
       :temporary="mobile"
       width="252"
     >
-      <div class="d-flex align-center ga-3 px-4 py-5">
-        <VAvatar color="primary" size="36" rounded="lg">
-          <span class="text-caption font-weight-bold">{{ brand.shortName }}</span>
-        </VAvatar>
-        <div v-if="!rail" class="min-w-0">
-          <div class="text-subtitle-2 font-weight-bold text-truncate">{{ brand.name }}</div>
-          <div class="text-caption text-medium-emphasis text-truncate">{{ brand.tagline }}</div>
-        </div>
+      <div class="px-4 py-5">
+        <BrandLogo :compact="rail" :height="36" />
       </div>
 
       <VDivider />
@@ -91,6 +86,12 @@ const initials = computed(() => {
             to="/preferencias"
             prepend-icon="mdi-tune-variant"
             :title="t('app.nav.preferences')"
+            color="primary"
+          />
+          <VListItem
+            to="/personalizacion"
+            prepend-icon="mdi-palette-outline"
+            :title="t('app.nav.customization')"
             color="primary"
           />
         </VList>
@@ -170,5 +171,7 @@ const initials = computed(() => {
         <RouterView />
       </VContainer>
     </VMain>
+
+    <AppFooter />
   </VApp>
 </template>

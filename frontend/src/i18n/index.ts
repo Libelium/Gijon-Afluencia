@@ -4,6 +4,7 @@ import map from '@/features/map/i18n'
 import dashboards from '@/features/dashboards/i18n'
 import alarms from '@/features/alarms/i18n'
 import preferences from '@/features/preferences/i18n'
+import customization from '@/features/customization/i18n'
 
 /**
  * Cada feature aporta su fragmento y el nucleo los fusiona, de modo que ningun modulo
@@ -16,6 +17,7 @@ const messages: Record<string, string> = {
   ...dashboards,
   ...alarms,
   ...preferences,
+  ...customization,
 }
 
 export function t(key: string, params?: Record<string, string | number>): string {

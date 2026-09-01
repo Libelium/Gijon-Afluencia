@@ -119,6 +119,25 @@ Esta versión consulta alarmas; no las crea ni las modifica.
 - Las preferencias se guardan en la cuenta, así que acompañan a la persona entre navegadores y
   dispositivos.
 
+### Personalización
+
+Marca blanca por organización, sin reconstruir la imagen: los valores viven en las preferencias de
+organización del backend y se aplican en tiempo de ejecución.
+
+- **Tres colores de marca** —primario, secundario y de acento— y de ellos se **derivan** las
+  variantes de tema claro y oscuro con el contraste garantizado. Se indica uno por papel y no seis
+  a mano porque un color pensado para fondo claro no suele cumplir sobre fondo oscuro: el rojo
+  corporativo de Gijón da 7,99:1 sobre blanco y 2,20:1 sobre la superficie oscura, menos de la
+  mitad del 4,5:1 que exige WCAG AA. Cada campo muestra el contraste obtenido en ambos temas, y si
+  en oscuro hay que aclarar el color se dice a qué valor.
+- **Logotipos** para tema claro, tema oscuro y para la página de inicio de sesión de Keycloak, que
+  los recoge por su cuenta del endpoint público de imagen. Solo mapas de bits: el SVG se rechaza
+  porque puede llevar código ejecutable.
+- **Pie de página** en HTML sencillo, saneado en el servidor con lista blanca y otra vez al
+  pintarlo con DOMPurify. Admite imágenes incrustadas en base64, que es como se pone una tira de
+  logotipos de financiación sin alojar ficheros.
+- Quien no personaliza nada no nota diferencia: se usan la paleta y las iniciales de siempre.
+
 ### Transversal a toda la aplicación
 
 - **Interfaz en español**, con las URL también en español.
@@ -162,6 +181,7 @@ quitando su carpeta.
 | Estado | `src/stores/` | Sesión e interfaz |
 | Estados de pantalla | `src/components/StateBlock.vue` | Cargando, vacío, error, contenido |
 | Tipos del dominio | `src/types/index.ts` | Contrato interno compartido |
+| Personalización | `src/customization/` | Derivación de paleta con contraste y contrato de preferencias |
 
 Tres decisiones que conviene conocer antes de tocar el código:
 

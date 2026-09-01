@@ -305,13 +305,28 @@ components:
     image:
       tag: "${TAG_KEYCLOAK}"
     config:
-      # Required: the image's entrypoint exits if BACKEND_URL is unset (it is
-      # substituted into the login theme before Keycloak starts).
-      BACKEND_URL: http://web-back:80
+      # La URL PUBLICA de la API, no la interna del cluster. Obligatoria: el entrypoint de la
+      # imagen aborta si falta.
+      #
+      # Es contraintuitivo y ya estuvo mal: BACKEND_URL no la usa Keycloak para hablar con el
+      # backend, sino que se sustituye en el tema de login y acaba en `window.BACKEND_URL`, que
+      # lee el NAVEGADOR (login/resources/js/dynamicLogo.js) para descargar el logotipo de la
+      # organizacion. Con un nombre interno como `http://web-back:80` el navegador falla con
+      # ERR_NAME_NOT_RESOLVED y el logotipo por organizacion no aparece nunca — sin ningun error
+      # en el servidor. Ningun uso de esta variable es del lado servidor: buscar `backendUrl` en
+      # keycloak/pidtheme lo confirma.
+      BACKEND_URL: "${URL_API}"
       KC_DB_URL_HOST: "${PG_HOST}"
       KC_DB_URL_PORT: "${PG_PORT}"
       KC_HOSTNAME: "${URL_KEYCLOAK}"
       KC_HOSTNAME_ADMIN: "${URL_KEYCLOAK}"
+      # Marca blanca del tema de login. Vacias no pasa nada: el entrypoint sustituye
+      # entonces los violetas por defecto (`${KC_BRAND_PRIMARY:-#7D00F4}`), y la plantilla
+      # descarta cualquier valor que no empiece por `#`.
+      KC_BRAND_PRIMARY: "${KC_BRAND_PRIMARY}"
+      KC_BRAND_SECONDARY: "${KC_BRAND_SECONDARY}"
+      KC_BRAND_INDIGO: "${KC_BRAND_INDIGO}"
+      KC_BRAND_LOGIN_IMAGE: "${KC_BRAND_LOGIN_IMAGE}"
     gatewayAPI:
       enabled: true
       routes:

@@ -988,12 +988,24 @@ components:
       tag: ""                   # TODO: pin the platform image tag
       pullPolicy: IfNotPresent
     replicas: 1
+    # Recreate y NO RollingUpdate: con `maxSurge: 1` el pod nuevo convive con el viejo, los dos
+    # intentan formar el cluster de Infinispan y el nuevo muere con
+    #   ERROR: Failed to start embedded or remote cache manager
+    # una y otra vez. Keycloak agrupa por JGroups y su pila por defecto usa multicast UDP, que en
+    # Kubernetes no descubre nada; por eso la PRIMERA instalacion funciona —un solo pod forma un
+    # cluster de uno sin descubrir a nadie— y falla justo al actualizar.
+    #
+    # Recreate para el pod viejo antes de crear el nuevo, asi que nunca hay dos. Con `replicas: 1`
+    # el coste es una interrupcion breve del inicio de sesion durante la actualizacion, y no se
+    # pierde nada: la alternativa (varias replicas de verdad) exige ademas KC_CACHE_STACK=kubernetes
+    # y un Service headless para DNS_PING, y con una sola replica no aporta nada.
+    #
+    # Si alguna vez se sube `replicas` por encima de 1, hay que configurar antes esa pila.
     strategy:
-      type: RollingUpdate
-      rollingUpdate:
-        maxSurge: 1
-        maxUnavailable: 0
+      type: Recreate
     hpa:
+      # No activar sin configurar antes KC_CACHE_STACK=kubernetes: escalar Keycloak con la pila
+      # por defecto reproduce el fallo del cache manager descrito arriba.
       enabled: false
       minReplicas: 1
       maxReplicas: 3
@@ -1036,11 +1048,26 @@ components:
         - port: 57800
           name: jgroups-tcp-fd
           protocol: TCP
+    # Keycloak arranca despacio: JVM, importacion del realm y descubrimiento de Infinispan.
+    # Con solo liveness, el presupuesto es initialDelay + periodSeconds*failureThreshold, y al
+    # agotarse el kubelet REINICIA el contenedor — que vuelve a empezar de cero y vuelve a
+    # agotarlo: un bucle de reinicios del que no sale solo. Se ve como `connection refused` en
+    # /health/live mientras el arranque va bien por dentro.
+    #
+    # El startupProbe existe exactamente para esto: mientras no pase, liveness y readiness estan
+    # suspendidas, y en cuanto pasa una vez deja de evaluarse. 10 minutos de margen para arrancar
+    # y, a partir de ahi, la vigilancia estrecha de siempre.
+    startupProbe:
+      httpGet:
+        path: /health/started
+        port: keycloak-admin
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 60
     livenessProbe:
       httpGet:
         path: /health/live
         port: keycloak-admin
-      initialDelaySeconds: 60
       periodSeconds: 30
       timeoutSeconds: 15
       failureThreshold: 3
@@ -1048,7 +1075,6 @@ components:
       httpGet:
         path: /health/ready
         port: keycloak-admin
-      initialDelaySeconds: 10
       periodSeconds: 30
       timeoutSeconds: 15
       successThreshold: 1

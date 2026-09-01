@@ -6,6 +6,9 @@ metadata:
     {{- include "rabbitmq.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.cluster.replicas }}
+  {{- if .Values.cluster.image }}
+  image: {{ .Values.cluster.image | quote }}
+  {{- end }}
   persistence:
     storage: {{ .Values.cluster.persistence.storage | quote }}
     {{- if .Values.cluster.persistence.storageClass }}
@@ -21,6 +24,9 @@ spec:
     additionalConfig: |
       consumer_timeout = {{ .Values.cluster.config.consumerTimeout | int64 }}
       loopback_users = {{ .Values.cluster.config.loopbackUsers }}
+      {{- if .Values.cluster.config.permitTransientNonExclQueues }}
+      deprecated_features.permit.transient_nonexcl_queues = true
+      {{- end }}
     additionalPlugins:
       {{- range .Values.cluster.additionalPlugins }}
       - {{ . | quote }}

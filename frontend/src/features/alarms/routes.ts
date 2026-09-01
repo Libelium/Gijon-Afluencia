@@ -8,6 +8,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Alarmas' },
   },
   {
+    path: '/alarmas/nueva',
+    name: 'alarm-create',
+    component: () => import('./views/AlarmFormView.vue'),
+    meta: { title: 'Nueva alarma' },
+  },
+  {
     path: '/alarmas/:id',
     name: 'alarm-detail',
     component: () => import('./views/AlarmDetailView.vue'),

@@ -8,6 +8,12 @@ cluster:
   name: pid-gijon
   replicas: 1
 
+  # Imagen del broker. Vacio = la que traiga por defecto el Cluster Operator, que
+  # sigue a la ultima release. Fijala en cualquier despliegue que quieras
+  # reproducible: el salto de la 3.13 a la 4.x cambia el comportamiento de las
+  # colas (ver permitTransientNonExclQueues mas abajo).
+  image: ""
+
   persistence:
     storage: "8Gi"
     storageClass: ""
@@ -26,6 +32,14 @@ cluster:
     consumerTimeout: 5400000
     # "none" disables the localhost-only restriction for the guest user.
     loopbackUsers: "none"
+    # Celery (queues-consumer) declara sus colas internas como transitorias y no
+    # exclusivas. RabbitMQ 4.x marca `transient_nonexcl_queues` como
+    # denied_by_default, asi que ese Queue.declare falla con
+    #   INTERNAL_ERROR - Feature `transient_nonexcl_queues` is deprecated
+    # y el worker entra en bucle de reinicios (RestartFreqExceeded): publica bien,
+    # pero las colas se quedan con 0 consumidores y el dato no se persiste nunca.
+    # No da error en el arranque del chart: falla despues, dentro del consumidor.
+    permitTransientNonExclQueues: true
 
   additionalPlugins:
     - rabbitmq_amqp1_0

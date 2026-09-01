@@ -27,6 +27,7 @@ RUN apt-get update \
     zlib1g-dev \
     zip \
     ca-certificates \
+    git \
     libpng-dev \
     libjpeg-dev \
     && rm -r /var/lib/apt/lists/*
@@ -92,6 +93,18 @@ USER www-data
 # fija laravel/framework a 10.x-dev en un commit concreto: con `update` esa rama de
 # desarrollo deriva sola. Si el lock no concuerda con composer.json, install falla, que
 # es justo el aviso que se quiere.
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# `preferred-install: auto` en vez del `dist` de composer.json: sigue prefiriendo el zip
+# de dist, pero cuando la descarga falla clona desde el repositorio en la misma referencia
+# del lock, en lugar de abortar la construccion entera. Con `dist` a secas composer
+# imprime «Source fallback is disabled. Not trying alternative sources.» y sale con 100.
+#
+# Hace falta porque GitHub rechaza intermitentemente su propio endpoint de archivo
+# `codeload.github.com/<repo>/legacy.zip/<sha-de-40>` con un 400 —mientras `zip/<sha>` y
+# `legacy.zip/<sha-corto>` responden 200—, y es exactamente la URL que construye composer
+# al no haber token de GitHub. Sin esto, tres paquetes cualesquiera de los 98 tumban el
+# build por algo que no esta ni en el lock ni en el codigo. La referencia instalada es la
+# misma, asi que la construccion sigue siendo reproducible.
+RUN composer config --no-plugins preferred-install auto \
+    && composer install --no-dev --optimize-autoloader --no-interaction
 
 USER root

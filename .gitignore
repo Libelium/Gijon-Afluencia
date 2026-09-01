@@ -27,3 +27,13 @@ deploy/**/environments/*/
 .idea/
 .vscode/
 .DS_Store
+
+# Carpetas de trabajo de la raiz del repositorio.
+#
+# La barra inicial NO es opcional: un patron como `customization/` coincide a CUALQUIER
+# profundidad, asi que tambien ignoraba frontend/src/customization/ y
+# frontend/src/features/customization/ — codigo fuente del modulo de personalizacion, que
+# desaparecia de `git status` sin avisar. Anclado a la raiz solo tapa lo que se pretendia.
+/auditoria/
+/fake_data/
+/customization/

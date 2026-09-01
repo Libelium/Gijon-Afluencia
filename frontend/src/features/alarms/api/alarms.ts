@@ -10,6 +10,7 @@ import type {
   DateRange,
   EventLevel,
   InactivityCondition,
+  NewAlarm,
   StatusSeries,
   ThresholdCondition,
 } from '../types'
@@ -41,6 +42,20 @@ export async function listAlarms(query: AlarmsQuery): Promise<Paginated<AlarmRow
 export async function getAlarm(id: number): Promise<AlarmDetail> {
   const { data } = await http.get<AlarmDetail>(`/alarms/${id}`)
   return data
+}
+
+/**
+ * Alta de una alarma junto con sus condiciones en una sola llamada: el servidor las crea en la
+ * misma transaccion y borra la alarma si alguna condicion falla, asi que no puede quedar una
+ * alarma a medio configurar.
+ *
+ * `entity_group_id` se omite a proposito y no se manda a null: el servidor decide por
+ * presencia de la clave, no por su valor, y una clave presente con null le hace buscar el
+ * grupo cero y responder 404.
+ */
+export async function createAlarm(alarm: NewAlarm): Promise<number> {
+  const { data } = await http.post<{ id?: number }>('/alarms', alarm)
+  return Number(data?.id) || 0
 }
 
 export async function getConditions(id: number): Promise<ThresholdCondition[]> {

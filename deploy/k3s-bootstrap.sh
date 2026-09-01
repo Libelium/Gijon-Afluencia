@@ -80,7 +80,12 @@ fi
 # sync, so it starts, logs nothing useful, and silently never programs a
 # Gateway — GatewayClass sits at "Waiting for controller" forever.
 log "Installing the Gateway API CRDs ($GATEWAY_API_VERSION, experimental channel)"
-run kubectl apply -f "https://github.com/kubernetes-sigs/gateway-api/releases/download/$GATEWAY_API_VERSION/experimental-install.yaml"
+# --server-side is required, not a preference: client-side apply stores the whole
+# manifest in the last-applied-configuration annotation, and the experimental
+# HTTPRoute CRD alone is over the 256 KiB annotation limit. A plain apply dies
+# with `metadata.annotations: Too long` *after* creating some of the CRDs, so the
+# failure looks partial and re-running does not fix it.
+run kubectl apply --server-side --force-conflicts -f "https://github.com/kubernetes-sigs/gateway-api/releases/download/$GATEWAY_API_VERSION/experimental-install.yaml"
 
 # ---------------------------------------------- 3. Traefik + Gateways ---
 log "Installing Traefik with the Gateway API provider"
@@ -207,12 +212,12 @@ run helm upgrade --install stackgres-operator stackgres/stackgres-operator \
   -n stackgres-system --create-namespace --wait
 
 log "Installing cert-manager ($CERT_MANAGER_VERSION)"
-run kubectl apply -f "https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml"
+run kubectl apply --server-side --force-conflicts -f "https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml"
 run kubectl wait --for=condition=Available -n cert-manager --all deployment --timeout=300s
 
 log "Installing the RabbitMQ operators"
-run kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
-run kubectl apply -f "https://github.com/rabbitmq/messaging-topology-operator/releases/download/$RMQ_TOPOLOGY_VERSION/messaging-topology-operator-with-certmanager.yaml"
+run kubectl apply --server-side --force-conflicts -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml
+run kubectl apply --server-side --force-conflicts -f "https://github.com/rabbitmq/messaging-topology-operator/releases/download/$RMQ_TOPOLOGY_VERSION/messaging-topology-operator-with-certmanager.yaml"
 
 # ----------------------------------------------------------- 5. Report ---
 # Finishing green with a dead gateway is the worst outcome here: every route the
@@ -239,7 +244,7 @@ if [[ $DRY -eq 0 ]]; then
     warn "and BackendTLSPolicy at v1, and only Gateway API >= v1.5.0 serves them"
     warn "there. The provider then starts cleanly and silently programs nothing."
     warn "Re-apply the CRDs (experimental channel only) and restart Traefik:"
-    warn "  kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/$GATEWAY_API_VERSION/experimental-install.yaml"
+    warn "  kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/$GATEWAY_API_VERSION/experimental-install.yaml"
     warn "  kubectl rollout restart -n $GATEWAY_NS deploy/traefik"
     die "gateway not Programmed"
   fi

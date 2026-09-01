@@ -89,3 +89,37 @@ export type StatusSeries =
   | { state: 'ok'; points: SeriesPoint[] }
   | { state: 'unconfigured' }
   | { state: 'unresolved' }
+
+/** Tipos de alarma que admite el servidor. */
+export type AlarmType = 'basic' | 'inactivity'
+
+/**
+ * Condiciones tal y como las espera POST /alarms: en el alta viajan dentro de la alarma y con
+ * nombres en camelCase, no como los devuelve el detalle.
+ */
+export interface NewThresholdCondition {
+  entityId: number
+  measure: string
+  condition: ConditionOperator
+  threshold: number[]
+}
+
+export interface NewInactivityCondition {
+  entityId: number
+  measure?: string
+  timeoutS: number
+}
+
+/**
+ * Alta de una alarma. `up` es el estado de disparo, no configuracion: una alarma recien creada
+ * nace en reposo. `function` es obligatorio para el servidor incluso cuando hay una sola
+ * condicion o la alarma es de inactividad, donde no combina nada.
+ */
+export interface NewAlarm {
+  name: string
+  type: AlarmType
+  function: AlarmFunction
+  up: boolean
+  disabled: boolean
+  conditions: Array<NewThresholdCondition | NewInactivityCondition>
+}

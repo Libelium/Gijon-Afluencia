@@ -4,6 +4,7 @@ export default {
   'app.nav.dashboards': 'Paneles',
   'app.nav.alarms': 'Alarmas',
   'app.nav.preferences': 'Preferencias',
+  'app.nav.customization': 'Personalización',
   'app.nav.section.data': 'Datos',
   'app.nav.section.analysis': 'Análisis',
   'app.theme.toLight': 'Cambiar a tema claro',

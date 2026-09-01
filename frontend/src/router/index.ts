@@ -9,6 +9,7 @@ import mapRoutes from '@/features/map/routes'
 import dashboardRoutes from '@/features/dashboards/routes'
 import alarmRoutes from '@/features/alarms/routes'
 import preferenceRoutes from '@/features/preferences/routes'
+import customizationRoutes from '@/features/customization/routes'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -33,6 +34,7 @@ const routes: RouteRecordRaw[] = [
       ...dashboardRoutes,
       ...alarmRoutes,
       ...preferenceRoutes,
+      ...customizationRoutes,
       {
         path: '/sin-acceso',
         name: 'forbidden',
