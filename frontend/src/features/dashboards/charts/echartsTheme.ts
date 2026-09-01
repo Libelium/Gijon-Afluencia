@@ -1,5 +1,18 @@
-import { registerTheme } from 'echarts/core'
+import { registerTheme, use } from 'echarts/core'
+import { LegacyGridContainLabel } from 'echarts/features'
 import { INK, LINE, MUTED, SURFACE, seriesColors } from '../palette'
+
+/**
+ * ECharts 6 saco `grid.containLabel` del nucleo: en una compilacion con importaciones selectivas
+ * la opcion se ignora —con aviso por consola— salvo que se instale esta pieza, y las etiquetas
+ * de los ejes se recortan contra el borde de la tarjeta.
+ *
+ * Se instala AQUI porque este modulo es el unico que importan todas las graficas (a traves de
+ * `useChartTheme`), asi que ninguna puede quedarse sin el por olvido. La alternativa moderna es
+ * `grid.outerBounds`, que reparte los margenes de otra forma: migrar a ella cambia el aspecto de
+ * los doce graficos y necesita revision visual, asi que no se hace de paso en una subsanacion.
+ */
+use([LegacyGridContainLabel])
 
 /** Misma pila que usa la aplicacion; en lienzo hay que darla escrita, no se hereda del CSS. */
 const FONT_FAMILY = 'Roboto, system-ui, sans-serif'

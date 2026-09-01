@@ -134,8 +134,20 @@ class FiwareTenantScopeController extends Controller
         return (new DefaultPaginationResource($result))->response();
     }
 
+    /**
+     * Lists the IoT Agent services of one organization.
+     *
+     * SECURITY: the organization is resolved and authorized BEFORE any scope is read. Without
+     * this check any authenticated user could walk the sequential organizationId and read the
+     * IoT Agent apikeys of other organizations (BOLA / IDOR). Same `authorize('read', ...)`
+     * pattern as OrganizationController::show.
+     */
     public function getTenantScopeServicesOrganization(int $organizationId)
     {
+        $organization = Organization::findOrFail($organizationId);
+
+        $this->authorize('read', $organization);
+
         $scopes = OrganizationRepository::getOrganizationScopes($organizationId);
 
         $services = [];

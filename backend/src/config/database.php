@@ -15,7 +15,12 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'psql'),
+    // El respaldo era 'psql', una conexion que no existe en el array de abajo
+    // (las declaradas son sqlite, mysql, obbck, obtest, ob, pgsql,
+    // pgsql_realtime y device_manager). Sin DB_CONNECTION en el entorno la
+    // aplicacion moria con «Database connection [psql] not configured».
+    // Defecto encontrado durante la subsanacion; no figura en la auditoria.
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------

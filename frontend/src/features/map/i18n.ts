@@ -34,4 +34,15 @@ export default {
   'map.identifier': 'Identificador',
   'map.coordinates': 'Latitud y longitud',
   'map.viewDetail': 'Ver detalle',
+
+  // Alternativa por teclado y por texto del mapa (WCAG 1.1.1 y 2.1.1).
+  'map.table.toggle': 'Ver en una tabla las {n} entidades del área visible',
+  'map.table.toggleOne': 'Ver en una tabla la entidad del área visible',
+  'map.table.toggleEmpty': 'Ver en una tabla las entidades del área visible',
+  'map.table.caption':
+    'Entidades del área visible del mapa. La lista se actualiza al desplazar o ampliar el mapa.',
+  'map.table.name': 'Entidad',
+  'map.table.datamodel': 'Modelo de datos',
+  'map.table.coordinates': 'Latitud y longitud',
+  'map.mapLabel': 'Mapa de entidades. Con el foco puesto en él, las flechas lo desplazan y las teclas + y − cambian el zoom.',
 } as const

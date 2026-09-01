@@ -17,6 +17,8 @@ export default {
   'templates.heatmap.calendarFootnote':
     'El valor de cada día es la suma de sus lecturas agregadas: la medida cuenta personas por intervalo, no es un contador acumulado.',
   'templates.heatmap.dayTotal': 'Total del día',
+  'templates.heatmap.dayColumn': 'Día',
+  'templates.heatmap.calendarLabel': 'Calendario de intensidad por día',
   'templates.heatmap.mapWithoutLocation': '{count} puntos sin ubicación no se muestran en el mapa',
   'templates.heatmap.emptyMap': 'Ningún punto de medida tiene ubicación',
 } as const

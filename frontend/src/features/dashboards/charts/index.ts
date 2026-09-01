@@ -12,4 +12,6 @@ export { default as UnsupportedPanel } from './UnsupportedPanel.vue'
 
 export { CHART_THEME, chartThemeFor } from './echartsTheme'
 export { useChartTheme } from './useChartTheme'
+export { provideChartLabel, useChartLabel } from './chartLabel'
+export { ariaOption, seriesTable, pairsTable, rowsTable, type AlternativeTable } from './a11y'
 export { hasData, lastPoint, nonNull, toMillis } from './chartOptions'

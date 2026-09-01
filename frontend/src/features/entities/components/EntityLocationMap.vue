@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { t } from '@/i18n'
+import { formatNumber } from '@/lib/format'
 import { tilesAttribution, tilesUrl } from '@/lib/mapConfig'
 
 /**
@@ -25,6 +27,20 @@ const props = withDefaults(
 
 const tiles = tilesUrl()
 const attribution = tilesAttribution()
+
+/**
+ * Nombre accesible con las coordenadas dentro (WCAG 1.1.1).
+ *
+ * Aqui no hace falta tabla equivalente: `EntityLocationCard`, que es quien monta este mapa,
+ * imprime justo debajo las mismas coordenadas en texto, con su origen y un boton para
+ * copiarlas. Lo que faltaba era que el propio mapa dijera QUE esta senalando.
+ */
+const label = computed(() =>
+  t('entities.detail.mapLabelAt', {
+    lat: formatNumber(props.lat, 5),
+    lon: formatNumber(props.lon, 5),
+  }),
+)
 </script>
 
 <template>
@@ -33,7 +49,7 @@ const attribution = tilesAttribution()
     class="rounded-lg overflow-hidden"
     :style="{ height: `${props.height}px` }"
     role="group"
-    :aria-label="t('entities.detail.mapLabel')"
+    :aria-label="label"
   >
     <LMap
       :zoom="props.zoom"

@@ -6,6 +6,7 @@ import { LMap, LMarker, LPopup, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
+import { formatNumber, urnTail } from '@/lib/format'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import type { Bounds, Entity } from '@/types'
@@ -208,6 +209,36 @@ function clearFilters() {
   datamodel.value = null
 }
 
+/**
+ * Alternativa textual y por teclado del mapa (WCAG 1.1.1 y 2.1.1, hallazgo GDTIS-PT01-ACC-001).
+ *
+ * Un mapa de marcadores no se puede recorrer con el teclado de forma util —Leaflet dibuja los
+ * marcadores agrupados y el globo emergente se abre sobre el lienzo—, y para un lector de
+ * pantalla el mapa es un `<canvas>` de teselas. La misma consulta que pinta los marcadores
+ * alimenta esta tabla, asi que lo que se lista es EXACTAMENTE lo que se ve, se actualiza con el
+ * encuadre y cada fila lleva su enlace al detalle: es la ruta equivalente completa.
+ */
+const tableHeaders = [
+  { title: t('map.table.name'), key: 'name', sortable: false },
+  { title: t('map.table.datamodel'), key: 'datamodel', sortable: false },
+  { title: t('map.table.coordinates'), key: 'coordinates', sortable: false },
+]
+
+const tableRows = computed(() =>
+  placed.value.map((item) => ({
+    id: item.entity.id,
+    name: item.entity.name || urnTail(item.entity.urn),
+    datamodel: item.entity.datamodel || t('common.noValue'),
+    coordinates: `${formatNumber(item.latLng[0], 5)}, ${formatNumber(item.latLng[1], 5)}`,
+  })),
+)
+
+const tableToggleText = computed(() => {
+  if (!placed.value.length) return t('map.table.toggleEmpty')
+  if (placed.value.length === 1) return t('map.table.toggleOne')
+  return t('map.table.toggle', { n: formatNumber(placed.value.length, 0) })
+})
+
 watch([search, datamodel], () => schedule(FILTER_DEBOUNCE_MS))
 
 onMounted(() => {
@@ -238,12 +269,18 @@ void loadDatamodels()
       class="map-canvas flex-grow-1 position-relative overflow-hidden rounded-lg"
       :class="{ 'map-canvas--dark': dark }"
     >
+      <!-- `keyboard` es el valor por defecto de Leaflet, pero se declara aqui a proposito:
+           es la unica forma de que se vea, al leer esta plantilla, que el lienzo se desplaza
+           con las flechas y se amplia con + y −. La alternativa completa es la tabla de abajo. -->
       <LMap
         :center="center"
         :zoom="zoom"
         :min-zoom="3"
         :max-zoom="19"
         :use-global-leaflet="true"
+        :options="{ keyboard: true }"
+        role="group"
+        :aria-label="t('map.mapLabel')"
         @ready="onMapReady"
       >
         <LTileLayer
@@ -332,10 +369,64 @@ void loadDatamodels()
         </VCard>
       </div>
     </div>
+
+    <details class="map-alt mt-3">
+      <summary class="map-alt__summary text-body-2">
+        <VIcon icon="mdi-table" size="16" class="me-2" />
+        {{ tableToggleText }}
+      </summary>
+
+      <VCard class="table-card mt-2">
+        <VDataTable
+          :headers="tableHeaders"
+          :items="tableRows"
+          :items-per-page="-1"
+          :no-data-text="emptyText"
+          item-value="id"
+          height="240"
+          density="compact"
+          fixed-header
+          hide-default-footer
+          class="text-body-2"
+        >
+          <template #[`item.name`]="{ item }">
+            <RouterLink
+              :to="`/entidades/${item.id}`"
+              class="text-primary font-weight-medium text-decoration-none"
+            >
+              {{ item.name }}
+            </RouterLink>
+          </template>
+        </VDataTable>
+      </VCard>
+
+      <p class="text-caption text-medium-emphasis mt-2 mb-0">{{ t('map.table.caption') }}</p>
+    </details>
   </div>
 </template>
 
 <style scoped>
+/* La tabla equivalente vive fuera del lienzo: plegada ocupa una linea y el mapa conserva
+   practicamente todo el alto; desplegada, se reparten el espacio. */
+.map-alt__summary {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  user-select: none;
+}
+
+.map-alt__summary:hover {
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.map-alt__summary:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+}
+
 /* Alto util: el mapa ocupa lo que queda bajo la barra superior, descontando el relleno
    del contenedor de la aplicacion. Sin una altura explicita Leaflet no se dibuja. */
 .map-view {
@@ -549,7 +640,25 @@ void loadDatamodels()
 
 /* Cartografia clara sobre tema oscuro: deslumbra. Se invierte y se recoloca el tono para
    obtener una capa nocturna sin depender de un servicio con clave. Solo afecta al panel de
-   teselas; los marcadores viven en otro panel y conservan su color. */
+   teselas; los marcadores viven en otro panel y conservan su color.
+
+   PENDIENTE DE VERIFICACION DINAMICA — GDTIS-PT01-ACC-012 (WCAG 1.4.3).
+   El filtro altera el contraste real de las ETIQUETAS CARTOGRAFICAS (nombres de calle y de
+   barrio, que vienen pintados dentro de la propia tesela), y ese contraste no es calculable
+   estaticamente: depende del pixel de cada tesela. Lo que hay que medir cuando exista entorno
+   desplegado, y por que se deja asi mientras tanto:
+
+     - Que medir: contraste de las etiquetas de tesela sobre su fondo, en tema oscuro y en los
+       niveles de zoom de uso habitual (13 a 18), con un medidor sobre pixeles. El termino
+       sospechoso es `contrast(0.88)`, que REDUCE el contraste de partida; si la medida no
+       llega a 4.5:1, la correccion es subirlo hacia 1 y compensar el deslumbramiento con
+       `brightness`, no al reves.
+     - Por que no se cambia a ciegas: cualquier valor elegido sin medir es tan arbitrario como
+       el actual, y tocarlo dejaria el tema oscuro peor sin evidencia de que mejora.
+     - Que atenua el riesgo mientras tanto: ninguna informacion de la aplicacion vive solo en
+       las etiquetas de la tesela. La atribucion tiene su propio fondo opaco (regla de arriba),
+       los marcadores no pasan por el filtro, y desde esta subsanacion el area visible del mapa
+       tiene ademas una tabla equivalente con nombre y coordenadas de cada entidad. */
 .map-canvas--dark :deep(.leaflet-tile-pane) {
   filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.72);
 }

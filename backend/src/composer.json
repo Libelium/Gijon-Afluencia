@@ -20,7 +20,7 @@
         "fakerphp/faker": "^1.9.1",
         "firebase/php-jwt": "^6.10",
         "guzzlehttp/guzzle": "^7.2",
-        "laravel/framework": "^10.10",
+        "laravel/framework": "^10.50.3",
         "laravel/sanctum": "^3.3",
         "laravel/scout": "^10.6",
         "laravel/tinker": "^2.8",
@@ -85,8 +85,17 @@
             "ignore": [
                 "PKSA-y2cr-5h3j-g3ys"
             ]
+        },
+        "policy": {
+            "advisories": {
+                "ignore-id": {
+                    "PKSA-mdq4-51ck-6kdq": "CVE-2026-48019 / GHSA-5vg9-5847-vvmq - CRLF injection in the default 'email' validation rule. Affects EVERY Laravel 9/10/11 release and is only fixed in >=12.60.0: there is NO fix inside the 10.x series, so it cannot be resolved by pinning. Accepted here only to keep the resolver able to install a TAGGED 10.x release instead of the moving 10.x-dev branch (GDTIS-PT01-COD-099). Real remediation = upgrade to Laravel 12.61.1+; tracked separately.",
+                    "PKSA-3r5d-mb8f-1qw9": "GHSA-5vg9-5847-vvmq (GitHub-sourced duplicate of PKSA-mdq4-51ck-6kdq, same CRLF injection in the default email rule). Fixed only in >=12.60.0. Same rationale as above.",
+                    "PKSA-m5cs-t1y6-qpcs": "GHSA-crmm-hgp2-wgrp - Temporary Signed URL path confusion. Fixed only in >=12.61.1; no 10.x backport exists. Same rationale as above."
+                }
+            }
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

@@ -28,7 +28,7 @@
   "oauth2DeviceCodeLifespan": 600,
   "oauth2DevicePollingInterval": 5,
   "enabled": true,
-  "sslRequired": "none",
+  "sslRequired": "external",
   "registrationAllowed": __KC_REGISTRATION_ALLOWED__,
   "registrationEmailAsUsername": true,
   "rememberMe": false,
@@ -715,21 +715,17 @@
       "id": "1b68f5a9-f775-4507-b3de-90cf0474ffa8",
       "clientId": "apidog-client",
       "name": "apidog-client",
-      "description": "",
+      "description": "DISABLED. Development artefact (Apidog API client). It is kept only so an existing realm is updated rather than left with the old definition; nothing in the platform uses it. Do not re-enable in production: if a developer needs it, create it in a development realm with its own short-lived secret.",
       "rootUrl": "",
       "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
-      "enabled": true,
+      "enabled": false,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": [],
+      "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -741,7 +737,6 @@
       "frontchannelLogout": true,
       "protocol": "openid-connect",
       "attributes": {
-        "access.token.lifespan": "31536000",
         "client.secret.creation.time": "1724230485",
         "client.introspection.response.allow.jwt.claim.enabled": "false",
         "post.logout.redirect.uris": "+",
@@ -752,17 +747,14 @@
         "client.use.lightweight.access.token.enabled": "false",
         "backchannel.logout.session.required": "true",
         "client_credentials.use_refresh_token": "false",
-        "client.offline.session.idle.timeout": "31536000",
         "acr.loa.map": "{}",
         "require.pushed.authorization.requests": "false",
         "tls.client.certificate.bound.access.tokens": "false",
         "display.on.consent.screen": "false",
-        "client.session.max.lifespan": "31536000",
-        "client.session.idle.timeout": "31536000",
         "token.response.type.bearer.lower-case": "false"
       },
       "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": true,
+      "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": -1,
       "defaultClientScopes": [
         "web-origins",
@@ -832,12 +824,8 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": __KC_APP_REDIRECT_URIS__,
+      "webOrigins": __KC_APP_WEB_ORIGINS__,
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -1066,12 +1054,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": [],
+      "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -1090,7 +1074,7 @@
         "backchannel.logout.revoke.offline.tokens": "false"
       },
       "authenticationFlowBindingOverrides": {},
-      "fullScopeAllowed": true,
+      "fullScopeAllowed": false,
       "nodeReRegistrationTimeout": -1,
       "defaultClientScopes": [
         "web-origins",
@@ -1120,12 +1104,8 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "__KC_LARAVEL_BACKEND_SECRET__",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": __KC_APP_REDIRECT_URIS__,
+      "webOrigins": __KC_APP_WEB_ORIGINS__,
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -1184,12 +1164,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": __KC_APP_REDIRECT_URIS__,
+      "webOrigins": __KC_APP_WEB_ORIGINS__,
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -1237,12 +1213,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": [],
+      "webOrigins": [],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -1481,12 +1453,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "/*"
-      ],
-      "webOrigins": [
-        "/*"
-      ],
+      "redirectUris": __KC_APP_REDIRECT_URIS__,
+      "webOrigins": __KC_APP_WEB_ORIGINS__,
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -2128,18 +2096,18 @@
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
   "smtpServer": {
-    "password": "",
+    "password": "__KC_SMTP_PASSWORD__",
     "replyToDisplayName": "",
-    "starttls": "true",
-    "auth": "false",
-    "port": "587",
-    "host": "smtp.pid.gijon.example",
+    "starttls": "__KC_SMTP_STARTTLS__",
+    "auth": "__KC_SMTP_AUTH__",
+    "port": "__KC_SMTP_PORT__",
+    "host": "__KC_SMTP_HOST__",
     "replyTo": "",
-    "from": "no-reply@pid.gijon.example",
-    "fromDisplayName": "PID Gijon",
+    "from": "__KC_SMTP_FROM__",
+    "fromDisplayName": "__KC_SMTP_FROM_DISPLAY_NAME__",
     "envelopeFrom": "",
-    "ssl": "false",
-    "user": ""
+    "ssl": "__KC_SMTP_SSL__",
+    "user": "__KC_SMTP_USER__"
   },
   "loginTheme": "pidtheme",
   "accountTheme": "keycloak.v3",

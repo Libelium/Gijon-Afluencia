@@ -4,28 +4,35 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart as PieSeries } from 'echarts/charts'
-import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import { AriaComponent, TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import { t } from '@/i18n'
 import { formatMeasure, formatNumber } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from './useChartTheme'
 import {
   asItems,
   categoryLabel,
+  chartStyle,
   lastPoint,
   nonNull,
   timeFormatOf,
   tooltipRow,
 } from './chartOptions'
+import { useChartLabel } from './chartLabel'
+import { ariaOption, pairsTable } from './a11y'
 import type { ChartSeries } from './types'
 
-use([CanvasRenderer, PieSeries, TitleComponent, TooltipComponent, LegendComponent])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([CanvasRenderer, PieSeries, TitleComponent, TooltipComponent, LegendComponent, AriaComponent])
 
 const props = withDefaults(
   defineProps<{
     series: ChartSeries[]
     units?: string
     height?: number | string
+    /** Rotulo de la grafica. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { height: 280 },
 )
@@ -65,12 +72,15 @@ const showLegend = computed(() => slices.value.length > 1 && slices.value.length
 const pixels = computed(() => (typeof props.height === 'number' ? props.height : 280))
 const centerY = computed(() => Math.round(pixels.value * (showLegend.value ? 0.44 : 0.5)))
 
+const label = useChartLabel(() => props.title, () => t('dashboards.chart.pie'))
+
 const option = computed<EChartsOption>(() => {
   const figureSize = compact.value ? 18 : 22
   const titleHeight = figureSize * 1.2 + 4 + 14
 
   return {
     animationDuration: 300,
+    aria: ariaOption(label.value),
     title: {
       text: formatNumber(total.value),
       subtext: units.value || t('dashboards.chart.total'),
@@ -112,12 +122,29 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => ({
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-  width: '100%',
-}))
+const style = computed(() => chartStyle(props.height))
+
+/**
+ * La tabla equivalente lista los mismos sectores que dibuja el anillo, con su valor y su
+ * porcentaje: el porcentaje solo existe en el dibujo y en el globo emergente, asi que sin el
+ * la alternativa no seria equivalente.
+ */
+const table = computed(() =>
+  pairsTable(
+    slices.value.map((slice) => ({
+      label: slice.name,
+      value: total.value
+        ? `${formatMeasure(slice.value, units.value)} · ${formatNumber((slice.value / total.value) * 100, 1)} %`
+        : formatMeasure(slice.value, units.value),
+    })),
+    [t('dashboards.chart.share'), t('dashboards.chart.value')],
+  ),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

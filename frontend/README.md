@@ -140,7 +140,12 @@ organización del backend y se aplican en tiempo de ejecución.
 
 ### Transversal a toda la aplicación
 
-- **Interfaz en español**, con las URL también en español.
+- **Interfaz en español**, con las URL también en español y el idioma declarado en `<html lang>`
+  a partir del diccionario cargado, no como literal.
+- **Accesibilidad**: enlace de salto al contenido, filas de tabla operables con teclado,
+  `scope="col"` en las cabeceras, diálogos asociados a su título, avisos sin caducidad y una
+  **tabla de datos equivalente** en cada gráfica y en cada mapa, porque un `<canvas>` y un lienzo
+  de teselas no son legibles con lector de pantalla.
 - **Tema claro y oscuro** en todas las pantallas, con la paleta comprobada contra WCAG 2.1 AA.
 - **Diseño adaptable** verificado a 390 px de ancho.
 - **Cuatro estados en cada pantalla** —cargando, vacío, error y con datos—, con mensajes de error
@@ -296,7 +301,15 @@ cambias, cámbialo también allí o el inicio de sesión fallará.
 | `npm run build` | Comprueba tipos y empaqueta en `dist/` |
 | `npm run preview` | Sirve `dist/` para revisar el artefacto construido |
 | `npm run typecheck` | `vue-tsc --noEmit`, plantillas incluidas |
+| `npm run lint` | ESLint con `eslint-plugin-vue`: revisa también las plantillas, que el compilador de tipos no ve |
+| `npm run lint:fix` | Igual, aplicando las correcciones automáticas |
+| `npm test` | Pruebas unitarias y de componentes con Vitest |
+| `npm run test:watch` | Vitest en modo continuo |
+| `npm run test:coverage` | Pruebas con informe de cobertura y umbrales |
 | `npm run licenses` | Vuelca el árbol de dependencias y sus licencias |
+
+Los umbrales de cobertura están en `vitest.config.ts`: un suelo global bajo —que solo impide que
+la cobertura baje— y umbrales exigentes por fichero en los módulos ya cubiertos.
 
 ---
 

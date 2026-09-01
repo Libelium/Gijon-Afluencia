@@ -93,6 +93,10 @@ USER www-data
 # fija laravel/framework a 10.x-dev en un commit concreto: con `update` esa rama de
 # desarrollo deriva sola. Si el lock no concuerda con composer.json, install falla, que
 # es justo el aviso que se quiere.
+# NOTA: el lock ya NO fija 10.x-dev. GDTIS-PT01-COD-099 se subsano pineando
+# laravel/framework a v10.50.3 con minimum-stability: stable. El razonamiento de
+# `install` frente a `update` sigue vigente: es lo que garantiza que la imagen
+# lleve exactamente el arbol del lock versionado.
 # `preferred-install: auto` en vez del `dist` de composer.json: sigue prefiriendo el zip
 # de dist, pero cuando la descarga falla clona desde el repositorio en la misma referencia
 # del lock, en lugar de abortar la construccion entera. Con `dist` a secas composer

@@ -12,8 +12,14 @@ class IOTAProxy(ConfigurableService):
     """Generic IOTA proxy"""
 
     @abstractmethod
-    def get_services(self, entity_type: str, tenant: str, scope: str):
-        """Get a service from the IOTA"""
+    def get_services(
+        self,
+        entity_type: str | None,
+        device_type_code: str | None,
+        tenant: str,
+        scope: str,
+    ):
+        """Get the services from the IOTA, optionally filtered"""
         pass
 
     @abstractmethod

@@ -1,6 +1,11 @@
 import json
 import ast
-import xml.etree.ElementTree as ET
+# SEC-023. The stdlib xml.etree.ElementTree expands external entities and
+# nested entity definitions, so a KML upload could read local files off the
+# worker (XXE) or exhaust its memory (billion laughs). defusedxml exposes the
+# same API with those features disabled and raises EntitiesForbidden /
+# DTDForbidden instead. The uploads reaching this parser are user-supplied.
+import defusedxml.ElementTree as ET
 from datetime import datetime
 from typing import List, Dict
 
@@ -153,13 +158,16 @@ class KmlParser(DataParser):
             return None
 
         # Try JSON-like structures
+        # COD-078: these were three bare `except:` clauses, which also swallow
+        # KeyboardInterrupt and SystemExit and would hide a genuine crash as a
+        # silently unparsed value.
         if isinstance(value, str) and value.strip().startswith(("{", "[")):
             try:
                 return json.loads(value)
-            except:
+            except json.JSONDecodeError:
                 try:
                     return ast.literal_eval(value)
-                except:
+                except (ValueError, SyntaxError, RecursionError, MemoryError):
                     return value
 
         # Boolean
@@ -169,5 +177,5 @@ class KmlParser(DataParser):
         # Number
         try:
             return float(value)
-        except:
+        except (TypeError, ValueError):
             return value

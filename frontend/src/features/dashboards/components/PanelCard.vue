@@ -4,7 +4,7 @@ import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import type { Panel } from '@/types'
-import { ChartRenderer, chartVariant, resolveChartKind, type ChartData } from '../charts'
+import { ChartRenderer, chartVariant, provideChartLabel, resolveChartKind, type ChartData } from '../charts'
 import { fetchPanelData, queryableSeries } from '../api/dashboards'
 import type { DateRange } from '../lib/range'
 
@@ -89,6 +89,10 @@ watch(
   () => void load(),
   { immediate: true },
 )
+
+// El titulo del panel es el nombre accesible de su grafica y el encabezado de la tabla
+// equivalente que la acompana. Ver `charts/chartLabel.ts`.
+provideChartLabel(() => title.value)
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
@@ -97,13 +97,21 @@ async function submit() {
     saving.value = false
   }
 }
+
+/**
+ * Vuetify pone `role="dialog"` y `aria-modal` en el dialogo, pero no lo asocia con su titulo:
+ * al abrirse, un lector de pantalla anuncia «dialogo» sin decir cual (WCAG 4.1.2, hallazgo
+ * GDTIS-PT01-ACC-007). `useId` genera un identificador unico por instancia, que es lo que hace
+ * falta cuando el mismo componente se monta varias veces en una pantalla.
+ */
+const titleId = useId()
 </script>
 
 <template>
-  <VDialog v-model="open" scrollable :persistent="saving">
+  <VDialog v-model="open" scrollable :persistent="saving" :aria-labelledby="titleId">
     <VCard>
       <VCardTitle class="d-flex align-center ga-3 py-4">
-        <span class="text-h6">{{ t('dashboards.templateEntities.title') }}</span>
+        <span :id="titleId" class="text-h6">{{ t('dashboards.templateEntities.title') }}</span>
         <VSpacer />
         <VBtn
           icon="mdi-close"
@@ -186,7 +194,7 @@ async function submit() {
             </VList>
           </StateBlock>
 
-          <VAlert v-if="saveError" type="error" :text="saveError" />
+          <VAlert v-if="saveError" type="error" role="alert" :text="saveError" />
         </div>
       </VCardText>
 

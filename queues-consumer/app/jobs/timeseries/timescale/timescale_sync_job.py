@@ -6,7 +6,11 @@ from config.logging import appLogging as logging
 from jobs.job import Job
 from jobs.timeseries.timescale.models.entity_data_model import build_entity_data_model
 import jobs.timeseries.timescale.session as ts_session
-from jobs.timeseries.timescale.sql_template_loader import check_schema_template
+from jobs.timeseries.timescale.sql_template_loader import (
+    InvalidSchemaName,
+    render_check_schema,
+    validate_schema_name,
+)
 from schemas.entity_data_notification import EntityAttr, EntityDataNotification
 from sqlalchemy import Column, Tuple, text
 from sqlalchemy.dialects.postgresql import insert
@@ -35,7 +39,17 @@ class TimescaleSyncJob(Job):
             raise e
 
     def single_handle(self, db: Session = None, db_idx: int = 0):
+        # SEC-020. `tenant` reaches us from an NGSI-LD notification body, and
+        # the schema name built from it is interpolated into DDL. Validate it
+        # here, before anything is rendered or a table object is built, so a
+        # hostile tenant is rejected at the door instead of reaching the SQL.
         schema = f"{constants.SCHEMA_PREFIX}{self.entity_data.tenant}"
+        try:
+            validate_schema_name(schema)
+        except InvalidSchemaName as e:
+            logging.error(f"Rejected timeseries notification: {e}")
+            raise
+
         self.__ensure_schema(schema, db, db_idx)
         entity_datas = self.__notification_to_entity_data(self.entity_data)
 
@@ -69,7 +83,7 @@ class TimescaleSyncJob(Job):
             return
 
         logging.info(f"[schema_cache] schema '{schema}' not in cache for DB {db_idx}, running schema check")
-        script = check_schema_template.render(schema=schema)
+        script = render_check_schema(schema)
 
         try:
             db.execute(text(script))

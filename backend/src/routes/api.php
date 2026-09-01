@@ -48,11 +48,13 @@ Route::get('/hchk', function () {
     return response('OK', 200);
 });
 
-Route::get('help/image/{folder}/{filepath}', [HelpController::class, 'getImage'])->where('filepath', '(.*)');
-
 /**
- * Internal routes for APISIX gateway
- * These endpoints should only be accessible from the internal network
+ * Internal routes for the APISIX gateway.
+ *
+ * They stay outside `auth:api` because the gateway calls them while it is still deciding
+ * whether to admit a request. They are NOT public: PermissionController authenticates every
+ * call with the shared X-Gateway-Secret header (config `services.api-gateway.secret`) and
+ * fails closed when that secret is not configured.
  */
 Route::prefix('internal')->group(function () {
     Route::post('check-write-permission', [PermissionController::class, 'checkWritePermission']);
@@ -66,6 +68,9 @@ Route::middleware('auth:api')->group(function () {
         Route::get('changelog/{version}', [HelpController::class, 'getChangelog']);
         Route::get('index', [HelpController::class, 'getFolderIndex']);
         Route::get('content/{folder}/{filepath}', [HelpController::class, 'getFileContent'])->where('filepath', '(.*)');
+        // Same URL as before, now behind auth:api: documentation images are part of the
+        // documentation, and the documentation is only served to authenticated users.
+        Route::get('image/{folder}/{filepath}', [HelpController::class, 'getImage'])->where('filepath', '(.*)');
     });
 });
 
@@ -248,8 +253,11 @@ Route::prefix("V1")->group(function () {
 
         // Alarm notification channels
         Route::prefix('phone')->group(function () {
-            Route::post('verify/send',    [PhoneVerificationController::class, 'send']);
-            Route::post('verify/confirm', [PhoneVerificationController::class, 'confirm']);
+            // Rate limited like login / refresh-token: the confirmation code is 6 digits and
+            // valid for 10 minutes. The controller additionally locks out after a handful of
+            // wrong guesses per user + phone number.
+            Route::post('verify/send',    [PhoneVerificationController::class, 'send'])->middleware('throttle:5,1');
+            Route::post('verify/confirm', [PhoneVerificationController::class, 'confirm'])->middleware('throttle:10,1');
         });
 
         Route::prefix('telegram')->group(function () {

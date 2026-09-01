@@ -4,14 +4,20 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GaugeChart as GaugeSeries } from 'echarts/charts'
+import { AriaComponent } from 'echarts/components'
 import type { EChartsOption } from 'echarts'
 import { formatMeasure } from '@/lib/format'
+import { t } from '@/i18n'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { LINE, occupancyColors, seriesColors } from '../palette'
 import { useChartTheme } from './useChartTheme'
-import { axisValue, lastPoint, niceCeil } from './chartOptions'
+import { axisValue, chartStyle, lastPoint, niceCeil } from './chartOptions'
+import { useChartLabel } from './chartLabel'
+import { ariaOption, seriesTable } from './a11y'
 import type { ChartSeries } from './types'
 
-use([CanvasRenderer, GaugeSeries])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([CanvasRenderer, GaugeSeries, AriaComponent])
 
 const props = withDefaults(
   defineProps<{
@@ -22,17 +28,24 @@ const props = withDefaults(
     /** 'occupancy' pinta la escala de niveles; el resto de medidas no admiten ese significado. */
     scale?: 'neutral' | 'occupancy'
     height?: number | string
+    /** Rotulo del indicador. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { scale: 'neutral', height: 280 },
 )
 
-const { themeName, isDark, compact } = useChartTheme()
+const { themeName, isDark, compact, timeZone } = useChartTheme()
 
 const units = computed(() => props.series[0]?.units ?? props.units)
 const value = computed(() => lastPoint(props.series[0])?.v ?? null)
 
 const min = computed(() => props.min ?? Math.min(0, value.value ?? 0))
 const max = computed(() => props.max ?? niceCeil(Math.max(value.value ?? 0, 1)))
+
+const label = useChartLabel(
+  () => props.title || props.series[0]?.name,
+  () => t('dashboards.chart.gauge'),
+)
 
 const option = computed<EChartsOption>(() => {
   const track = isDark.value ? LINE.dark : LINE.light
@@ -43,6 +56,7 @@ const option = computed<EChartsOption>(() => {
 
   return {
     animationDuration: 400,
+    aria: ariaOption(label.value),
     series: [
       {
         type: 'gauge',
@@ -89,12 +103,18 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => ({
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-  width: '100%',
-}))
+const style = computed(() => chartStyle(props.height))
+
+// La aguja marca el ultimo valor, pero la serie completa es el dato que llega: se ofrece entera,
+// que es mas —no menos— de lo que el dibujo deja leer.
+const table = computed(() =>
+  seriesTable(props.series, { timeZone: timeZone.value, units: props.units, order: 'desc' }),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

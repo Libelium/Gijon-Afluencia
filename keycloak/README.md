@@ -59,6 +59,31 @@ Otras variables de interés (todas documentadas en `.env.example`): `BACKEND_URL
 `KC_DEFAULT_LOCALE`, `KC_REGISTRATION_ALLOWED`, `KC_MOBILE_CLIENT_ENABLED` y los colores de marca
 `KC_BRAND_PRIMARY` / `KC_BRAND_SECONDARY` / `KC_BRAND_INDIGO`.
 
+### URLs de retorno OAuth
+
+Los clientes de servicio (`laravel-backend`, `laravel-backend-client`, `vue-frontend`,
+`dlm-client`) ya no llevan el comodín `"/*"` en `redirectUris`. Ese patrón es relativo al origen
+de Keycloak, así que aceptaba una redirección a cualquier ruta que sirva Keycloak.
+
+Por defecto se usa `KC_HOSTNAME`, que es el mismo valor que el backend envía como
+`KEYCLOAK_REDIRECT_URI` al canjear el código de autorización. Si una instalación necesita más,
+`KC_APP_REDIRECT_URIS` acepta una lista separada por comas (y `KC_APP_WEB_ORIGINS` los orígenes
+CORS). **El contenedor no arranca si la lista queda vacía.**
+
+Los clientes que solo usan *password grant* o intercambio de token (`queues-consumer-client`,
+`pid-gijon-mcp-cli`, `change-password-client`) ya no tienen ninguna URL de retorno, porque no la
+necesitan.
+
+### Correo (segundo factor y reinicio de contraseña)
+
+Ese canal transporta el código OTP y los enlaces de reinicio, así que el arranque lo exige
+autenticado y cifrado. Si defines `KC_SMTP_HOST` tienes que definir también `KC_SMTP_USER` y
+`KC_SMTP_PASSWORD`, y dejar activo `KC_SMTP_STARTTLS` (puerto 587) o `KC_SMTP_SSL` (puerto 465):
+con los dos en `false` el contenedor se detiene.
+
+Si no defines `KC_SMTP_HOST` no se configura correo. Es válido en desarrollo, pero entonces ni el
+reinicio de contraseña ni el segundo factor por correo funcionan.
+
 ## Arranque
 
 ```bash

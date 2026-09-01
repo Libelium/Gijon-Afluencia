@@ -4,7 +4,7 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart as LineSeries } from 'echarts/charts'
-import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 // Los tipos salen del paquete raiz, no de 'echarts/charts': son declaraciones distintas
 // y mezclarlas hace incompatible el objeto de opciones. La importacion es solo de tipos.
 import type {
@@ -14,22 +14,41 @@ import type {
 } from 'echarts'
 import { t } from '@/i18n'
 import { formatMeasure } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from '../../charts/useChartTheme'
-import { asItems, axisValue, timeFormatOf, timeLabel, toMillis, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
+import {
+  asItems,
+  chartGrid,
+  chartStyle,
+  scrollLegend,
+  timeFormatOf,
+  timeLabel,
+  toMillis,
+  tooltipHeader,
+  tooltipRow,
+  valueAxis,
+} from '../../charts/chartOptions'
+import { useChartLabel } from '../../charts/chartLabel'
+import { ariaOption, seriesTable } from '../../charts/a11y'
 import type { NamedSeries } from '../shared/types'
 
-use([CanvasRenderer, LineSeries, GridComponent, TooltipComponent, LegendComponent])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([CanvasRenderer, LineSeries, GridComponent, TooltipComponent, LegendComponent, AriaComponent])
 
 const props = withDefaults(
   defineProps<{
     series: NamedSeries[]
     units?: string
     height?: number
+    /** Rotulo de la grafica. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { height: 320 },
 )
 
 const { compact, themeName, timeZone } = useChartTheme()
+
+const label = useChartLabel(() => props.title, () => t('dashboards.chart.stackedArea'))
 
 const option = computed<EChartsOption>(() => {
   const format = timeFormatOf(props.series, compact.value)
@@ -49,8 +68,9 @@ const option = computed<EChartsOption>(() => {
 
   return {
     animationDuration: 300,
-    grid: { left: 8, right: 20, top: 20, bottom: 34, containLabel: true },
-    legend: { show: true, type: 'scroll', bottom: 0 },
+    aria: ariaOption(label.value),
+    grid: chartGrid(34),
+    legend: scrollLegend(true),
     tooltip: {
       trigger: 'axis',
       confine: true,
@@ -76,14 +96,21 @@ const option = computed<EChartsOption>(() => {
       splitNumber: compact.value ? 3 : 6,
       axisLabel: { hideOverlap: true, formatter: (v: number) => timeLabel(v, timeZone.value, format) },
     },
-    yAxis: { type: 'value', splitNumber: 5, axisLabel: { formatter: (v: number) => axisValue(v) } },
+    yAxis: valueAxis(false),
     series: data,
   }
 })
 
-const style = computed(() => ({ height: `${props.height}px`, width: '100%' }))
+const style = computed(() => chartStyle(props.height))
+
+const table = computed(() =>
+  seriesTable(props.series, { timeZone: timeZone.value, units: props.units }),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

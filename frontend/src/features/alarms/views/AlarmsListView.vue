@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { t } from '@/i18n'
 import { errorMessage } from '@/api/http'
 import { formatDateTime } from '@/lib/format'
+import { clickableRowProps } from '@/lib/a11y'
 import { useSessionStore } from '@/stores/session'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
@@ -98,8 +99,15 @@ function clearSearch() {
 }
 
 function openAlarm(_event: unknown, row: { item: AlarmRow }) {
-  if (row?.item?.id !== undefined) void router.push(`/alarmas/${row.item.id}`)
+  goToAlarm(row.item)
 }
+
+function goToAlarm(alarm: AlarmRow) {
+  if (alarm?.id !== undefined) void router.push(`/alarmas/${alarm.id}`)
+}
+
+// Mismo motivo que en el listado de entidades: la fila pulsable necesita equivalente de teclado.
+const rowProps = clickableRowProps<AlarmRow>(goToAlarm)
 </script>
 
 <template>
@@ -152,7 +160,7 @@ function openAlarm(_event: unknown, row: { item: AlarmRow }) {
         :loading="loading"
         :loading-text="t('common.loading')"
         :no-data-text="emptyText"
-        :row-props="{ class: 'cursor-pointer' }"
+        :row-props="rowProps"
         item-value="id"
         hide-default-footer
         @click:row="openAlarm"

@@ -114,6 +114,21 @@ pytest, dentro del contenedor:
 docker compose run --rm --no-deps fiware-manager pytest ./app/tests/ -q
 ```
 
+> **Nota de subsanación (COD-102).** `pytest` ya no es una dependencia de tiempo de
+> ejecución: se ha movido al grupo `test` del `pyproject.toml`, para que no viaje en la
+> imagen de producción.
+>
+> - Para que el comando de arriba siga funcionando, el `Dockerfile` debe sincronizar
+>   también ese grupo, igual que ya hace `queues-consumer`:
+>   `uv sync --locked --no-install-project --all-groups --no-cache`.
+> - En local, el grupo hay que pedirlo de forma explícita, porque el grupo que `uv`
+>   selecciona por defecto es `dev`, no `test`:
+>   `uv sync --group test && pytest ./app/tests/ -q`.
+>   Un `uv sync` a secas deja el entorno **sin `pytest`**. Esa es exactamente la causa
+>   raíz de FUN-019 en `queues-consumer`, donde se confundió con una dependencia sin
+>   declarar; allí se ha fijado `default-groups = ["test"]`, que aquí no se puede usar
+>   porque el `Dockerfile` no selecciona grupos y volvería a meter `pytest` en la imagen.
+
 Los tests viven en `app/tests/`, agrupados por módulo (`ote/`, `parser/`, `iota/`).
 No hay linter ni formateador configurado: seguir el
 estilo del código de alrededor.

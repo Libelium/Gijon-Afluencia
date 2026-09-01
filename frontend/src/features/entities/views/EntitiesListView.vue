@@ -6,6 +6,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import { formatNumber, relativeFromNow, urnTail } from '@/lib/format'
+import { clickableRowProps } from '@/lib/a11y'
 import { useSessionStore } from '@/stores/session'
 import { dataScopeLabel, listDataScopes, type DataScope } from '@/api/scopes'
 import type { Entity } from '@/types'
@@ -131,8 +132,15 @@ function clearFilters() {
 }
 
 function openEntity(_event: unknown, row: { item: Entity }) {
-  void router.push(`/entidades/${row.item.id}`)
+  goToEntity(row.item)
 }
+
+function goToEntity(entity: Entity) {
+  void router.push(`/entidades/${entity.id}`)
+}
+
+// La fila entera es pulsable con el raton; sin esto, con teclado no habria forma de activarla.
+const rowProps = clickableRowProps<Entity>(goToEntity)
 
 // El campo lleva `clearable`, y al pulsar la «x» Vuetify emite null, no cadena vacia. Sin el
 // respaldo, el trim revienta dentro del temporizador, fuera de cualquier captura, y el listado
@@ -251,7 +259,7 @@ onBeforeUnmount(() => window.clearTimeout(debounce))
           :next-page-label="t('entities.table.nextPage')"
           :last-page-label="t('entities.table.lastPage')"
           :sort-by="[]"
-          :row-props="{ class: 'cursor-pointer' }"
+          :row-props="rowProps"
           item-value="id"
           mobile-breakpoint="sm"
           @update:page="page = $event"

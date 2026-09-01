@@ -357,7 +357,11 @@ onMounted(load)
       @confirm="confirmDeleteDashboard"
     />
 
-    <VSnackbar v-model="snack.open" :color="snack.color" :timeout="4000" location="bottom">
+    <!-- Sin cierre automatico (WCAG 2.2.1): un aviso que se va solo a los 4 s no da tiempo a
+         quien lee despacio, usa magnificacion o navega con lector de pantalla, y Vuetify no
+         detiene la cuenta atras al recibir el foco. El boton «Cerrar» es la unica forma de
+         descartarlo, que es lo que exige el criterio. -->
+    <VSnackbar v-model="snack.open" :color="snack.color" :timeout="-1" location="bottom">
       {{ snack.text }}
       <template #actions>
         <VBtn variant="text" @click="snack.open = false">{{ t('common.close') }}</VBtn>

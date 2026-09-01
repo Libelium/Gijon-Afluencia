@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
 import { useSessionStore } from '@/stores/session'
@@ -93,13 +93,21 @@ async function submit() {
     saving.value = false
   }
 }
+
+/**
+ * Vuetify pone `role="dialog"` y `aria-modal` en el dialogo, pero no lo asocia con su titulo:
+ * al abrirse, un lector de pantalla anuncia «dialogo» sin decir cual (WCAG 4.1.2, hallazgo
+ * GDTIS-PT01-ACC-007). `useId` genera un identificador unico por instancia, que es lo que hace
+ * falta cuando el mismo componente se monta varias veces en una pantalla.
+ */
+const titleId = useId()
 </script>
 
 <template>
-  <VDialog v-model="open" scrollable :persistent="saving">
+  <VDialog v-model="open" scrollable :persistent="saving" :aria-labelledby="titleId">
     <VCard>
       <VCardTitle class="d-flex align-center ga-3 py-4">
-        <span class="text-h6">{{ t('dashboards.create.title') }}</span>
+        <span :id="titleId" class="text-h6">{{ t('dashboards.create.title') }}</span>
         <VSpacer />
         <span class="text-caption text-medium-emphasis">{{ t('dashboards.create.step', { current: step }) }}</span>
         <VBtn
@@ -193,9 +201,13 @@ async function submit() {
 
           <TemplatePicker v-if="mode === 'template'" v-model="templateKey" />
 
+          <!-- `role="alert"` para que el fallo se anuncie en cuanto aparece: sin el, quien usa
+               lector de pantalla se queda esperando junto a un boton que no ha hecho nada
+               visible (WCAG 4.1.3, hallazgo GDTIS-PT01-ACC-009). -->
           <VAlert
             v-if="error"
             type="error"
+            role="alert"
             :title="createdId ? t('dashboards.create.templateFailed') : undefined"
             :text="error"
           />

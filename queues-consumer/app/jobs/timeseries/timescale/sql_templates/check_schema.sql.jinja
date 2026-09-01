@@ -18,8 +18,8 @@ select exists (
 --- - tables (hypertables)
 --- - indexes
 if not schema_exists then
-    CREATE SCHEMA {{ schema }};
-    CREATE TABLE {{ schema }}.entity_data (
+    CREATE SCHEMA {{ schema_ident }};
+    CREATE TABLE {{ schema_ident }}.entity_data (
         time TIMESTAMPTZ NOT NULL,
         entity_id TEXT NOT NULL,
         entity_type TEXT NOT NULL,
@@ -40,7 +40,7 @@ if not schema_exists then
         SELECT create_hypertable('{{ schema }}.entity_data', by_range('time'));
     END IF;
 
-    CREATE UNIQUE INDEX ix_scope_id_entity_id_attr_id_time ON {{ schema }}.entity_data (scope_id, entity_id, attr_id, time);
+    CREATE UNIQUE INDEX ix_scope_id_entity_id_attr_id_time ON {{ schema_ident }}.entity_data (scope_id, entity_id, attr_id, time);
 
 else
     --- Schema exists: Single optimized check for migration necessity
@@ -61,7 +61,7 @@ else
 
         --- Drop the 'id' column
         --- Metadata-only change, no heap rewrite
-        ALTER TABLE {{ schema }}.entity_data
+        ALTER TABLE {{ schema_ident }}.entity_data
             DROP COLUMN id;
     end if;
 end if;

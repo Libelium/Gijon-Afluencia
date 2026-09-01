@@ -12,9 +12,20 @@ use App\Repositories\OrganizationRepository;
 use App\Repositories\ResourcePermissionRepository;
 use App\Authorization\AppResourcePermission;
 use App\Http\V1\Resources\RegulationResource;
+use App\Services\OrderFieldValidator;
 
 class RegulationController extends Controller
 {
+    /** Columns a regulation listing may be ordered by. See OrderFieldValidator for the why. */
+    private const ORDERABLE_COLUMNS = [
+        'id',
+        'name',
+        'datamodel',
+        'user_id',
+        'created_at',
+        'updated_at',
+    ];
+
     /**
      * Display a listing of the resource. Paginated.
      *
@@ -41,7 +52,14 @@ class RegulationController extends Controller
                 return $query->where('name', 'like', '%' . $search . '%');
             })
             // sort
-            ->when($request->orderBy, function ($query, $orderBy) use ($request) {
+            ->when($request->orderBy, function ($query) use ($request) {
+                $orderBy = OrderFieldValidator::resolveColumn(
+                    $request->orderBy,
+                    self::ORDERABLE_COLUMNS,
+                    'regulations.id',
+                    'regulations'
+                );
+
                 return $query->orderBy($orderBy, $request->orderDirection ? 'asc' : 'desc');
             });
 

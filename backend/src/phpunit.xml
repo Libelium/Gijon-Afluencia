@@ -4,6 +4,12 @@
          bootstrap="vendor/autoload.php"
          colors="true"
 >
+    <!--
+      The suite needs a real PostgreSQL server with PostGIS; SQLite cannot host this
+      schema. The connection settings, and the exact commands that create the database
+      the suite expects, live in .env.testing (Laravel loads it because APP_ENV below is
+      "testing"). Read that file before running the suite for the first time.
+    -->
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
@@ -21,8 +27,6 @@
         <env name="APP_ENV" value="testing"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

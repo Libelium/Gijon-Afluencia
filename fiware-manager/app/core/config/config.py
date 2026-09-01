@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     # buffer reached 1.5 GB and the pod, capped at 600 MB, would have been OOM-killed.
     OTE_FLUSH_MAX_BYTES: int = int(os.getenv("OTE_FLUSH_MAX_BYTES", str(4 * 1024 * 1024)))
     OTE_MAX_BUFFER_BYTES: int = int(os.getenv("OTE_MAX_BUFFER_BYTES", str(200 * 1024 * 1024)))
+    # SEC-024. Hard ceiling on the OUTPUT of gunzipping a sensor body. The buffer
+    # caps above act on already-decompressed data, so they cannot stop a
+    # decompression bomb: a few hundred KB of crafted gzip expands to gigabytes
+    # inside `gzip.decompress` before any of them is consulted. 64 MB is ~16x the
+    # largest real frame window (OTE_FLUSH_MAX_BYTES).
+    OTE_MAX_DECOMPRESSED_BYTES: int = int(
+        os.getenv("OTE_MAX_DECOMPRESSED_BYTES", str(64 * 1024 * 1024))
+    )
     PENDING_COMMANDS_COLLECTION: str = "custom_pending_commands"
     GUNICORN_WORKERS: int = os.getenv("GUNICORN_WORKERS", 1)
     ENABLE_SWAGGER: bool = os.getenv("ENABLE_SWAGGER", False)

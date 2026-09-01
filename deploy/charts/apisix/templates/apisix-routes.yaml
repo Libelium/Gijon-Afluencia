@@ -109,12 +109,15 @@ spec:
                   local request_body = cjson.encode({tenant_name = tenant_name, scope_name = scope_name})
                   {{- end }}
 
+                  -- Service-to-service credential for /api/internal/*. web-back checks it
+                  -- with hash_equals and fails closed, so the header is not optional.
                   local res, err = httpc:request_uri(backend_url, {
                     method = "POST",
                     body = request_body,
                     headers = {
                       ["Content-Type"] = "application/json",
                       ["Authorization"] = auth_header,
+                      ["X-Gateway-Secret"] = {{ $.Values.fiware.backend.gatewaySecret | quote }},
                     },
                     ssl_verify = false
                   })

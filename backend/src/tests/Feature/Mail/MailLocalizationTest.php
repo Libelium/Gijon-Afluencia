@@ -3,13 +3,9 @@
 namespace Tests\Feature\Mail;
 
 use App\Helpers\MailLocaleHelper;
-use App\Models\Mail\AccountBlockedNotice;
-use App\Models\Mail\AccountUnblockedNotice;
-use App\Models\Mail\CriticalIncidentAlert;
 use App\Models\Mail\PasswordChanged;
 use App\Models\Mail\ResetPassword;
 use App\Models\User;
-use Illuminate\Mail\Mailable;
 use Tests\TestCase;
 
 /**
@@ -23,6 +19,26 @@ use Tests\TestCase;
  *   - a translator dropping or renaming a :placeholder (":name" printed literally, or a broken sentence);
  *   - the locale not actually being applied at render time (body translated, subject still English);
  *   - a key referenced in a template that does not exist in the translation files.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * NOTE ON SCOPE (GDTIS-PT01-FUN-018)
+ * ---------------------------------------------------------------------------------------------
+ * The previous version of this file referenced three mailable classes that do not exist anywhere
+ * in the codebase — App\Models\Mail\AccountBlockedNotice, App\Models\Mail\AccountUnblockedNotice
+ * and App\Models\Mail\CriticalIncidentAlert — plus their source paths. Every test that touched
+ * them died with "Class not found", which is 13 of the suite's 17 original failures. (The audit
+ * report only spotted AccountUnblockedNotice; all three are missing.)
+ *
+ * app/Models/Mail/ contains exactly two mailables: ResetPassword and PasswordChanged. The three
+ * Blade views for the incident emails DO exist and ARE fully translated into the five locales,
+ * but nothing in app/, routes/ or config/ ever renders them — see
+ * test_incident_mail_views_have_no_mailable_yet(), which pins that fact so the dead code stays
+ * visible and so that whoever adds the missing mailables is told to extend the render coverage
+ * below.
+ *
+ * The data-level tests (key parity, placeholders, emptiness, whitelist) still cover ALL the
+ * translation keys, including the incident ones, because they work from the Blade views and the
+ * JSON files rather than from the mailable classes.
  */
 class MailLocalizationTest extends TestCase
 {
@@ -31,7 +47,14 @@ class MailLocalizationTest extends TestCase
 
     private const DEFAULT_LOCALE = 'en';
 
-    /** Templates + mailables that must only ever reference existing keys. */
+    /**
+     * Templates + mailables that must only ever reference existing keys.
+     *
+     * All five Blade views are listed (they exist and are translated) even though three of them
+     * have no mailable class yet; that is precisely how the incident translations keep being
+     * validated. Only files that really exist may be listed here — a missing path is a hard
+     * failure, which is what made this test obsolete before.
+     */
     private const SOURCES = [
         'resources/views/app/account/mail/resetPassword.blade.php',
         'resources/views/app/account/mail/passwordChanged.blade.php',
@@ -40,9 +63,16 @@ class MailLocalizationTest extends TestCase
         'resources/views/app/incidents/mail/accountUnblockedNotice.blade.php',
         'app/Models/Mail/ResetPassword.php',
         'app/Models/Mail/PasswordChanged.php',
-        'app/Models/Mail/CriticalIncidentAlert.php',
-        'app/Models/Mail/AccountBlockedNotice.php',
-        'app/Models/Mail/AccountUnblockedNotice.php',
+    ];
+
+    /**
+     * Blade views under resources/views/app/incidents/mail/ that are rendered by no mailable.
+     * Keyed by view file, valued by the class that is expected to render it one day.
+     */
+    private const MAIL_VIEWS_WITHOUT_MAILABLE = [
+        'resources/views/app/incidents/mail/criticalIncidentAlert.blade.php'   => 'App\Models\Mail\CriticalIncidentAlert',
+        'resources/views/app/incidents/mail/accountBlockedNotice.blade.php'    => 'App\Models\Mail\AccountBlockedNotice',
+        'resources/views/app/incidents/mail/accountUnblockedNotice.blade.php'  => 'App\Models\Mail\AccountUnblockedNotice',
     ];
 
     /** @return array<string, string> flat key => translation */
@@ -126,7 +156,7 @@ class MailLocalizationTest extends TestCase
         $used = [];
         foreach (self::SOURCES as $relative) {
             $path = base_path($relative);
-            $this->assertFileExists($path);
+            $this->assertFileExists($path, "{$relative} is listed in SOURCES but does not exist.");
             preg_match_all('/__\(\s*[\'"]([^\'"]+)[\'"]/', file_get_contents($path), $matches);
             foreach ($matches[1] as $key) {
                 $used[$key] = $relative;
@@ -147,6 +177,71 @@ class MailLocalizationTest extends TestCase
         }
     }
 
+    /**
+     * No translation key is dead weight: every `emails.*` key in the JSON files is referenced by
+     * at least one of the sources above. Catches the opposite drift of the test before this one —
+     * a template stops using a key and nobody removes it from five JSON files.
+     */
+    public function test_no_email_translation_key_is_unused(): void
+    {
+        $used = [];
+        foreach (self::SOURCES as $relative) {
+            preg_match_all('/__\(\s*[\'"]([^\'"]+)[\'"]/', file_get_contents(base_path($relative)), $matches);
+            foreach ($matches[1] as $key) {
+                $used[$key] = true;
+            }
+        }
+
+        // Subjects are set in the mailables via __('...') too, but the three mailables that do not
+        // exist yet cannot reference theirs — allow exactly those.
+        $subjectsOfMissingMailables = [
+            'emails.accountBlocked.subject',
+            'emails.accountUnblocked.subject',
+            'emails.criticalIncident.subject',
+        ];
+
+        $unused = [];
+        foreach (array_keys($this->translations(self::DEFAULT_LOCALE)) as $key) {
+            if (!str_starts_with($key, 'emails.')) {
+                continue;
+            }
+            if (isset($used[$key]) || in_array($key, $subjectsOfMissingMailables, true)) {
+                continue;
+            }
+            $unused[] = $key;
+        }
+
+        $this->assertSame(
+            [],
+            $unused,
+            'These emails.* keys exist in lang/*.json but are referenced by no template or mailable: '
+                . implode(', ', $unused)
+        );
+    }
+
+    // ---------------------------------------------------------------- dead code tripwire
+
+    /**
+     * Pins the fact that three incident e-mail templates are fully translated but rendered by
+     * nothing. This is NOT a desirable state — it is recorded so it cannot be forgotten, and so
+     * that adding the mailable class turns this test red and points at the coverage that must be
+     * added at the same time.
+     */
+    public function test_incident_mail_views_have_no_mailable_yet(): void
+    {
+        foreach (self::MAIL_VIEWS_WITHOUT_MAILABLE as $view => $expectedClass) {
+            $this->assertFileExists(base_path($view), "{$view} disappeared; update this test.");
+
+            $this->assertFalse(
+                class_exists($expectedClass),
+                "{$expectedClass} now exists. Good — but this test and the render coverage in "
+                    . 'test_every_mailable_renders_in_the_given_locale() were written while it did not. '
+                    . "Add it to mailables() so its subject and body are checked in all five locales, "
+                    . "and remove it from MAIL_VIEWS_WITHOUT_MAILABLE."
+            );
+        }
+    }
+
     // ---------------------------------------------------------------- locale resolution
 
     public function test_locale_helper_defaults_to_english_without_a_user(): void
@@ -159,27 +254,17 @@ class MailLocalizationTest extends TestCase
     // ---------------------------------------------------------------- rendering
 
     /**
-     * Every mailable, in every locale: the body must contain that locale's heading/intro and the
-     * subject must be that locale's subject. This is what proves the locale is really applied — a
-     * regression here is the "translated body, English subject" bug.
+     * Every mailable that EXISTS, in every locale: the body must contain that locale's
+     * heading/intro and the subject must be that locale's subject. This is what proves the locale
+     * is really applied — a regression here is the "translated body, English subject" bug.
      *
      * @dataProvider localeProvider
      */
     public function test_every_mailable_renders_in_the_given_locale(string $locale): void
     {
         $t = $this->translations($locale);
-        $user = new User(['name' => 'Ana Pérez', 'email' => 'ana@example.test']);
 
-        $cases = [
-            // mailable, key whose text must appear in the body, expected subject
-            [new ResetPassword($user, 'https://example.test/reset'), 'emails.resetPassword.cta', $t['emails.resetPassword.subject']],
-            [new PasswordChanged($user), 'emails.passwordChanged.body', $t['emails.passwordChanged.subject']],
-            [new CriticalIncidentAlert('OC-2026-0001', 'lighting', ''), 'emails.criticalIncident.intro', str_replace(':ref', 'OC-2026-0001', $t['emails.criticalIncident.subject'])],
-            [new AccountBlockedNotice('Ana Pérez', 'spam'), 'emails.accountBlocked.heading', $t['emails.accountBlocked.subject']],
-            [new AccountUnblockedNotice('Ana Pérez'), 'emails.accountUnblocked.heading', $t['emails.accountUnblocked.subject']],
-        ];
-
-        foreach ($cases as [$mailable, $bodyKey, $expectedSubject]) {
+        foreach ($this->mailables($t) as [$mailable, $bodyKey, $expectedSubject]) {
             $class = get_class($mailable);
 
             $body = $mailable->locale($locale)->render();
@@ -199,42 +284,45 @@ class MailLocalizationTest extends TestCase
     }
 
     /**
-     * The greeting interpolates the recipient's name. Assert the name actually lands in the body and
-     * that no raw ":name" placeholder survives — in any locale.
+     * The greeting interpolates the recipient's name. Assert the name actually lands in the body
+     * and that no raw ":name" placeholder survives — in any locale.
      *
      * @dataProvider localeProvider
      */
     public function test_recipient_name_is_interpolated_and_no_placeholder_survives(string $locale): void
     {
-        $body = (new AccountBlockedNotice('Ana Pérez', 'spam'))->locale($locale)->render();
+        $body = (new PasswordChanged($this->recipient()))->locale($locale)->render();
 
         $this->assertStringContainsString('Ana Pérez', $body, "The recipient name is missing from the '{$locale}' email.");
         $this->assertStringNotContainsString(':name', $body, "A raw ':name' placeholder leaked into the '{$locale}' email.");
     }
 
-    /** The optional reason is rendered when given and absent when not (the @if must survive). */
-    public function test_block_reason_is_optional(): void
+    /** The reset link is rendered as the CTA href, in every locale. */
+    public function test_reset_password_link_is_rendered(): void
     {
-        $t = $this->translations(self::DEFAULT_LOCALE);
+        $url = 'https://example.test/reset?token=abc123';
 
-        $withReason = (new AccountBlockedNotice('Ana Pérez', 'Repeated spam'))->locale('en')->render();
-        $this->assertStringContainsString('Repeated spam', $withReason);
-        $this->assertStringContainsString($this->visibleText($t['emails.accountBlocked.reasonLabel']), $this->visibleText($withReason));
+        foreach (self::LOCALES as $locale) {
+            $body = (new ResetPassword($this->recipient(), $url))->locale($locale)->render();
 
-        $withoutReason = (new AccountBlockedNotice('Ana Pérez', null))->locale('en')->render();
-        $this->assertStringNotContainsString($this->visibleText($t['emails.accountBlocked.reasonLabel']), $this->visibleText($withoutReason));
+            $this->assertStringContainsString(
+                $url,
+                html_entity_decode($body, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                "The reset URL is missing from the '{$locale}' email."
+            );
+        }
     }
 
     /**
-     * The whitelist in MailLocaleHelper is the ONLY thing standing between a user and an email full of
-     * raw translation keys.
+     * The whitelist in MailLocaleHelper is the ONLY thing standing between a user and an email full
+     * of raw translation keys.
      *
-     * Why: Laravel's JSON translations do NOT fall back to `fallback_locale`. Translator::get() looks up
-     * the flat key in the ('*','*') JSON store for the REQUESTED locale only; when there is no
-     * lang/<locale>.json it drops to the group/file lookup ("emails" group), finds no lang/<locale>/emails.php
-     * either, and returns the key itself. Rendering with an unsupported locale therefore emails
-     * "emails.accountUnblocked.heading" to a person — verified below, so nobody "simplifies" the helper by
-     * dropping the whitelist.
+     * Why: Laravel's JSON translations do NOT fall back to `fallback_locale`. Translator::get() looks
+     * up the flat key in the ('*','*') JSON store for the REQUESTED locale only; when there is no
+     * lang/<locale>.json it drops to the group/file lookup ("emails" group), finds no
+     * lang/<locale>/emails.php either, and returns the key itself. Rendering with an unsupported
+     * locale therefore emails "emails.passwordChanged.body" to a person — verified below, so nobody
+     * "simplifies" the helper by dropping the whitelist.
      *
      * The protection is that every locale the helper can return HAS a file, which is what this asserts.
      */
@@ -270,10 +358,10 @@ class MailLocalizationTest extends TestCase
     public function test_an_unwhitelisted_locale_would_render_raw_keys(): void
     {
         // 'fr' ships no lang/fr.json. This documents WHY MailLocaleHelper must never return it.
-        $body = (new AccountUnblockedNotice('Ana Pérez'))->locale('fr')->render();
+        $body = (new PasswordChanged($this->recipient()))->locale('fr')->render();
 
         $this->assertStringContainsString(
-            'emails.accountUnblocked.heading',
+            'emails.passwordChanged.body',
             $body,
             'Laravel JSON translations are expected NOT to fall back to English. If this now falls back, '
                 . 'the framework behaviour changed and the note on the whitelist can be relaxed.'
@@ -290,6 +378,28 @@ class MailLocalizationTest extends TestCase
             self::LOCALES,
             array_map(fn (string $l) => [$l], self::LOCALES)
         );
+    }
+
+    /**
+     * The mailables that exist, as [mailable, body key that must appear, expected subject].
+     *
+     * @param array<string, string> $t translations for the locale under test
+     * @return array<int, array{0: \Illuminate\Mail\Mailable, 1: string, 2: string}>
+     */
+    private function mailables(array $t): array
+    {
+        $user = $this->recipient();
+
+        return [
+            [new ResetPassword($user, 'https://example.test/reset'), 'emails.resetPassword.cta', $t['emails.resetPassword.subject']],
+            [new PasswordChanged($user), 'emails.passwordChanged.body', $t['emails.passwordChanged.subject']],
+        ];
+    }
+
+    /** An unsaved User — the mailables only read ->name, so no database is involved. */
+    private function recipient(): User
+    {
+        return new User(['name' => 'Ana Pérez', 'email' => 'ana@example.test']);
     }
 
     /**

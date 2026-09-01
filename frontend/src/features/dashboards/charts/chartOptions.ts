@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon'
+import type { GridComponentOption, LegendComponentOption, YAXisComponentOption } from 'echarts'
 import { locale } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import type { ChartPoint, ChartSeries } from './types'
@@ -160,4 +161,43 @@ export function niceCeil(value: number): number {
     if (candidate >= value * 1.05) return candidate
   }
   return 10 * magnitude
+}
+
+// --- Fragmentos de opciones comunes ------------------------------------------------------
+// Estos cuatro bloques estaban copiados literalmente en LineChart, BarChart, StackedAreaChart y
+// PredictionBandChart. Ademas de duplicacion (hallazgo COD-098), significaba que ajustar el
+// margen de un eje solo lo arreglaba en la grafica que se tocara.
+
+/**
+ * Eje de valores. `splitNumber` baja en pantalla estrecha porque las marcas se solapan, y el
+ * formateador es el mismo `axisValue` que abrevia los millares.
+ */
+export function valueAxis(compact: boolean, min?: number): YAXisComponentOption {
+  return {
+    type: 'value',
+    min,
+    splitNumber: compact ? 3 : 5,
+    axisLabel: { formatter: (value: number) => axisValue(value) },
+  }
+}
+
+/**
+ * Margenes del area de dibujo. Holgados a la derecha: la ultima etiqueta del eje temporal se
+ * sale por ese lado. `bottom` lo pone cada grafica segun tenga leyenda o etiquetas giradas.
+ */
+export function chartGrid(bottom: number): GridComponentOption {
+  return { left: 8, right: 20, top: 20, bottom, containLabel: true }
+}
+
+/** Leyenda desplazable al pie. Se oculta con una sola serie, donde solo repetiria el titulo. */
+export function scrollLegend(show: boolean, data?: string[]): LegendComponentOption {
+  return { show, type: 'scroll', bottom: 0, data }
+}
+
+/** Estilo del lienzo. Un numero se interpreta en pixeles; una cadena se pasa tal cual. */
+export function chartStyle(height: number | string): { height: string; width: string } {
+  return {
+    height: typeof height === 'number' ? `${height}px` : height,
+    width: '100%',
+  }
 }

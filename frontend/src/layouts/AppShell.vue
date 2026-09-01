@@ -45,10 +45,34 @@ const initials = computed(() => {
   const parts = name.replace(/@.*/, '').split(/[.\s_-]+/).filter(Boolean)
   return (parts[0]?.[0] ?? '').concat(parts[1]?.[0] ?? '').toUpperCase() || '·'
 })
+
+const MAIN_ID = 'contenido-principal'
+
+/**
+ * Enlace de salto al contenido (WCAG 2.4.1).
+ *
+ * Se mueve el foco a mano en lugar de dejar que el navegador siga el `href`: la aplicacion usa
+ * enrutado por historial, asi que un salto nativo dejaria `#contenido-principal` pegado a la
+ * URL y al recargar el enrutador recibiria una ruta que no es. El `href` se conserva porque es
+ * lo que hace que el enlace se anuncie como tal y responda a Intro.
+ */
+function skipToContent(event: Event) {
+  event.preventDefault()
+  const main = document.getElementById(MAIN_ID)
+  if (!main) return
+  main.focus()
+  main.scrollIntoView()
+}
 </script>
 
 <template>
   <VApp>
+    <!-- Primer elemento enfocable de la pagina: sin el, quien navega con teclado recorre el
+         menu lateral entero y la barra superior antes de llegar al contenido, en CADA pantalla. -->
+    <a class="skip-link" :href="`#${MAIN_ID}`" @click="skipToContent">
+      {{ t('app.skipToContent') }}
+    </a>
+
     <VNavigationDrawer
       v-model="ui.drawer"
       :rail="rail"
@@ -167,7 +191,15 @@ const initials = computed(() => {
     </VAppBar>
 
     <VMain>
-      <VContainer fluid class="pa-4 pa-md-6">
+      <!-- `tabindex="-1"` no anade el contenedor al recorrido de tabulacion: solo lo hace
+           enfocable por programa, que es lo que necesita el enlace de salto. -->
+      <VContainer
+        :id="MAIN_ID"
+        fluid
+        tabindex="-1"
+        class="pa-4 pa-md-6 main-content"
+        :aria-label="t('app.mainContent')"
+      >
         <RouterView />
       </VContainer>
     </VMain>
@@ -175,3 +207,34 @@ const initials = computed(() => {
     <AppFooter />
   </VApp>
 </template>
+
+<style scoped>
+/* Fuera de pantalla mientras no tiene el foco, y a la vista —sobre todo lo demas— en cuanto
+   lo recibe. No se usa `display: none` a proposito: eso lo sacaria del recorrido de teclado,
+   que es justo lo contrario de lo que se busca. */
+.skip-link {
+  position: fixed;
+  inset-block-start: 8px;
+  inset-inline-start: -9999px;
+  z-index: 3000;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary));
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  inset-inline-start: 8px;
+  outline: 2px solid rgb(var(--v-theme-on-primary));
+  outline-offset: 2px;
+}
+
+/* El contenedor recibe el foco por programa; el anillo del navegador ahi no aporta nada y
+   solo dibuja un marco alrededor de toda la pagina. */
+.main-content:focus {
+  outline: none;
+}
+</style>

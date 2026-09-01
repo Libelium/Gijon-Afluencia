@@ -71,8 +71,9 @@ Como el chart se despliega en `pid-gijon`, su `HTTPRoute` se engancha a `public-
 
 ## Secretos: aquí no se versiona ninguno
 
-`keycloak.clientSecret` y la clave de administración de APISIX
-(`apisix.apisix.admin.credentials.admin`) están **vacíos** en `values.yaml` a propósito; el chart
+`keycloak.clientSecret`, la clave de administración de APISIX
+(`apisix.apisix.admin.credentials.admin`) y el secreto de pasarela
+(`fiware.backend.gatewaySecret`) están **vacíos** en `values.yaml` a propósito; el chart
 falla al renderizar (`apisix.validateCredentials`) mientras no se aporten en el despliegue.
 Súmalos con el generador, con `--set` o —para GitOps y producción— pon
 `keycloak.useExternalSecret: true` para tomar las credenciales del cliente de Keycloak desde el
@@ -82,12 +83,32 @@ External Secrets Operator. Véanse [docs/05-secrets.md](../../docs/05-secrets.md
 > El cliente de Keycloak (`laravel-backend`) y su secreto son **los mismos** que usa `web-back`:
 > reutiliza `KEYCLOAK_CLIENT_SECRET`, no crees un cliente nuevo.
 
+### Secreto de pasarela (`fiware.backend.gatewaySecret`)
+
+La comprobación de permisos va contra `POST /api/internal/check-fiware-write-permission`, un
+endpoint de `web-back` que queda **fuera de `auth:api`** porque la pasarela lo llama mientras
+todavía está decidiendo si admite la petición. Ese endpoint se autentica con la cabecera
+`X-Gateway-Secret`, que `web-back` compara con `hash_equals` contra su `API_GATEWAY_SECRET` y
+**falla cerrado**: sin cabecera responde 401, y mientras el secreto no esté configurado en su
+lado responde 503.
+
+`fiware.backend.gatewaySecret` **es exactamente el mismo valor** que el `API_GATEWAY_SECRET` de
+`web-back` (`scripts/generate-env.sh` ya lo genera con ese nombre). Aporta el mismo valor a los
+dos, o las escrituras FIWARE se quedan en 401.
+
+```bash
+helm upgrade --install apisix charts/apisix -n pid-gijon \
+  -f environments/<entorno>/apisix.values.yaml \
+  --set fiware.backend.gatewaySecret="$API_GATEWAY_SECRET"
+```
+
 ## Valores principales
 
 | Clave | Por defecto | Para qué |
 |-------|-------------|----------|
 | `fiware.namespace` | `pid-gijon` | Namespace de los backends FIWARE. |
 | `fiware.services` | 3 rutas | Rutas que se generan (ver arriba). |
+| `fiware.backend.gatewaySecret` | `""` | **Se aporta en el despliegue.** Mismo valor que el `API_GATEWAY_SECRET` de web-back. |
 | `keycloak.clientId` | `laravel-backend` | Cliente OIDC (compartido con web-back). |
 | `keycloak.clientSecret` | `""` | **Se aporta en el despliegue.** |
 | `keycloak.discoveryUrl` | `""` | URL de descubrimiento OIDC (obligatoria). |
@@ -96,3 +117,4 @@ External Secrets Operator. Véanse [docs/05-secrets.md](../../docs/05-secrets.md
 | `gatewayAPI.hostnames` | `[]` | Nombres de host públicos de la pasarela. |
 | `apisix.enabled` | `true` | Desplegar el plano de datos y el controlador incluidos. |
 | `apisix.apisix.admin.credentials.admin` | `""` | **Se aporta en el despliegue.** Clave de administración de APISIX. |
+| `apisix.apisix.admin.allow.ipList` | CIDR internos | Quién puede llamar a la Admin API. Por defecto los rangos de k3s (`10.42.0.0/16`, `10.43.0.0/16`) y loopback; **cámbialos si tu clúster usa otros**. |

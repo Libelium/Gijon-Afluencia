@@ -1,5 +1,5 @@
 import pytest
-from mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 from datetime import datetime
 from types import SimpleNamespace
 from models.entity_model import Entity  # Ajusta al nombre real del archivo

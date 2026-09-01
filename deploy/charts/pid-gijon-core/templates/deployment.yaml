@@ -56,6 +56,10 @@ spec:
         {{- toYaml $component.podAnnotations | nindent 8 }}
         {{- end }}
     spec:
+      {{- with (default $.Values.global.podSecurityContext $component.podSecurityContext) }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if $.Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml $.Values.global.imagePullSecrets | nindent 8 }}
@@ -121,6 +125,10 @@ spec:
         - name: {{ include "pid-gijon-core.kebabcase" $name }}
           image: {{ include "pid-gijon-core.imageRef" (list $component $) }}
           imagePullPolicy: {{ $component.image.pullPolicy | default "IfNotPresent" }}
+          {{- with (default $.Values.global.containerSecurityContext $component.containerSecurityContext) }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- if $component.args }}
           args:
             {{- toYaml $component.args | nindent 12 }}

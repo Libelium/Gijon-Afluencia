@@ -6,9 +6,25 @@ use App\Models\Alarm;
 use Illuminate\Support\Facades\Auth;
 use App\Repositories\ResourcePermissionRepository;
 use App\Authorization\AppResourcePermission;
+use App\Services\OrderFieldValidator;
 
 class AlarmRepository
 {
+    /** Columns an alarm listing may be ordered by — the ones queryShared() selects. */
+    private const ORDERABLE_COLUMNS = [
+        'id',
+        'user_id',
+        'name',
+        'type',
+        'function',
+        'up',
+        'disabled',
+        'created_at',
+        'updated_at',
+    ];
+
+    private const DEFAULT_ORDER_COLUMN = 'alarms.id';
+
     /**
      * Return paginated results using query and filters
      *
@@ -16,6 +32,14 @@ class AlarmRepository
      */
     public static function paginate($userId, $pagination_size, $page, $order_column, $order_direction, $search_text = null): array
     {
+        $order_column = OrderFieldValidator::resolveColumn(
+            $order_column,
+            self::ORDERABLE_COLUMNS,
+            self::DEFAULT_ORDER_COLUMN,
+            'alarms'
+        );
+        $order_direction = OrderFieldValidator::resolveDirection($order_direction);
+
         $alarms = self::queryShared($userId, $search_text)
             ->orderBy($order_column, $order_direction)
             ->paginate($pagination_size, ['*'], 'page', $page);

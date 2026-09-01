@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
+import { applyDocumentLanguage } from './i18n'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import './styles/app.scss'
@@ -11,6 +12,10 @@ import { useCustomizationStore } from './stores/customization'
 const PUBLIC_PATHS = ['/login']
 
 async function bootstrap() {
+  // El idioma declarado en `<html lang>` sale del diccionario cargado, no de un literal del
+  // HTML: si algun dia se anade un segundo idioma, la declaracion lo acompana sola.
+  applyDocumentLanguage()
+
   const app = createApp(App)
   app.use(createPinia())
   app.use(vuetify)

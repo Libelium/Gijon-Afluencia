@@ -133,6 +133,8 @@ components:
     secrets:
       DB_USERNAME: platformdb
       DB_PASSWORD: "${DB_PASSWORD_PLATFORMDB}"
+      # Valida la cabecera X-Queues-Consumer-Token de /publish (SEC-017).
+      QUEUES_CONSUMER_API_TOKEN: "${QUEUES_CONSUMER_API_TOKEN}"
       TS_DB_USERNAME: platformdb
       TS_DB_PASSWORD: "${DB_PASSWORD_PLATFORMDB}"
       DB_REALTIME_USERNAME: realtime
@@ -182,6 +184,8 @@ components:
     secrets:
       DB_USERNAME: platformdb
       DB_PASSWORD: "${DB_PASSWORD_PLATFORMDB}"
+      # Valida la cabecera X-Queues-Consumer-Token de /publish (SEC-017).
+      QUEUES_CONSUMER_API_TOKEN: "${QUEUES_CONSUMER_API_TOKEN}"
       TS_DB_USERNAME: platformdb
       TS_DB_PASSWORD: "${DB_PASSWORD_PLATFORMDB}"
       DB_REALTIME_USERNAME: realtime
@@ -276,6 +280,8 @@ components:
       DB_REALTIME_USERNAME: realtime
       DB_REALTIME_PASSWORD: "${DB_PASSWORD_REALTIME}"
       APP_KEY: "${LARAVEL_APP_KEY}"
+      # El backend firma sus POST /publish con este secreto (SEC-017).
+      QUEUES_CONSUMER_API_TOKEN: "${QUEUES_CONSUMER_API_TOKEN}"
       FILE_ENCRYPTION_KEY: "${FILE_ENCRYPTION_KEY}"
       GENERIC_ENCRYPTION_KEY: "${GENERIC_ENCRYPTION_KEY}"
       KEYCLOAK_REALM: "${KEYCLOAK_REALM}"

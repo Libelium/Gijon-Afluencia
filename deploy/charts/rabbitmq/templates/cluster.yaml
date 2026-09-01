@@ -23,7 +23,7 @@ spec:
   rabbitmq:
     additionalConfig: |
       consumer_timeout = {{ .Values.cluster.config.consumerTimeout | int64 }}
-      loopback_users = {{ .Values.cluster.config.loopbackUsers }}
+      loopback_users.guest = {{ .Values.cluster.config.restrictGuestToLoopback }}
       {{- if .Values.cluster.config.permitTransientNonExclQueues }}
       deprecated_features.permit.transient_nonexcl_queues = true
       {{- end }}

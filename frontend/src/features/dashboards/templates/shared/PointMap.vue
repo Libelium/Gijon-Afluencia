@@ -5,6 +5,9 @@ import { LMap, LTileLayer, LCircleMarker, LPolyline, LTooltip } from '@vue-leafl
 import 'leaflet/dist/leaflet.css'
 import type { Map as LeafletMap, LatLngBoundsExpression } from 'leaflet'
 import { t } from '@/i18n'
+import { formatNumber } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
+import { rowsTable } from '../../charts/a11y'
 import {
   defaultCenter,
   defaultZoom,
@@ -104,6 +107,35 @@ onBeforeUnmount(() => {
   if (resizeTimer) clearTimeout(resizeTimer)
   observer?.disconnect()
 })
+
+/**
+ * Alternativa textual del mapa (WCAG 1.1.1, hallazgo GDTIS-PT01-ACC-001).
+ *
+ * Los circulos y las lineas son `<path>` de SVG dentro del lienzo de Leaflet: su valor solo se
+ * lee acercando el raton para que salga el globo. La tabla ofrece el mismo dato —rotulo, valor
+ * y posicion— sin depender del puntero ni de percibir el tamano y el color.
+ */
+const pointsTable = computed(() =>
+  rowsTable(
+    [
+      t('templates.common.pointColumn'),
+      t('templates.common.value'),
+      t('templates.common.coordinatesColumn'),
+    ],
+    props.points.map((point) => [
+      point.label,
+      point.text,
+      `${formatNumber(point.lat, 5)}, ${formatNumber(point.lon, 5)}`,
+    ]),
+  ),
+)
+
+const linksTable = computed(() =>
+  rowsTable(
+    [t('templates.common.linkColumn'), t('templates.common.value')],
+    props.links.map((link) => [link.label, link.text]),
+  ),
+)
 </script>
 
 <template>
@@ -114,10 +146,20 @@ onBeforeUnmount(() => {
       class="point-map rounded-lg overflow-hidden"
       :class="{ 'point-map--dark': isDark }"
       :style="{ height: `${height}px` }"
-      role="img"
-      :aria-label="t('templates.common.mapLabel')"
     >
-      <LMap :center="center" :zoom="zoom" :min-zoom="3" :max-zoom="19" :scroll-wheel-zoom="false" @ready="onReady">
+      <!-- `group` y no `img`: dentro del mapa hay controles que deben seguir siendo
+           alcanzables (zoom, enlace de atribucion). La alternativa textual es la tabla que
+           va justo debajo. -->
+      <LMap
+        :center="center"
+        :zoom="zoom"
+        :min-zoom="3"
+        :max-zoom="19"
+        :scroll-wheel-zoom="false"
+        role="group"
+        :aria-label="t('templates.common.mapLabel')"
+        @ready="onReady"
+      >
         <LTileLayer :url="tilesUrl" :attribution="tilesAttribution" :options="{ maxZoom: 19, detectRetina: true }" />
 
         <!-- Las lineas van antes que los circulos para que estos queden encima. -->
@@ -152,6 +194,18 @@ onBeforeUnmount(() => {
         </LCircleMarker>
       </LMap>
     </div>
+
+    <DataTableAlternative
+      :title="t('templates.common.mapLabel')"
+      :table="pointsTable"
+      :label="t('templates.common.mapTable')"
+    />
+
+    <DataTableAlternative
+      v-if="links.length"
+      :title="t('templates.common.linkColumn')"
+      :table="linksTable"
+    />
 
     <div v-if="legend?.length" class="d-flex flex-wrap align-center ga-4 mt-3">
       <span
@@ -205,7 +259,9 @@ onBeforeUnmount(() => {
   color: rgb(var(--v-theme-primary));
 }
 
-/* Cartografia clara sobre tema oscuro: deslumbra. */
+/* Cartografia clara sobre tema oscuro: deslumbra.
+   Mismo filtro y mismo pendiente que en `map/views/MapView.vue`: ver ahi la nota completa de
+   GDTIS-PT01-ACC-012 (contraste de las etiquetas de tesela, no calculable estaticamente). */
 .point-map--dark :deep(.leaflet-tile-pane) {
   filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.72);
 }

@@ -10,6 +10,11 @@
 
 fiware:
   namespace: pid-gijon
+  backend:
+    # Mismo valor que API_GATEWAY_SECRET del backend: APISIX lo envia en
+    # X-Gateway-Secret y PermissionController lo compara con hash_equals
+    # (GDTIS-PT01-SEC-028/031). El chart aborta si queda vacio.
+    gatewaySecret: "${API_GATEWAY_SECRET}"
 
 keycloak:
   clientId: laravel-backend

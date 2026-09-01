@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
-import { t } from '@/i18n'
-import { formatDateTime, formatNumber } from '@/lib/format'
-import { toMillis } from './chartOptions'
+import { seriesTable } from './a11y'
 import type { ChartSeries } from './types'
 
 const props = withDefaults(
@@ -19,52 +17,39 @@ const props = withDefaults(
 
 const session = useSessionStore()
 
-type Header = { title: string; key: string; align?: 'start' | 'end' | 'center'; sortable?: boolean }
+/**
+ * La construccion de la tabla vive en `a11y.ts` porque es la MISMA que alimenta la alternativa
+ * textual del resto de graficas: una sola implementacion, probada una vez. Este componente solo
+ * la pinta con la tabla de Vuetify, que ademas pagina y fija la cabecera.
+ */
+const table = computed(() =>
+  seriesTable(props.series, {
+    timeZone: session.timeZone,
+    units: props.units,
+    limit: props.limit,
+    // Lo reciente arriba: en una tabla de panel es el dato que se busca.
+    order: 'desc',
+  }),
+)
 
-// Las unidades van en la cabecera, no repetidas en cada celda.
-const unitsOf = (serie: ChartSeries) => serie.units ?? props.units
-
-const headers = computed<Header[]>(() => [
-  { title: t('dashboards.chart.datetime'), key: 't', align: 'start', sortable: false },
-  ...props.series.map((serie, index) => ({
-    title: unitsOf(serie) ? `${serie.name} (${unitsOf(serie)})` : serie.name,
-    key: `s${index}`,
-    align: 'end' as const,
+const headers = computed(() =>
+  table.value.columns.map((title, index) => ({
+    title,
+    key: `c${index}`,
+    align: (index === 0 ? 'start' : 'end') as 'start' | 'end',
     sortable: false,
   })),
-])
+)
 
-function stampLabel(raw: string): string {
-  const ms = toMillis(raw)
-  return Number.isFinite(ms) ? formatDateTime(raw, session.timeZone) : raw
-}
-
-function byTimeDesc(a: string, b: string): number {
-  const left = toMillis(a)
-  const right = toMillis(b)
-  if (Number.isFinite(left) && Number.isFinite(right)) return right - left
-  return b.localeCompare(a)
-}
-
-const items = computed(() => {
-  const stamps = new Set<string>()
-  for (const serie of props.series) {
-    for (const point of serie.points) if (point.v !== null) stamps.add(point.t)
-  }
-
-  const values = props.series.map((serie) => new Map(serie.points.map((p) => [p.t, p.v])))
-
-  return [...stamps]
-    .sort(byTimeDesc)
-    .slice(0, props.limit)
-    .map((stamp) => {
-      const row: Record<string, string> = { t: stampLabel(stamp) }
-      values.forEach((map, index) => {
-        row[`s${index}`] = formatNumber(map.get(stamp) ?? null)
-      })
-      return row
+const items = computed(() =>
+  table.value.rows.map((row) => {
+    const item: Record<string, string> = {}
+    row.forEach((cell, index) => {
+      item[`c${index}`] = cell
     })
-})
+    return item
+  }),
+)
 </script>
 
 <template>
@@ -73,7 +58,7 @@ const items = computed(() => {
     :items="items"
     :items-per-page="-1"
     :height="height"
-    item-value="t"
+    item-value="c0"
     fixed-header
     hide-default-footer
     class="text-body-2"

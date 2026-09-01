@@ -14,6 +14,15 @@ export default {
   'app.nav.open': 'Abrir el menú',
   'app.user.logout': 'Cerrar sesión',
   'app.user.session': 'Sesión',
+  'app.skipToContent': 'Saltar al contenido principal',
+  'app.mainContent': 'Contenido principal',
+
+  'a11y.dataTable.show': 'Ver los datos en una tabla',
+  'a11y.dataTable.hide': 'Ocultar la tabla de datos',
+  'a11y.dataTable.caption': 'Tabla de datos equivalente: {title}',
+  'a11y.dataTable.empty': 'No hay datos que representar.',
+  'a11y.dataTable.truncated': 'Se muestran las primeras {shown} filas de {total}.',
+  'a11y.chart.description': '{title}. Gráfica; los mismos datos están disponibles en la tabla que sigue.',
 
   'common.search': 'Buscar',
   'common.retry': 'Reintentar',

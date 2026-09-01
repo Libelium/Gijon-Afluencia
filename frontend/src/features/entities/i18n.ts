@@ -35,6 +35,7 @@ export default {
   'entities.detail.location': 'Ubicación',
   'entities.detail.coordinates': 'Latitud {lat}, longitud {lon}',
   'entities.detail.mapLabel': 'Mapa con la ubicación de la entidad',
+  'entities.detail.mapLabelAt': 'Mapa con la ubicación de la entidad: latitud {lat}, longitud {lon}',
   'entities.detail.noLocation': 'Esta entidad no publica su ubicación',
   'entities.detail.locationFromEntity': 'Ubicación registrada en la ficha de la entidad',
   'entities.detail.locationFromMeasure': 'Ubicación tomada de la medida {measure}',

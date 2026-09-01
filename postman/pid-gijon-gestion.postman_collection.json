@@ -1827,10 +1827,7 @@
                 }
               ]
             },
-            "description": "",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": ""
           },
           "response": []
         },

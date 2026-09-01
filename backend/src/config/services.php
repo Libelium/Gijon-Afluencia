@@ -65,6 +65,10 @@ return [
 
     'queues-consumer' => [
         'publish' => env('QUEUES_CONSUMER_API_URL') . "/publish",
+        // Secreto compartido con queues-consumer. El consumer es fail-closed:
+        // sin cabecera X-Queues-Consumer-Token responde 401, y si el secreto no
+        // esta configurado en su lado responde 503 (GDTIS-PT01-SEC-017).
+        'token' => env('QUEUES_CONSUMER_API_TOKEN'),
     ],
 
     'generative_api' => [

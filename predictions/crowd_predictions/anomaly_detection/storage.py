@@ -11,8 +11,49 @@ Via pickle, since there is no XGBoost-style save_model() for a Birch + running
 statistics bundle and it only ever round-trips through this code. Pickling a
 sklearn estimator IS version-fragile, which is why the sklearn version travels in
 the metrics sidecar and a mismatch starts fresh instead of unpickling blind.
+
+SEC-019 - why the pickle stays, and what guards it now
+------------------------------------------------------
+`pickle.load` is not a parser, it is an interpreter: a crafted file runs arbitrary
+code in this process. The bundle is read from
+`anomalies_detection/{tenant}/{scope}/models/anomaly_<datamodel>.pkl`, so write
+access to that bucket prefix - a leaked key, a misconfigured policy, another
+tenant, a compromised pod - was remote code execution in the prediction worker.
+The finding is a reappearance (SEC-001 of the first delivery).
+
+Replacing the format was considered and rejected on the evidence, not on
+convenience. The bundle holds a live `sklearn.cluster.Birch`, and the vertical
+LEARNS incrementally through `partial_fit`, which needs Birch's CF-tree:
+`root_`, `dummy_leaf_` and the `_CFNode` / `_CFSubcluster` chain, all private
+sklearn internals with no public accessor and no stable layout. Scoring alone
+would need only the public `subcluster_centers_` ndarray, so a JSON/parquet
+bundle could score - but it could not continue training, which is the whole
+design (see core.py: "instead of a re-read of history"). Writing a JSON codec for
+sklearn's private tree means reimplementing it and re-verifying it on every
+sklearn bump - strictly more fragile than the pickle it replaced, and this file
+already detects a version mismatch and retrains.
+
+So the control applied is integrity, which is what the threat actually needs:
+
+  1. Every bundle carries an HMAC-SHA256 over its own bytes, keyed by
+     ANOMALY_STATE_HMAC_KEY. A file this deployment did not write does not
+     verify, and is never handed to the unpickler.
+  2. Defence in depth: verification passed, deserialization still goes through a
+     restricted Unpickler that resolves only the handful of classes this bundle
+     legitimately contains. A signed-but-hostile payload (i.e. the key itself
+     leaked) still cannot reach `os.system` or `subprocess.Popen`.
+  3. Fail-closed and cheap: an unsigned bundle, a bad signature or an
+     unconfigured key all raise, and `load_state` already turns any read failure
+     into "start a fresh model". The cost of refusing is a retrain, not an outage,
+     which is why there is no "load it anyway" path.
+
+Rotating the key invalidates every stored bundle: the datamodels retrain. That is
+intended - it is also the recovery procedure if a bundle is ever suspect.
 """
 
+import hashlib
+import hmac
+import io
 import json
 import logging
 import os
@@ -58,14 +99,120 @@ def model_key(filename: str) -> str:
     return anomaly_key("models", filename)
 
 
+# Framing of a stored bundle: MAGIC || HMAC-SHA256(payload) || payload.
+# Keeping the signature inside the object rather than in a fourth sidecar file
+# preserves save_model_bundle's "model last" upload ordering, which is what makes
+# the reachable half-states harmless.
+_BUNDLE_MAGIC = b"PIDANOM1"
+_HMAC_SIZE = hashlib.sha256().digest_size
+
+
+class UnsignedBundleError(ValueError):
+    """The stored bundle has no valid signature, so it is not ours to trust."""
+
+
+class DisallowedBundleClassError(ValueError):
+    """The bundle references a class an anomaly bundle has no business containing."""
+
+
+# Exactly what a DatamodelAnomalyState graph legitimately resolves to. Derived by
+# recording every find_class() call while loading a real round-tripped bundle, not
+# guessed - see tests/test_anomaly_storage_security.py, which fails if the graph
+# ever needs something not listed here (rather than silently widening).
+_ALLOWED_CLASSES = {
+    ("crowd_predictions.anomaly_detection.core", "DatamodelAnomalyState"),
+    ("crowd_predictions.anomaly_detection.core", "RunningStats"),
+    ("sklearn.cluster._birch", "Birch"),
+    ("sklearn.cluster._birch", "_CFNode"),
+    ("sklearn.cluster._birch", "_CFSubcluster"),
+    ("collections", "deque"),
+    # Watermarks and rolling windows hold instants. A naive datetime needs only
+    # `datetime.datetime`; a tz-aware one also resolves `timezone` and
+    # `timedelta`, so all three are listed rather than waiting for the first
+    # aware watermark to refuse a bundle in production. All three are pure data
+    # constructors with no side effects.
+    ("datetime", "datetime"),
+    ("datetime", "timezone"),
+    ("datetime", "timedelta"),
+    ("numpy", "ndarray"),
+    ("numpy", "dtype"),
+    # numpy reorganised these into `numpy._core` in 2.0 and the project allows
+    # numpy>=1.24,<3, so BOTH spellings have to resolve or a bundle written under
+    # one major cannot be read under the other. Which of them a given array uses
+    # is a numpy internal detail: a contiguous array pickles through
+    # `_frombuffer`, a scalar through `scalar`, an F-ordered or sliced one
+    # through `_reconstruct`.
+    ("numpy._core.multiarray", "_reconstruct"),
+    ("numpy._core.multiarray", "scalar"),
+    ("numpy._core.numeric", "_frombuffer"),
+    ("numpy.core.multiarray", "_reconstruct"),
+    ("numpy.core.multiarray", "scalar"),
+    ("numpy.core.numeric", "_frombuffer"),
+}
+
+
+class _RestrictedUnpickler(pickle.Unpickler):
+    """Resolves only the classes in _ALLOWED_CLASSES.
+
+    This is the layer that survives a leaked HMAC key. `pickle`'s dangerous
+    primitives all arrive through the GLOBAL/STACK_GLOBAL opcodes, i.e. through
+    find_class, so refusing there refuses `posix.system`, `builtins.eval`,
+    `subprocess.Popen` and every other gadget.
+    """
+
+    def find_class(self, module: str, name: str):
+        if (module, name) not in _ALLOWED_CLASSES:
+            raise DisallowedBundleClassError(
+                f"anomaly bundle references {module}.{name}, which is not allowed"
+            )
+        return super().find_class(module, name)
+
+
+def _hmac_key() -> bytes:
+    key = (settings.anomaly().ANOMALY_STATE_HMAC_KEY or "").encode("utf-8")
+    if not key:
+        raise UnsignedBundleError(
+            "ANOMALY_STATE_HMAC_KEY is not configured, so the anomaly bundle can "
+            "neither be signed nor verified. Set it (any long random string, the "
+            "same value on every replica) - an unsigned bundle is not loaded."
+        )
+    return key
+
+
+def _sign(payload: bytes) -> bytes:
+    return hmac.new(_hmac_key(), payload, hashlib.sha256).digest()
+
+
 def _pickle_save(state, path: str) -> None:
+    payload = pickle.dumps(state, protocol=pickle.HIGHEST_PROTOCOL)
     with open(path, "wb") as f:
-        pickle.dump(state, f)
+        f.write(_BUNDLE_MAGIC)
+        f.write(_sign(payload))
+        f.write(payload)
 
 
 def _pickle_load(path: str):
     with open(path, "rb") as f:
-        return pickle.load(f)
+        blob = f.read()
+
+    header = len(_BUNDLE_MAGIC) + _HMAC_SIZE
+    if len(blob) < header or not blob.startswith(_BUNDLE_MAGIC):
+        # Includes every bundle written before this change: they are unsigned, so
+        # they are refused and the datamodel retrains once.
+        raise UnsignedBundleError(
+            "anomaly bundle is not in the signed format - refusing to unpickle it"
+        )
+
+    signature = blob[len(_BUNDLE_MAGIC):header]
+    payload = blob[header:]
+
+    # compare_digest, not ==, so a wrong signature does not leak its prefix.
+    if not hmac.compare_digest(signature, _sign(payload)):
+        raise UnsignedBundleError(
+            "anomaly bundle signature does not verify - refusing to unpickle it"
+        )
+
+    return _RestrictedUnpickler(io.BytesIO(payload)).load()
 
 
 def save_state(storage, profile, state: DatamodelAnomalyState, local_dir: str = "/tmp") -> str:

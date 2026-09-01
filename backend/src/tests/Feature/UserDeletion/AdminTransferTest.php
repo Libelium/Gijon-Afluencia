@@ -46,6 +46,12 @@ class AdminTransferTest extends TestCase
 {
     use DatabaseTransactions;
 
+    /**
+     * DatabaseTransactions only rolls back the DEFAULT connection unless told otherwise, and part
+     * of the schema this flow touches lives in the separate `pgsql_realtime` database.
+     */
+    protected $connectionsToTransact = ['pgsql', 'pgsql_realtime'];
+
     private User $oldAdmin;
     private User $newAdmin;
     private UserDeletionService $service;
@@ -180,38 +186,58 @@ class AdminTransferTest extends TestCase
     /**
      * Assigns the full set of application permissions to the user via Spatie so that
      * all policy checks pass when creating resources through the real API endpoints.
+     *
+     * NOTE (GDTIS-PT01-FUN-018): this used to call AppPermission::plusPermissions(), a method
+     * that does not exist on the enum, so all three tests in this class died with
+     * "Call to undefined method" even against a correctly configured PostgreSQL. The audit
+     * attributed every non-mail failure to the missing database; that is only half the story.
+     * superAdminPermissions() is the enum's real "everything" accessor (all 99 cases minus the
+     * two hidden ones), and every value it returns is present in the permissions table because
+     * PermissionsSyncSeeder seeds straight from the same enum.
      */
     private function grantPermissions(User $user): void
     {
-        $permissions = array_map(fn (AppPermission $p) => $p->value, AppPermission::plusPermissions());
+        $permissions = array_map(fn (AppPermission $p) => $p->value, AppPermission::superAdminPermissions());
         $user->givePermissionTo($permissions);
     }
 
     /**
-     * Creates all transferable resources via the real API endpoints, acting as $oldAdmin.
-     * This exercises the full controller / policy / observer stack, not just model creation.
+     * Creates one instance of every transferable resource, owned by $oldAdmin.
+     *
+     * NOTE (GDTIS-PT01-FUN-018): this used to create the data through the real API endpoints
+     * (POST /api/V1/workspaces, /reports, /connectors/out/mqtt, ...). Seven of the ten endpoint
+     * families it used DO NOT EXIST in this codebase: routes/api.php has no route whatsoever for
+     * workspaces, reports, reportDocConfigs, connectors/in/*, connectors/out/* or
+     * user/regenerate/apikey, and there is no WorkspaceController class at all. Every one of
+     * those calls 404'd, so the two main tests failed regardless of the database.
+     *
+     * The MODELS and the transfer handlers for all of them are still live code — see
+     * App\Providers\UserDeletionServiceProvider, which registers each of these classes with the
+     * TransferableRegistry — so the transfer logic is still worth testing. The data is therefore
+     * created directly through the models. What is lost versus the original intent is the
+     * controller/policy/observer stack; what is gained is a test that actually runs.
      *
      * The $newAdmin is only used to seed the dedup scenario (ws1 shared membership).
      */
     private function createTransferableData(User $oldAdmin, User $newAdmin): void
     {
         // Workspaces (ws1 shared with newAdmin to test dedup)
-        $ws1 = $this->api($oldAdmin, '/workspaces', ['name' => '[TEST] WS 1', 'collaborative' => false]);
-        $this->api($oldAdmin, '/workspaces', ['name' => '[TEST] WS 2', 'collaborative' => false]);
+        $ws1 = Workspace::create(['name' => '[TEST] WS 1', 'user_id' => $oldAdmin->id, 'collaborative' => false]);
+        Workspace::create(['name' => '[TEST] WS 2', 'user_id' => $oldAdmin->id, 'collaborative' => false]);
 
-        DB::table('workspace_has_users')->insert(['workspace_id' => $ws1['id'], 'user_id' => $oldAdmin->id]);
-        DB::table('workspace_has_users')->insert(['workspace_id' => $ws1['id'], 'user_id' => $newAdmin->id]);
+        DB::table('workspace_has_users')->insert(['workspace_id' => $ws1->id, 'user_id' => $oldAdmin->id]);
+        DB::table('workspace_has_users')->insert(['workspace_id' => $ws1->id, 'user_id' => $newAdmin->id]);
 
         // Dashboard
-        $dash = $this->api($oldAdmin, '/dashboards', [
+        $dash = Dashboard::create([
             'name'     => '[TEST] Dashboard',
             'type'     => 'Custom',
             'timezone' => 'UTC',
+            'user_id'  => $oldAdmin->id,
+            'layout'   => ['lg' => [], 'md' => [], 'sm' => [], 'xs' => [], 'xxs' => []],
         ]);
 
-        // Alarm — created directly because the API endpoint requires real IoT entities
-        // for conditions (Entity::findOrFail), which don't exist in this test environment.
-        // The transfer mechanism (StandardUserIdHandler) is the same regardless.
+        // Alarm
         $alarm = Alarm::create([
             'name'     => '[TEST] Alarm',
             'user_id'  => $oldAdmin->id,
@@ -220,145 +246,110 @@ class AdminTransferTest extends TestCase
             'up'       => false,
             'disabled' => false,
         ]);
-        // Replicate what AlarmController does: grant the owner resource permissions
-        // so that the alarm actions API can authorize the update check.
         $oldAdmin->giveResourcePermissionsTo(
             \App\Authorization\AppResourcePermission::defaultPermissions(), $alarm, true
         );
 
-        // Action + ActionEmail (old admin email in destination) — via the real API endpoint.
-        // This exercises the ActionHandler path including the email destination setup.
-        $this->api($oldAdmin, '/alarms/actions', [
-            'alarm_ids' => [$alarm->id],
-            'actions'   => [
-                [
-                    'type'          => 'email',
-                    'alarm_trigger' => 'up',
-                    'to'            => [$oldAdmin->email],
-                    'subject'       => '[TEST] Subject',
-                    'body'          => 'Test body',
-                ],
-            ],
+        // Action + ActionEmail (old admin email in the destination list). ActionEmail overrides
+        // getMorphClass() to return its table name, so actionable_type is 'action_email'.
+        $actionEmail = ActionEmail::create([
+            'destination' => [$oldAdmin->email],
+            'subject'     => '[TEST] Subject',
+            'content'     => 'Test body',
+        ]);
+        Action::create([
+            'name'            => '[TEST] Action',
+            'user_id'         => $oldAdmin->id,
+            'actionable_type' => $actionEmail->getMorphClass(),
+            'actionable_id'   => $actionEmail->id,
         ]);
 
-        // EntityGroup — created directly: the API requires non-empty real entities (IoT),
-        // which don't exist in this test environment.
+        // EntityGroup
         EntityGroup::create(['name' => '[TEST] Group', 'user_id' => $oldAdmin->id]);
 
         // ApiKey
-        $this->api($oldAdmin, '/user/regenerate/apikey', []);
+        ApiKey::create(['user_id' => $oldAdmin->id, 'key' => Str::random(40)]);
 
-        // ReportDocConfig with header (also creates an HtmlBlock as a side-effect)
-        $docConfig = $this->api($oldAdmin, '/reportDocConfigs', [
-            'name'   => '[TEST] Doc Config',
-            'config' => ['orientation' => 'portrait'],
-            'header' => ['content' => '<p>[TEST] Header</p>'],
+        // HtmlBlock (normally created as a side effect of a report header)
+        HtmlBlock::create([
+            'user_id' => $oldAdmin->id,
+            'name'    => '[TEST] Header',
+            'content' => '<p>[TEST] Header</p>',
         ]);
 
-        // Report referencing the dashboard
-        $report = $this->api($oldAdmin, '/reports', [
-            'name'     => '[TEST] Report',
-            'priority' => 1,
-            'config'   => [
-                'name'   => '[TEST] Doc Config (report)',
-                'config' => ['orientation' => 'portrait'],
-            ],
-            'blocks' => [
-                [
-                    'type'     => 'dashboard',
-                    'position' => 0,
-                    'block'    => ['id' => $dash['id']],
-                ],
-            ],
-            'actions' => [],
+        // ReportDocConfig + Report
+        $docConfig = ReportDocConfig::create([
+            'user_id' => $oldAdmin->id,
+            'name'    => '[TEST] Doc Config',
+            'config'  => ['orientation' => 'portrait'],
         ]);
 
-        // InConnector (Loriot)
-        $this->api($oldAdmin, '/connectors/in/loriot', [
-            'name'            => '[TEST] InConnector',
-            'type'            => 'loriot',
-            'status'          => 'active',
-            'downlink_active' => false,
+        $report = Report::create([
+            'user_id'              => $oldAdmin->id,
+            'report_doc_config_id' => $docConfig->id,
+            'name'                 => '[TEST] Report',
+            'priority'             => 1,
         ]);
 
-        // OutConnector (MQTT) — entities/devices must be passed as [] (not omitted)
-        // because linkEntities/linkDevices have non-nullable array type hints.
-        $this->api($oldAdmin, '/connectors/out/mqtt', [
-            'name'           => '[TEST] OutConnector MQTT',
-            'status'         => 'active',
-            'type'           => 'mqtt',
-            'ipAddress'      => '127.0.0.1',
-            'port'           => 1883,
-            'ssl'            => false,
-            'topicTemplate'  => ['test/topic'],
-            'payload_type'   => 'legacy',
-            'payload_config' => ['format' => 'legacy'],
-            'entities'       => [],
-            'devices'        => [],
+        // Connectors. connectable_* is a polymorphic pair with no foreign key, and the transfer
+        // handler (StandardUserIdHandler) only rewrites user_id, so a placeholder target is
+        // enough to characterise the transfer.
+        InConnector::create([
+            'uuid'             => (string) Str::uuid(),
+            'name'             => '[TEST] InConnector',
+            'type'             => 'loriot',
+            'status'           => 'active',
+            'user_id'          => $oldAdmin->id,
+            'connectable_type' => 'loriot_connector',
+            'connectable_id'   => 1,
         ]);
 
-        // OutConnector (HTTP)
-        $this->api($oldAdmin, '/connectors/out/http', [
-            'name'         => '[TEST] OutConnector HTTP',
-            'status'       => 'active',
-            'url'          => 'https://httpbin.org/post',
-            'method'       => 'POST',
-            'payload_type' => 'legacy',
-            'entities'     => [],
-            'devices'      => [],
+        OutConnector::create([
+            'name'             => '[TEST] OutConnector MQTT',
+            'type'             => 'mqtt',
+            'status'           => 'active',
+            'user_id'          => $oldAdmin->id,
+            'connectable_type' => 'mqtt_connector',
+            'connectable_id'   => 1,
         ]);
 
-        // Download — no public API endpoint, created directly.
-        // Linked to the report as the downloadable resource.
+        // Download, linked to the report as the downloadable resource.
         Download::create([
             'user_id'           => $oldAdmin->id,
-            'downloadable_id'   => $report['id'],
+            'downloadable_id'   => $report->id,
             'downloadable_type' => 'reports',
             'file_name'         => '[TEST] Report Export',
             'file_extension'    => 'csv',
             'status'            => 'Completed',
             'downloaded'        => false,
         ]);
+
+        // Keep the dashboard referenced so static analysis does not flag it as unused; it is the
+        // Dashboard row the transfer assertions look for.
+        $this->assertNotNull($dash->id);
     }
 
     private function createDeletableData(User $admin): void
     {
-        // HomeLayout + HomeWidget via API
-        $layout = $this->api($admin, '/home-layouts', ['name' => '[TEST] Layout']);
-        $this->api($admin, "/home-layouts/{$layout['id']}/widgets", ['type' => 'chart']);
+        $layout = HomeLayout::create([
+            'user_id' => $admin->id,
+            'name'    => '[TEST] Layout',
+            'layout'  => [],
+        ]);
 
-        // Preferencable — no API endpoint, created directly
+        HomeWidget::create([
+            'user_id'        => $admin->id,
+            'home_layout_id' => $layout->id,
+            'type'           => 'chart',
+        ]);
+
+        // Preferencable
         $pref = DB::table('preferences')->first();
         if ($pref) {
             Preferencable::create(['user_id' => $admin->id, 'preference_id' => $pref->id, 'value' => 'test']);
         }
 
-        // PasswordReset — no API endpoint, created directly
+        // PasswordReset
         DB::table('password_resets')->insert(['email' => $admin->email, 'token' => Str::random(60)]);
-    }
-
-    // ─── HTTP helper ─────────────────────────────────────────────────────────
-
-    /**
-     * Makes a POST request to /api/V1{$path} authenticated as $user.
-     * Fails the test immediately if the response is not 2xx.
-     *
-     * @return array<string, mixed>
-     */
-    private function api(User $user, string $path, array $data): array
-    {
-        $response = $this->actingAs($user)->postJson('/api/V1' . $path, $data);
-
-        $this->assertTrue(
-            $response->isSuccessful(),
-            "POST /api/V1{$path} returned {$response->status()}: " . $response->content()
-        );
-        $json = $response->json() ?? [];
-        // Some resources use DefaultPermissionsResource ($wrap = null) and return the
-        // payload flat; others extend JsonResource and wrap in {"data": {...}}.
-        // Unwrap the 'data' key so callers always get the flat resource array.
-        return (isset($json['data']) && is_array($json['data']) && !isset($json['data'][0]))
-            ? $json['data']
-            : $json;
     }
 }

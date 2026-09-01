@@ -2,6 +2,7 @@
 
 namespace App\Http\V1\Controllers;
 
+use App\Models\Dashboard;
 use App\Models\Panel;
 use App\Http\V1\Controllers\Controller;
 use App\Http\V1\Resources\PanelResource;
@@ -11,9 +12,25 @@ use Illuminate\Support\Facades\Storage;
 
 class PanelController extends Controller
 {
-    public function index($dashboard_id)
+    /**
+     * Lists the panels of one dashboard.
+     *
+     * The dashboard is mandatory and is authorized before anything is read: panels carry no
+     * permissions of their own, so the owning dashboard is what decides who may see them.
+     * It is taken from the request because the route (`apiResource('panels')`) carries no
+     * path parameter for it.
+     */
+    public function index(Request $request)
     {
-        $panels = Panel::where('dashboard_id', $dashboard_id)->get();
+        $request->validate([
+            'dashboard_id' => 'required|numeric',
+        ]);
+
+        $dashboard = Dashboard::findOrFail($request->input('dashboard_id'));
+
+        $this->authorize('read', $dashboard);
+
+        $panels = Panel::where('dashboard_id', $dashboard->id)->get();
 
         return response()->json($panels, 200);
     }
@@ -33,6 +50,9 @@ class PanelController extends Controller
             'dateRange' => 'nullable|array',
         ]);
 
+        // A panel may only be added to a dashboard the user is allowed to edit.
+        $this->authorize('create', [Panel::class, Dashboard::findOrFail($request->dashboard_id)]);
+
         PanelRepository::validatePanel($request);
 
         $panel = PanelRepository::store($request);
@@ -43,6 +63,8 @@ class PanelController extends Controller
     public function show($id)
     {
         $panel = Panel::findOrFail($id);
+
+        $this->authorize('read', $panel);
 
         return response()->json($panel, 200);
     }
@@ -62,6 +84,14 @@ class PanelController extends Controller
             'dateRange' => 'nullable|array',
         ]);
 
+        $panel = Panel::findOrFail($id);
+
+        // Both ends are authorized: the dashboard the panel is in today, and the one the
+        // request wants to move it to. Checking only the source would let a user push a panel
+        // into somebody else's dashboard.
+        $this->authorize('update', $panel);
+        $this->authorize('create', [Panel::class, Dashboard::findOrFail($request->dashboard_id)]);
+
         PanelRepository::validatePanel($request);
 
         $panel = PanelRepository::update($request, $id);
@@ -73,6 +103,8 @@ class PanelController extends Controller
     public function destroy($id)
     {
         $panel = Panel::findOrFail($id);
+
+        $this->authorize('delete', $panel);
 
         try {
             $image = Storage::disk('s3images')->exists('/dashboard/panel' . $id);
@@ -95,7 +127,9 @@ class PanelController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        Panel::findOrFail($id);
+        $panel = Panel::findOrFail($id);
+
+        $this->authorize('update', $panel);
 
         $image = Storage::disk('s3images')->put('/dashboard/panel' . $id . '/plan', file_get_contents($request->image));
 
@@ -113,6 +147,10 @@ class PanelController extends Controller
 
     public function getImage($id)
     {
+        $panel = Panel::findOrFail($id);
+
+        $this->authorize('read', $panel);
+
         $exists_image = Storage::disk('s3images')->exists('/dashboard/panel' . $id . '/plan');
 
         if (!$exists_image) {

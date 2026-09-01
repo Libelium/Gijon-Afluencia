@@ -13,7 +13,10 @@ class Queue:
         self.__create_uuid()
 
     def __create_uuid(self) -> None:
-        self.uuid = str(uuid.uuid1())
+        # SEC-045. uuid1() derives from the host MAC address and a timestamp, so
+        # it leaks the node identity and is predictable enough to guess
+        # neighbouring correlation ids. uuid4() is drawn from os.urandom.
+        self.uuid = str(uuid.uuid4())
 
     def set_routing_key(self, queue) -> None:
         self.__routing_key = queue

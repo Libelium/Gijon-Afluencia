@@ -26,6 +26,15 @@ COPY ./ /code
 
 # app/tmp is gitignored so COPY won't create it; ensure it exists at runtime
 RUN mkdir -p app/tmp
+# GDTIS-PT01-SEC-026 — ejecutar como usuario sin privilegios.
+# UID/GID numericos (no nombre) para que el `runAsNonRoot` de Kubernetes pueda
+# comprobarlo sin resolver /etc/passwd. Se coloca despues del ultimo COPY: todo
+# lo anterior necesita root, y a partir de aqui el proceso ya no.
+RUN groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app \
+    && chown -R 10001:10001 /code /opt/venv /pylibs
+USER 10001:10001
+
 
 #-------------------------------------------
 # DEV

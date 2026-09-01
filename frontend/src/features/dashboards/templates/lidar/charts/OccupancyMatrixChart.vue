@@ -4,16 +4,20 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { HeatmapChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
 import type { EChartsOption } from 'echarts'
 import { t } from '@/i18n'
 import { formatMeasure } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from '../../../charts'
-import { axisValue, tooltipHeader, tooltipRow } from '../../../charts/chartOptions'
+import { axisValue, chartStyle, tooltipHeader, tooltipRow } from '../../../charts/chartOptions'
+import { useChartLabel } from '../../../charts/chartLabel'
+import { ariaOption, rowsTable } from '../../../charts/a11y'
 import { INK, LINE, MUTED, occupancyColors, SURFACE } from '../../../palette'
 import type { MatrixCell } from '../data'
 
-use([CanvasRenderer, HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([CanvasRenderer, HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent, AriaComponent])
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +26,8 @@ const props = withDefaults(
     max: number | null
     units?: string
     height?: number | string
+    /** Rotulo del mapa de calor. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { height: 320 },
 )
@@ -30,6 +36,8 @@ const { themeName, isDark } = useChartTheme()
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const DAYS = [1, 2, 3, 4, 5, 6, 7].map((d) => t(`dashboards.lidar.weekdayShort.${d}`))
+
+const label = useChartLabel(() => props.title, () => t('dashboards.lidar.heatmap.matrixLabel'))
 
 const option = computed<EChartsOption>(() => {
   const data = props.cells
@@ -43,6 +51,7 @@ const option = computed<EChartsOption>(() => {
 
   return {
     animationDuration: 300,
+    aria: ariaOption(label.value),
     grid: { left: 8, right: 16, top: 12, bottom: 64, containLabel: true },
     tooltip: {
       trigger: 'item',
@@ -109,12 +118,30 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => ({
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-  width: '100%',
-}))
+const style = computed(() => chartStyle(props.height))
+
+/**
+ * Tabla equivalente del mapa de calor. Aqui el color ES el dato, asi que sin tabla no hay
+ * ninguna forma de conocer el valor de una celda: ni con lector de pantalla ni sin percibir
+ * bien el color. Se listan solo las celdas con lectura; las 168 vacias no dicen nada.
+ */
+const table = computed(() =>
+  rowsTable(
+    [t('dashboards.lidar.weekdayColumn'), t('dashboards.lidar.hourColumn'), t('dashboards.lidar.occupancyColumn')],
+    props.cells
+      .filter((cell) => cell.value !== null)
+      .map((cell) => [
+        t(`dashboards.lidar.weekday.${cell.weekday}`),
+        `${HOURS[cell.hour]}:00`,
+        formatMeasure(cell.value, props.units),
+      ]),
+  ),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

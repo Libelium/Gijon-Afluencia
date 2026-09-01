@@ -775,7 +775,8 @@ class EntityController extends Controller
             'params' => $params
         ];
 
-        $response = Http::post(config('services.queues-consumer.publish'), $message);
+        $response = Http::withHeaders(['X-Queues-Consumer-Token' => config('services.queues-consumer.token')])
+            ->post(config('services.queues-consumer.publish'), $message);
 
         if ($response->status() >= 400) {
             return response('Error uploading data to entity', 500);
@@ -1033,7 +1034,7 @@ class EntityController extends Controller
 
     public function paginateHealthchecks(Request $request)
     {
-        Auth::user()->can(AppPermission::ADMINISTRATION_IMPERSONATION_READ->value);
+        abort_unless(Auth::user()->can(AppPermission::ADMINISTRATION_IMPERSONATION_READ->value), 403);
 
         $requestBody = json_decode($request->getContent(), true);
         $paginationSize = $requestBody['paginationSize'] ?? '10';

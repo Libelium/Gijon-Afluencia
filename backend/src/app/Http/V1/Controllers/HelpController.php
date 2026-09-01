@@ -62,6 +62,12 @@ class HelpController extends Controller
      */
     public function getImage(string $folder, string $filepath): Response
     {
+        // Same folder whitelist as getFileContent: only the documentation sections the user
+        // actually has are reachable. The route also sits behind auth:api.
+        if (!$this->validateRoute($folder)) {
+            return response('Not a valid route', 404);
+        }
+
         $file = Storage::disk('s3')->get(self::DOCS_FOLDER . $folder . '/' . $filepath);
 
         if ($file == null) {

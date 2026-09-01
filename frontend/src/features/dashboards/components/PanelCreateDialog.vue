@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
@@ -179,13 +179,21 @@ async function submit() {
     saving.value = false
   }
 }
+
+/**
+ * Vuetify pone `role="dialog"` y `aria-modal` en el dialogo, pero no lo asocia con su titulo:
+ * al abrirse, un lector de pantalla anuncia «dialogo» sin decir cual (WCAG 4.1.2, hallazgo
+ * GDTIS-PT01-ACC-007). `useId` genera un identificador unico por instancia, que es lo que hace
+ * falta cuando el mismo componente se monta varias veces en una pantalla.
+ */
+const titleId = useId()
 </script>
 
 <template>
-  <VDialog v-model="open" scrollable :persistent="saving">
+  <VDialog v-model="open" scrollable :persistent="saving" :aria-labelledby="titleId">
     <VCard>
       <VCardTitle class="d-flex align-center ga-3 py-4">
-        <span class="text-h6">{{ t('dashboards.panelForm.title') }}</span>
+        <span :id="titleId" class="text-h6">{{ t('dashboards.panelForm.title') }}</span>
         <VSpacer />
         <VBtn
           icon="mdi-close"
@@ -308,7 +316,8 @@ async function submit() {
 
           <VAlert v-else type="info" density="comfortable" :text="t('dashboards.panelForm.lastValueOnly')" />
 
-          <VAlert v-if="error" type="error" :text="error" />
+          <!-- Anuncio proactivo del fallo de guardado (WCAG 4.1.3). -->
+          <VAlert v-if="error" type="error" role="alert" :text="error" />
         </div>
       </VCardText>
 

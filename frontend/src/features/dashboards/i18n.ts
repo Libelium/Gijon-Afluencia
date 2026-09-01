@@ -172,6 +172,13 @@ const messages = {
 
   'dashboards.chart.total': 'Total',
   'dashboards.chart.datetime': 'Fecha y hora',
+  'dashboards.chart.line': 'Gráfica de líneas',
+  'dashboards.chart.bar': 'Gráfica de barras',
+  'dashboards.chart.pie': 'Gráfica de reparto',
+  'dashboards.chart.gauge': 'Indicador de aguja',
+  'dashboards.chart.stackedArea': 'Gráfica de áreas apiladas',
+  'dashboards.chart.value': 'Valor',
+  'dashboards.chart.share': 'Reparto',
 } as const
 
 export default { ...messages, ...templates }

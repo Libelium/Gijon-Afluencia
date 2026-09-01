@@ -18,7 +18,8 @@ dependencies = [
     # directly: it arrives transitively via pandas/xgboost, but relying on that means
     # a bump of either of them can take it away.
     "numpy>=1.24,<3",
-    "requests>=2.28,<3",
+    # SEC-042: 2.32.4 carries the fixes for CVE-2024-35195 and CVE-2024-47081.
+    "requests>=2.32.4,<3",
     "boto3>=1.26,<2",
     "minio==7.2.4",
     "python-dotenv>=1.0,<2",

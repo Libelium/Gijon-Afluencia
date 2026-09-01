@@ -10,7 +10,14 @@
 #   docker compose -f deploy/docker-compose.core.yml up -d
 #   docker compose -f deploy/docker-compose.core.yml ps
 #
-# Credentials come from deploy/.env.example. They are development defaults.
+# Credentials come from deploy/.env — copy deploy/.env.example and fill it in.
+# There are no default passwords: every credential below is `${VAR:?...}`, so compose
+# refuses to start until you set it. `.env.example` shows how to generate them.
+#
+# Every port is published on ${BIND_ADDR}, which defaults to 127.0.0.1. These are
+# unhardened development datastores; binding them to 0.0.0.0 puts Mongo, Postgres,
+# Timescale, RabbitMQ and MinIO on every interface of the host. Change BIND_ADDR only
+# if you know the host is not reachable from anywhere you do not control.
 
 name: pid-gijon-deps
 
@@ -23,11 +30,19 @@ services:
   mongo:
     image: mongo:5.0
     container_name: pid-gijon-mongo
+    # Authentication is ON. Creating the root user makes mongod start with --auth, so
+    # Orion-LD and the IoT Agent below carry credentials too. An unauthenticated Mongo
+    # holds every entity and every device registration in the clear.
+    command: ["mongod", "--auth", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER:?set MONGO_USER in deploy/.env}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD:?set MONGO_PASSWORD in deploy/.env}"
     volumes:
       - mongo_data:/data/db
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "${BIND_ADDR:-127.0.0.1}:${MONGO_PORT:-27017}:27017"
     healthcheck:
+      # `ping` is one of the few commands mongod answers before authentication.
       test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
@@ -39,9 +54,24 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+    environment:
+      # Orion-LD 1.4.0 talks to Mongo through TWO drivers and each needs its own
+      # credentials:
+      #   - mongoc (NGSI-LD) takes ORIONLD_MONGO_URI. It must be the full URI: built
+      #     from -dbuser/-dbpwd/-dbAuthDb it comes out as `mongodb://u:p@host?authdb`,
+      #     a '?' where a '/' belongs, and the broker dies with "Invalid host string
+      #     in URI".
+      #   - the legacy C++ driver (NGSIv1/v2) takes ORIONLD_MONGO_USER / _PASSWORD /
+      #     _AUTH_SOURCE. Without them it opens an unauthenticated connection and
+      #     aborts on "command listDatabases requires authentication".
+      # The password must be URI-safe (deploy/.env.example generates hex).
+      ORIONLD_MONGO_URI: "mongodb://${MONGO_USER:?set MONGO_USER in deploy/.env}:${MONGO_PASSWORD:?set MONGO_PASSWORD in deploy/.env}@mongo:27017/?authSource=admin"
+      ORIONLD_MONGO_USER: "${MONGO_USER:?set MONGO_USER in deploy/.env}"
+      ORIONLD_MONGO_PASSWORD: "${MONGO_PASSWORD:?set MONGO_PASSWORD in deploy/.env}"
+      ORIONLD_MONGO_AUTH_SOURCE: admin
     command: -dbhost mongo -logLevel WARN -forwarding -experimental
     ports:
-      - "${ORION_PORT:-1026}:1026"
+      - "${BIND_ADDR:-127.0.0.1}:${ORION_PORT:-1026}:1026"
     # No healthcheck: the image ships neither curl nor wget, and running the
     # orionld binary to probe it starts a second broker. Check it from outside
     # with `curl localhost:1026/version`.
@@ -64,14 +94,17 @@ services:
       IOTA_MONGO_HOST: mongo
       IOTA_MONGO_PORT: 27017
       IOTA_MONGO_DB: iotajson
+      IOTA_MONGO_USER: "${MONGO_USER:?set MONGO_USER in deploy/.env}"
+      IOTA_MONGO_PASSWORD: "${MONGO_PASSWORD:?set MONGO_PASSWORD in deploy/.env}"
+      IOTA_MONGO_AUTH_SOURCE: admin
       IOTA_HTTP_PORT: 7896
       IOTA_PROVIDER_URL: http://iot-agent:4041
       IOTA_JSON_LD_CONTEXT: "${NGSI_LD_CONTEXT:-https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld}"
       IOTA_FALLBACK_TENANT: "${DEFAULT_TENANT:-pidgijon}"
       IOTA_LOG_LEVEL: WARN
     ports:
-      - "${IOTA_NORTH_PORT:-4041}:4041"
-      - "${IOTA_SOUTH_PORT:-7896}:7896"
+      - "${BIND_ADDR:-127.0.0.1}:${IOTA_NORTH_PORT:-4041}:4041"
+      - "${BIND_ADDR:-127.0.0.1}:${IOTA_SOUTH_PORT:-7896}:7896"
 
   # ------------------------------------------------------------- Datastores ---
   # The platform model: organizations, devices, entities, alarms, dashboards.
@@ -81,12 +114,12 @@ services:
     container_name: pid-gijon-postgres
     environment:
       POSTGRES_USER: "${DB_USERNAME:-platform}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-changeme}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD in deploy/.env}"
       POSTGRES_DB: "${DB_DATABASE:-platformdb}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${BIND_ADDR:-127.0.0.1}:${DB_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-platform} -d ${DB_DATABASE:-platformdb}"]
       interval: 10s
@@ -101,12 +134,12 @@ services:
     container_name: pid-gijon-timescale
     environment:
       POSTGRES_USER: "${TS_DB_USERNAME:-platform}"
-      POSTGRES_PASSWORD: "${TS_DB_PASSWORD:-changeme}"
+      POSTGRES_PASSWORD: "${TS_DB_PASSWORD:?set TS_DB_PASSWORD in deploy/.env}"
       POSTGRES_DB: "${TS_DB_DATABASE:-platformdb_ts}"
     volumes:
       - timescale_data:/var/lib/postgresql/data
     ports:
-      - "${TS_DB_PORT:-5433}:5432"
+      - "${BIND_ADDR:-127.0.0.1}:${TS_DB_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${TS_DB_USERNAME:-platform} -d ${TS_DB_DATABASE:-platformdb_ts}"]
       interval: 10s
@@ -118,12 +151,12 @@ services:
     container_name: pid-gijon-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-platform}"
-      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-changeme}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in deploy/.env}"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+      - "${BIND_ADDR:-127.0.0.1}:${RABBITMQ_PORT:-5672}:5672"
+      - "${BIND_ADDR:-127.0.0.1}:${RABBITMQ_MGMT_PORT:-15672}:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 15s
@@ -137,13 +170,13 @@ services:
     container_name: pid-gijon-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: "${LOCAL_ACCESS_ID:-minioadmin}"
-      MINIO_ROOT_PASSWORD: "${LOCAL_SECRET_KEY:-minioadmin}"
+      MINIO_ROOT_USER: "${LOCAL_ACCESS_ID:?set LOCAL_ACCESS_ID in deploy/.env}"
+      MINIO_ROOT_PASSWORD: "${LOCAL_SECRET_KEY:?set LOCAL_SECRET_KEY in deploy/.env}"
     volumes:
       - minio_data:/data
     ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "${BIND_ADDR:-127.0.0.1}:${MINIO_PORT:-9000}:9000"
+      - "${BIND_ADDR:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001"
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 15s

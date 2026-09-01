@@ -60,6 +60,14 @@ fiware:
   backend:
     serviceName: web-back
     servicePort: 80
+    # Shared secret sent as the X-Gateway-Secret header on /api/internal/*.
+    #
+    # web-back authenticates that call with it and FAILS CLOSED: without a matching
+    # header it answers 401, and while the secret is unset on its side it answers 503.
+    # It is the SAME value as web-back's API_GATEWAY_SECRET (generate-env.sh writes it
+    # as API_GATEWAY_SECRET). EMPTY here on purpose — never commit a real value; supply
+    # it at deploy time with --set fiware.backend.gatewaySecret=... or -f values.
+    gatewaySecret: ""
 
 # --- Keycloak OIDC (openid-connect plugin) ---------------------------------
 keycloak:
@@ -158,9 +166,19 @@ apisix:
         # IMPORTANT: never commit a real value.
         admin: ""
       allow:
-        # ClusterIP service, so reachable in-cluster only. Tighten in prod.
+        # Who may call the APISIX Admin API — the API that can rewrite every route
+        # and plugin of the gateway. It used to be 0.0.0.0/0: the Service is ClusterIP,
+        # so there is no route to it from outside, but that made the app-level control
+        # a no-op and left the whole gateway reconfigurable from any compromised pod.
+        #
+        # These are the k3s defaults: pods 10.42.0.0/16, services 10.43.0.0/16, plus
+        # loopback for the data plane's own probes and for the ingress controller when
+        # it runs in the same pod. CHANGE THEM if your cluster uses different ranges:
+        #   kubectl cluster-info dump | grep -m2 -E 'cluster-cidr|service-cluster-ip-range'
         ipList:
-          - 0.0.0.0/0
+          - 127.0.0.0/8
+          - 10.42.0.0/16
+          - 10.43.0.0/16
     prometheus:
       enabled: true
 

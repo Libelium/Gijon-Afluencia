@@ -4,24 +4,39 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart as LineSeries } from 'echarts/charts'
-import { GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, LegendComponent, MarkLineComponent, TooltipComponent } from 'echarts/components'
 import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import { t } from '@/i18n'
 import { formatMeasure, formatNumber } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from '../../../charts'
 import {
   asItems,
-  axisValue,
+  chartGrid,
+  chartStyle,
+  scrollLegend,
   timeFormatFor,
   timeLabel,
   toMillis,
   tooltipHeader,
   tooltipRow,
+  valueAxis,
   type TooltipItem,
 } from '../../../charts/chartOptions'
+import { useChartLabel } from '../../../charts/chartLabel'
+import { ariaOption, rowsTable } from '../../../charts/a11y'
 import { MUTED, seriesColors } from '../../../palette'
 
-use([CanvasRenderer, LineSeries, GridComponent, TooltipComponent, LegendComponent, MarkLineComponent])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([
+  CanvasRenderer,
+  LineSeries,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  MarkLineComponent,
+  AriaComponent,
+])
 
 const props = withDefaults(
   defineProps<{
@@ -35,6 +50,8 @@ const props = withDefaults(
     nowIndex?: number | null
     units?: string
     height?: number | string
+    /** Rotulo de la grafica. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { height: 340, lower: null, upper: null, nowIndex: null },
 )
@@ -71,15 +88,16 @@ const labels = computed(() => {
   return props.times.map((iso) => timeLabel(toMillis(iso), timeZone.value, format))
 })
 
+const label = useChartLabel(() => props.title, () => t('dashboards.lidar.prediction.chartLabel'))
+
 const option = computed<EChartsOption>(() => ({
   animationDuration: 300,
-  grid: { left: 8, right: 20, top: 20, bottom: 34, containLabel: true },
-  legend: {
-    show: true,
-    type: 'scroll',
-    bottom: 0,
-    data: [t('dashboards.lidar.prediction.measured'), t('dashboards.lidar.prediction.predicted')],
-  },
+  aria: ariaOption(label.value),
+  grid: chartGrid(34),
+  legend: scrollLegend(true, [
+    t('dashboards.lidar.prediction.measured'),
+    t('dashboards.lidar.prediction.predicted'),
+  ]),
   tooltip: {
     trigger: 'axis',
     confine: true,
@@ -109,12 +127,7 @@ const option = computed<EChartsOption>(() => ({
     data: labels.value,
     axisLabel: { hideOverlap: true },
   },
-  yAxis: {
-    type: 'value',
-    min: 0,
-    splitNumber: compact.value ? 3 : 5,
-    axisLabel: { formatter: (v: number) => axisValue(v) },
-  },
+  yAxis: valueAxis(compact.value, 0),
   series: [
     // 1) Base invisible de la banda: solo desplaza la serie apilada hasta el minimo.
     {
@@ -184,12 +197,36 @@ const option = computed<EChartsOption>(() => ({
   ],
 }))
 
-const style = computed(() => ({
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-  width: '100%',
-}))
+const style = computed(() => chartStyle(props.height))
+
+/**
+ * Tabla equivalente: instante, medido, previsto y los dos extremos del intervalo. El intervalo
+ * de confianza solo se ve como una banda sombreada, asi que sin estas dos columnas la
+ * alternativa perderia justo lo que distingue esta grafica de una de lineas.
+ */
+const table = computed(() =>
+  rowsTable(
+    [
+      t('dashboards.chart.datetime'),
+      t('dashboards.lidar.prediction.measured'),
+      t('dashboards.lidar.prediction.predicted'),
+      t('dashboards.lidar.prediction.lower'),
+      t('dashboards.lidar.prediction.upper'),
+    ],
+    props.times.map((iso, index) => [
+      labels.value[index] ?? iso,
+      formatNumber(props.measured[index] ?? null),
+      formatNumber(props.predicted[index] ?? null),
+      formatNumber(props.lower?.[index] ?? null),
+      formatNumber(props.upper?.[index] ?? null),
+    ]),
+  ),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

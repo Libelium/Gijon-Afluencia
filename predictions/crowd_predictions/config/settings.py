@@ -552,6 +552,17 @@ class AnomalySettings(EnvSettings):
 
     ANOMALY_CONFIG: str = ""
     ANOMALY_PREFIX: str = DEFAULT_ANOMALY_PREFIX
+    # SEC-019. Secret keying the HMAC-SHA256 that authenticates the persisted
+    # anomaly bundle. The bundle is a pickle, and `pickle.load` executes whatever
+    # the file tells it to, so anyone able to write to
+    # `anomalies_detection/{tenant}/{scope}/models/` had remote code execution in
+    # this process. The signature makes the object store untrusted input again:
+    # a bundle this deployment did not write cannot be loaded.
+    #
+    # Unset means "load nothing": every read is refused and the datamodel starts
+    # a fresh model, which load_state already handles. It does NOT mean
+    # "load unsigned bundles". See anomaly_detection/storage.py.
+    ANOMALY_STATE_HMAC_KEY: str = ""
 
     def _config(self) -> dict:
         if not self.ANOMALY_CONFIG:

@@ -88,6 +88,7 @@ export default {
   'alarms.status.unresolved':
     'El histórico de estado no está disponible: no se ha podido determinar el ámbito de datos de la organización.',
   'alarms.status.forbidden': 'No tienes permiso para consultar el histórico de estado de esta alarma.',
+  'alarms.status.stateColumn': 'Estado',
   'alarms.status.up': 'Disparada',
   'alarms.status.down': 'Reposo',
   'alarms.status.changes': '{count} cambios de estado en el periodo',

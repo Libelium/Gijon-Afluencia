@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timezone as dt_timezone
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Tuple
 from enum import Enum
@@ -9,68 +9,6 @@ class TimeScopeAdjustmentType(str, Enum):
     INCLUDED = "included"
     EXCLUDED = "excluded"
     NOT_APPLICABLE = "not_applicable"
-
-
-class TimeScopeAdjustment(BaseModel):
-    """
-    Time scope adjustment class,
-    to add exceptions to the time scope base class.
-    """
-
-    year: Optional[int] = None
-    # Month is 0 based
-    month: Optional[int] = None
-    # Month day is 0 based
-    month_day: Optional[int] = None
-    exclude: bool = True
-
-    @field_validator("month_day", mode="before")
-    def validate_month_day(cls, value):
-        if value < 0 or value > 30:
-            raise ValueError(
-                "Invalid month day: {value}. Month day must be between 1 and 31"
-            )
-
-        return value
-
-    @field_validator("month", mode="before")
-    def validate_month(cls, value):
-        if value < 0 or value > 11:
-            raise ValueError("Invalid month: {value}. Month must be between 0 and 11")
-
-        return value
-
-    def filter(self, date: datetime) -> TimeScopeAdjustmentType:
-        """
-        Checks if the given date is included, excluded or not applicable for
-        this adjustment.
-        """
-
-        in_year: bool = self.year is None or self.year == date.year
-        in_month: bool = self.month is None or self.month == date.month - 1
-        in_day: bool = self.month_day is None or self.month_day == date.day - 1
-
-        in_scope = in_year and in_month and in_day
-
-        if not in_scope:
-            return TimeScopeAdjustmentType.NOT_APPLICABLE
-
-        if self.exclude:
-            return TimeScopeAdjustmentType.EXCLUDED
-
-        return TimeScopeAdjustmentType.INCLUDED
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "year": 2020,
-                    "month": 0,
-                    "month_day": 1,
-                }
-            ]
-        }
-    }
 
 
 class TimeScopeAdjustment(BaseModel):
@@ -197,7 +135,22 @@ class TimeScope(BaseModel):
     def in_scope(self, date: datetime) -> bool:
         """
         Checks if the given date is inside the scope.
+
+        A naive `date` is read as UTC. This is not a detail: `datetime.astimezone`
+        assumes a naive datetime is in the *system* local time, so before this was
+        made explicit the very same call answered differently depending on the
+        TZ of the host it ran on. The container runs UTC and CI ran UTC, which is
+        why it went unnoticed; on a developer machine set to Europe/Madrid,
+        `datetime(2024, 1, 1, 6, 30)` against `hours=[07:00, 07:59:59]` in
+        Europe/Madrid returned False instead of True, because 06:30 was taken to
+        be 06:30 local rather than 06:30 UTC (FUN-020).
+
+        Every timestamp the platform stores and notifies is UTC, so UTC is the
+        right reading for a naive value; an aware `date` is used as given.
         """
+
+        if date.tzinfo is None:
+            date = date.replace(tzinfo=dt_timezone.utc)
 
         # first, check if it it explicitly excluded or included
         if self.extra:
@@ -224,6 +177,15 @@ class TimeScope(BaseModel):
         if not self.hours:
             return True
 
+        # NOTE: months, month_days and week_days above are deliberately evaluated
+        # on `date` (UTC), while only the hour window is evaluated in
+        # `self.timezone`. That asymmetry is not an oversight here: the SQL side
+        # of the same filter does exactly the same thing - see
+        # aether-link's query_builder.get_week_day_filtering_condition, which
+        # extracts dow/month/day from the raw column, against
+        # get_hour_filtering_condition, which applies AT TIME ZONE first. Making
+        # this function "more correct" on its own would silently desynchronise it
+        # from the query builder, so both sides have to change together.
         timezoned_date = date.astimezone(self.timezone)
         for hour_range in self.hours:
             if hour_range[0] > hour_range[1]:

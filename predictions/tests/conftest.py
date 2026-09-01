@@ -37,6 +37,11 @@ def _demo_target(monkeypatch):
     # test gets one deployment's calendar. Those that assert on it set their own.
     monkeypatch.setenv("CALENDAR_TIMEZONE", "Europe/Madrid")
     monkeypatch.setenv("HOLIDAYS_COUNTRY", "ES")
+    # SEC-019: the anomaly bundle is signed, and an unset key refuses to sign or
+    # verify rather than falling back to a bare pickle, so every test that stores
+    # a bundle needs one - exactly as a deployment does. Tests asserting on the
+    # unconfigured case override it.
+    monkeypatch.setenv("ANOMALY_STATE_HMAC_KEY", "test-anomaly-hmac-key")
 
 
 @pytest.fixture(autouse=True)

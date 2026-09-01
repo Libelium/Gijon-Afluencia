@@ -103,7 +103,9 @@ const style = computed(() => ({
         <template v-if="last">
           <VIcon icon="mdi-clock-outline" size="14" />
           <span>{{ t('dashboards.kpi.lastData') }}: {{ timestamp }}</span>
-          <span class="text-disabled">{{ relative }}</span>
+          <!-- `text-disabled` es opacidad 0,38: 2,4:1 sobre la superficie, muy por debajo del
+               4.5:1 de WCAG 1.4.3. Es texto informativo, no un control desactivado. -->
+          <span>{{ relative }}</span>
         </template>
         <template v-else>
           <VIcon icon="mdi-clock-alert-outline" size="14" />

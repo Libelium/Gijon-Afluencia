@@ -8,6 +8,7 @@ import os
 import re
 import threading
 import time
+import zlib
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -21,6 +22,46 @@ _UNSAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
 # Worker wake-up interval, not the flush interval (OTE_FLUSH_SECONDS, per device).
 _TICK_SECONDS = 5.0
+
+# How much decompressed output to pull per zlib call while enforcing the ceiling.
+_INFLATE_CHUNK = 1 * 1024 * 1024
+
+
+def decompress_bounded(body: bytes, max_output: int) -> Optional[bytes]:
+    """Gunzip `body`, giving up as soon as the output would exceed `max_output`.
+
+    SEC-024. `gzip.decompress` inflates the whole stream into memory before
+    returning, so the caller cannot react: a ~1 MB body of repeated zeros expands
+    to about 1 GB, and 36 sensors posting that concurrently take the pod out.
+    The archiver's OTE_MAX_BUFFER_BYTES cap does not help, because it is applied
+    to the result, i.e. after the allocation that does the damage.
+
+    Inflating incrementally through `zlib.decompressobj` and checking the running
+    total after every chunk bounds the peak allocation at
+    `max_output + _INFLATE_CHUNK`, whatever the compression ratio of the input.
+    """
+    # wbits 16 + MAX_WBITS selects the gzip (RFC 1952) wrapper rather than raw
+    # deflate, which is what gzip.decompress accepts.
+    decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    out = bytearray()
+    pending = body
+
+    while True:
+        out += decompressor.decompress(pending, _INFLATE_CHUNK)
+        if len(out) > max_output:
+            log.error(
+                "OTE archive: gzipped body expands past %d bytes - refusing it "
+                "(decompression bomb or misconfigured sensor)", max_output
+            )
+            return None
+        if decompressor.eof:
+            break
+        pending = decompressor.unconsumed_tail
+        if not pending:
+            # All input consumed without reaching the end of the gzip stream.
+            raise zlib.error("truncated gzip stream")
+
+    return bytes(out)
 
 
 def sanitize_device_id(device_id: str) -> str:
@@ -44,9 +85,12 @@ def decode_body(body: bytes) -> Optional[bytes]:
         return None
     if body[:2] == b"\x1f\x8b":                       # gzip magic
         try:
-            body = gzip.decompress(body)
+            body = decompress_bounded(body, settings.OTE_MAX_DECOMPRESSED_BYTES)
         except Exception as e:
             log.error("OTE archive: body looks gzipped but does not decompress: %s", e)
+            return None
+        if body is None:
+            # Over the ceiling: already logged by decompress_bounded.
             return None
     try:
         text = body.decode("utf-8")

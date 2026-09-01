@@ -9,10 +9,42 @@ use App\Repositories\ResourcePermissionRepository;
 use App\Authorization\AppResourcePermission;
 use App\Models\Organization;
 use App\Models\Realtime\EntityProperty;
+use App\Services\OrderFieldValidator;
 use Illuminate\Support\Facades\DB;
 
 class DeviceRepository
 {
+    /** Columns a device listing may be ordered by. See OrderFieldValidator for the why. */
+    private const ORDERABLE_COLUMNS = [
+        'id',
+        'serial',
+        'case_id',
+        'name',
+        'description',
+        'device_type_id',
+        'subscribed_until',
+        'created_at',
+        'updated_at',
+    ];
+
+    private const DEFAULT_ORDER_COLUMN = 'devices.id';
+
+    /**
+     * Every device listing orders the `devices` table, so they all share this whitelist.
+     */
+    private static function safeOrder(string $orderColumn, string $orderDirection): array
+    {
+        return [
+            OrderFieldValidator::resolveColumn(
+                $orderColumn,
+                self::ORDERABLE_COLUMNS,
+                self::DEFAULT_ORDER_COLUMN,
+                'devices'
+            ),
+            OrderFieldValidator::resolveDirection($orderDirection),
+        ];
+    }
+
     public static function paginate(
         int $userId,
         int $paginationSize,
@@ -32,6 +64,8 @@ class DeviceRepository
                 ->unique()
                 ->toArray();
         }
+
+        [$orderColumn, $orderDirection] = self::safeOrder($orderColumn, $orderDirection);
 
         $query = Device::with([
             'deviceType',
@@ -137,6 +171,8 @@ class DeviceRepository
                 ->unique()
                 ->toArray();
         }
+
+        [$orderColumn, $orderDirection] = self::safeOrder($orderColumn, $orderDirection);
 
         $query = Device::with([
             'deviceType',
@@ -263,6 +299,8 @@ class DeviceRepository
         array|null $types = null,
         int|null $organizationId = null
     ) {
+        [$orderColumn, $orderDirection] = self::safeOrder($orderColumn, $orderDirection);
+
         $query = Device::with([
             'deviceType',
             'entities',
@@ -300,6 +338,8 @@ class DeviceRepository
         string $orderDirection,
         string|null $searchText = null
     ) {
+        [$orderColumn, $orderDirection] = self::safeOrder($orderColumn, $orderDirection);
+
         $query = Device::with([
             'deviceType',
             'entities',

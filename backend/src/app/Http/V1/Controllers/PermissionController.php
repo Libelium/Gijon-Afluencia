@@ -17,6 +17,39 @@ use App\Repositories\ResourcePermissionRepository;
 
 class PermissionController extends Controller
 {
+    /**
+     * Header the API gateway must send on the `internal/*` endpoints, carrying the shared
+     * secret configured as `services.api-gateway.secret` (env API_GATEWAY_SECRET).
+     */
+    private const GATEWAY_SECRET_HEADER = 'X-Gateway-Secret';
+
+    /**
+     * Service-to-service authentication for the `internal/*` endpoints.
+     *
+     * These routes sit outside `auth:api` on purpose — the API gateway calls them while it is
+     * still deciding whether to let a request through — so the shared secret is the only thing
+     * separating them from the outside world. Two rules matter here:
+     *
+     *  - FAIL CLOSED. If no secret is configured the endpoints are unusable (503), never open.
+     *    An unconfigured secret is a deployment error, and answering "allowed" to an
+     *    unauthenticated caller would turn these endpoints into an authorization oracle.
+     *  - Constant-time comparison, so the secret cannot be recovered byte by byte.
+     */
+    private function assertGatewayAuthenticated(Request $request): void
+    {
+        $expected = config('services.api-gateway.secret');
+
+        if (!is_string($expected) || $expected === '') {
+            abort(503, 'Internal gateway authentication is not configured');
+        }
+
+        $provided = $request->header(self::GATEWAY_SECRET_HEADER);
+
+        if (!is_string($provided) || $provided === '' || !hash_equals($expected, $provided)) {
+            abort(401, 'Invalid or missing gateway credentials');
+        }
+    }
+
     public function index(Request $request)
     {
 
@@ -52,11 +85,16 @@ class PermissionController extends Controller
      * Internal endpoint for APISIX to check write permissions
      * Validates if a Keycloak user has UPDATE permission on an organization (tenant)
      *
+     * Requires the X-Gateway-Secret header (see assertGatewayAuthenticated): the caller is
+     * trusted infrastructure, not an end user, and the body names the user to check.
+     *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function checkWritePermission(Request $request)
     {
+        $this->assertGatewayAuthenticated($request);
+
         $request->validate([
             'keycloak_user_id' => 'required|string',
             'organization_id' => 'required|integer|exists:organizations,id',
@@ -109,11 +147,16 @@ class PermissionController extends Controller
      *
      * Note: Keycloak user ID is extracted from the authenticated JWT token (sub claim)
      *
+     * Requires the X-Gateway-Secret header (see assertGatewayAuthenticated) on top of the
+     * forwarded JWT.
+     *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function checkFiwareWritePermission(Request $request)
     {
+        $this->assertGatewayAuthenticated($request);
+
         $request->validate([
             'tenant_name' => 'required|string',
             'scope_name' => 'nullable|string',

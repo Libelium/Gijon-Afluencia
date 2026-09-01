@@ -11,5 +11,7 @@ class Parking extends AuditableModel
   *
   * @var array
   */
-  protected $fillable = ['id', 'user_id', 'project_id', 'name', 'description', 'map_url', 'slug', 'content'];
+  // `id` is deliberately NOT fillable: letting a request set the primary key through a
+  // mass assignment lets a caller overwrite or impersonate an existing row.
+  protected $fillable = ['user_id', 'project_id', 'name', 'description', 'map_url', 'slug', 'content'];
 }

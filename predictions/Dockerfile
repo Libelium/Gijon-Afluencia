@@ -24,6 +24,15 @@ RUN pip install --upgrade pip && \
     pip uninstall -y nvidia-nccl-cu12
 
 RUN chmod +x scripts/main.py scripts/train.py scripts/predict.py
+# GDTIS-PT01-SEC-026 — ejecutar como usuario sin privilegios.
+# UID/GID numericos (no nombre) para que el `runAsNonRoot` de Kubernetes pueda
+# comprobarlo sin resolver /etc/passwd. Se coloca despues del ultimo COPY: todo
+# lo anterior necesita root, y a partir de aqui el proceso ya no.
+RUN groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app \
+    && chown -R 10001:10001 /app
+USER 10001:10001
+
 
 # Default CMD: LIDAR+SmartSpot fusion. The two CronJobs override the command on
 # this SAME image with "python scripts/run_daily.py" (train + predict) and

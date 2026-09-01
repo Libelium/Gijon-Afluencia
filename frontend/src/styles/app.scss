@@ -105,8 +105,11 @@
   background: rgb(var(--v-theme-primary));
 }
 
+// Sin `opacity`: el color del subencabezado ya es `on-surface` al 70 % (ver
+// `plugins/theme.ts`), y multiplicarlo por otro 0,72 lo dejaba en un 50 % efectivo, es decir
+// 3,5:1 sobre la superficie del menu — por debajo del 4.5:1 de WCAG 1.4.3. El interletrado
+// basta para diferenciarlo de los elementos de navegacion.
 .v-navigation-drawer .v-list-subheader {
-  opacity: 0.72;
   letter-spacing: 0.08em;
 }
 

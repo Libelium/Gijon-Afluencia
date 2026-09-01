@@ -12,6 +12,12 @@ dependencies = [
     "pydantic>=2.0.0",
     "pandas>=2.0.0",
     "isodate>=0.6.1",
-    "freezegun>=1.5.1",
 ]
 requires-python = ">=3.8"
+
+[dependency-groups]
+# COD-103. freezegun was a runtime dependency of this library, so it was
+# pulled into queues-consumer and aether-link - both of which consume
+# aether-pylib as an editable path dependency - and ended up in their
+# production images. Only tests/ uses it.
+test = ["pytest>=7.2.1,<9", "freezegun>=1.5.1,<2"]

@@ -524,7 +524,8 @@ class EntityGroupController extends Controller
     private function enqueueLinkedEntityGroupUpdate(int $groupId, bool $force = false): void
     {
         try {
-            Http::post(config('services.queues-consumer.publish'), [
+            Http::withHeaders(['X-Queues-Consumer-Token' => config('services.queues-consumer.token')])
+                ->post(config('services.queues-consumer.publish'), [
                 'task'   => 'platform.entity_groups.update',
                 'params' => ['group_id' => $groupId, 'force' => $force],
             ]);

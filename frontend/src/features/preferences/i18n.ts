@@ -19,9 +19,11 @@ export default {
   'preferences.section.appearance.help':
     'El tema se aplica al guardar, sin necesidad de recargar la página.',
 
-  'preferences.field.language': 'Idioma',
+  // El rotulo dice a que afecta el ajuste, no solo la nota de ayuda: llamarlo «Idioma» a secas
+  // hacía esperar que cambiara la interfaz, que se sirve solo en español (ACC-005).
+  'preferences.field.language': 'Idioma de las notificaciones',
   'preferences.field.language.hint':
-    'La interfaz está disponible únicamente en español. Este ajuste afecta a los textos que genera el servidor, como los correos de aviso.',
+    'Idioma de los textos que genera el servidor, como los correos de aviso. La interfaz se muestra siempre en español.',
   'preferences.field.timeZone': 'Zona horaria',
   'preferences.field.timeZone.hint':
     'Las medidas se almacenan en UTC. Zona detectada en este navegador: {zone}.',

@@ -74,12 +74,15 @@ data:
       local headers = core.request.headers(ctx)
       local auth_header = headers["Authorization"] or headers["authorization"]
 
+      -- Service-to-service credential for /api/internal/*. web-back checks it with
+      -- hash_equals and fails closed, so the header is not optional.
       local res, err = httpc:request_uri(backend_url, {
         method = "POST",
         body = cjson.encode(request_body),
         headers = {
           ["Content-Type"] = "application/json",
           ["Authorization"] = auth_header,
+          ["X-Gateway-Secret"] = {{ .Values.fiware.backend.gatewaySecret | quote }},
         },
         ssl_verify = false
       })

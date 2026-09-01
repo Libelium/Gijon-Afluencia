@@ -92,7 +92,9 @@ class PushNotificationDispatcher
         $endpoint = config('services.queues-consumer.publish');
 
         try {
-            $response = Http::timeout(180)->post($endpoint, [
+            $response = Http::timeout(180)
+                ->withHeaders(['X-Queues-Consumer-Token' => config('services.queues-consumer.token')])
+                ->post($endpoint, [
                 'task' => 'platform.push-notifications.send',
                 'params' => [
                     'platform' => $platform,

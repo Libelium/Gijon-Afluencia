@@ -11,6 +11,7 @@ use App\Models\EntityHealthcheck;
 use App\Models\FiwareScope;
 use App\Models\FiwareTenant;
 use App\Models\Realtime\EntityProperty;
+use App\Services\OrderFieldValidator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 class EntityRepository
@@ -22,6 +23,45 @@ class EntityRepository
         'urn:ngsi-ld:PlatformAlarm:%',
         'urn:ngsi-ld:CrowdFlowEventETL:%:%',
     ];
+
+    /** Columns an entity listing may be ordered by. See OrderFieldValidator for the why. */
+    private const ORDERABLE_ENTITY_COLUMNS = [
+        'id',
+        'urn',
+        'datamodel',
+        'tenant',
+        'scope',
+        'fiware_scope_id',
+        'created_at',
+        'updated_at',
+    ];
+
+    /** Default order for entity listings when the requested column is not allowed. */
+    private const DEFAULT_ENTITY_ORDER_COLUMN = 'entities.id';
+
+    /**
+     * Aliases a healthcheck listing may be ordered by. They are the aggregates built in the
+     * SELECT of paginateHealthchecks, plus the grouping key.
+     */
+    private const ORDERABLE_HEALTHCHECK_COLUMNS = [
+        'urn',
+        'device_id',
+        'serial',
+        'device_type',
+        'firmware_version',
+        'overall_status',
+        'reason',
+        'battery_status',
+        'signal_status',
+        'send_frequency_status',
+        'battery_reason',
+        'signal_reason',
+        'send_frequency_reason',
+    ];
+
+    /** Default order for healthcheck listings when the requested column is not allowed. */
+    private const DEFAULT_HEALTHCHECK_ORDER_COLUMN = 'overall_status';
+
 
     public static function getEntitiesQuery(
         int $userId,
@@ -37,6 +77,14 @@ class EntityRepository
         array|null $bounds = null,
         array|null $urn = null,
     ) {
+        $orderColumn = OrderFieldValidator::resolveColumn(
+            $orderColumn,
+            self::ORDERABLE_ENTITY_COLUMNS,
+            self::DEFAULT_ENTITY_ORDER_COLUMN,
+            'entities'
+        );
+        $orderDirection = OrderFieldValidator::resolveDirection($orderDirection);
+
         $query = Entity::distinct()->with(
             [
                 'devices' => function ($query) {
@@ -400,6 +448,13 @@ class EntityRepository
         array $selectedStatus = [],
         array $selectedOrganizations = []
     ) {
+        $orderColumn = OrderFieldValidator::resolveColumn(
+            $orderColumn,
+            self::ORDERABLE_HEALTHCHECK_COLUMNS,
+            self::DEFAULT_HEALTHCHECK_ORDER_COLUMN
+        );
+        $orderDirection = OrderFieldValidator::resolveDirection($orderDirection);
+
         // Define the healthcheck properties and their types for casting
         $healthcheckProperties = [
             'device_id' => 'string',

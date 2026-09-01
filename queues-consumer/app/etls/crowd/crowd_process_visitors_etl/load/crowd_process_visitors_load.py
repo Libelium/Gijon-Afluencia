@@ -188,114 +188,87 @@ class ProcessVisitorsLoad:
                 "uniqueVisitors": (
                     flow["uniqueVisitors"] if flow["uniqueVisitors"] else 0
                 ),
+                "touristAverageVisitDuration": (
+                    flow["touristAverageVisitDuration"].total_seconds()
+                    if isinstance(flow["touristAverageVisitDuration"], timedelta)
+                    else None
+                ),
+                "touristMinimumVisitDuration": (
+                    flow["touristMinimumVisitDuration"].total_seconds()
+                    if isinstance(flow["touristMinimumVisitDuration"], timedelta)
+                    else None
+                ),
+                "touristMaximumVisitDuration": (
+                    flow["touristMaximumVisitDuration"].total_seconds()
+                    if isinstance(flow["touristMaximumVisitDuration"], timedelta)
+                    else None
+                ),
+                "touristVisits": (
+                    flow["touristVisits"] if flow["touristVisits"] else 0
+                ),
+                "touristUniqueVisitors": (
+                    flow["touristUniqueVisitors"]
+                    if flow["touristUniqueVisitors"]
+                    else 0
+                ),
+                "residentAverageVisitDuration": (
+                    flow["residentAverageVisitDuration"].total_seconds()
+                    if isinstance(flow["residentAverageVisitDuration"], timedelta)
+                    else None
+                ),
+                "residentMinimumVisitDuration": (
+                    flow["residentMinimumVisitDuration"].total_seconds()
+                    if isinstance(flow["residentMinimumVisitDuration"], timedelta)
+                    else None
+                ),
+                "residentMaximumVisitDuration": (
+                    flow["residentMaximumVisitDuration"].total_seconds()
+                    if isinstance(flow["residentMaximumVisitDuration"], timedelta)
+                    else None
+                ),
+                "residentVisits": (
+                    flow["residentVisits"] if flow["residentVisits"] else 0
+                ),
+                "residentUniqueVisitors": (
+                    flow["residentUniqueVisitors"]
+                    if flow["residentUniqueVisitors"]
+                    else 0
+                ),
+                "shortTermVisitorAverageVisitDuration": (
+                    flow["shortTermVisitorAverageVisitDuration"].total_seconds()
+                    if isinstance(
+                        flow["shortTermVisitorAverageVisitDuration"], timedelta
+                    )
+                    else None
+                ),
+                "shortTermVisitorMinimumVisitDuration": (
+                    flow["shortTermVisitorMinimumVisitDuration"].total_seconds()
+                    if isinstance(
+                        flow["shortTermVisitorMinimumVisitDuration"], timedelta
+                    )
+                    else None
+                ),
+                "shortTermVisitorMaximumVisitDuration": (
+                    flow["shortTermVisitorMaximumVisitDuration"].total_seconds()
+                    if isinstance(
+                        flow["shortTermVisitorMaximumVisitDuration"], timedelta
+                    )
+                    else None
+                ),
+                "shortTermVisitorVisits": (
+                    flow["shortTermVisitorVisits"]
+                    if flow["shortTermVisitorVisits"]
+                    else 0
+                ),
+                "shortTermVisitorUniqueVisitors": (
+                    flow["shortTermVisitorUniqueVisitors"]
+                    if flow["shortTermVisitorUniqueVisitors"]
+                    else 0
+                ),
                 "TimeInstant": self.start_date.isoformat(),
                 "startDate": self.start_date.isoformat(),
                 "endDate": self.end_date.isoformat(),
             }
-
-            if self.use_classification:
-                new_flow = {
-                    "entityId": flow_id,
-                    "averageVisitDuration": (
-                        flow["averageVisitDuration"].total_seconds()
-                        if isinstance(flow["averageVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "minimumVisitDuration": (
-                        flow["minimumVisitDuration"].total_seconds()
-                        if isinstance(flow["minimumVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "maximumVisitDuration": (
-                        flow["maximumVisitDuration"].total_seconds()
-                        if isinstance(flow["maximumVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "visits": flow["visits"] if flow["visits"] else 0,
-                    "uniqueVisitors": (
-                        flow["uniqueVisitors"] if flow["uniqueVisitors"] else 0
-                    ),
-                    "touristAverageVisitDuration": (
-                        flow["touristAverageVisitDuration"].total_seconds()
-                        if isinstance(flow["touristAverageVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "touristMinimumVisitDuration": (
-                        flow["touristMinimumVisitDuration"].total_seconds()
-                        if isinstance(flow["touristMinimumVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "touristMaximumVisitDuration": (
-                        flow["touristMaximumVisitDuration"].total_seconds()
-                        if isinstance(flow["touristMaximumVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "touristVisits": (
-                        flow["touristVisits"] if flow["touristVisits"] else 0
-                    ),
-                    "touristUniqueVisitors": (
-                        flow["touristUniqueVisitors"]
-                        if flow["touristUniqueVisitors"]
-                        else 0
-                    ),
-                    "residentAverageVisitDuration": (
-                        flow["residentAverageVisitDuration"].total_seconds()
-                        if isinstance(flow["residentAverageVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "residentMinimumVisitDuration": (
-                        flow["residentMinimumVisitDuration"].total_seconds()
-                        if isinstance(flow["residentMinimumVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "residentMaximumVisitDuration": (
-                        flow["residentMaximumVisitDuration"].total_seconds()
-                        if isinstance(flow["residentMaximumVisitDuration"], timedelta)
-                        else None
-                    ),
-                    "residentVisits": (
-                        flow["residentVisits"] if flow["residentVisits"] else 0
-                    ),
-                    "residentUniqueVisitors": (
-                        flow["residentUniqueVisitors"]
-                        if flow["residentUniqueVisitors"]
-                        else 0
-                    ),
-                    "shortTermVisitorAverageVisitDuration": (
-                        flow["shortTermVisitorAverageVisitDuration"].total_seconds()
-                        if isinstance(
-                            flow["shortTermVisitorAverageVisitDuration"], timedelta
-                        )
-                        else None
-                    ),
-                    "shortTermVisitorMinimumVisitDuration": (
-                        flow["shortTermVisitorMinimumVisitDuration"].total_seconds()
-                        if isinstance(
-                            flow["shortTermVisitorMinimumVisitDuration"], timedelta
-                        )
-                        else None
-                    ),
-                    "shortTermVisitorMaximumVisitDuration": (
-                        flow["shortTermVisitorMaximumVisitDuration"].total_seconds()
-                        if isinstance(
-                            flow["shortTermVisitorMaximumVisitDuration"], timedelta
-                        )
-                        else None
-                    ),
-                    "shortTermVisitorVisits": (
-                        flow["shortTermVisitorVisits"]
-                        if flow["shortTermVisitorVisits"]
-                        else 0
-                    ),
-                    "shortTermVisitorUniqueVisitors": (
-                        flow["shortTermVisitorUniqueVisitors"]
-                        if flow["shortTermVisitorUniqueVisitors"]
-                        else 0
-                    ),
-                    "TimeInstant": self.start_date.isoformat(),
-                    "startDate": self.start_date.isoformat(),
-                    "endDate": self.end_date.isoformat(),
-                }
 
             payload.append(new_flow)
 
@@ -312,33 +285,23 @@ class ProcessVisitorsLoad:
             "minimumvisitduration": "minimumVisitDuration",
             "maximumvisitduration": "maximumVisitDuration",
             "visits": "visits",
+            "touristaveragevisitduration": "touristAverageVisitDuration",
+            "touristminimumvisitduration": "touristMinimumVisitDuration",
+            "touristmaximumvisitduration": "touristMaximumVisitDuration",
+            "touristvisits": "touristVisits",
+            "residentaveragevisitduration": "residentAverageVisitDuration",
+            "residentminimumvisitduration": "residentMinimumVisitDuration",
+            "residentmaximumvisitduration": "residentMaximumVisitDuration",
+            "residentvisits": "residentVisits",
+            "shorttermvisitoraveragevisitduration": "shortTermVisitorAverageVisitDuration",
+            "shorttermvisitorminimumvisitduration": "shortTermVisitorMinimumVisitDuration",
+            "shorttermvisitormaximumvisitduration": "shortTermVisitorMaximumVisitDuration",
+            "shorttermvisitorvisits": "shortTermVisitorVisits",
             "unique_visitors": "uniqueVisitors",
+            "tourist_unique_visitors": "touristUniqueVisitors",
+            "resident_unique_visitors": "residentUniqueVisitors",
+            "shorttermvisitor_unique_visitors": "shortTermVisitorUniqueVisitors",
         }
-
-        if self.use_classification:
-            mapping = {
-                "entityid": "entity",
-                "averagevisitduration": "averageVisitDuration",
-                "minimumvisitduration": "minimumVisitDuration",
-                "maximumvisitduration": "maximumVisitDuration",
-                "visits": "visits",
-                "touristaveragevisitduration": "touristAverageVisitDuration",
-                "touristminimumvisitduration": "touristMinimumVisitDuration",
-                "touristmaximumvisitduration": "touristMaximumVisitDuration",
-                "touristvisits": "touristVisits",
-                "residentaveragevisitduration": "residentAverageVisitDuration",
-                "residentminimumvisitduration": "residentMinimumVisitDuration",
-                "residentmaximumvisitduration": "residentMaximumVisitDuration",
-                "residentvisits": "residentVisits",
-                "shorttermvisitoraveragevisitduration": "shortTermVisitorAverageVisitDuration",
-                "shorttermvisitorminimumvisitduration": "shortTermVisitorMinimumVisitDuration",
-                "shorttermvisitormaximumvisitduration": "shortTermVisitorMaximumVisitDuration",
-                "shorttermvisitorvisits": "shortTermVisitorVisits",
-                "unique_visitors": "uniqueVisitors",
-                "tourist_unique_visitors": "touristUniqueVisitors",
-                "resident_unique_visitors": "residentUniqueVisitors",
-                "shorttermvisitor_unique_visitors": "shortTermVisitorUniqueVisitors",
-            }
 
         # Rename the columns in the dataframe
         df = df.rename(columns=mapping)

@@ -141,7 +141,6 @@ const snack = reactive({
   color: 'success',
   title: '',
   lines: [] as string[],
-  timeout: 4000,
 })
 
 function resolveTheme(mode: string): ThemeName {
@@ -224,8 +223,6 @@ function report(total: number, failures: string[]) {
     snack.color = 'warning'
     snack.title = t('preferences.partialSaved', { ok, total })
   }
-  // Un fallo no debe desaparecer solo: el usuario tiene que poder leer cual ha sido.
-  snack.timeout = failures.length ? -1 : 4000
   snack.open = true
 }
 </script>
@@ -451,14 +448,21 @@ function report(total: number, failures: string[]) {
       </div>
     </StateBlock>
 
+    <!-- Sin cierre automatico (WCAG 2.2.1). Este aviso llega a listar un motivo de fallo por
+         cada preferencia que no se ha podido guardar: cuatro segundos no bastan para leerlo, y
+         Vuetify no detiene la cuenta atras cuando el aviso recibe el foco. Se descarta con su
+         boton «Cerrar». -->
     <VSnackbar
       v-model="snack.open"
       :color="snack.color"
-      :timeout="snack.timeout"
+      :timeout="-1"
       location="bottom"
       multi-line
     >
-      <div class="d-flex flex-column ga-1">
+      <!-- Vuetify marca el contenido del aviso como `role="status"` (cortes: espera a que el
+           lector termine lo que esta diciendo). Para un fallo de guardado eso llega tarde, asi
+           que el resumen de errores se eleva a `role="alert"` (WCAG 4.1.3, ACC-009). -->
+      <div :role="snack.color === 'success' ? 'status' : 'alert'" class="d-flex flex-column ga-1">
         <span class="font-weight-medium">{{ snack.title }}</span>
         <span v-for="line in snack.lines" :key="line" class="text-body-2">{{ line }}</span>
       </div>

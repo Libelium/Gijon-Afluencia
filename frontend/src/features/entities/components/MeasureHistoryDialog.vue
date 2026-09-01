@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
 import { LineChart, type ChartPoint, type ChartSeries } from '@/features/dashboards/charts'
@@ -134,14 +134,22 @@ watch([() => props.modelValue, () => props.measure?.id, preset], ([isOpen]) => {
   queried.value = null
   error.value = null
 })
+
+/**
+ * Vuetify pone `role="dialog"` y `aria-modal` en el dialogo, pero no lo asocia con su titulo:
+ * al abrirse, un lector de pantalla anuncia «dialogo» sin decir cual (WCAG 4.1.2, hallazgo
+ * GDTIS-PT01-ACC-007). `useId` genera un identificador unico por instancia, que es lo que hace
+ * falta cuando el mismo componente se monta varias veces en una pantalla.
+ */
+const titleId = useId()
 </script>
 
 <template>
-  <VDialog v-model="open" max-width="920" scrollable>
+  <VDialog v-model="open" max-width="920" scrollable :aria-labelledby="titleId">
     <VCard v-if="measure">
       <VCardTitle class="d-flex align-center ga-3 py-4">
         <div class="min-w-0">
-          <div class="text-h6 text-truncate" :title="measure.name">{{ measure.name }}</div>
+          <div :id="titleId" class="text-h6 text-truncate" :title="measure.name">{{ measure.name }}</div>
           <div v-if="subtitle" class="text-caption text-medium-emphasis text-truncate">
             {{ subtitle }}
           </div>
@@ -194,7 +202,13 @@ watch([() => props.modelValue, () => props.measure?.id, preset], ([isOpen]) => {
             skeleton="card"
             @retry="load()"
           >
-            <LineChart :series="series" :units="measure.units" area :height="CHART_HEIGHT" />
+            <LineChart
+              :series="series"
+              :units="measure.units"
+              :title="measure.name"
+              area
+              :height="CHART_HEIGHT"
+            />
             <div class="d-flex flex-wrap ga-4 mt-2 text-caption text-medium-emphasis">
               <span v-if="countCaption">{{ countCaption }}</span>
               <span v-if="lastCaption">{{ lastCaption }}</span>

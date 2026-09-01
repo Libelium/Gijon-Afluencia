@@ -129,6 +129,17 @@ class ServiceProvisioningHelper
                 ['services' => $services],
             );
 
+            // The provisioning result must be checked here. This method is what promises the
+            // caller that the missing services now exist; returning the "to provision" lists
+            // without confirming the call succeeded would report devices as provisioned when
+            // the IoT Agent never accepted them.
+            if (!self::provisioningSucceeded($response)) {
+                throw new Exception(
+                    'Provisioning of ' . count($services) . ' service(s) failed for tenant '
+                        . $tenant->name . ' and scope ' . $scope->name
+                );
+            }
+
             $allEntityTypes = $devices->merge($probes)
                 ->pluck('entity_type')
                 ->filter()
@@ -388,6 +399,21 @@ class ServiceProvisioningHelper
     }
 
     /**
+     * Whether a provisioning call came back as a confirmed success.
+     *
+     * Only a 2xx HTTP response counts. Anything else — null, an empty array, an unexpected
+     * shape — is treated as a failure, so a change in AetherLinkHelper cannot silently turn
+     * a failed provisioning into a reported success.
+     *
+     * @param mixed $response The value returned by provisionServices().
+     * @return bool
+     */
+    private static function provisioningSucceeded($response): bool
+    {
+        return $response instanceof \Illuminate\Http\Client\Response && $response->successful();
+    }
+
+    /**
      * Extracts the shared apikey prefix of each smsp family already provisioned
      * in the IOTA. Smart Spot firmware posts with <family prefix> + 3-letter
      * datamodel suffix, so every service of a family must share one prefix:
@@ -515,7 +541,8 @@ class ServiceProvisioningHelper
             ],
         ];
 
-        $response = Http::post($queuesService, $message);
+        $response = Http::withHeaders(['X-Queues-Consumer-Token' => config('services.queues-consumer.token')])
+            ->post($queuesService, $message);
 
         if ($response->status() >= 400) {
             throw new \Exception("Error creating subscriptions for tenant "

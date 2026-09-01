@@ -1,3 +1,8 @@
+# SEC-042. Versions carrying known CVEs, replaced by floors that include the fix
+# and capped at the next major so a future breaking release cannot arrive
+# unannounced (COD-104):
+#   requests 2.31.0 -> CVE-2024-35195 (2.32.0), CVE-2024-47081 (2.32.4)
+#   python-dotenv 0.21.1 -> unmaintained line, superseded by 1.x
 [project]
 name = "fiware-manager"
 version = "0.1.17"
@@ -7,21 +12,37 @@ license = "EUPL-1.2"
 readme = "README.md"
 requires-python = ">=3.11.9"
 dependencies = [
-    "requests",
+    "requests>=2.32.4,<3",
     "fastapi==0.108.0",
     "pydantic==2.4.2",
     "pydantic-settings>=2,<3",
     "uvicorn>=0.20.0,<0.21.0",
     "gunicorn>=21,<24",
-    "python-dotenv==0.21.1",
-    "python-dateutil",
-    "pytest==7.2.1",
+    "python-dotenv>=1.0.1,<2",
+    "python-dateutil>=2.8,<3",
     "pymongo==4.4.1",
-    "setuptools",
-    "boto3",
-    "minio",
+    "setuptools>=68",
+    "boto3>=1.26,<2",
+    "minio>=7.2,<8",
 ]
+
+[dependency-groups]
+# COD-102. pytest was a runtime dependency and shipped in the production
+# image; nothing outside app/tests/ imports it.
+test = ["pytest>=7.2.1,<9"]
 
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# COD-101. Same defect as aether-link's COD-100: the importable code lives in
+# app/, but config/ (the gunicorn config file) is a second top-level directory,
+# so setuptools' flat-layout auto-discovery aborts with "Multiple top-level
+# packages discovered in a flat-layout: ['app', 'config']" and
+# `pip install -e .` fails at metadata generation.
+include = ["app*"]
+# app.core, app.core.config, app.core.parser and app.api.v1.routes have no
+# __init__.py: they are implicit namespace packages, so a plain find() would
+# silently skip them.
+namespaces = true

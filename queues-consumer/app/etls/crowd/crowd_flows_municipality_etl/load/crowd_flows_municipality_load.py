@@ -217,120 +217,94 @@ class CrowdFlowsMunicipalityLoad:
                     else None
                 ),
                 "count": flow["count"] if flow["count"] else 0,
-                "TimeInstant": self.start_date.isoformat(),
-                "startDate": self.start_date.isoformat(),
-                "endDate": self.end_date.isoformat(),
-            }
-
-            if self.use_classification:
-                new_flow = {
-                    "entityId": flow_id,
-                    "origin": flow["origin"],
-                    "destination": flow["destination"],
-                    "averageTransitDuration": (
-                        flow["averageTransitDuration"].total_seconds()
-                        if isinstance(flow["averageTransitDuration"], timedelta)
+                    "touristAverageTransitDuration": (
+                        flow["touristAverageTransitDuration"].total_seconds()
+                        if isinstance(
+                            flow["touristAverageTransitDuration"], timedelta
+                        )
                         else None
                     ),
-                    "minimumTransitDuration": (
-                        flow["minimumTransitDuration"].total_seconds()
-                        if isinstance(flow["minimumTransitDuration"], timedelta)
+                    "touristMinimumTransitDuration": (
+                        flow["touristMinimumTransitDuration"].total_seconds()
+                        if isinstance(
+                            flow["touristMinimumTransitDuration"], timedelta
+                        )
                         else None
                     ),
-                    "maximumTransitDuration": (
-                        flow["maximumTransitDuration"].total_seconds()
-                        if isinstance(flow["maximumTransitDuration"], timedelta)
+                    "touristMaximumTransitDuration": (
+                        flow["touristMaximumTransitDuration"].total_seconds()
+                        if isinstance(
+                            flow["touristMaximumTransitDuration"], timedelta
+                        )
                         else None
                     ),
-                    "count": flow["count"] if flow["count"] else 0,
-                        "touristAverageTransitDuration": (
-                            flow["touristAverageTransitDuration"].total_seconds()
-                            if isinstance(
-                                flow["touristAverageTransitDuration"], timedelta
-                            )
-                            else None
-                        ),
-                        "touristMinimumTransitDuration": (
-                            flow["touristMinimumTransitDuration"].total_seconds()
-                            if isinstance(
-                                flow["touristMinimumTransitDuration"], timedelta
-                            )
-                            else None
-                        ),
-                        "touristMaximumTransitDuration": (
-                            flow["touristMaximumTransitDuration"].total_seconds()
-                            if isinstance(
-                                flow["touristMaximumTransitDuration"], timedelta
-                            )
-                            else None
-                        ),
-                        "touristCount": (
-                            flow["touristCount"] if flow["touristCount"] else 0
-                        ),
-                        "residentAverageTransitDuration": (
-                            flow["residentAverageTransitDuration"].total_seconds()
-                            if isinstance(
-                                flow["residentAverageTransitDuration"], timedelta
-                            )
-                            else None
-                        ),
-                        "residentMinimumTransitDuration": (
-                            flow["residentMinimumTransitDuration"].total_seconds()
-                            if isinstance(
-                                flow["residentMinimumTransitDuration"], timedelta
-                            )
-                            else None
-                        ),
-                        "residentMaximumTransitDuration": (
-                            flow["residentMaximumTransitDuration"].total_seconds()
-                            if isinstance(
-                                flow["residentMaximumTransitDuration"], timedelta
-                            )
-                            else None
-                        ),
-                        "residentCount": (
-                            flow["residentCount"] if flow["residentCount"] else 0
-                        ),
-                        "shortTermVisitorAverageTransitDuration": (
-                            flow[
-                                "shortTermVisitorAverageTransitDuration"
-                            ].total_seconds()
-                            if isinstance(
-                                flow["shortTermVisitorAverageTransitDuration"],
-                                timedelta,
-                            )
-                            else None
-                        ),
-                        "shortTermVisitorMinimumTransitDuration": (
-                            flow[
-                                "shortTermVisitorMinimumTransitDuration"
-                            ].total_seconds()
-                            if isinstance(
-                                flow["shortTermVisitorMinimumTransitDuration"],
-                                timedelta,
-                            )
-                            else None
-                        ),
-                        "shortTermVisitorMaximumTransitDuration": (
-                            flow[
-                                "shortTermVisitorMaximumTransitDuration"
-                            ].total_seconds()
-                            if isinstance(
-                                flow["shortTermVisitorMaximumTransitDuration"],
-                                timedelta,
-                            )
-                            else None
-                        ),
-                        "shortTermVisitorCount": (
-                            flow["shortTermVisitorCount"]
-                            if flow["shortTermVisitorCount"]
-                            else 0
-                        ),
-                        "TimeInstant": self.start_date.isoformat(),
-                        "startDate": self.start_date.isoformat(),
-                        "endDate": self.end_date.isoformat(),
-                        
-                    }
+                    "touristCount": (
+                        flow["touristCount"] if flow["touristCount"] else 0
+                    ),
+                    "residentAverageTransitDuration": (
+                        flow["residentAverageTransitDuration"].total_seconds()
+                        if isinstance(
+                            flow["residentAverageTransitDuration"], timedelta
+                        )
+                        else None
+                    ),
+                    "residentMinimumTransitDuration": (
+                        flow["residentMinimumTransitDuration"].total_seconds()
+                        if isinstance(
+                            flow["residentMinimumTransitDuration"], timedelta
+                        )
+                        else None
+                    ),
+                    "residentMaximumTransitDuration": (
+                        flow["residentMaximumTransitDuration"].total_seconds()
+                        if isinstance(
+                            flow["residentMaximumTransitDuration"], timedelta
+                        )
+                        else None
+                    ),
+                    "residentCount": (
+                        flow["residentCount"] if flow["residentCount"] else 0
+                    ),
+                    "shortTermVisitorAverageTransitDuration": (
+                        flow[
+                            "shortTermVisitorAverageTransitDuration"
+                        ].total_seconds()
+                        if isinstance(
+                            flow["shortTermVisitorAverageTransitDuration"],
+                            timedelta,
+                        )
+                        else None
+                    ),
+                    "shortTermVisitorMinimumTransitDuration": (
+                        flow[
+                            "shortTermVisitorMinimumTransitDuration"
+                        ].total_seconds()
+                        if isinstance(
+                            flow["shortTermVisitorMinimumTransitDuration"],
+                            timedelta,
+                        )
+                        else None
+                    ),
+                    "shortTermVisitorMaximumTransitDuration": (
+                        flow[
+                            "shortTermVisitorMaximumTransitDuration"
+                        ].total_seconds()
+                        if isinstance(
+                            flow["shortTermVisitorMaximumTransitDuration"],
+                            timedelta,
+                        )
+                        else None
+                    ),
+                    "shortTermVisitorCount": (
+                        flow["shortTermVisitorCount"]
+                        if flow["shortTermVisitorCount"]
+                        else 0
+                    ),
+                    "TimeInstant": self.start_date.isoformat(),
+                    "startDate": self.start_date.isoformat(),
+                    "endDate": self.end_date.isoformat(),
+                    
+                }
                 
 
             if flow_entity_urn not in existing_flow_urns:
@@ -370,29 +344,19 @@ class CrowdFlowsMunicipalityLoad:
             "minimumtransitduration": "minimumTransitDuration",
             "maximumtransitduration": "maximumTransitDuration",
             "count": "count",
+            "touristaveragetransitduration": "touristAverageTransitDuration",
+            "touristminimumtransitduration": "touristMinimumTransitDuration",
+            "touristmaximumtransitduration": "touristMaximumTransitDuration",
+            "touristcount": "touristCount",
+            "residentaveragetransitduration": "residentAverageTransitDuration",
+            "residentminimumtransitduration": "residentMinimumTransitDuration",
+            "residentmaximumtransitduration": "residentMaximumTransitDuration",
+            "residentcount": "residentCount",
+            "shorttermvisitoraveragetransitduration": "shortTermVisitorAverageTransitDuration",
+            "shorttermvisitorminimumtransitduration": "shortTermVisitorMinimumTransitDuration",
+            "shorttermvisitormaximumtransitduration": "shortTermVisitorMaximumTransitDuration",
+            "shorttermvisitorcount": "shortTermVisitorCount",
         }
-
-        if self.use_classification:
-            mapping = {
-                "origin_entityid": "origin",
-                "entityid": "destination",
-                "averagetransitduration": "averageTransitDuration",
-                "minimumtransitduration": "minimumTransitDuration",
-                "maximumtransitduration": "maximumTransitDuration",
-                "count": "count",
-                "touristaveragetransitduration": "touristAverageTransitDuration",
-                "touristminimumtransitduration": "touristMinimumTransitDuration",
-                "touristmaximumtransitduration": "touristMaximumTransitDuration",
-                "touristcount": "touristCount",
-                "residentaveragetransitduration": "residentAverageTransitDuration",
-                "residentminimumtransitduration": "residentMinimumTransitDuration",
-                "residentmaximumtransitduration": "residentMaximumTransitDuration",
-                "residentcount": "residentCount",
-                "shorttermvisitoraveragetransitduration": "shortTermVisitorAverageTransitDuration",
-                "shorttermvisitorminimumtransitduration": "shortTermVisitorMinimumTransitDuration",
-                "shorttermvisitormaximumtransitduration": "shortTermVisitorMaximumTransitDuration",
-                "shorttermvisitorcount": "shortTermVisitorCount",
-            }
 
         # Rename the columns in the dataframe
         df = df.rename(columns=mapping)

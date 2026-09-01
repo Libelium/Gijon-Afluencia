@@ -2,13 +2,18 @@
 import { computed, ref, watch } from 'vue'
 import { DateTime } from 'luxon'
 import { LineChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
+// Ver `charts/echartsTheme.ts`: sin esta pieza ECharts 6 ignora `grid.containLabel` y recorta
+// las etiquetas de los ejes. Esta tarjeta no pasa por `useChartTheme`, asi que la instala ella.
+import { LegacyGridContainLabel } from 'echarts/features'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
 import { useDisplay, useTheme } from 'vuetify'
 import { ApiError, errorMessage } from '@/api/http'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { ariaOption, rowsTable } from '@/features/dashboards/charts/a11y'
 import { locale, t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import { useSessionStore } from '@/stores/session'
@@ -17,7 +22,17 @@ import { dataScopeId, getAlarmStatusSeries } from '../api/alarms'
 import { rangeFromPreset } from '../lib/display'
 import type { DateRange } from '../types'
 
-use([LineChart, GridComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
+// `AriaComponent` es lo que hace que ECharts ponga `role="img"` y un nombre accesible en el
+// contenedor del lienzo. Sin el, el `<canvas>` no tiene nombre (WCAG 1.1.1, ACC-002).
+use([
+  LineChart,
+  GridComponent,
+  TooltipComponent,
+  VisualMapComponent,
+  CanvasRenderer,
+  AriaComponent,
+  LegacyGridContainLabel,
+])
 
 const props = defineProps<{ alarmId: number }>()
 
@@ -75,6 +90,7 @@ const option = computed(() => {
 
   return {
     animationDuration: 300,
+    aria: ariaOption(t('alarms.status.title')),
     backgroundColor: 'transparent',
     grid: { left: 4, right: 12, top: 16, bottom: 4, containLabel: true },
     // Dos tramos de color: en reposo la linea es un acento tranquilo y al dispararse pasa a
@@ -153,6 +169,23 @@ const chartStyle = computed(() => ({
   width: '100%',
 }))
 
+/**
+ * Tabla equivalente del cronograma de estado (WCAG 1.1.1). Se listan los CAMBIOS de estado, no
+ * los cientos de lecturas identicas: es la misma informacion que se lee en el escalon del
+ * grafico, y una tabla con una fila por lectura seria ilegible.
+ */
+const table = computed(() =>
+  rowsTable(
+    [t('dashboards.chart.datetime'), t('alarms.status.stateColumn')],
+    rows.value
+      .filter((row, index) => index === 0 || row[1] !== rows.value[index - 1][1])
+      .map(([ms, value]) => [
+        DateTime.fromMillis(ms, { zone: session.timeZone }).setLocale(locale).toFormat('dd/MM/yyyy HH:mm'),
+        stateLabel(value),
+      ]),
+  ),
+)
+
 async function load() {
   loading.value = true
   error.value = null
@@ -218,6 +251,7 @@ watch(() => props.alarmId, load, { immediate: true })
       <div class="pa-4">
         <VChart :option="option" :style="chartStyle" autoresize />
         <div class="text-caption text-medium-emphasis mt-3">{{ changesLabel }}</div>
+        <DataTableAlternative :title="t('alarms.status.title')" :table="table" />
       </div>
     </StateBlock>
   </VCard>

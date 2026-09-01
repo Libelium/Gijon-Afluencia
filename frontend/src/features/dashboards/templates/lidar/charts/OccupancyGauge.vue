@@ -4,15 +4,20 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GaugeChart as GaugeSeries } from 'echarts/charts'
+import { AriaComponent } from 'echarts/components'
 import type { EChartsOption } from 'echarts'
 import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from '../../../charts'
-import { axisValue } from '../../../charts/chartOptions'
+import { axisValue, chartStyle } from '../../../charts/chartOptions'
+import { ariaOption, pairsTable } from '../../../charts/a11y'
+import { useChartLabel } from '../../../charts/chartLabel'
 import { INK, MUTED, occupancyColors } from '../../../palette'
 import { occupancyRatio } from '../data'
 
-use([CanvasRenderer, GaugeSeries])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([CanvasRenderer, GaugeSeries, AriaComponent])
 
 const props = withDefaults(
   defineProps<{
@@ -20,11 +25,15 @@ const props = withDefaults(
     /** Aforo maximo. Este componente NO se monta si no hay aforo. */
     capacity: number
     height?: number | string
+    /** Rotulo del indicador. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { height: 260 },
 )
 
 const { themeName, isDark } = useChartTheme()
+
+const label = useChartLabel(() => props.title, () => t('dashboards.lidar.analytics.gaugeLabel'))
 
 const ratio = computed(() => occupancyRatio(props.value, props.capacity))
 const clamped = computed(() => Math.min(Math.max(props.value ?? 0, 0), props.capacity))
@@ -45,6 +54,7 @@ const option = computed<EChartsOption>(() => {
 
   return {
     animationDuration: 400,
+    aria: ariaOption(label.value),
     series: [
       {
         type: 'gauge',
@@ -84,12 +94,27 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => ({
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-  width: '100%',
-}))
+const style = computed(() => chartStyle(props.height))
+
+// La aguja y el porcentaje solo existen dibujados: la tabla da las tres cifras en texto.
+const table = computed(() =>
+  pairsTable(
+    [
+      {
+        label: t('dashboards.lidar.occupancyColumn'),
+        value: props.value === null ? t('common.noValue') : formatNumber(props.value, 0),
+      },
+      { label: t('dashboards.lidar.analytics.capacity'), value: formatNumber(props.capacity, 0) },
+      { label: t('dashboards.lidar.analytics.ratio'), value: percentText.value },
+    ],
+    [t('dashboards.lidar.analytics.magnitude'), t('dashboards.chart.value')],
+  ),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

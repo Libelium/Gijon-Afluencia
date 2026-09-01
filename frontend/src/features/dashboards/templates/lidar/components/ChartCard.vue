@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
+import { provideChartLabel } from '../../../charts/chartLabel'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title: string
     subtitle?: string
@@ -18,6 +19,10 @@ withDefaults(
 )
 
 defineEmits<{ retry: [] }>()
+
+// El titulo visible de la tarjeta es tambien el nombre accesible de la grafica que contiene y
+// el encabezado de su tabla equivalente. Ver `chartLabel.ts`.
+provideChartLabel(() => props.title)
 </script>
 
 <template>

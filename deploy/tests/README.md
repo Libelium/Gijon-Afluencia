@@ -160,11 +160,43 @@ Para listar en su lugar todos los grupos de servicio (útil al elegir por tipo d
 - `kubectl` con acceso al clúster — solo para las comprobaciones a nivel de clúster; las de API se
   ejecutan desde cualquier sitio con acceso de red a los nombres de host públicos.
 
+## Dependencias y reproducibilidad
+
+Las dependencias se declaran **una sola vez**, en `pyproject.toml`, y se resuelven en `uv.lock`.
+Esa es la fuente de verdad. Prepara el entorno con:
+
+```bash
+cd tests
+uv sync --locked
+```
+
+`requirements.txt` **no es una segunda declaración**: es una exportación derivada del lock, con
+versiones exactas, y lleva una cabecera que lo dice. Existe solo como respaldo para máquinas sin
+`uv`, donde `run-tests.sh` cae a `pip install -r requirements.txt`. Al llevar las versiones ya
+resueltas, ese respaldo instala lo mismo que el lock en lugar de resolver rangos abiertos por su
+cuenta.
+
+Si cambias una dependencia, regenera ambos ficheros o dejarán de concordar:
+
+```bash
+cd tests
+uv lock
+uv export --frozen --no-hashes --no-emit-project -o requirements.txt
+```
+
+> **Pendiente conocido.** `run-tests.sh` sigue instalando con `pip install -r requirements.txt` en
+> lugar de `uv sync --locked`. Mientras siga así, el respaldo es el camino que se ejecuta también
+> cuando `uv` está disponible, y `requirements.txt` no puede eliminarse. Es la parte que queda
+> abierta del hallazgo de auditoría GDTIS-PT01-COD-105.
+
 ## Estructura
 
 ```
 tests/
   run-tests.sh             punto de entrada: prepara las dependencias de Python, carga tests.env y lanza pytest
+  pyproject.toml           dependencias declaradas y configuración de pytest (marcadores, testpaths)
+  uv.lock                  resolución fijada de esas dependencias — la fuente de verdad
+  requirements.txt         exportación derivada del lock; respaldo para máquinas sin uv (no editar a mano)
   conftest.py              registra el resultado de cada comprobación e imprime el informe final
   helpers/
     report.py              CheckFailure con consejo + renderizado del informe + dependencias

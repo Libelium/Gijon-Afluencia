@@ -1,2 +1,37 @@
-pytest>=7.4
-requests>=2.31
+# GENERADO — no editar a mano.
+#
+# Este fichero no declara dependencias: las EXPORTA desde `uv.lock`, que es la
+# única fuente de verdad. Las dependencias del proyecto se declaran en
+# `pyproject.toml` y se resuelven en `uv.lock`; aquí solo se vuelcan resueltas.
+#
+# Regenerar tras cualquier cambio en pyproject.toml o uv.lock:
+#
+#     cd deploy/tests
+#     uv lock
+#     uv export --frozen --no-hashes --no-emit-project -o requirements.txt
+#
+# Camino soportado para preparar el entorno:
+#
+#     uv sync --locked
+#
+# Este fichero existe solo como respaldo para máquinas sin `uv`, donde
+# `run-tests.sh` cae a `pip install -r requirements.txt`. Al llevar versiones
+# exactas, ese respaldo instala lo mismo que el lock en vez de resolver rangos
+# abiertos por su cuenta.
+#
+# Origen: deploy/tests/uv.lock (revision 3, requires-python >= 3.10)
+
+certifi==2026.7.22
+charset-normalizer==3.5.1
+colorama==0.4.6 ; sys_platform == 'win32'
+exceptiongroup==1.3.1 ; python_full_version < '3.11'
+idna==3.19
+iniconfig==2.3.0
+packaging==26.3
+pluggy==1.6.0
+pygments==2.21.0
+pytest==9.1.1
+requests==2.34.2
+tomli==2.4.1 ; python_full_version < '3.11'
+typing-extensions==4.16.0 ; python_full_version < '3.11'
+urllib3==2.7.0

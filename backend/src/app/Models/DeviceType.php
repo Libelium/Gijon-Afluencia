@@ -17,7 +17,9 @@ class DeviceType extends AuditableModel
      *
      * @var array
      */
-    protected $fillable = ['id', 'name', 'category', 'brand', 'code', 'fiware_properties'];
+    // `id` is deliberately NOT fillable: letting a request set the primary key through a
+    // mass assignment lets a caller overwrite or impersonate an existing row.
+    protected $fillable = ['name', 'category', 'brand', 'code', 'fiware_properties'];
 
     // Relations
     public function devices()

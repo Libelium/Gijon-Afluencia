@@ -30,8 +30,17 @@ cluster:
   config:
     # Consumer timeout in ms (90 minutes).
     consumerTimeout: 5400000
-    # "none" disables the localhost-only restriction for the guest user.
-    loopbackUsers: "none"
+    # Restringe el usuario integrado `guest` a conexiones por loopback, que es el
+    # comportamiento por defecto de RabbitMQ.
+    #
+    # Antes valia "none", que se traducia en `loopback_users = none` y levanta la
+    # restriccion para TODOS los usuarios: guest/guest —credencial publica y conocida—
+    # quedaba utilizable desde cualquier punto que alcance el Service. La plataforma se
+    # autentica con el usuario dedicado que crea este chart (ver `user` / `credentials`),
+    # asi que nada necesita guest.
+    #
+    # Ponlo a false solo en un cluster local desechable.
+    restrictGuestToLoopback: true
     # Celery (queues-consumer) declara sus colas internas como transitorias y no
     # exclusivas. RabbitMQ 4.x marca `transient_nonexcl_queues` como
     # denied_by_default, asi que ese Queue.declare falla con

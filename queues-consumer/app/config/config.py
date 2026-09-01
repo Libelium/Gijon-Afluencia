@@ -129,6 +129,24 @@ class Settings(BaseSettings):
         os.getenv("DLQ_RECOVERY_CHECK_INTERVAL_SECONDS", "10")
     )
     ENABLE_SWAGGER: bool = os.getenv("ENABLE_SWAGGER", "false") == "true"
+
+    # ---- HTTP API access control (SEC-016, SEC-017, SEC-018, SEC-043) -------
+    # Shared secret expected in the X-Queues-Consumer-Token header by /publish
+    # and /stream. Deliberately has NO default: an empty value makes those
+    # endpoints refuse every request (503) instead of serving them unauthenticated.
+    # See app/api.py for the rationale.
+    QUEUES_CONSUMER_API_TOKEN: str = os.getenv("QUEUES_CONSUMER_API_TOKEN", "")
+    # Comma-separated allow list of origins for CORS. Empty means "no
+    # cross-origin browser access", which is the right default for a service
+    # that is ClusterIP-only and is called server-to-server.
+    CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    # Comma-separated allow list of Celery task names that /publish may dispatch.
+    # Empty means "use PUBLISHABLE_TASKS_DEFAULT from app/api.py".
+    PUBLISHABLE_TASKS: str = os.getenv("PUBLISHABLE_TASKS", "")
+    # Root directory of the generated HLS output served by /stream. Previously
+    # referenced by app/api.py but never declared here, so the endpoint raised
+    # AttributeError on every request.
+    STREAMING_OUTPUT_DIR: str = os.getenv("STREAMING_OUTPUT_DIR", "/code/app/tmp/streaming")
     SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "aws_sns")
     SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
     SMS_API_SECRET: str = os.getenv("SMS_API_SECRET", "")

@@ -4,16 +4,20 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { HeatmapChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
+import { AriaComponent, GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
 import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import { t } from '@/i18n'
 import { formatMeasure } from '@/lib/format'
+import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { occupancyColors, INK, MUTED, SURFACE } from '../../palette'
 import { useChartTheme } from '../../charts/useChartTheme'
-import { asItems, axisValue, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
+import { asItems, axisValue, chartStyle, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
+import { useChartLabel } from '../../charts/chartLabel'
+import { ariaOption, rowsTable } from '../../charts/a11y'
 import type { MatrixCell } from './types'
 
-use([CanvasRenderer, HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent])
+// Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
+use([CanvasRenderer, HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent, AriaComponent])
 
 const props = withDefaults(
   defineProps<{
@@ -29,11 +33,15 @@ const props = withDefaults(
     height?: number
     xLabelRotate?: number
     xLabelInterval?: number | 'auto'
+    /** Rotulo de la matriz. Da nombre al lienzo y encabeza la tabla equivalente. */
+    title?: string
   }>(),
   { height: 320, xLabelRotate: 0, xLabelInterval: 'auto' },
 )
 
 const { themeName, isDark } = useChartTheme()
+
+const label = useChartLabel(() => props.title, () => t('templates.common.matrixLabel'))
 
 const option = computed<EChartsOption>(() => {
   const rows = props.yLabels.length
@@ -44,6 +52,7 @@ const option = computed<EChartsOption>(() => {
 
   return {
     animationDuration: 300,
+    aria: ariaOption(label.value),
     // El fondo reserva 56 px para la barra de intensidad horizontal.
     grid: { left: 8, right: 12, top: 8, bottom: 56, containLabel: true },
     tooltip: {
@@ -105,9 +114,35 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => ({ height: `${props.height}px`, width: '100%' }))
+const style = computed(() => chartStyle(props.height))
+
+/**
+ * Tabla equivalente de la matriz: fila, columna y valor. Igual que en el resto de mapas de
+ * calor, el color es el dato y sin tabla no hay forma de consultarlo.
+ */
+const table = computed(() =>
+  rowsTable(
+    [
+      t('templates.common.rowLabel'),
+      t('templates.common.columnLabel'),
+      props.valueLabel ?? t('templates.common.value'),
+    ],
+    props.cells
+      .filter((cell) => cell.value !== null && cell.value !== undefined)
+      .map((cell) => [
+        props.yLabels[cell.y] ?? String(cell.y),
+        props.xLabels[cell.x] ?? String(cell.x),
+        formatMeasure(cell.value, props.units),
+      ]),
+    // Una matriz completa de 24x7 son 168 celdas y todas son dato.
+    400,
+  ),
+)
 </script>
 
 <template>
-  <VChart :option="option" :theme="themeName" :style="style" autoresize />
+  <div>
+    <VChart :option="option" :theme="themeName" :style="style" autoresize />
+    <DataTableAlternative :title="label" :table="table" />
+  </div>
 </template>

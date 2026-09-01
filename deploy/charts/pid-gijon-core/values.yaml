@@ -24,6 +24,25 @@ fullnameOverride: ""
 # Global settings shared by every component.
 # -----------------------------------------------------------------------------
 global:
+  # GDTIS-PT01-SEC-026 — endurecimiento de contenedores.
+  # Vacio por defecto A PROPOSITO: este chart despliega tambien imagenes de
+  # terceros (Orion-LD, IoT Agent, Keycloak) que no corren como no-root, y un
+  # `runAsNonRoot` global las dejaria en CreateContainerConfigError.
+  # Se activa por componente con `containerSecurityContext`. Los cuatro
+  # componentes propios de Python ya declaran USER 10001 en su Dockerfile, y para
+  # ellos el valor recomendado es:
+  #   containerSecurityContext:
+  #     runAsNonRoot: true
+  #     runAsUser: 10001
+  #     runAsGroup: 10001
+  #     allowPrivilegeEscalation: false
+  #     readOnlyRootFilesystem: false   # queues-consumer escribe en app/tmp
+  #     capabilities: { drop: ["ALL"] }
+  #   podSecurityContext:
+  #     seccompProfile: { type: RuntimeDefault }
+  podSecurityContext: {}
+  containerSecurityContext: {}
+
   # Optional container registry prepended to each component's image.repository.
   # Leave empty to use the repository as-is. Public images (FIWARE)
   # pin their own registry per component (image.registry) and are unaffected.
@@ -973,6 +992,10 @@ components:
     #   KC_ADMIN_CLIENT (change-password-client) / KC_MASTER_REALM (master)
     #   KC_ADMIN_USER / KC_ADMIN_PASSWORD        # TODO: set a STRONG password
     #   KC_IMPERSONATION_CLIENT_SECRET / KC_IMPERSONATION_USERNAME / KC_IMPERSONATION_PASSWORD
+    #   API_GATEWAY_SECRET                       # TODO: set. Shared secret for /api/internal/*:
+    #     web-back checks the X-Gateway-Secret header against it and FAILS CLOSED — those
+    #     endpoints answer 503 while it is empty. If the optional APISIX chart is deployed,
+    #     give it the SAME value as fiware.backend.gatewaySecret.
     #   MAIL_USERNAME / MAIL_PASSWORD
     #   Object storage:  AWS_S3_KEY / AWS_S3_SECRET (+ *_IMAGES_*)
     #   Optional integrations: DLM_TOKEN, STATUSCAKE_API_KEY, OPENWEATHERMAP_API_KEY,
@@ -1106,6 +1129,24 @@ components:
       KC_HOSTNAME_ADMIN: <CHANGE_ME>      # public Keycloak admin URL (usually same as KC_HOSTNAME)
       KC_BOOTSTRAP_ADMIN_USERNAME: admin  # bootstrap admin username (password is a secret)
       BACKEND_URL: http://web-back        # internal backend service
+      # OAuth callback URLs of the service clients. The realm no longer ships the
+      # catch-all "/*"; the entrypoint defaults them to KC_HOSTNAME, which is the same
+      # value web-back sends as KEYCLOAK_REDIRECT_URI when it exchanges the code.
+      # Uncomment only if a deployment needs more than that (comma-separated).
+      # KC_APP_REDIRECT_URIS: "https://kc.example.com,https://app.example.com/login"
+      # KC_APP_WEB_ORIGINS: "https://app.example.com"
+      #
+      # Realm mail server. It carries the second-factor code and the password-reset
+      # links, so the entrypoint requires it to be authenticated and encrypted: set
+      # KC_SMTP_HOST here and KC_SMTP_USER / KC_SMTP_PASSWORD as secrets, and leave
+      # STARTTLS (587) or SSL (465) on — with both off the pod refuses to start.
+      # Leave KC_SMTP_HOST unset and there is NO mail: no password reset, no e-mail MFA.
+      # KC_SMTP_HOST: <CHANGE_ME>
+      # KC_SMTP_PORT: "587"
+      # KC_SMTP_STARTTLS: "true"
+      # KC_SMTP_SSL: "false"
+      # KC_SMTP_FROM: no-reply@example.com
+      # KC_SMTP_FROM_DISPLAY_NAME: PID Gijon
       # JGroups discovery + heap. Keeps the headless service name in sync.
       JAVA_OPTS_APPEND: "-Djava.net.preferIPv4Stack=true -Djgroups.dns.query=keycloak-headless -Xmx1g"
     secrets: {}
@@ -1115,9 +1156,10 @@ components:
     #   KEYCLOAK_ADMIN_PASSWORD: ""    # TODO: set a STRONG password (never reuse defaults)
     #   KC_LARAVEL_BACKEND_SECRET: ""  # TODO: set (openssl rand -base64 24)
     #   KC_REALM_MANAGEMENT_SECRET: "" # TODO: set (openssl rand -base64 24)
-    # The last two are REQUIRED: the realm export ships placeholders for the
-    # laravel-backend and realm-management client secrets, and the image's
-    # entrypoint refuses to start unless both variables are present.
+    #   KC_SMTP_USER / KC_SMTP_PASSWORD  # REQUIRED when KC_SMTP_HOST is set above
+    # KC_LARAVEL_BACKEND_SECRET and KC_REALM_MANAGEMENT_SECRET are REQUIRED: the realm
+    # export ships placeholders for the laravel-backend and realm-management client
+    # secrets, and the image's entrypoint refuses to start unless both are present.
 
 # =============================================================================
 # KEDA autoscaling (optional). Requires the KEDA operator in the cluster.

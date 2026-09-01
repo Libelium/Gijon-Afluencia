@@ -1,3 +1,8 @@
+# SEC-042. Versions carrying known CVEs, replaced by floors that include the fix
+# and capped at the next major so a future breaking release cannot arrive
+# unannounced (COD-104):
+#   requests 2.31.0 -> CVE-2024-35195 (2.32.0), CVE-2024-47081 (2.32.4)
+#   python-dotenv 0.21.1 -> unmaintained line, superseded by 1.x
 [project]
 name = "aether-link"
 version = "0.7.1"
@@ -13,19 +18,40 @@ dependencies = [
     "uvicorn>=0.20.0,<0.21.0",
     "gunicorn>=21,<24",
     "sqlalchemy>=2.0.2,<3",
-    "python-dotenv>=0.21.1,<0.22.0",
-    "pytest>=8.0.0,<9",
+    "python-dotenv>=1.0.1,<2",
     "psycopg2-binary>=2.9.9,<3",
     "pandas>=2.0.0,<3",
-    "requests",
-    "isodate",
-    "freezegun",
+    "requests>=2.32.4,<3",
+    "isodate>=0.6.1,<1",
     "aether-pylib>=0.7.0,<0.8.0",
+]
+
+[dependency-groups]
+# COD-102 / COD-103. pytest and freezegun were declared as runtime
+# dependencies, so they were installed into the production image and became
+# part of its attack surface for no reason. Nothing outside app/tests/
+# imports either of them.
+test = [
+    "pytest>=8.0.0,<9",
+    "freezegun>=1.5.1,<2",
 ]
 
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# COD-100. The importable code lives in app/. Without an explicit `find`
+# directive, setuptools' flat-layout auto-discovery aborts with "Multiple
+# top-level packages discovered in a flat-layout: ['app', 'gunicorn']" -
+# gunicorn/ holds the gunicorn *config file*, it is not a package - and
+# `pip install -e .` fails at metadata generation. That is why the Dockerfile
+# had to resort to `uv sync --no-install-project`.
+include = ["app*"]
+# app.core, app.core.config, app.api.v1.routes and several data_sources
+# sub-packages have no __init__.py: they are implicit namespace packages, so a
+# plain find() would silently skip them and the wheel would be incomplete.
+namespaces = true
 
 [tool.uv.sources]
 aether-pylib = { path = "../pylibs/aether-pylib", editable = true }
