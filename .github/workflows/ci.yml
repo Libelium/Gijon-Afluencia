@@ -1,0 +1,118 @@
+name: CI
+
+# Ejecuta las tres suites de la plataforma (frontend, Python y backend) mas el
+# tipado y el linter en cada push a main y en cada pull request. Da a la red de
+# pruebas del repositorio un lugar donde correr de forma automatica.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancela ejecuciones en curso de la misma rama/PR cuando llega un push nuevo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Frontend (Vue 3 + Vite + TypeScript): tipado estricto, ESLint y Vitest.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (typecheck · lint · vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+
+  # ---------------------------------------------------------------------------
+  # Python: un job por paquete, cada uno con su version de interprete. uv resuelve
+  # tambien la dependencia local aether-pylib (path editable) desde el checkout.
+  # ---------------------------------------------------------------------------
+  python:
+    name: Python · ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { package: pylibs/aether-pylib, python: '3.12', sync: '--all-groups' }
+          - { package: aether-link,         python: '3.12', sync: '--all-groups' }
+          - { package: fiware-manager,      python: '3.11', sync: '--all-groups' }
+          - { package: queues-consumer,     python: '3.10', sync: '--all-groups' }
+          - { package: predictions,         python: '3.10', sync: '--extra test' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install ${{ matrix.python }}
+      - name: Instalar y ejecutar pytest
+        working-directory: ${{ matrix.package }}
+        run: |
+          uv sync ${{ matrix.sync }}
+          uv run pytest -q
+
+  # ---------------------------------------------------------------------------
+  # Backend (PHP/Laravel): PostgreSQL con PostGIS y las tres conexiones que la
+  # aplicacion declara (pgsql, pgsql_realtime, device_manager). El esquema se
+  # construye igual que en produccion; los pasos vienen de src/.env.testing.
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend (PHPUnit sobre PostgreSQL/PostGIS)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_USER: pid
+          POSTGRES_PASSWORD: pidtest
+          POSTGRES_DB: pid_gijon_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pid"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend/src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, xml, bcmath, ctype, gd, intl, zip, pcntl, sodium, pdo_pgsql, pgsql
+          coverage: none
+          tools: composer:v2
+      - name: Crear las bases de datos auxiliares
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+          PGPASSWORD=pidtest psql -h 127.0.0.1 -U pid -d pid_gijon_test \
+            -c 'CREATE DATABASE device_manager;' \
+            -c 'CREATE DATABASE realtime;'
+      - name: composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ github.token }}"}}'
+      - name: Migrar y sembrar (las tres conexiones, en orden)
+        run: |
+          php artisan migrate --database=device_manager --path=database/migrations/device_manager --force
+          php artisan migrate --database=pgsql_realtime  --path=database/migrations/realtime      --force
+          php artisan migrate --database=pgsql           --path=database/migrations               --force
+          php artisan db:seed --class=DeviceTypesSeeder --force
+          php artisan db:seed --class=SyncSeeder --force
+      - name: php artisan test
+        run: php artisan test
