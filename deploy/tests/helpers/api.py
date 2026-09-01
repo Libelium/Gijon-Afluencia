@@ -176,7 +176,13 @@ def get_device_by_serial(token: str, serial: str) -> Device:
     a un dispositivo real en producción.
     """
     url = f"{config.api_url}/api/V1/devices/paginate"
-    payload = {"filters": {"serial": serial}, "page": 1, "per_page": 1}
+    payload = {
+        "filters": {"serial": serial},
+        "page": 1,
+        "paginationSize": 1,
+        "orderBy": "serial",
+        "orderDirection": False,
+    }
 
     response = http_request("POST", url, json=payload, headers=_auth_headers(token))
     if not _is_success(response.status_code):
