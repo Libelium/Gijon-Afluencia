@@ -109,6 +109,10 @@ jobs:
           COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ github.token }}"}}'
       - name: Migrar y sembrar (las tres conexiones, en orden)
         run: |
+          # artisan migrate/seed no cargan .env.testing por si solos (ese fichero solo
+          # lo toma Laravel cuando APP_ENV=testing, que fija phpunit.xml para el test).
+          # Se copia a .env para que las tres conexiones tomen su configuracion.
+          cp .env.testing .env
           php artisan migrate --database=device_manager --path=database/migrations/device_manager --force
           php artisan migrate --database=pgsql_realtime  --path=database/migrations/realtime      --force
           php artisan migrate --database=pgsql           --path=database/migrations               --force
