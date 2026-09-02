@@ -1,13 +1,19 @@
-from datetime import datetime, time, timedelta
-from typing import List, Tuple, Union
+from datetime import datetime, timedelta
+from typing import List, Union
 import requests
 from app.core.configurable_service.configurable_service import ServiceParamDescription
 from app.core.time_series.data_sources.data_source import DataSource
 from app.core.time_series.data_sources.mintaka.mintaka_query_builder import (
     MintakaQueryBuilder,
 )
+from app.core.time_series.data_sources.mintaka.mintaka_http_client import (
+    MintakaHttpClient,
+)
+from app.core.time_series.data_sources.mintaka.mintaka_period_filter import (
+    MintakaPeriodFilter,
+)
 from aether_pylib.time_series.time_series import TimeSeries, TimeSeriesValue
-from aether_pylib.time_series.time_scope import TimeScope, TimeScopeAdjustment
+from aether_pylib.time_series.time_scope import TimeScope
 from aether_pylib.time_series.time_series_options import (
     TimeSeriesOptions,
     TimeSeriesOrdering,
@@ -41,6 +47,11 @@ class MintakaDataSource(DataSource):
             raise Exception(
                 "Missing required parameters.\n" + str(self.params_description())
             )
+
+        # Collaborators: the HTTP transport and the period/calendar filtering, split out
+        # of this class so it keeps the query orchestration/pagination/merge logic only.
+        self._http = MintakaHttpClient(self.service_url)
+        self._period_filter = MintakaPeriodFilter()
 
     def params_description() -> ServiceParamDescription:
         """
@@ -77,15 +88,7 @@ class MintakaDataSource(DataSource):
         """
         Check if the data source is reachable (mintaka info endpoint)
         """
-        response = requests.get(self.service_url + "/info")
-        logging.info(
-            "Mintaka health check: " + str(response.status_code) + " " + response.text
-        )
-        if response.status_code == 200:
-            return True
-        raise Exception(
-            f"Mintaka health check failed: {response.status_code}\n" + response.text
-        )
+        return self._http.health_check()
 
     def get_time_series(
         self,
@@ -172,21 +175,9 @@ class MintakaDataSource(DataSource):
         """
         query = self.__get_query_from_options(entity_id, attrs, options, session)
 
-        response = session.send(query)
-
-        if response.status_code not in [200, 206]:
-            logging.error(
-                "Error retrieving data from mintaka: "
-                + str(response.status_code)
-                + " "
-                + response.text
-            )
-            return []
-
-        response_json = response.json()
+        response_json, _ = self._http.send(session, query)
 
         if response_json is None:
-            logging.error("None response received from Mintaka")
             return []
 
         time_series = self.__transform_ngsi_ld_response(response_json, attrs)
@@ -251,21 +242,9 @@ class MintakaDataSource(DataSource):
         """
         query = self.__get_query_from_options(page_anchor, attrs, options, session)
 
-        response = session.send(query)
-
-        if response.status_code not in [200, 206]:
-            logging.error(
-                "Error retrieving data from mintaka: "
-                + str(response.status_code)
-                + " "
-                + response.text
-            )
-            return []
-
-        response_json = response.json()
+        response_json, next_page = self._http.send(session, query)
 
         if response_json is None:
-            logging.error("None response received from Mintaka")
             return []
 
         # this returns multiple entities, so we need to process each one
@@ -279,8 +258,6 @@ class MintakaDataSource(DataSource):
             time_series = [
                 serie for serie in time_series if serie.device_id in entity_ids
             ]
-
-        next_page = response.headers.get("Next-Page")
 
         return time_series, next_page
 
@@ -423,162 +400,18 @@ class MintakaDataSource(DataSource):
 
         return new_options
 
-    def __month_series_filtering(
-        self, series_values: List[TimeSeriesValue], months: List[int]
-    ):
-        """
-        Filter a list of time series values by the given months
-        """
-        if months is None or len(months) == 0:
-            return series_values
-
-        return [
-            value for value in series_values if (value.timestamp.month - 1) in months
-        ]
-
-    def __month_day_series_filtering(
-        self, series_values: List[TimeSeriesValue], month_days: List[int]
-    ):
-        """
-        Filter a list of time series values by the given month days
-        """
-        if month_days is None or len(month_days) == 0:
-            return series_values
-
-        return [
-            value for value in series_values if (value.timestamp.day - 1) in month_days
-        ]
-
-    def __week_day_series_filtering(
-        self, series_values: List[TimeSeriesValue], week_days: List[int]
-    ):
-        """
-        Filter a list of time series values by the given week days
-        """
-        if week_days is None or len(week_days) == 0:
-            return series_values
-
-        return [
-            value for value in series_values if value.timestamp.weekday() in week_days
-        ]
-
-    def __hour_series_filtering(
-        self, series_values: List[TimeSeriesValue], hours: List[Tuple[time, time]]
-    ):
-        """
-        Filter a list of time series values by the given hours
-        """
-        if hours is None or len(hours) == 0:
-            return series_values
-
-        filtered_values = []
-
-        for value in series_values:
-            for hour in hours:
-                value_time = value.timestamp.time()
-                if hour[0] > hour[1]:
-                    if value_time >= hour[0] or value_time <= hour[1]:
-                        filtered_values.append(value)
-                        break
-                else:
-                    if value_time >= hour[0] and value_time <= hour[1]:
-                        filtered_values.append(value)
-                        break
-
-        return filtered_values
-
-    def __date_matches_adjustment(
-        self, date: datetime, adjustment: TimeScopeAdjustment
-    ):
-        """
-        Check if a date matches the given adjustment, it gives true
-        only if the date matches the adjustment and the adjustment is not None
-        """
-
-        return (
-            adjustment is not None
-            and adjustment.month == date.month - 1
-            and adjustment.month_day == date.day - 1
-        )
-
-    def __period_adjustment_filtering(
-        self,
-        series_values: List[TimeSeriesValue],
-        adjustments: List[TimeScopeAdjustment],
-    ):
-        """
-        Filter a list of time series values by the given period adjustments,
-        it returns two values:
-        - the values that were explicitly added by the adjustments
-        - the values that were filtered by the adjustments (all values that were not either explicitly added or excluded)
-        """
-
-        if adjustments is None or len(adjustments) == 0:
-            return [], series_values
-
-        extra_added_values = []
-        filtered_values = []
-
-        for value in series_values:
-            for adjustment in adjustments:
-                if self.__date_matches_adjustment(value.timestamp, adjustment):
-                    if not adjustment.exclude:
-                        extra_added_values.append(value)
-                    break
-            else:
-                filtered_values.append(value)
-
-        return extra_added_values, filtered_values
-
-    def __period_series_filtering(
-        self, series: TimeSeries, period: TimeScope
-    ):
-        """
-        Filter a time series by the given period
-        """
-
-        if period is None:
-            return series
-
-        extra_added, filtered_values = self.__period_adjustment_filtering(
-            series.values, period.extra
-        )
-
-        filtered_values = self.__month_series_filtering(filtered_values, period.months)
-        filtered_values = self.__month_day_series_filtering(
-            filtered_values, period.month_days
-        )
-        filtered_values = self.__week_day_series_filtering(
-            filtered_values, period.week_days
-        )
-        filtered_values = self.__hour_series_filtering(filtered_values, period.hours)
-
-        # add back the values that were explicitly added
-        filtered_values.extend(extra_added)
-
-        return filtered_values
-
     def __period_list_series_filtering(
         self, series: TimeSeries, periods: List[TimeScope]
     ):
         """
         Filter a timeseries by the given periods,
-        a series passes the filter if it passes any of the periods
+        a series passes the filter if it passes any of the periods.
+
+        Delegates to the MintakaPeriodFilter collaborator; kept as a thin method so the
+        existing call site (and the tests) reach the calendar logic the same way.
         """
 
-        filtered_values = []
-
-        for period in periods:
-            filtered_values.extend(self.__period_series_filtering(series, period))
-
-        # filter unique values
-        filtered_values = self.__remove_duplicates(filtered_values)
-
-        return TimeSeries(
-            device_id=series.device_id,
-            measure_id=series.measure_id,
-            values=filtered_values,
-        )
+        return self._period_filter.filter_series_list(series, periods)
 
     def __get_query_from_options(
         self,

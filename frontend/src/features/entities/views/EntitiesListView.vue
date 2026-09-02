@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { errorMessage } from '@/api/http'
+import { useDebounceFn } from '@/composables/useDebounce'
+import { usePaginatedList } from '@/composables/usePaginatedList'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
@@ -25,14 +26,23 @@ const dataScope = ref<DataScope | null>(null)
 const page = ref(1)
 const perPage = ref(25)
 
-const rows = ref<Entity[]>([])
-const total = ref(0)
-const pending = ref(true)
-const error = ref<string | null>(null)
-
 const datamodels = ref<string[]>([])
 const dataScopes = ref<DataScope[]>([])
 const lastData = ref<Record<string, string>>({})
+
+const { rows, total, loading: pending, error, load } = usePaginatedList<Entity>(
+  () =>
+    listEntities({
+      page: page.value,
+      paginationSize: perPage.value,
+      search: searchTerm.value || undefined,
+      types: types.value.length ? types.value.join(',') : undefined,
+      // Los dos van juntos o no van: el servidor rechaza un ambito sin espacio de datos.
+      tenant: dataScope.value?.tenant,
+      scope: dataScope.value?.scope,
+    }),
+  { onLoaded: (items, isCurrent) => void loadLastData(items, isCurrent) },
+)
 
 const filtered = computed(
   () => !!searchTerm.value || types.value.length > 0 || !!dataScope.value,
@@ -64,42 +74,19 @@ const headers = [
 
 const pageText = `{0}-{1} ${t('common.of')} {2}`
 
-// Cada carga lleva su numero: una respuesta lenta de una busqueda anterior no debe pisar la actual.
-let sequence = 0
-let debounce: number | undefined
+// El campo lleva `clearable`, y al pulsar la «x» Vuetify emite null, no cadena vacia. Sin el
+// respaldo, el trim revienta dentro del temporizador, fuera de cualquier captura, y el listado
+// se queda con los resultados del texto anterior y el campo vacio.
+const applySearch = useDebounceFn((value: string | null) => {
+  searchTerm.value = (value ?? '').trim()
+}, SEARCH_DEBOUNCE)
 
-async function load() {
-  const current = ++sequence
-  pending.value = true
-  error.value = null
-  try {
-    const result = await listEntities({
-      page: page.value,
-      paginationSize: perPage.value,
-      search: searchTerm.value || undefined,
-      types: types.value.length ? types.value.join(',') : undefined,
-      // Los dos van juntos o no van: el servidor rechaza un ambito sin espacio de datos.
-      tenant: dataScope.value?.tenant,
-      scope: dataScope.value?.scope,
-    })
-    if (current !== sequence) return
-    rows.value = result.rows
-    total.value = result.count
-    void loadLastData(result.rows, current)
-  } catch (e) {
-    if (current !== sequence) return
-    rows.value = []
-    total.value = 0
-    error.value = errorMessage(e)
-  } finally {
-    if (current === sequence) pending.value = false
-  }
-}
-
-async function loadLastData(items: Entity[], current: number) {
+// La marca de ultimo dato es una peticion secundaria: se encadena a cada carga aceptada y no
+// bloquea la tabla. `isCurrent` evita escribir la respuesta de una carga que ya quedo atras.
+async function loadLastData(items: Entity[], isCurrent: () => boolean) {
   try {
     const times = await getLastDataTimes(items.map((e) => e.id))
-    if (current !== sequence) return
+    if (!isCurrent()) return
     lastData.value = { ...lastData.value, ...times }
   } catch {
     // La marca de ultimo dato es informativa: si falla, la tabla sigue siendo utilizable.
@@ -124,7 +111,7 @@ async function loadDataScopes() {
 
 function clearFilters() {
   // Un rebote en vuelo volveria a escribir searchTerm despues de haberlo limpiado.
-  window.clearTimeout(debounce)
+  applySearch.cancel()
   search.value = ''
   searchTerm.value = ''
   types.value = []
@@ -142,15 +129,7 @@ function goToEntity(entity: Entity) {
 // La fila entera es pulsable con el raton; sin esto, con teclado no habria forma de activarla.
 const rowProps = clickableRowProps<Entity>(goToEntity)
 
-// El campo lleva `clearable`, y al pulsar la «x» Vuetify emite null, no cadena vacia. Sin el
-// respaldo, el trim revienta dentro del temporizador, fuera de cualquier captura, y el listado
-// se queda con los resultados del texto anterior y el campo vacio.
-watch(search, (value) => {
-  window.clearTimeout(debounce)
-  debounce = window.setTimeout(() => {
-    searchTerm.value = (value ?? '').trim()
-  }, SEARCH_DEBOUNCE)
-})
+watch(search, (value) => applySearch(value))
 
 const scopeId = computed(() => dataScope.value?.id ?? null)
 
@@ -165,8 +144,6 @@ onMounted(() => {
   void loadDatamodels()
   void loadDataScopes()
 })
-
-onBeforeUnmount(() => window.clearTimeout(debounce))
 </script>
 
 <template>

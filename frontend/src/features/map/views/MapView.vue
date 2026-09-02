@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { LMap, LMarker, LPopup, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import { errorMessage } from '@/api/http'
+import { useDebouncedResize } from '@/composables/useDebouncedResize'
 import { t } from '@/i18n'
 import { formatNumber, urnTail } from '@/lib/format'
 import PageHeader from '@/components/PageHeader.vue'
@@ -60,10 +61,7 @@ const emptyText = computed(() => (filtered.value ? t('map.emptyFiltered') : t('m
 const stateInteractive = computed(() => Boolean(error.value) || empty.value)
 
 let moveTimer: ReturnType<typeof setTimeout> | undefined
-let resizeTimer: ReturnType<typeof setTimeout> | undefined
-let observer: ResizeObserver | undefined
 let pending: AbortController | undefined
-let lastSize = ''
 // Solo la PRIMERA carga puede recolocar la vista. Si mas adelante el usuario arrastra el mapa a
 // una zona vacia lo ha hecho a proposito, y moverle el encuadre por debajo seria peor que el vacio.
 let firstLoadDone = false
@@ -169,24 +167,10 @@ function onMapReady(instance: LeafletMap) {
   void load()
 }
 
-/**
- * Leaflet cachea el tamaño de su contenedor, asi que hay que avisarle cuando cambia: al
- * plegar el menu lateral, al girar el movil o al redimensionar la ventana. Observar el
- * contenedor cubre los tres casos sin acoplarse al estado del menu.
- */
-function sizeKey(el: HTMLElement): string {
-  return `${Math.round(el.clientWidth)}x${Math.round(el.clientHeight)}`
-}
-
-function onCanvasResize() {
-  const el = canvas.value
-  if (!el) return
-  const key = sizeKey(el)
-  if (key === lastSize) return
-  lastSize = key
-  if (resizeTimer) clearTimeout(resizeTimer)
-  resizeTimer = setTimeout(() => map.value?.invalidateSize(), RESIZE_DEBOUNCE_MS)
-}
+// Leaflet cachea el tamaño de su contenedor y hay que avisarle cuando cambia: al plegar el menu
+// lateral, al girar el movil o al redimensionar la ventana. `useDebouncedResize` observa el lienzo
+// y recalcula el tamaño (rebotado) solo cuando cambia de veras.
+useDebouncedResize(canvas, () => map.value?.invalidateSize(), RESIZE_DEBOUNCE_MS)
 
 async function loadDatamodels() {
   datamodelsLoading.value = true
@@ -241,18 +225,8 @@ const tableToggleText = computed(() => {
 
 watch([search, datamodel], () => schedule(FILTER_DEBOUNCE_MS))
 
-onMounted(() => {
-  const el = canvas.value
-  if (!el || typeof ResizeObserver === 'undefined') return
-  lastSize = sizeKey(el)
-  observer = new ResizeObserver(onCanvasResize)
-  observer.observe(el)
-})
-
 onBeforeUnmount(() => {
   if (moveTimer) clearTimeout(moveTimer)
-  if (resizeTimer) clearTimeout(resizeTimer)
-  observer?.disconnect()
   pending?.abort()
   map.value?.off('moveend', onMoveEnd)
 })

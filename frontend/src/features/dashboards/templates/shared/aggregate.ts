@@ -1,8 +1,20 @@
 import { DateTime } from 'luxon'
 import type { ChartPoint } from '../../charts'
-import type { Bucket, Kpis, MatrixCell } from './types'
+import type { Bucket, Kpis, MatrixCell, Point } from './types'
 
 export type How = 'mean' | 'sum' | 'max'
+
+/**
+ * Cuando hay mas puntos de los que un tope admite, se quedan los de dato mas reciente. Se compara
+ * por `time_last_data` en orden descendente (cadena ISO, comparable como texto). Si no hay recorte
+ * que hacer se devuelve el array original, sin copiarlo, para conservar su orden.
+ */
+export function topByRecency(points: Point[], limit: number): Point[] {
+  if (points.length <= limit) return points
+  return [...points]
+    .sort((a, b) => (b.entity.time_last_data ?? '').localeCompare(a.entity.time_last_data ?? ''))
+    .slice(0, limit)
+}
 
 function isNumeric(v: number | null | undefined): v is number {
   return v !== null && v !== undefined && Number.isFinite(v)

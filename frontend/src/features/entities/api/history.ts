@@ -1,6 +1,7 @@
 import { http } from '@/api/http'
 import type { ChartPoint } from '@/features/dashboards/charts'
 import { resolveAggregation, type AggregationOption, type DateRange } from '@/features/dashboards/lib/range'
+import { numericValue, type RawTimeSeriesResponse, type RawValue } from '@/features/dashboards/lib/timeseries'
 import { parseApiDateTime } from '@/lib/format'
 import type { EntityRef } from '@/types'
 
@@ -26,35 +27,10 @@ interface TimeSeriesRequest {
   }
 }
 
-interface RawValue {
-  timestamp?: string
-  value?: unknown
-}
-
-interface RawTimeSeries {
-  device_id?: string
-  measure_id?: string
-  values?: RawValue[]
-}
-
-interface RawTimeSeriesResponse {
-  time_series?: RawTimeSeries[]
-}
-
 export interface MeasureHistory {
   points: ChartPoint[]
   /** Agregacion aplicada, para poder advertir de que no se dibujan lecturas crudas. */
   aggregation: AggregationOption | null
-}
-
-function numeric(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'boolean') return value ? 1 : 0
-  if (typeof value === 'string' && value.trim() !== '') {
-    const parsed = Number(value)
-    if (Number.isFinite(parsed)) return parsed
-  }
-  return null
 }
 
 interface Reading {
@@ -71,7 +47,7 @@ function toReading(raw: RawValue): Reading | null {
   const at = parseApiDateTime(raw.timestamp)
   const iso = at?.toISO()
   if (!at || !iso) return null
-  return { at: at.toMillis(), point: { t: iso, v: numeric(raw.value) } }
+  return { at: at.toMillis(), point: { t: iso, v: numericValue(raw.value) } }
 }
 
 /**

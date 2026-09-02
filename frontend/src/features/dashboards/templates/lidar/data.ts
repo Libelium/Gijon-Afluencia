@@ -5,7 +5,8 @@ import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
 import type { Aggregation, Entity, EntityRef, Measure } from '@/types'
 import type { ChartPoint } from '../../charts'
-import { autoAggregation, type DateRange } from '../../lib/range'
+import { autoAggregation, RANGE_PRESETS, type DateRange, type RangePresetId } from '../../lib/range'
+import type { RawTimeSeriesResponse as RawEnvelope } from '../../lib/timeseries'
 import { HIDDEN_IDS, matchRole, normalizeId, type RoleKey } from './roles'
 
 /**
@@ -212,19 +213,6 @@ export interface FetchSeriesOptions {
   /** Fuerza el intervalo ISO en lugar del automatico (p. ej. 'PT1H'). */
   forceInterval?: string
   limit?: number
-}
-
-interface RawValue {
-  timestamp?: string
-  value?: unknown
-}
-interface RawSeries {
-  device_id?: string
-  measure_id?: string
-  values?: RawValue[]
-}
-interface RawEnvelope {
-  time_series?: RawSeries[]
 }
 
 function readPoints(envelope: RawEnvelope | undefined, measureId: string): ChartPoint[] {
@@ -486,6 +474,19 @@ const LEVEL_SUFFIXES = ['veryLow', 'low', 'medium', 'high', 'veryHigh']
 /** Clave i18n del nivel: 'dashboards.lidar.level.veryLow' … '.veryHigh'. */
 export function levelKey(ratio: number | null): string {
   return `dashboards.lidar.level.${LEVEL_SUFFIXES[levelIndex(ratio)]}`
+}
+
+const LEVEL_COLORS = ['success', 'success', 'warning', 'warning', 'error']
+
+/** Color semantico de Vuetify para el nivel de ocupacion; `secondary` cuando no hay ratio. */
+export function levelColor(ratio: number | null): string {
+  return ratio === null ? 'secondary' : LEVEL_COLORS[levelIndex(ratio)]
+}
+
+/** Rotulo traducido del preset de rango vigente, o undefined si no es uno conocido. */
+export function presetHint(preset: RangePresetId): string | undefined {
+  const found = RANGE_PRESETS.find((p) => p.id === preset)
+  return found ? t(found.labelKey) : undefined
 }
 
 /** Amplia la ventana hacia el futuro, para pedir la parte prevista. */

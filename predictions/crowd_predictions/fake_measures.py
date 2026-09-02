@@ -685,7 +685,7 @@ def build_messages(args, cfg: dict, prefix: str, base_ts_ms: int) -> list:
                                   prefix, random.Random(args.seed))
 
 
-def main():
+def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--source", required=True, choices=sorted(SOURCES),
@@ -729,8 +729,10 @@ def main():
     batch.add_argument("--csv-dir",
                        help="Where to leave the generated CSVs (default: a temporary directory)")
 
-    args = parser.parse_args()
+    return parser
 
+
+def _validate_args(parser: argparse.ArgumentParser, args) -> None:
     if args.mode == "random" and args.mean <= 0:
         parser.error("--mode random needs a --mean greater than 0")
     if args.entities < 1:
@@ -745,48 +747,43 @@ def main():
         except ValueError as exc:
             parser.error(str(exc))
 
-    # The route is chosen by the mode when it is not given: a series of thousands of
-    # measures over the IoT Agent (one POST each, and it loses data under load) is
-    # never what you want.
-    route = args.route or ("batch" if args.mode == "random" else "iota")
 
-    cfg = SOURCES[args.source]
-    apikey = os.environ.get(cfg["apikey_env"])
-    iota_url = os.environ.get("IOTA_URL")
-    prefix = os.environ.get(cfg["prefix_env"], cfg["default_prefix"])
-
+def _require_environment(args, cfg: dict, route: str, iota_url: str, apikey: str) -> None:
     # In dry-run nothing is published, so no destination is needed. Each route needs
     # ITS OWN variables: the storage ones are validated inside helpers/uploader.py.
-    if not args.dry_run:
-        required = (("IOTA_URL", iota_url), (cfg["apikey_env"], apikey)) if route == "iota" else \
-                   (("QUEUES_CONSUMER_API_URL", os.environ.get("QUEUES_CONSUMER_API_URL")),)
-        missing = [name for name, value in required if not value]
-        if missing:
-            print(f"ERROR: missing from the environment: {', '.join(missing)}.")
-            print("       Define it/them in .env (see .env.example) or export it/them:")
-            if route == "iota":
-                print('       export IOTA_URL="https://<iot-agent>/iot/json"')
-                print(f'       export {cfg["apikey_env"]}="..."')
-            else:
-                print('       export QUEUES_CONSUMER_API_URL="https://<queues-consumer>"')
-            sys.exit(1)
+    if args.dry_run:
+        return
 
-    base_ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
-    messages = build_messages(args, cfg, prefix, base_ts_ms)
+    required = (("IOTA_URL", iota_url), (cfg["apikey_env"], apikey)) if route == "iota" else \
+               (("QUEUES_CONSUMER_API_URL", os.environ.get("QUEUES_CONSUMER_API_URL")),)
+    missing = [name for name, value in required if not value]
+    if missing:
+        print(f"ERROR: missing from the environment: {', '.join(missing)}.")
+        print("       Define it/them in .env (see .env.example) or export it/them:")
+        if route == "iota":
+            print('       export IOTA_URL="https://<iot-agent>/iot/json"')
+            print(f'       export {cfg["apikey_env"]}="..."')
+        else:
+            print('       export QUEUES_CONSUMER_API_URL="https://<queues-consumer>"')
+        sys.exit(1)
 
-    if route == "batch":
-        target = "(dry-run, nothing is published)" if args.dry_run else \
-                 f"{os.environ.get('QUEUES_CONSUMER_API_URL')} (tenant " \
-                 f"{args.tenant or os.environ.get('FIWARE_TENANT')})"
-        print(f"{'[DRY-RUN] ' if args.dry_run else ''}Publishing {len(messages):,} "
-              f"{cfg['label']} from '{args.source}' (prefix '{prefix}') in batches of "
-              f"{args.batch_size} rows -> {target}...")
-        n_ok, total = post_batch(messages, args.source, batch_size=args.batch_size,
-                                 ingest_ts_ms=base_ts_ms, tenant=args.tenant, scope=args.scope,
-                                 csv_dir=args.csv_dir, dry_run=args.dry_run)
-        print(f"Summary: {n_ok}/{total} batches OK ({len(messages):,} measures)")
-        sys.exit(0 if total and n_ok == total else 1)
 
+def _publish_batch(messages: list, args, cfg: dict, prefix: str, base_ts_ms: int) -> None:
+    target = "(dry-run, nothing is published)" if args.dry_run else \
+             f"{os.environ.get('QUEUES_CONSUMER_API_URL')} (tenant " \
+             f"{args.tenant or os.environ.get('FIWARE_TENANT')})"
+    print(f"{'[DRY-RUN] ' if args.dry_run else ''}Publishing {len(messages):,} "
+          f"{cfg['label']} from '{args.source}' (prefix '{prefix}') in batches of "
+          f"{args.batch_size} rows -> {target}...")
+    n_ok, total = post_batch(messages, args.source, batch_size=args.batch_size,
+                             ingest_ts_ms=base_ts_ms, tenant=args.tenant, scope=args.scope,
+                             csv_dir=args.csv_dir, dry_run=args.dry_run)
+    print(f"Summary: {n_ok}/{total} batches OK ({len(messages):,} measures)")
+    sys.exit(0 if total and n_ok == total else 1)
+
+
+def _publish_iota(messages: list, args, cfg: dict, prefix: str, iota_url: str,
+                  apikey: str, base_ts_ms: int) -> None:
     target = "(dry-run, no destination)" if args.dry_run else iota_url
     print(f"{'[DRY-RUN] ' if args.dry_run else ''}Posting {len(messages)} test {cfg['label']} "
           f"from '{args.source}' (prefix '{prefix}') to {target}...")
@@ -803,4 +800,30 @@ def main():
 
     n_ok = sum(results)
     print(f"\nSummary: {n_ok}/{len(messages)} OK")
+
+
+def main():
+    parser = _build_arg_parser()
+    args = parser.parse_args()
+    _validate_args(parser, args)
+
+    # The route is chosen by the mode when it is not given: a series of thousands of
+    # measures over the IoT Agent (one POST each, and it loses data under load) is
+    # never what you want.
+    route = args.route or ("batch" if args.mode == "random" else "iota")
+
+    cfg = SOURCES[args.source]
+    apikey = os.environ.get(cfg["apikey_env"])
+    iota_url = os.environ.get("IOTA_URL")
+    prefix = os.environ.get(cfg["prefix_env"], cfg["default_prefix"])
+
+    _require_environment(args, cfg, route, iota_url, apikey)
+
+    base_ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    messages = build_messages(args, cfg, prefix, base_ts_ms)
+
+    if route == "batch":
+        _publish_batch(messages, args, cfg, prefix, base_ts_ms)
+    else:
+        _publish_iota(messages, args, cfg, prefix, iota_url, apikey, base_ts_ms)
 

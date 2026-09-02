@@ -10,7 +10,7 @@ import { t } from '@/i18n'
 import { formatDateTime, formatNumber, relativeFromNow } from '@/lib/format'
 import type { Dashboard } from '@/types'
 import { BarChart, type ChartPoint } from '../../charts'
-import { RANGE_PRESETS, rangeHours } from '../../lib/range'
+import { rangeHours } from '../../lib/range'
 import ChartCard from './components/ChartCard.vue'
 import LidarControlBar from './components/LidarControlBar.vue'
 import LidarNotice from './components/LidarNotice.vue'
@@ -20,10 +20,11 @@ import {
   describeZone,
   fetchZoneSeries,
   hourWeekdayMatrix,
-  levelIndex,
+  levelColor,
   levelKey,
   MATRIX_POINTS,
   meanByHour,
+  presetHint,
   refOf,
   summarise,
 } from './data'
@@ -125,15 +126,9 @@ const summary = computed(() => summarise(trend.value))
 
 const ratio = computed(() => profile.value?.ratio ?? null)
 
-const percentColor = computed(() => {
-  if (ratio.value === null) return 'secondary'
-  return ['success', 'success', 'warning', 'warning', 'error'][levelIndex(ratio.value)]
-})
+const percentColor = computed(() => levelColor(ratio.value))
 
-const rangeHint = computed(() => {
-  const found = RANGE_PRESETS.find((p) => p.id === preset.value)
-  return found ? t(found.labelKey) : undefined
-})
+const rangeHint = computed(() => presetHint(preset.value))
 
 const markers = computed<ZoneMarker[]>(() =>
   zones.value.flatMap((z) => {

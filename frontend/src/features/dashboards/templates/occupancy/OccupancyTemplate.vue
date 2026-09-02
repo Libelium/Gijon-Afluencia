@@ -6,7 +6,7 @@ import { formatDateTime, formatNumber } from '@/lib/format'
 import { BarChart, hasData, LineChart, useChartTheme, type ChartPoint, type ChartSeries } from '../../charts'
 import { autoAggregation, type AggregationOption } from '../../lib/range'
 import { occupancyColor, occupancyColors } from '../../palette'
-import { byHourOfDay, kpisOf, levelRatio, sumSeries } from '../shared/aggregate'
+import { byHourOfDay, kpisOf, levelRatio, sumSeries, topByRecency } from '../shared/aggregate'
 import { fetchSeries, REQUEST_BATCH, type SeriesRequest } from '../shared/series'
 import ChartCard from '../shared/ChartCard.vue'
 import PointMap, { type MapPoint } from '../shared/PointMap.vue'
@@ -46,14 +46,6 @@ const notice = ref<string | undefined>(undefined)
 
 const usedPoints = ref<Point[]>([])
 const seriesByPoint = ref<Map<string, ChartPoint[]>>(new Map())
-
-/** Los puntos con dato mas reciente ganan cuando hay mas de los que la peticion aguanta. */
-function topByRecency(points: Point[], limit: number): Point[] {
-  if (points.length <= limit) return points
-  return [...points]
-    .sort((a, b) => (b.entity.time_last_data ?? '').localeCompare(a.entity.time_last_data ?? ''))
-    .slice(0, limit)
-}
 
 async function load(ctx: TemplateContext | null) {
   if (!ctx) return

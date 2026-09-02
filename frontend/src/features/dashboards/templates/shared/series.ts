@@ -1,6 +1,7 @@
 import { http } from '@/api/http'
 import type { ChartPoint } from '../../charts'
 import { autoAggregation, type AggregationOption, type DateRange } from '../../lib/range'
+import { numericValue, type RawTimeSeriesResponse, type RawValue } from '../../lib/timeseries'
 import type { EntityRef } from '@/types'
 import { toIncrements } from './aggregate'
 
@@ -42,31 +43,6 @@ interface TimeSeriesRequestBody {
   }
 }
 
-interface RawValue {
-  timestamp?: string
-  value?: unknown
-}
-
-interface RawTimeSeries {
-  device_id?: string
-  measure_id?: string
-  values?: RawValue[]
-}
-
-interface RawTimeSeriesResponse {
-  time_series?: RawTimeSeries[]
-}
-
-function numeric(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'boolean') return value ? 1 : 0
-  if (typeof value === 'string' && value.trim() !== '') {
-    const parsed = Number(value)
-    if (Number.isFinite(parsed)) return parsed
-  }
-  return null
-}
-
 function requestUrn(request: SeriesRequest): string {
   return request.urn ?? request.ref.urn
 }
@@ -93,7 +69,7 @@ function readPoints(
 
   return (match?.values ?? [])
     .filter((v): v is RawValue & { timestamp: string } => typeof v.timestamp === 'string')
-    .map((v) => ({ t: v.timestamp, v: numeric(v.value) }))
+    .map((v) => ({ t: v.timestamp, v: numericValue(v.value) }))
     .sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0))
 }
 

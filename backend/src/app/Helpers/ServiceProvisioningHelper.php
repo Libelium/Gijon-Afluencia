@@ -14,44 +14,7 @@ use App\Repositories\OrganizationRepository;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Contracts\ServiceMapProviderInterface;
-
-
-enum SmspDatamodels: string
-{
-    case AirQualityObserved = "aqo";
-    case NoiseLevelObserved = "nlo";
-    case CrowdFlowEvent = "cfe";
-    case CrowdFlowObserved = "cfo";
-    case CrowdSimulationEvent = "cse";
-    case WeatherObserved = "wto";
-    case Device = "dev";
-    case DeviceHealthObserved = "dho";
-    case Irrigation = "irr";
-
-    /**
-     * Creates an enum instance from a string value.
-     *
-     * @param string $value The string value (e.g., 'aqo').
-     * @return self The corresponding enum case.
-     * @throws Exception if the value is invalid.
-     */
-    static function fromValue(string $value): SmspDatamodels
-    {
-        return match ($value) {
-            'aqo' => self::AirQualityObserved,
-            'nlo' => self::NoiseLevelObserved,
-            'cfe' => self::CrowdFlowEvent,
-            'cfo' => self::CrowdFlowObserved,
-            'cse' => self::CrowdSimulationEvent,
-            'wto' => self::WeatherObserved,
-            'dev' => self::Device,
-            'dho' => self::DeviceHealthObserved,
-            'irr' => self::Irrigation,
-            default => throw new \Exception('Invalid permission value: ' . $value),
-        };
-    }
-}
-
+use App\Enums\SmspDatamodels;
 use Exception;
 
 class ServiceProvisioningHelper
@@ -349,8 +312,11 @@ class ServiceProvisioningHelper
      */
     public static function provisionService(string $tenant, string $scope, array $datamodels, bool $provisionAttributes = false)
     {
-        $services = self::buildProvisionPayload($datamodels, $provisionAttributes);
-        return AetherLinkHelper::provisionService($tenant, $scope, $services);
+        return self::provisionServices(
+            $tenant,
+            $scope,
+            self::buildProvisionPayload($datamodels, $provisionAttributes)
+        );
     }
 
     /**
@@ -382,7 +348,7 @@ class ServiceProvisioningHelper
             }
         }
 
-        return AetherLinkHelper::provisionService($tenant, $scope, $services);
+        return self::provisionServices($tenant, $scope, $services);
     }
 
     /**

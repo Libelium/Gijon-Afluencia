@@ -297,63 +297,9 @@ class EntityRepository
         int $userId,
         AppResourcePermission $permission
     ): object {
+        $permissionId = app(ResourcePermissionCache::class)->getPermissionId($permission);
 
-        $with_scopes = $query->join(
-            'fiware_scopes',
-            'entities.fiware_scope_id',
-            '=',
-            'fiware_scopes.id'
-        );
-
-        $permission_id = app(ResourcePermissionCache::class)->getPermissionId($permission);
-
-        $models = ResourcePermissionRepository::getUserModels(User::find($userId));
-
-        $with_permission = $with_scopes->join(
-            'model_has_resource_permissions',
-            function ($join) use ($models, $permission_id) {
-                $join->where('model_has_resource_permissions.resource_permission_id', $permission_id);
-
-                $join->where(function ($query) use ($models) {
-                    foreach ($models as $model) {
-                        $query->orWhere(function ($q) use ($model) {
-                            $q->where('model_has_resource_permissions.model_id', $model['model_id'])
-                                ->where('model_has_resource_permissions.model_type', $model['model_type']);
-                        });
-                    }
-                });
-
-                $join->on(
-                    function ($join) {
-                        $join->on(
-                            function ($query) {
-                                $query
-                                    ->on('model_has_resource_permissions.resource_id', 'fiware_scopes.fiware_tenant_id')
-                                    ->where('model_has_resource_permissions.resource_type', (new FiwareTenant())->getTable());
-                            }
-                        );
-
-                        $join->orOn(
-                            function ($query) {
-                                $query
-                                    ->on('model_has_resource_permissions.resource_id', 'entities.fiware_scope_id')
-                                    ->where('model_has_resource_permissions.resource_type', (new FiwareScope())->getTable());
-                            }
-                        );
-
-                        $join->orOn(
-                            function ($query) {
-                                $query
-                                    ->on('model_has_resource_permissions.resource_id', 'entities.id')
-                                    ->where('model_has_resource_permissions.resource_type', (new Entity())->getTable());
-                            }
-                        );
-                    }
-                );
-            }
-        );
-
-        return $with_permission;
+        return self::joinResourcePermissions($query, $userId, [$permissionId]);
     }
 
     private static function updateRequestWithPermissionsCheck(
@@ -361,7 +307,30 @@ class EntityRepository
         int $userId,
         array $permissions
     ): object {
+        $permissionIds = [];
 
+        foreach ($permissions as $permission) {
+            $permissionIds[] = app(ResourcePermissionCache::class)->getPermissionId($permission);
+        }
+
+        return self::joinResourcePermissions($query, $userId, $permissionIds);
+    }
+
+    /**
+     * Restricts an entities query to the rows the user may access under any of the
+     * given resource-permission ids, by joining fiware_scopes and
+     * model_has_resource_permissions with the tenant/scope/entity resource matching.
+     *
+     * Shared by the single- and multi-permission entry points; the only thing that
+     * differs between them is the set of permission ids to match, so a single-permission
+     * check is simply a one-element set.
+     *
+     * @param object $query
+     * @param int $userId
+     * @param int[] $permissionIds
+     */
+    private static function joinResourcePermissions(object $query, int $userId, array $permissionIds): object
+    {
         $with_scopes = $query->join(
             'fiware_scopes',
             'entities.fiware_scope_id',
@@ -369,18 +338,12 @@ class EntityRepository
             'fiware_scopes.id'
         );
 
-        $permission_ids = [];
-
-        foreach ($permissions as $permission) {
-            $permission_ids[] = app(ResourcePermissionCache::class)->getPermissionId($permission);
-        }
-
         $models = ResourcePermissionRepository::getUserModels(User::find($userId));
 
-        $with_permission = $with_scopes->join(
+        return $with_scopes->join(
             'model_has_resource_permissions',
-            function ($join) use ($models, $permission_ids) {
-                $join->whereIn('model_has_resource_permissions.resource_permission_id', $permission_ids);
+            function ($join) use ($models, $permissionIds) {
+                $join->whereIn('model_has_resource_permissions.resource_permission_id', $permissionIds);
 
                 $join->where(function ($query) use ($models) {
                     foreach ($models as $model) {
@@ -420,8 +383,6 @@ class EntityRepository
                 );
             }
         );
-
-        return $with_permission;
     }
 
     private static function searchTextQuery(object $query, string $searchText): object

@@ -28,6 +28,69 @@ from sqlalchemy.orm import Session
 _interpreter_factory = CmdStatusInterpreterFactory()
 
 
+def _handle_relationship(entity_value, entity_data: EntityDataNotification, db: Session):
+    """Apply a Relationship attribute update. Relationships never carry a property
+    timestamp, so nothing is returned to fold into max_property_timestamp."""
+    update_entity_relationship(entity_value, db, commit=False)
+    return None
+
+
+def _handle_property(entity_value, entity_data: EntityDataNotification, db: Session):
+    """Apply a Property attribute update and return its timestamp candidate (or None
+    when the value is a timestamp override, which must not move the pending cutoff)."""
+    attr_name = entity_value.get("name", None)
+    urn = entity_value.get("urn", None)
+    tenant = entity_value.get("tenant", None)
+    scope = entity_value.get("scope", None)
+    if attr_name == "commands":
+        command_list = entity_value.get("value", None)
+        if isinstance(command_list, str):
+            command_list = [command_list]
+            entity_value["value"] = command_list
+        process_commands_property_update(
+            urn=urn,
+            tenant=tenant,
+            scope=scope,
+            entity_id=entity_data.db_id,
+            new_commands=command_list,
+            db=db,
+            commit=False,
+        )
+
+    update_entity_property(entity_value, db, commit=False)
+
+    if entity_value["timestamp_override"]:
+        return None
+    return entity_value.get("timestamp")
+
+
+def _handle_command(entity_value, entity_data: EntityDataNotification, db: Session):
+    """Apply a Command attribute update. Commands never contribute a property
+    timestamp, so nothing is returned to fold into max_property_timestamp."""
+    process_command_update(
+        entity_urn=entity_data.urn,
+        entity_tenant=entity_data.tenant,
+        entity_scope=entity_data.scope,
+        entity_type=entity_data.type,
+        entity_id=entity_data.db_id,
+        cmd_name=entity_value.get("name", None),
+        cmd_value=entity_value.get("value", None),
+        ts=entity_value.get("timestamp", None),
+        db=db,
+        commit=False,
+    )
+    return None
+
+
+# Dispatch by NGSI attribute type instead of an if/elif ladder: each handler applies
+# its own attribute update and returns a timestamp candidate (Property) or None.
+_ENTITY_VALUE_HANDLERS = {
+    "Relationship": _handle_relationship,
+    "Property": _handle_property,
+    "Command": _handle_command,
+}
+
+
 def update_entity(
     entity_data: EntityDataNotification, realtime_db: Session, main_db: Session
 ):
@@ -41,71 +104,28 @@ def update_entity(
 
     try:
         entity_values = _EntityNotificationData_to_EntityValues(entity_data)
-        updated_entity_values_list = {}
 
         for entity_value in entity_values:
             type = entity_value.get("type", None)
-            if type is None:
-                logging.info(
-                    f"Type is None. Value: {entity_value}. Skipping this value."
-                )
+            handler = _ENTITY_VALUE_HANDLERS.get(type)
+
+            if handler is None:
+                if type is None:
+                    logging.info(
+                        f"Type is None. Value: {entity_value}. Skipping this value."
+                    )
+                else:
+                    logging.info(
+                        f"Type is not Relationship or Property. Value: {entity_value}. Skipping this value."
+                    )
                 continue
 
-            elif type == "Relationship":
-                update_entity_relationship(entity_value, realtime_db, commit=False)
+            ts = handler(entity_value, entity_data, realtime_db)
 
-            elif type == "Property":
-                attr_name = entity_value.get("name", None)
-                urn = entity_value.get("urn", None)
-                tenant = entity_value.get("tenant", None)
-                scope = entity_value.get("scope", None)
-                if attr_name == "commands":
-                    command_list = entity_value.get("value", None)
-                    if isinstance(command_list, str):
-                        command_list = [command_list]
-                        entity_value["value"] = command_list
-                    process_commands_property_update(
-                        urn=urn,
-                        tenant=tenant,
-                        scope=scope,
-                        entity_id=entity_data.db_id,
-                        new_commands=command_list,
-                        db=realtime_db,
-                        commit=False,
-                    )
-
-                entity_value_updated = update_entity_property(entity_value, realtime_db, commit=False)
-
-                if entity_value_updated and not entity_value["timestamp_override"]:
-                    updated_entity_values_list[attr_name] = {
-                        "value": entity_value["value"],
-                        "type": "Property",
-                    }
-
-                if not entity_value["timestamp_override"]:
-                    ts = entity_value.get("timestamp")
-                    if ts is not None:
-                        if max_property_timestamp is None or ts > max_property_timestamp:
-                            max_property_timestamp = ts
-
-            elif type == "Command":
-                process_command_update(
-                    entity_urn=entity_data.urn,
-                    entity_tenant=entity_data.tenant,
-                    entity_scope=entity_data.scope,
-                    entity_type=entity_data.type,
-                    entity_id=entity_data.db_id,
-                    cmd_name=entity_value.get("name", None),
-                    cmd_value=entity_value.get("value", None),
-                    ts=entity_value.get("timestamp", None),
-                    db=realtime_db,
-                    commit=False,
-                )
-
-            else:
-                logging.info(
-                    f"Type is not Relationship or Property. Value: {entity_value}. Skipping this value."
-                )
+            if ts is not None and (
+                max_property_timestamp is None or ts > max_property_timestamp
+            ):
+                max_property_timestamp = ts
 
         # Change all commands in pending status to not pending
         if max_property_timestamp is not None:

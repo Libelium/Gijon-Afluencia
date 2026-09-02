@@ -25,6 +25,7 @@ Design decisions (the reasoning behind each one is in the README):
 """
 
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 from itertools import product
 
@@ -242,6 +243,52 @@ def feature_importance(model: xgb.XGBRegressor, train_columns: list) -> list:
 BACKTEST_LOOKBACK_DAYS = ROLLING_WARMUP_DAYS + 2
 
 
+def _make_predict_fn(model, train_columns: list, columns: list):
+    """The recursive-backtest prediction closure shared by both horizon-step backtests:
+    align each feature frame to the EXACT training columns (a zone absent from a window
+    would otherwise shift every column) and clamp to a non-negative rounded count."""
+
+    def predict_fn(feature_df):
+        X = prepare_features(feature_df, columns).reindex(columns=train_columns, fill_value=0)
+        return [max(0, round(float(v))) for v in model.predict(X)]
+
+    return predict_fn
+
+
+def _iter_backtest_windows(bins: list, horizon_hours: int, columns: list, predict_fn,
+                           n_windows: int):
+    """Yield ``(predicted, truth)`` for each of ``n_windows`` non-overlapping holdouts
+    going backwards from the latest bin, reusing the same trained model (only which slice
+    of history is held out changes). Windows with no usable history/ground truth, or that
+    predict nothing, are skipped.
+
+    This is the recursive mechanism that backtest_by_horizon_step() (a single window) and
+    backtest_spread_by_horizon_step() (several) share - see their docstrings for why this
+    number does not exist anywhere else. For a single window the truth slice
+    ``cutoff <= t < cutoff + horizon_hours`` is exactly ``t >= cutoff``, since no bin is
+    later than the latest one the window starts from.
+    """
+    latest = max(b["timestamp"] for b in bins)
+    for w in range(n_windows):
+        cutoff = latest - timedelta(hours=horizon_hours - 1 + horizon_hours * w)
+        window_end = cutoff + timedelta(hours=horizon_hours)
+        lookback_start = cutoff - timedelta(days=BACKTEST_LOOKBACK_DAYS)
+
+        history = [b for b in bins if lookback_start <= b["timestamp"] < cutoff]
+        truth = {(b["zone_id"], b["timestamp"]): b["occupancy"]
+                 for b in bins if cutoff <= b["timestamp"] < window_end}
+        if not history or not truth:
+            continue
+
+        zone_ids = sorted({b["zone_id"] for b in history})
+        predicted = predict_recursive(history, zone_ids, predict_fn, cutoff,
+                                       horizon_hours=horizon_hours, feature_columns=columns)
+        if predicted.empty:
+            continue
+
+        yield predicted, truth
+
+
 def backtest_by_horizon_step(model, train_columns: list, bins: list, horizon_hours: int,
                              feature_columns: list = None) -> dict:
     """
@@ -259,34 +306,17 @@ def backtest_by_horizon_step(model, train_columns: list, bins: list, horizon_hou
     if not bins or horizon_hours < 1:
         return {}
 
-    latest = max(b["timestamp"] for b in bins)
-    cutoff = latest - timedelta(hours=horizon_hours - 1)
-    lookback_start = cutoff - timedelta(days=BACKTEST_LOOKBACK_DAYS)
-
-    history = [b for b in bins if lookback_start <= b["timestamp"] < cutoff]
-    truth = {(b["zone_id"], b["timestamp"]): b["occupancy"]
-             for b in bins if b["timestamp"] >= cutoff}
-    if not history or not truth:
-        return {}
-
     columns = feature_columns or FEATURE_COLUMNS
-
-    def predict_fn(feature_df):
-        X = prepare_features(feature_df, columns).reindex(columns=train_columns, fill_value=0)
-        return [max(0, round(float(v))) for v in model.predict(X)]
-
-    zone_ids = sorted({b["zone_id"] for b in history})
-    predicted = predict_recursive(history, zone_ids, predict_fn, cutoff,
-                                   horizon_hours=horizon_hours, feature_columns=columns)
-    if predicted.empty:
-        return {}
+    predict_fn = _make_predict_fn(model, train_columns, columns)
 
     errors = defaultdict(list)
-    for row in predicted.itertuples(index=False):
-        actual = truth.get((row.zone_id, row.timestamp))
-        if actual is None:
-            continue                      # a bin the zone never reported - not an error
-        errors[int(row.horizon_step)].append(abs(actual - row.predicted_occupancy))
+    for predicted, truth in _iter_backtest_windows(bins, horizon_hours, columns,
+                                                    predict_fn, n_windows=1):
+        for row in predicted.itertuples(index=False):
+            actual = truth.get((row.zone_id, row.timestamp))
+            if actual is None:
+                continue                  # a bin the zone never reported - not an error
+            errors[int(row.horizon_step)].append(abs(actual - row.predicted_occupancy))
 
     # STRING keys, because this dict goes into the .metrics.json sidecar and JSON object
     # keys are always strings: with int keys the value would have one shape in memory and
@@ -313,9 +343,20 @@ MIN_RELATIVE_DENOM = 5
 MIN_BAND_LO, MAX_BAND_HI = -0.9, 1.5
 
 
+@dataclass
+class BacktestSpreadConfig:
+    """Tuning knobs for backtest_spread_by_horizon_step(), bundled into one object so the
+    function keeps a small signature. The defaults reproduce the previous positional
+    defaults, so callers that pass neither behave exactly as before."""
+
+    n_windows: int = 3
+    lower_pct: float = 10
+    upper_pct: float = 90
+
+
 def backtest_spread_by_horizon_step(model, train_columns: list, bins: list, horizon_hours: int,
-                                     feature_columns: list = None, n_windows: int = 3,
-                                     lower_pct: float = 10, upper_pct: float = 90) -> dict:
+                                     feature_columns: list = None,
+                                     config: "BacktestSpreadConfig" = None) -> dict:
     """
     {horizon_step: {"lo": x, "hi": y}} - empirical (lower_pct, upper_pct) percentiles of the
     RELATIVE backtest error ((actual - predicted) / predicted) at that step, to turn a bare
@@ -346,34 +387,16 @@ def backtest_spread_by_horizon_step(model, train_columns: list, bins: list, hori
     before each window's cutoff) - see that function's docstring for why this number does not
     exist anywhere else.
     """
-    if not bins or horizon_hours < 1 or n_windows < 1:
+    config = config or BacktestSpreadConfig()
+    if not bins or horizon_hours < 1 or config.n_windows < 1:
         return {}
 
-    latest = max(b["timestamp"] for b in bins)
     columns = feature_columns or FEATURE_COLUMNS
-
-    def predict_fn(feature_df):
-        X = prepare_features(feature_df, columns).reindex(columns=train_columns, fill_value=0)
-        return [max(0, round(float(v))) for v in model.predict(X)]
+    predict_fn = _make_predict_fn(model, train_columns, columns)
 
     errors = defaultdict(list)
-    for w in range(n_windows):
-        cutoff = latest - timedelta(hours=horizon_hours - 1 + horizon_hours * w)
-        window_end = cutoff + timedelta(hours=horizon_hours)
-        lookback_start = cutoff - timedelta(days=BACKTEST_LOOKBACK_DAYS)
-
-        history = [b for b in bins if lookback_start <= b["timestamp"] < cutoff]
-        truth = {(b["zone_id"], b["timestamp"]): b["occupancy"]
-                 for b in bins if cutoff <= b["timestamp"] < window_end}
-        if not history or not truth:
-            continue
-
-        zone_ids = sorted({b["zone_id"] for b in history})
-        predicted = predict_recursive(history, zone_ids, predict_fn, cutoff,
-                                       horizon_hours=horizon_hours, feature_columns=columns)
-        if predicted.empty:
-            continue
-
+    for predicted, truth in _iter_backtest_windows(bins, horizon_hours, columns,
+                                                    predict_fn, n_windows=config.n_windows):
         for row in predicted.itertuples(index=False):
             actual = truth.get((row.zone_id, row.timestamp))
             if actual is None:
@@ -383,8 +406,8 @@ def backtest_spread_by_horizon_step(model, train_columns: list, bins: list, hori
 
     return {
         str(step): {
-            "lo": round(max(float(np.percentile(values, lower_pct)), MIN_BAND_LO), 2),
-            "hi": round(min(float(np.percentile(values, upper_pct)), MAX_BAND_HI), 2),
+            "lo": round(max(float(np.percentile(values, config.lower_pct)), MIN_BAND_LO), 2),
+            "hi": round(min(float(np.percentile(values, config.upper_pct)), MAX_BAND_HI), 2),
         }
         for step, values in sorted(errors.items())
         if len(values) >= MIN_SPREAD_SAMPLES

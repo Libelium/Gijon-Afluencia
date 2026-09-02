@@ -2,6 +2,7 @@ import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
 import type { EntityRef } from '@/types'
 import { datamodelOf } from '../contract'
+import { topByRecency } from '../shared/aggregate'
 import type { Point } from '../shared/types'
 
 /**
@@ -62,11 +63,6 @@ function nodeOf(id: string, place?: Point): FlowNode {
 
 function byRecency(a: Point, b: Point): number {
   return (b.entity.time_last_data ?? '').localeCompare(a.entity.time_last_data ?? '')
-}
-
-/** Los puntos con dato mas reciente ganan cuando hay mas de los que el tope de series admite. */
-function topByRecency(points: Point[], limit: number): Point[] {
-  return points.length <= limit ? points : [...points].sort(byRecency).slice(0, limit)
 }
 
 interface Source {

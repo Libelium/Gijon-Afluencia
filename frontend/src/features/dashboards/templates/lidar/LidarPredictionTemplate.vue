@@ -8,7 +8,7 @@ import { t } from '@/i18n'
 import { formatDateTime, formatNumber, relativeFromNow } from '@/lib/format'
 import type { Dashboard, Entity, Measure } from '@/types'
 import { BarChart, toMillis, type ChartPoint } from '../../charts'
-import { autoAggregation, RANGE_PRESETS, type DateRange } from '../../lib/range'
+import { autoAggregation, type DateRange } from '../../lib/range'
 import PredictionBandChart from './charts/PredictionBandChart.vue'
 import AttributesCard from './components/AttributesCard.vue'
 import ChartCard from './components/ChartCard.vue'
@@ -21,6 +21,7 @@ import {
   fetchZoneSeries,
   findPredictionTwin,
   meanByHour,
+  presetHint,
   refOf,
   summarise,
   type Aligned,
@@ -244,10 +245,7 @@ function signed(value: number | null): string {
   return value > 0 ? `+${text}` : text
 }
 
-const rangeHint = computed(() => {
-  const found = RANGE_PRESETS.find((p) => p.id === preset.value)
-  return found ? t(found.labelKey) : undefined
-})
+const rangeHint = computed(() => presetHint(preset.value))
 
 /** Atributos de la gemela. La fiabilidad puede llegar como numero y entonces no esta entre los
  * atributos de texto: se anade a mano para que salga con su distintivo. */

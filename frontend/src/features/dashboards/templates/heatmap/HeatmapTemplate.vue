@@ -7,7 +7,7 @@ import { formatNumber } from '@/lib/format'
 import { useChartTheme, type ChartPoint } from '../../charts'
 import { autoAggregation, rangeHours, type AggregationOption, type DateRange } from '../../lib/range'
 import { occupancyColor, occupancyColors } from '../../palette'
-import { byDate, byHourOfDay, byWeekday, byWeekHour, kpisOf, levelRatio, peakOf, sumSeries } from '../shared/aggregate'
+import { byDate, byHourOfDay, byWeekday, byWeekHour, kpisOf, levelRatio, peakOf, sumSeries, topByRecency } from '../shared/aggregate'
 import { fetchSeries, REQUEST_BATCH, type SeriesRequest } from '../shared/series'
 import ChartCard from '../shared/ChartCard.vue'
 import MatrixHeatmap from '../shared/MatrixHeatmap.vue'
@@ -56,13 +56,6 @@ const rangeByPoint = ref<Map<string, ChartPoint[]>>(new Map())
 /** Series por horas de la ventana reciente: alimentan la matriz y las horas punta. */
 const hourlySum = ref<ChartPoint[]>([])
 const matrixDays = ref(MATRIX_DAYS)
-
-function topByRecency(points: Point[], limit: number): Point[] {
-  if (points.length <= limit) return points
-  return [...points]
-    .sort((a, b) => (b.entity.time_last_data ?? '').localeCompare(a.entity.time_last_data ?? ''))
-    .slice(0, limit)
-}
 
 function windowOf(range: DateRange, days: number): DateRange {
   const end = DateTime.fromISO(range.end, { zone: 'utc' })

@@ -79,40 +79,50 @@ class PreferenceValidator
     }
 
     /**
-     * Validates a non-empty value according to the preference's declared type,
-     * falling back to a safe-scalar rule for anything unrecognized.
+     * Validates a non-empty value using the strategy registered for the given
+     * preference name, falling back to a safe-scalar rule for anything unregistered.
      */
     private static function validateByType(string $preferenceName, mixed $value): array
     {
-        return match (self::typeOf($preferenceName)) {
-            'color'   => self::result(self::isHexColor($value), $value, 'Invalid color value'),
-            'boolean' => self::result(self::isValidBoolean($value), $value, 'Invalid boolean value'),
-            'integer' => self::result(self::isIntegerLike($value), $value, 'Invalid numeric value'),
-            'columns' => self::validateCustomColumns($value),
-            'json'    => self::validateJsonArray($value),
-            default   => self::validateSafeScalar($value),
-        };
+        $validator = self::validators()[$preferenceName]
+            ?? static fn (mixed $v): array => self::validateSafeScalar($v);
+
+        return $validator($value);
     }
 
-    private static function typeOf(string $preferenceName): string
+    /**
+     * Strategy map: preference name => validator callable(mixed $value): array.
+     *
+     * Resolution is a direct name lookup instead of a chain of list membership
+     * and literal-name comparisons, so registering a new preference here is all
+     * that a new validation rule requires (Open/Closed).
+     *
+     * @return array<string, callable(mixed): array>
+     */
+    private static function validators(): array
     {
-        $groups = [
-            'color'   => self::COLOR_PREFERENCES,
-            'boolean' => self::BOOLEAN_PREFERENCES,
-            'integer' => self::INTEGER_PREFERENCES,
+        $color   = static fn (mixed $value): array => self::result(self::isHexColor($value), $value, 'Invalid color value');
+        $boolean = static fn (mixed $value): array => self::result(self::isValidBoolean($value), $value, 'Invalid boolean value');
+        $integer = static fn (mixed $value): array => self::result(self::isIntegerLike($value), $value, 'Invalid numeric value');
+        $columns = static fn (mixed $value): array => self::validateCustomColumns($value);
+        $json    = static fn (mixed $value): array => self::validateJsonArray($value);
+
+        $validators = [
+            'devicesListCustomColumns' => $columns,
+            'customModules'            => $json,
         ];
 
-        foreach ($groups as $type => $names) {
-            if (in_array($preferenceName, $names, true)) {
-                return $type;
-            }
+        foreach (self::COLOR_PREFERENCES as $name) {
+            $validators[$name] = $color;
+        }
+        foreach (self::BOOLEAN_PREFERENCES as $name) {
+            $validators[$name] = $boolean;
+        }
+        foreach (self::INTEGER_PREFERENCES as $name) {
+            $validators[$name] = $integer;
         }
 
-        if ($preferenceName === 'devicesListCustomColumns') {
-            return 'columns';
-        }
-
-        return $preferenceName === 'customModules' ? 'json' : 'scalar';
+        return $validators;
     }
 
     private static function ok(mixed $value): array

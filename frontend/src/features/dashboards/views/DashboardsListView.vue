@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { errorMessage } from '@/api/http'
+import { useDebounceFn } from '@/composables/useDebounce'
+import { usePaginatedList } from '@/composables/usePaginatedList'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
@@ -18,17 +19,25 @@ type TypeFilter = 'all' | 'custom' | 'template'
 
 const router = useRouter()
 
-const all = ref<DashboardDetail[]>([])
-const count = ref(0) // total que declara el servidor
 const filter = ref<TypeFilter>('all')
 const page = ref(1)
 const search = ref<string | null>('')
-const loading = ref(false)
-const error = ref<string | null>(null)
 const createOpen = ref(false)
 
 /** El campo con `clearable` devuelve null al vaciarse, no cadena vacia. */
 const query = computed(() => (search.value ?? '').trim())
+
+// `all` es el catalogo completo que declara el servidor (hasta CATALOG_SIZE); el filtro por tipo
+// y la paginacion se resuelven en cliente sobre el. La busqueda si viaja al servidor.
+const { rows: all, total: count, loading, error, load } = usePaginatedList<DashboardDetail>(
+  () =>
+    listDashboards({
+      page: 1,
+      paginationSize: CATALOG_SIZE,
+      search: query.value || undefined,
+    }),
+  { initialLoading: false },
+)
 
 const filtered = computed(() =>
   all.value.filter((d) => filter.value === 'all' || (filter.value === 'template') === !!d.templateType),
@@ -77,39 +86,16 @@ const emptyHint = computed(() => {
   return t('dashboards.list.emptyHint')
 })
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
-    const result = await listDashboards({
-      page: 1,
-      paginationSize: CATALOG_SIZE,
-      search: query.value || undefined,
-    })
-    all.value = result.rows
-    count.value = result.count
-  } catch (e) {
-    error.value = errorMessage(e)
-    all.value = []
-    count.value = 0
-  } finally {
-    loading.value = false
-  }
-}
-
-let timer: ReturnType<typeof setTimeout> | undefined
-
 watch(filter, () => {
   page.value = 1
 })
 
-watch(query, () => {
-  clearTimeout(timer)
-  timer = setTimeout(() => {
-    page.value = 1
-    void load()
-  }, SEARCH_DELAY)
-})
+const runSearch = useDebounceFn(() => {
+  page.value = 1
+  void load()
+}, SEARCH_DELAY)
+
+watch(query, () => runSearch())
 
 function goToDashboard(id: number) {
   void router.push(`/paneles/${id}`)

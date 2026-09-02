@@ -8,7 +8,7 @@ import { t } from '@/i18n'
 import { formatDateTime, formatNumber, relativeFromNow } from '@/lib/format'
 import type { Dashboard, Measure } from '@/types'
 import { BarChart, LineChart, hasData, type ChartPoint, type ChartSeries } from '../../charts'
-import { autoAggregation, RANGE_PRESETS, type DateRange } from '../../lib/range'
+import { autoAggregation, type DateRange } from '../../lib/range'
 import OccupancyGauge from './charts/OccupancyGauge.vue'
 import AttributesCard from './components/AttributesCard.vue'
 import ChartCard from './components/ChartCard.vue'
@@ -17,12 +17,13 @@ import LidarNotice from './components/LidarNotice.vue'
 import {
   fetchZoneSeries,
   incrementsOf,
-  levelIndex,
+  levelColor,
   levelKey,
   MATRIX_POINTS,
   meanByHour,
   meanByWeekday,
   numericValue,
+  presetHint,
   refOf,
   summarise,
   type SeriesSpec,
@@ -166,15 +167,9 @@ const profileDays = computed<number | null>(() => {
 const capacity = computed<number | null>(() => profile.value?.capacity ?? null)
 const ratio = computed<number | null>(() => profile.value?.ratio ?? null)
 
-const percentColor = computed(() => {
-  if (ratio.value === null) return 'secondary'
-  return ['success', 'success', 'warning', 'warning', 'error'][levelIndex(ratio.value)]
-})
+const percentColor = computed(() => levelColor(ratio.value))
 
-const rangeHint = computed(() => {
-  const found = RANGE_PRESETS.find((p) => p.id === preset.value)
-  return found ? t(found.labelKey) : undefined
-})
+const rangeHint = computed(() => presetHint(preset.value))
 
 interface Tile {
   id: string

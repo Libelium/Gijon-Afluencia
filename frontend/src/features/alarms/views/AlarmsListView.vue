@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { t } from '@/i18n'
-import { errorMessage } from '@/api/http'
+import { useDebounceFn } from '@/composables/useDebounce'
+import { usePaginatedList } from '@/composables/usePaginatedList'
 import { formatDateTime } from '@/lib/format'
 import { clickableRowProps } from '@/lib/a11y'
 import { useSessionStore } from '@/stores/session'
@@ -18,17 +19,25 @@ import type { AlarmRow } from '../types'
 const router = useRouter()
 const session = useSessionStore()
 
-const rows = ref<AlarmRow[]>([])
-const total = ref(0)
 const page = ref(1)
 const itemsPerPage = ref(10)
 const search = ref('')
 const appliedSearch = ref('')
-const loading = ref(false)
 const loaded = ref(false)
-const error = ref<string | null>(null)
 
-let debounceId: ReturnType<typeof setTimeout> | undefined
+const { rows, total, loading, error, load } = usePaginatedList<AlarmRow>(
+  () =>
+    listAlarms({
+      page: page.value,
+      paginationSize: itemsPerPage.value,
+      search: appliedSearch.value,
+    }),
+  {
+    onLoaded: () => {
+      loaded.value = true
+    },
+  },
+)
 
 interface Header {
   title: string
@@ -50,27 +59,6 @@ const emptyText = computed(() =>
   appliedSearch.value ? t('alarms.list.emptySearch') : t('alarms.list.empty'),
 )
 
-async function fetchAlarms() {
-  loading.value = true
-  error.value = null
-  try {
-    const data = await listAlarms({
-      page: page.value,
-      paginationSize: itemsPerPage.value,
-      search: appliedSearch.value,
-    })
-    rows.value = data.rows
-    total.value = data.count
-    loaded.value = true
-  } catch (e) {
-    rows.value = []
-    total.value = 0
-    error.value = errorMessage(e)
-  } finally {
-    loading.value = false
-  }
-}
-
 // Una sola fuente para la peticion: pagina, tamano y busqueda cambian a la vez sin lanzar
 // dos consultas seguidas.
 const request = computed(() => ({
@@ -79,21 +67,18 @@ const request = computed(() => ({
   search: appliedSearch.value,
 }))
 
-watch(request, fetchAlarms, { immediate: true })
+watch(request, load, { immediate: true })
 
-watch(search, (value) => {
-  clearTimeout(debounceId)
-  debounceId = setTimeout(() => {
-    page.value = 1
-    appliedSearch.value = (value ?? '').trim()
-  }, 350)
-})
+const applySearch = useDebounceFn((value: string | null) => {
+  page.value = 1
+  appliedSearch.value = (value ?? '').trim()
+}, 350)
 
-onBeforeUnmount(() => clearTimeout(debounceId))
+watch(search, (value) => applySearch(value))
 
 function clearSearch() {
+  applySearch.cancel()
   search.value = ''
-  clearTimeout(debounceId)
   page.value = 1
   appliedSearch.value = ''
 }
@@ -140,7 +125,7 @@ const rowProps = clickableRowProps<AlarmRow>(goToAlarm)
       :empty-text="emptyText"
       empty-icon="mdi-bell-off-outline"
       skeleton="table"
-      @retry="fetchAlarms"
+      @retry="load"
     >
       <template #empty-action>
         <VBtn v-if="appliedSearch" variant="tonal" @click="clearSearch">

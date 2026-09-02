@@ -167,50 +167,7 @@ class ResourceLimitsHelper
      */
     public static function getCurrentUsage(User $user, string $resourceType, string $scope): ?int
     {
-        /** @var Model $modelClass */
-        $modelClass = self::getModelForResourceType($resourceType);
-
-        $modelInstance = new $modelClass;
-        $table = $modelInstance->getTable();
-
-        // For user-centric scopes, check if the table even has a user_id column.
-        if (!Schema::hasColumn($table, 'user_id') && !method_exists($modelClass, 'countByUser')) {
-            // If the resource isn't user-specific, its usage can't be counted against a user/org limit.
-            // This prevents errors for models that don't have a user relationship.
-            return null;
-        }
-
-        switch ($scope) {
-            case 'user':
-                if (method_exists($modelClass, 'countByUser')) {
-                    return $modelClass::countByUser($user->id);
-                }
-
-                return $modelClass::where('user_id', $user->id)->count();
-            case 'organization':
-            case 'global':
-                if (!$user->organization) {
-                    return null; // Or handle as an error if user should always have an org
-                }
-                // Get all user IDs within the organization
-                $memberIds = $user->organization->users()->pluck('id');
-
-                // Exclude users that have a specific limit for the resource type
-                $excludedUserIds = UserResourceLimit::where('resource_type', $resourceType)
-                    ->whereIn('user_id', $memberIds)
-                    ->pluck('user_id')
-                    ->toArray();
-
-                $memberIds = $memberIds->diff($excludedUserIds);
-
-                if (method_exists($modelClass, 'countByUsers')) {
-                    return $modelClass::countByUsers($memberIds);
-                }
-                return $modelClass::whereIn('user_id', $memberIds)->count();
-
-            default:
-                return null;
-        }
+        return self::countUsageForScope($user, $resourceType, $scope, false);
     }
 
 
@@ -224,6 +181,21 @@ class ResourceLimitsHelper
      * @throws Exception
      */
     public static function getCurrentUsageExcludingUser(User $user, string $resourceType, string $scope): ?int
+    {
+        return self::countUsageForScope($user, $resourceType, $scope, true);
+    }
+
+    /**
+     * Shared implementation for counting a resource's current usage at a given scope.
+     *
+     * @param User $user
+     * @param string $resourceType
+     * @param string $scope ('user', 'organization', 'global')
+     * @param bool $excludeUser When true, the user's own usage is left out of organization/global scopes.
+     * @return int|null
+     * @throws Exception
+     */
+    private static function countUsageForScope(User $user, string $resourceType, string $scope, bool $excludeUser): ?int
     {
         /** @var Model $modelClass */
         $modelClass = self::getModelForResourceType($resourceType);
@@ -261,7 +233,9 @@ class ResourceLimitsHelper
 
                 $memberIds = $memberIds->diff($excludedUserIds);
 
-                $memberIds = $memberIds->diff($user->id);
+                if ($excludeUser) {
+                    $memberIds = $memberIds->diff($user->id);
+                }
 
                 if (method_exists($modelClass, 'countByUsers')) {
                     return $modelClass::countByUsers($memberIds);
@@ -361,7 +335,7 @@ class ResourceLimitsHelper
 
     public static function canCreateOrFail(User $user, string $resourceType): void
     {
-        asset($canResourceLimit = ResourceLimitsHelper::canCreate($user, $resourceType));
+        $canResourceLimit = ResourceLimitsHelper::canCreate($user, $resourceType);
 
         $canResourceLimitNumber = ResourceLimitsHelper::getEffectiveLimit($user, $resourceType);
 

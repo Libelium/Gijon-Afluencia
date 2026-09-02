@@ -3,6 +3,7 @@
 namespace App\Http\V1\Controllers\Realtime;
 
 use App\Http\V1\Controllers\Controller;
+use App\DataObjects\EntityFetchFilters;
 use App\Models\Realtime\EntityProperty;
 use App\Models\Realtime\EntityRelationship;
 use Illuminate\Http\Request;
@@ -292,61 +293,20 @@ class RealtimeEntityController extends Controller
             return response('Missing headers (tenant,scope)', 400);
         }
 
-        $typeFilter = $request->input('attrTypeFilter', 'Property,Relationship,Command');
-        $typeFilter = explode(',', $typeFilter);
-
-        $nameFilter = $request->input('attrNameFilter', '');
-        if ($nameFilter == '') {
-            $nameFilter = [];
-        } else {
-            $nameFilter = explode(',', $nameFilter);
-        }
-
-        $propFilter = $request->input('attrPropFilter', '');
-        if ($propFilter == '') {
-            $propFilter = [];
-        } else {
-            $propFilter = explode(',', $propFilter);
-        }
-
-        $relFilter = $request->input('attrRelFilter', '');
-        if ($relFilter == '') {
-            $relFilter = [];
-        } else {
-            $relFilter = explode(',', $relFilter);
-        }
-
-        $cmdFilter = $request->input('attrCmdFilter', '');
-        if ($cmdFilter == '') {
-            $cmdFilter = [];
-        } else {
-            $cmdFilter = explode(',', $cmdFilter);
-        }
-
-        $propFilter = array_merge($propFilter, $nameFilter);
-        $relFilter = array_merge($relFilter, $nameFilter);
-        $cmdFilter = array_merge($cmdFilter, $nameFilter);
-
-        $lastSent = (bool) $request->input('lastSent', false);
-
-        $filterCmdAvailable = $request->input('filterCmdAvailable', false);
-
-        $filterCmdPending = $request->input('filterCmdPending', false);
-
-        $referenceDataNesting = (int) $request->input('referenceDataNesting', 0);
+        $filters = EntityFetchFilters::fromRequest($request);
 
         $entity = $this->getEntity(
             $urn,
             $tenant,
             $scope,
-            $typeFilter,
-            $propFilter,
-            $relFilter,
-            $cmdFilter,
-            $lastSent,
-            $filterCmdAvailable,
-            $filterCmdPending,
-            $referenceDataNesting,
+            $filters->typeFilter,
+            $filters->propFilter,
+            $filters->relFilter,
+            $filters->cmdFilter,
+            $filters->lastSent,
+            $filters->filterCmdAvailable,
+            $filters->filterCmdPending,
+            $filters->referenceDataNesting,
             []
         );
 
@@ -422,48 +382,7 @@ class RealtimeEntityController extends Controller
 
         $entities = $request->input('entities');
 
-        $typeFilter = $request->input('attrTypeFilter', 'Property,Relationship,Command');
-        $typeFilter = explode(',', $typeFilter);
-
-        $nameFilter = $request->input('attrNameFilter', '');
-        if ($nameFilter == '') {
-            $nameFilter = [];
-        } else {
-            $nameFilter = explode(',', $nameFilter);
-        }
-
-        $propFilter = $request->input('attrPropFilter', '');
-        if ($propFilter == '') {
-            $propFilter = [];
-        } else {
-            $propFilter = explode(',', $propFilter);
-        }
-
-        $relFilter = $request->input('attrRelFilter', '');
-        if ($relFilter == '') {
-            $relFilter = [];
-        } else {
-            $relFilter = explode(',', $relFilter);
-        }
-
-        $cmdFilter = $request->input('attrCmdFilter', '');
-        if ($cmdFilter == '') {
-            $cmdFilter = [];
-        } else {
-            $cmdFilter = explode(',', $cmdFilter);
-        }
-
-        $propFilter = array_merge($propFilter, $nameFilter);
-        $relFilter = array_merge($relFilter, $nameFilter);
-        $cmdFilter = array_merge($cmdFilter, $nameFilter);
-
-        $lastSent = (bool) $request->input('lastSent', false);
-
-        $filterCmdAvailable = $request->input('filterCmdAvailable', false);
-
-        $filterCmdPending = $request->input('filterCmdPending', false);
-
-        $referenceDataNesting = (int) $request->input('referenceDataNesting', 0);
+        $filters = EntityFetchFilters::fromRequest($request);
 
         $data = [];
 
@@ -472,14 +391,14 @@ class RealtimeEntityController extends Controller
                 $entity['urn'],
                 $entity['tenant'],
                 $entity['scope'],
-                $typeFilter,
-                $propFilter,
-                $relFilter,
-                $cmdFilter,
-                $lastSent,
-                $filterCmdAvailable,
-                $filterCmdPending,
-                $referenceDataNesting,
+                $filters->typeFilter,
+                $filters->propFilter,
+                $filters->relFilter,
+                $filters->cmdFilter,
+                $filters->lastSent,
+                $filters->filterCmdAvailable,
+                $filters->filterCmdPending,
+                $filters->referenceDataNesting,
                 []
             );
 
