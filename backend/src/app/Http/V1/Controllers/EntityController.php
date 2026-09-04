@@ -5,7 +5,6 @@ namespace App\Http\V1\Controllers;
 use App\Authorization\AppPermission;
 use App\Models\Entity;
 use App\Helpers\AetherLinkHelper;
-use App\Models\EntityGroup;
 use App\Http\V1\Controllers\Controller;
 use App\Http\V1\Requests\Entities\CreateEntityRequest;
 use App\Http\V1\Requests\Entities\UpdateEntityRequest;
@@ -17,9 +16,12 @@ use App\Models\FiwareScope;
 use App\Models\FiwareTenant;
 use App\Models\Realtime\EntityCommand;
 use App\Models\Realtime\EntityProperty;
+use App\DataObjects\EntityQueryFilters;
 use App\Repositories\EntityRepository;
 use App\Repositories\LogsRepository;
 use App\Repositories\PreferenceRepository;
+use App\Services\Entities\EntityFileImportService;
+use App\Services\Entities\EntityPropertyService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +34,12 @@ use App\Helpers\Entities\RealtimeEntityResourcesHelper;
 
 class EntityController extends Controller
 {
+    public function __construct(
+        private readonly EntityPropertyService $entityProperties,
+        private readonly EntityFileImportService $entityFileImport,
+    ) {
+    }
+
     public function show(int $id)
     {
         $entity = Entity::with(['geolocation', 'fiwareScope', 'name'])->findOrFail($id);
@@ -139,57 +147,27 @@ class EntityController extends Controller
      */
     public function upsertProperties(int $id, UpdateEntityRequest $request): Response
     {
-        $updateEntityRequest = $request->validated();
-        $unmodifiedRequest = $updateEntityRequest;
-        $isSmspFiware = false;
+        $payload = $request->validated();
 
         // if it is empty, we don't need to update anything
-        if (empty($updateEntityRequest)) {
+        if (empty($payload)) {
             return response('No properties to update', 400);
         }
 
         $entity = Entity::findOrFail($id);
         $this->authorize('update', $entity);
 
-        // An Incident inside an AssetIntervention has its status governed by the intervention only.
-        if ($entity->datamodel === 'Incident' && array_key_exists('status', $updateEntityRequest)) {
-            $inIntervention = EntityGroup::where('type', 'AssetIntervention')
-                ->whereHas('entities', fn ($q) => $q->where('entities.id', $entity->id))
-                ->exists();
-            if ($inIntervention) {
-                return response('Incident status is governed by its AssetIntervention', 422);
-            }
+        // The client sends the location as "geolocation"; the broker knows it as "location".
+        $forBroker = $payload;
+        $isSmspFiware = false;
+        if (array_key_exists('geolocation', $forBroker)) {
+            $geolocationValue = $forBroker['geolocation'];
+            $forBroker['location'] = $geolocationValue;
+            unset($forBroker['geolocation']);
+            $isSmspFiware = $this->entityProperties->handleSmartSpotLocationUpdate($entity, $geolocationValue);
         }
 
-        if (array_key_exists('geolocation', $updateEntityRequest)) {
-            $geolocationValue = $updateEntityRequest['geolocation'];
-            $updateEntityRequest['location'] = $geolocationValue;
-            unset($updateEntityRequest['geolocation']);
-            $isSmspFiware = $this->handleSmartSpotLocationUpdate($entity, $geolocationValue);
-        }
-
-        $attrsToUpdate = [];
-        $timestamp = $updateEntityRequest['timestamp'] ?? null;
-        unset($updateEntityRequest['timestamp']); // Exclude global timestamp from attributes
-
-
-        foreach ($updateEntityRequest as $attrName => $attrValue) {
-            // Check if $attrValue is already in NGSI-LD format (has 'value' and 'type' keys)
-            if (is_array($attrValue) && isset($attrValue['value']) && isset($attrValue['type'])) {
-                // Already in NGSI-LD format, use directly
-                $attrsToUpdate[$attrName] = $attrValue;
-            } else {
-                // Simple value, wrap it in NGSI-LD format
-                $attrsToUpdate[$attrName] = [
-                    "value" => $attrValue,
-                    "type" => "Property"
-                ];
-                // Only add global timestamp if attribute doesn't have its own
-                if ($timestamp) {
-                    $attrsToUpdate[$attrName]["timestamp"] = $timestamp;
-                }
-            }
-        }
+        $attrsToUpdate = $this->entityProperties->toNgsiAttributes($forBroker);
 
         $result = AetherLinkHelper::updateOnContextBroker(
             $entity->urn,
@@ -202,20 +180,13 @@ class EntityController extends Controller
             return response($result["response"], $result["status"]);
         }
 
-        // Update units in EntityProperty table for each attribute that has unitCode
-        foreach ($attrsToUpdate as $attrName => $attrData) {
-            if (is_array($attrData) && isset($attrData['unitCode'])) {
-                EntityProperty::where('entity_id', $entity->id)
-                    ->where('name', $attrName)
-                    ->update(['units' => $attrData['unitCode']]);
-            }
-        }
+        $this->entityProperties->persistUnits($entity, $attrsToUpdate);
 
         if ($isSmspFiware) {
-            $unmodifiedRequest['warning'] = 'GPS localization will be disabled for the related Smart Spot device.';
+            $payload['warning'] = 'GPS localization will be disabled for the related Smart Spot device.';
         }
 
-        return response($unmodifiedRequest, 200);
+        return response($payload, 200);
     }
 
     /**
@@ -252,103 +223,6 @@ class EntityController extends Controller
         return response(['message' => 'Attribute deleted successfully'], 200);
     }
 
-    /**
-     * Finds associated 'smsp_fiware' devices and sends commands to disable GPS and set new coordinates.
-     *
-     * @param Entity $entity The entity for which to find associated devices.
-     * @param array $geolocationValue GeoJSON Point format: {"type": "Point", "coordinates": [lng, lat]}
-     * @return bool Returns `true` if at least one command was sent, otherwise `false`.
-     */
-    private function handleSmartSpotLocationUpdate(Entity $entity, array $geolocationValue): bool
-    {
-        $smartSpotDevices = $this->getSmartSpotDevices($entity);
-        if ($smartSpotDevices->isEmpty()) {
-            return false;
-        }
-
-        $commandSent = false;
-        foreach ($smartSpotDevices as $device) {
-            if ($this->sendLocationCommandsToSmspFiwareDevice($device, $entity, $geolocationValue)) {
-                $commandSent = true;
-            }
-        }
-
-        return $commandSent;
-    }
-
-    /**
-     * Get SmartSpot devices associated with an entity.
-     */
-    private function getSmartSpotDevices(Entity $entity)
-    {
-        return $entity->devices()->whereHas('deviceType', function ($query) {
-            $query->where('code', 'smsp_fiware');
-        })->get();
-    }
-
-    /**
-     * Find entities from a device that have the rw_dho_upd_location command.
-     */
-    private function getEntitiesWithLocationCommand(Device $device)
-    {
-        $deviceEntities = $device->entities()->get();
-        $entitiesWithCommand = $deviceEntities->filter(function ($entity) {
-            return $entity->commands()->where('name', 'rw_dho_upd_location')->exists();
-        });
-
-        return $entitiesWithCommand;
-    }
-
-    /**
-     * Send location commands to all entities of a device that have the command.
-     * Falls back to main entity if no entity with the command is found.
-     */
-    private function sendLocationCommandsToSmspFiwareDevice(Device $device, Entity $sourceEntity, array $geolocationValue): bool
-    {
-        try {
-            $entitiesWithCommand = $this->getEntitiesWithLocationCommand($device);
-            $targetEntities = $entitiesWithCommand->isNotEmpty()
-                ? $entitiesWithCommand
-                : collect([$device->mainEntity->first()])->filter();
-
-            if ($targetEntities->isEmpty()) {
-                throw new \Illuminate\Database\Eloquent\ModelNotFoundException('No suitable entity found');
-            }
-
-            $payload = [
-                "rw_dho_upd_location" => [
-                    "type" => "Command",
-                    "value" => false
-                ],
-                "rw_dho_latitude" => [
-                    "type" => "Command",
-                    "value" => (float) $geolocationValue['coordinates'][1]
-                ],
-                "rw_dho_longitude" => [
-                    "type" => "Command",
-                    "value" => (float) $geolocationValue['coordinates'][0]
-                ]
-            ];
-
-            foreach ($targetEntities as $targetEntity) {
-                AetherLinkHelper::updateOnContextBroker(
-                    $targetEntity->urn,
-                    $targetEntity->tenant,
-                    $targetEntity->scope,
-                    $payload
-                );
-            }
-
-            return true;
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error('Failed to send disable GPS commands for smsp_fiware device.', [
-                'device_serial' => $device->serial,
-                'entity_id' => $sourceEntity->id,
-                'error_message' => $e->getMessage(),
-            ]);
-            return false;
-        }
-    }
 
 
     public function sendCommands(int $id, Request $request): Response
@@ -566,15 +440,17 @@ class EntityController extends Controller
             $page,
             $orderColumn,
             $orderDirection,
-            $tenant,
-            $scope,
-            $searchText,
-            $types,
-            $groups,
-            $onlyCanUpdate,
-            $excluded,
-            $bounds,
-            $urn,
+            new EntityQueryFilters(
+                tenant: $tenant,
+                scope: $scope,
+                searchText: $searchText,
+                types: $types,
+                groups: $groups,
+                onlyCanUpdate: $onlyCanUpdate,
+                excluded: $excluded,
+                bounds: $bounds,
+                urn: $urn,
+            ),
         );
 
         $result = [
@@ -761,7 +637,7 @@ class EntityController extends Controller
                 return response(['error' => 'Invalid JSON file'], 422);
             }
 
-            $parsedEntities = $this->parseEntitiesFromFile($data);
+            $parsedEntities = $this->entityFileImport->parseEntitiesFromFile($data);
 
             if (empty($parsedEntities)) {
                 return response(['error' => 'No valid entities found in file'], 422);
@@ -843,147 +719,6 @@ class EntityController extends Controller
         }
     }
 
-    /**
-     * Parse entities from JSON/GeoJSON file data.
-     *
-     * @param array $data
-     * @return array
-     */
-    private function parseEntitiesFromFile(array $data): array
-    {
-        $entities = [];
-
-        // Check if it's a GeoJSON FeatureCollection
-        if (isset($data['type']) && $data['type'] === 'FeatureCollection' && isset($data['features'])) {
-            foreach ($data['features'] as $feature) {
-                $entity = $this->parseGeoJSONFeature($feature);
-                if ($entity) {
-                    $entities[] = $entity;
-                }
-            }
-        }
-        // Check if it's an array of entities
-        elseif (is_array($data) && !isset($data['type'])) {
-            foreach ($data as $item) {
-                $entity = $this->parseEntityObject($item);
-                if ($entity) {
-                    $entities[] = $entity;
-                }
-            }
-        }
-        // Single entity object
-        elseif (isset($data['id']) || isset($data['entity_id'])) {
-            $entity = $this->parseEntityObject($data);
-            if ($entity) {
-                $entities[] = $entity;
-            }
-        }
-
-        return $entities;
-    }
-
-    /**
-     * Parse a GeoJSON feature into an entity.
-     *
-     * @param array $feature
-     * @return array|null
-     */
-    private function parseGeoJSONFeature(array $feature): ?array
-    {
-        if (!isset($feature['properties']['entity_id'])) {
-            return null;
-        }
-
-        $entityId = $feature['properties']['entity_id'];
-        $entityDatamodel = $this->extractDatamodelFromUrn($entityId);
-
-        // Build attributes from properties (excluding entity_id and timestamp)
-        $attributes = [];
-        foreach ($feature['properties'] as $key => $value) {
-            if ($key === 'entity_id' || $key === 'timestamp') {
-                continue;
-            }
-
-            $attributes[$key] = [
-                'type' => 'Property',
-                'value' => $value,
-            ];
-        }
-
-        // Add location from geometry if present
-        if (isset($feature['geometry'])) {
-            $attributes['location'] = [
-                'type' => 'Property',
-                'value' => $feature['geometry'],
-            ];
-        }
-
-        return [
-            'id' => $entityId,
-            'type' => $entityDatamodel,
-            'attributes' => !empty($attributes) ? $attributes : null,
-        ];
-    }
-
-    /**
-     * Parse a regular entity object.
-     *
-     * @param array $item
-     * @return array|null
-     */
-    private function parseEntityObject(array $item): ?array
-    {
-        $entityId = $item['id'] ?? $item['entity_id'] ?? null;
-        if (!$entityId) {
-            return null;
-        }
-
-        $entityDatamodel = $item['type'] ?? $this->extractDatamodelFromUrn($entityId);
-
-        // Build attributes from remaining properties
-        $attributes = [];
-        $excludedKeys = ['id', 'entity_id', 'type'];
-
-        foreach ($item as $key => $value) {
-            if (in_array($key, $excludedKeys)) {
-                continue;
-            }
-
-            // Check if value is already in NGSI-LD format
-            if (is_array($value) && isset($value['type']) && isset($value['value'])) {
-                // Force type to Property (Context Broker doesn't accept GeoProperty)
-                $value['type'] = 'Property';
-                $attributes[$key] = $value;
-            } else {
-                $attributes[$key] = [
-                    'type' => 'Property',
-                    'value' => $value,
-                ];
-            }
-        }
-
-        return [
-            'id' => $entityId,
-            'type' => $entityDatamodel,
-            'attributes' => !empty($attributes) ? $attributes : null,
-        ];
-    }
-
-    /**
-     * Extract the entity type from a URN.
-     * e.g., urn:ngsi-ld:TouristDestination:TD1011 -> TouristDestination
-     *
-     * @param string $urn
-     * @return string
-     */
-    private function extractDatamodelFromUrn(string $urn): string
-    {
-        $parts = explode(':', $urn);
-        if (count($parts) >= 3) {
-            return $parts[2];
-        }
-        return 'Unknown';
-    }
 
     public function paginateHealthchecks(Request $request)
     {

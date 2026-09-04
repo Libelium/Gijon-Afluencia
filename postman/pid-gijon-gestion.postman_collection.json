@@ -1202,31 +1202,6 @@
             "description": ""
           },
           "response": []
-        },
-        {
-          "name": "Status",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/telegram/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "telegram",
-                "status"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
         }
       ]
     },
@@ -4108,52 +4083,6 @@
               "variable": [
                 {
                   "key": "group",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Change an AssetIntervention's status and cascade it to all its member incidents (their status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/groups/{id}/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "groups",
-                "{id}",
-                "status"
-              ],
-              "variable": [
-                {
-                  "key": "id",
                   "value": "",
                   "description": ""
                 }

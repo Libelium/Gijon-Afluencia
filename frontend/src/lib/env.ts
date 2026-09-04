@@ -18,12 +18,15 @@ export type ConfigKey =
   | 'VITE_OIDC_CLIENT_ID'
   | 'VITE_OIDC_REDIRECT_URI'
   | 'VITE_MAP_TILES_URL'
+  | 'VITE_MAP_TILES_URL_DARK'
   | 'VITE_MAP_TILES_ATTRIBUTION'
+  | 'VITE_MAP_TILES_ATTRIBUTION_DARK'
   | 'VITE_MAP_DEFAULT_CENTER'
   | 'VITE_MAP_DEFAULT_ZOOM'
   | 'VITE_REALTIME_URL'
   | 'VITE_DATA_SCOPE_PREFERENCE_KEY'
   | 'VITE_ALARM_ENTITY_TYPE'
+  | 'VITE_ACCESSIBILITY_CONTACT'
 
 const runtime: Partial<Record<ConfigKey, string>> =
   (typeof window !== 'undefined' && window.__APP_CONFIG__) || {}

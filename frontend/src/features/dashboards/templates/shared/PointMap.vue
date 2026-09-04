@@ -8,12 +8,7 @@ import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { rowsTable } from '../../charts/a11y'
-import {
-  defaultCenter,
-  defaultZoom,
-  tilesAttribution as tilesAttributionOf,
-  tilesUrl as tilesUrlOf,
-} from '@/lib/mapConfig'
+import { defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { SURFACE } from '../../palette'
 
 export interface MapPoint {
@@ -53,14 +48,14 @@ const props = withDefaults(
 
 // Cartografia y encuadre inicial salen de `@/lib/mapConfig`, igual que en la vista de mapa.
 // La atribucion es obligacion de la licencia de las teselas: siempre visible.
-const tilesUrl = tilesUrlOf()
-const tilesAttribution = tilesAttributionOf()
+
 const center = defaultCenter()
 const zoom = defaultZoom()
 
 const theme = useTheme()
 const isDark = computed(() => theme.global.current.value.dark)
 const stroke = computed(() => (isDark.value ? SURFACE.dark : SURFACE.light))
+const tiles = computed(() => tilesForTheme(isDark.value))
 
 const canvas = ref<HTMLElement | null>(null)
 const map = shallowRef<LeafletMap | null>(null)
@@ -144,7 +139,6 @@ const linksTable = computed(() =>
     <div
       ref="canvas"
       class="point-map rounded-lg overflow-hidden"
-      :class="{ 'point-map--dark': isDark }"
       :style="{ height: `${height}px` }"
     >
       <!-- `group` y no `img`: dentro del mapa hay controles que deben seguir siendo
@@ -160,7 +154,7 @@ const linksTable = computed(() =>
         :aria-label="t('templates.common.mapLabel')"
         @ready="onReady"
       >
-        <LTileLayer :url="tilesUrl" :attribution="tilesAttribution" :options="{ maxZoom: 19, detectRetina: true }" />
+        <LTileLayer :url="tiles.url" :attribution="tiles.attribution" :options="{ maxZoom: 19, detectRetina: true }" />
 
         <!-- Las lineas van antes que los circulos para que estos queden encima. -->
         <LPolyline
@@ -259,10 +253,5 @@ const linksTable = computed(() =>
   color: rgb(var(--v-theme-primary));
 }
 
-/* Cartografia clara sobre tema oscuro: deslumbra.
-   Mismo filtro y mismo pendiente que en `map/views/MapView.vue`: ver ahi la nota completa de
-   GDTIS-PT01-ACC-012 (contraste de las etiquetas de tesela, no calculable estaticamente). */
-.point-map--dark :deep(.leaflet-tile-pane) {
-  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.72);
-}
+
 </style>

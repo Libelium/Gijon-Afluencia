@@ -14,18 +14,16 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * CHARACTERIZATION TESTS — DashboardController::applyContentToDashboard (GDTIS-PT01-COD-075).
+ * CHARACTERIZATION TESTS — DashboardContentService::apply.
  *
- * applyContentToDashboard has an NPath of 358 512 and is the shared engine behind both JSON
- * endpoints:
+ * It is the shared engine behind both JSON endpoints:
  *
  *   POST /api/V1/dashboards/from-json        -> createFromJson  (batch, resolves "@key" refs)
  *   POST /api/V1/dashboards/{id}/from-json   -> updateFromJson  (reconciles one dashboard)
  *
- * The method is private, so these tests drive it through those two routes. That is deliberate:
- * the refactor tracked as COD-065..068 will move this logic out of the controller, and a test
- * bound to the HTTP contract survives that move while a test bound to the private method would
- * not.
+ * These tests drive it through those two routes rather than calling it directly: a test bound
+ * to the HTTP contract survives the code being reshaped, which is what happened when this
+ * logic moved out of the controller.
  *
  * These tests describe what the code does TODAY, sharp edges included. Each surprising behaviour
  * is called out in a comment. They are a regression net, not a specification.
@@ -45,7 +43,7 @@ use Tests\TestCase;
  *   - PanelRepository::validatePanel rejection paths.
  *   - concurrent/partial-failure rollback of the wrapping DB::transaction.
  *
- * @see \App\Http\V1\Controllers\DashboardController::applyContentToDashboard
+ * @see \App\Services\Dashboards\DashboardContentService::apply
  */
 class DashboardApplyContentTest extends TestCase
 {
