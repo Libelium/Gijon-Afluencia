@@ -9,19 +9,12 @@ use App\Models\Actions\ActionEmail;
 use App\Models\Alarm;
 use App\Models\ApiKey;
 use App\Models\Dashboard;
-use App\Models\Download;
 use App\Models\EntityGroup;
-use App\Models\HomeLayout;
-use App\Models\HomeWidget;
-use App\Models\HtmlBlock;
 use App\Models\InConnector;
 use App\Models\Organization;
 use App\Models\OutConnectors\OutConnector;
 use App\Models\Preferencable;
-use App\Models\Reports\Report;
-use App\Models\Reports\ReportDocConfig;
 use App\Models\User;
-use App\Models\Workspace;
 use App\Services\UserDeletion\UserDeletionService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +62,7 @@ class AdminTransferTest extends TestCase
 
     public function test_all_resources_are_transferred_to_new_admin(): void
     {
-        $this->createTransferableData($this->oldAdmin, $this->newAdmin);
+        $this->createTransferableData($this->oldAdmin);
         $this->createDeletableData($this->oldAdmin);
 
         $this->service->deleteCompletelyTransactional($this->oldAdmin, $this->newAdmin);
@@ -79,22 +72,11 @@ class AdminTransferTest extends TestCase
 
         $this->assertEquals(UserStatus::Deleted, $old->fresh()->status);
 
-        foreach ([Workspace::class, Dashboard::class, Alarm::class, HtmlBlock::class,
-                  EntityGroup::class, ApiKey::class, Report::class, ReportDocConfig::class,
-                  InConnector::class, OutConnector::class, Download::class] as $model) {
+        foreach ([Dashboard::class, Alarm::class,
+                  EntityGroup::class, ApiKey::class,
+                  InConnector::class, OutConnector::class] as $model) {
             $this->assertEquals(0, $model::where('user_id', $old->id)->count(), "{$model}: old admin still has records");
             $this->assertGreaterThan(0, $model::where('user_id', $new->id)->count(), "{$model}: new admin has no records after transfer");
-        }
-
-        // ── Workspace memberships transferred (no duplicates) ─────────────────
-        $this->assertEquals(0, DB::table('workspace_has_users')->where('user_id', $old->id)->count(), 'Old admin still has workspace memberships');
-
-        foreach (Workspace::where('user_id', $new->id)->pluck('id') as $wsId) {
-            $count = DB::table('workspace_has_users')
-                ->where('workspace_id', $wsId)
-                ->where('user_id', $new->id)
-                ->count();
-            $this->assertLessThanOrEqual(1, $count, "Duplicate membership on workspace {$wsId}");
         }
 
         // ── Action user_id transferred ────────────────────────────────────────
@@ -113,10 +95,7 @@ class AdminTransferTest extends TestCase
         $this->assertGreaterThan(0, Organization::where('admin', $new->id)->count(), 'New admin is not admin of any organization');
 
         // ── Deletable data removed ────────────────────────────────────────────
-        $this->assertEquals(0, HomeLayout::where('user_id', $old->id)->count(), 'HomeLayout not deleted');
-        $this->assertEquals(0, HomeWidget::where('user_id', $old->id)->count(), 'HomeWidget not deleted');
         $this->assertEquals(0, Preferencable::where('user_id', $old->id)->count(), 'Preferencable not deleted');
-        $this->assertEquals(0, DB::table('password_resets')->where('email', $old->email)->count(), 'PasswordReset not deleted');
 
         // ── Spatie permissions removed ────────────────────────────────────────
         $this->assertEquals(0, DB::table('model_has_roles')->where('model_id', $old->id)->where('model_type', User::class)->count(), 'Old admin still has roles');
@@ -128,7 +107,7 @@ class AdminTransferTest extends TestCase
 
     public function test_delete_without_transfer_cleans_data_and_marks_deleted(): void
     {
-        $this->createTransferableData($this->oldAdmin, $this->newAdmin);
+        $this->createTransferableData($this->oldAdmin);
         $this->createDeletableData($this->oldAdmin);
 
         $this->service->deleteCompletelyTransactional($this->oldAdmin);
@@ -137,18 +116,6 @@ class AdminTransferTest extends TestCase
 
         $this->assertEquals(UserStatus::Deleted, $old->fresh()->status);
         $this->assertEquals(0, Organization::where('admin', $old->id)->count(), 'Organization still exists after clean');
-    }
-
-    public function test_workspace_membership_dedup_is_handled(): void
-    {
-        $ws = Workspace::create(['name' => '[TEST] Shared WS', 'user_id' => $this->oldAdmin->id, 'collaborative' => false]);
-        DB::table('workspace_has_users')->insert(['workspace_id' => $ws->id, 'user_id' => $this->oldAdmin->id]);
-        DB::table('workspace_has_users')->insert(['workspace_id' => $ws->id, 'user_id' => $this->newAdmin->id]);
-
-        $this->service->deleteCompletelyTransactional($this->oldAdmin, $this->newAdmin);
-
-        $this->assertEquals(1, DB::table('workspace_has_users')->where('workspace_id', $ws->id)->where('user_id', $this->newAdmin->id)->count(), 'Duplicate workspace membership after dedup');
-        $this->assertEquals(0, DB::table('workspace_has_users')->where('workspace_id', $ws->id)->where('user_id', $this->oldAdmin->id)->count(), 'Old admin membership not removed');
     }
 
     // ─── Setup helpers ───────────────────────────────────────────────────────
@@ -205,29 +172,19 @@ class AdminTransferTest extends TestCase
      * Creates one instance of every transferable resource, owned by $oldAdmin.
      *
      * NOTE (GDTIS-PT01-FUN-018): this used to create the data through the real API endpoints
-     * (POST /api/V1/workspaces, /reports, /connectors/out/mqtt, ...). Seven of the ten endpoint
-     * families it used DO NOT EXIST in this codebase: routes/api.php has no route whatsoever for
-     * workspaces, reports, reportDocConfigs, connectors/in/*, connectors/out/* or
-     * user/regenerate/apikey, and there is no WorkspaceController class at all. Every one of
-     * those calls 404'd, so the two main tests failed regardless of the database.
+     * (POST /api/V1/connectors/out/mqtt, ...). Most of the endpoint families it used DO NOT EXIST
+     * in this codebase: routes/api.php has no route for connectors/in/*, connectors/out/* or
+     * user/regenerate/apikey. Every one of those calls 404'd, so the two main tests failed
+     * regardless of the database.
      *
      * The MODELS and the transfer handlers for all of them are still live code — see
      * App\Providers\UserDeletionServiceProvider, which registers each of these classes with the
      * TransferableRegistry — so the transfer logic is still worth testing. The data is therefore
      * created directly through the models. What is lost versus the original intent is the
      * controller/policy/observer stack; what is gained is a test that actually runs.
-     *
-     * The $newAdmin is only used to seed the dedup scenario (ws1 shared membership).
      */
-    private function createTransferableData(User $oldAdmin, User $newAdmin): void
+    private function createTransferableData(User $oldAdmin): void
     {
-        // Workspaces (ws1 shared with newAdmin to test dedup)
-        $ws1 = Workspace::create(['name' => '[TEST] WS 1', 'user_id' => $oldAdmin->id, 'collaborative' => false]);
-        Workspace::create(['name' => '[TEST] WS 2', 'user_id' => $oldAdmin->id, 'collaborative' => false]);
-
-        DB::table('workspace_has_users')->insert(['workspace_id' => $ws1->id, 'user_id' => $oldAdmin->id]);
-        DB::table('workspace_has_users')->insert(['workspace_id' => $ws1->id, 'user_id' => $newAdmin->id]);
-
         // Dashboard
         $dash = Dashboard::create([
             'name'     => '[TEST] Dashboard',
@@ -270,27 +227,6 @@ class AdminTransferTest extends TestCase
         // ApiKey
         ApiKey::create(['user_id' => $oldAdmin->id, 'key' => Str::random(40)]);
 
-        // HtmlBlock (normally created as a side effect of a report header)
-        HtmlBlock::create([
-            'user_id' => $oldAdmin->id,
-            'name'    => '[TEST] Header',
-            'content' => '<p>[TEST] Header</p>',
-        ]);
-
-        // ReportDocConfig + Report
-        $docConfig = ReportDocConfig::create([
-            'user_id' => $oldAdmin->id,
-            'name'    => '[TEST] Doc Config',
-            'config'  => ['orientation' => 'portrait'],
-        ]);
-
-        $report = Report::create([
-            'user_id'              => $oldAdmin->id,
-            'report_doc_config_id' => $docConfig->id,
-            'name'                 => '[TEST] Report',
-            'priority'             => 1,
-        ]);
-
         // Connectors. connectable_* is a polymorphic pair with no foreign key, and the transfer
         // handler (StandardUserIdHandler) only rewrites user_id, so a placeholder target is
         // enough to characterise the transfer.
@@ -313,17 +249,6 @@ class AdminTransferTest extends TestCase
             'connectable_id'   => 1,
         ]);
 
-        // Download, linked to the report as the downloadable resource.
-        Download::create([
-            'user_id'           => $oldAdmin->id,
-            'downloadable_id'   => $report->id,
-            'downloadable_type' => 'reports',
-            'file_name'         => '[TEST] Report Export',
-            'file_extension'    => 'csv',
-            'status'            => 'Completed',
-            'downloaded'        => false,
-        ]);
-
         // Keep the dashboard referenced so static analysis does not flag it as unused; it is the
         // Dashboard row the transfer assertions look for.
         $this->assertNotNull($dash->id);
@@ -331,25 +256,10 @@ class AdminTransferTest extends TestCase
 
     private function createDeletableData(User $admin): void
     {
-        $layout = HomeLayout::create([
-            'user_id' => $admin->id,
-            'name'    => '[TEST] Layout',
-            'layout'  => [],
-        ]);
-
-        HomeWidget::create([
-            'user_id'        => $admin->id,
-            'home_layout_id' => $layout->id,
-            'type'           => 'chart',
-        ]);
-
         // Preferencable
         $pref = DB::table('preferences')->first();
         if ($pref) {
             Preferencable::create(['user_id' => $admin->id, 'preference_id' => $pref->id, 'value' => 'test']);
         }
-
-        // PasswordReset
-        DB::table('password_resets')->insert(['email' => $admin->email, 'token' => Str::random(60)]);
     }
 }

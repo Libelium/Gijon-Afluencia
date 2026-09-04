@@ -11,10 +11,10 @@ Servidor en el puerto `8000` del contenedor (`22000` en la máquina anfitriona).
 
 | Método y ruta | Para qué |
 | --- | --- |
-| `GET /hchk` | Health check. Comprueba la conectividad de los tres backends configurados. |
+| `GET /alive` | Liveness. Devuelve 200 sin consultar ninguna dependencia: sólo dice que el proceso responde. |
+| `GET /hchk` | Readiness. Comprueba en paralelo la conectividad de los tres backends configurados; 200 si todos responden, 503 si alguno falla o no contesta en 5 s. |
 | `GET /docs` | Swagger UI (sólo si `ENABLE_SWAGGER=true`). |
 | `POST /api/v1/time-series/` | Consulta de series temporales (agregaciones, ventanas, paginación). |
-| `POST /api/v1/time-series/hash` | Hash sha256 determinista de lo que devolvería la consulta anterior, calculado en base de datos. |
 | `DELETE /api/v1/time-series/` | Borrado de series. |
 | `GET /api/v1/context-broker/dataTypes` | Tipos de entidad presentes en el broker. |
 | `GET · POST · DELETE /api/v1/context-broker/entities…` | Alta, consulta, actualización y borrado de entidades NGSI. |
@@ -22,6 +22,10 @@ Servidor en el puerto `8000` del contenedor (`22000` en la máquina anfitriona).
 | `GET /api/v1/iota/services` | Servicios (grupos de dispositivos) dados de alta en el IoT Agent. |
 | `POST /api/v1/iota/provision/service` · `/provision/device` | Aprovisionamiento de servicios y dispositivos. |
 | `DELETE /api/v1/iota/devices` | Baja de dispositivos. |
+
+La división entre las dos sondas es deliberada: un `livenessProbe` que dependiera de Orion, del
+IoT Agent o de Timescale haría que kubelet matase `aether-link` cada vez que se cae un backend
+ajeno. Por eso `livenessProbe` apunta a `/alive` y `readinessProbe` a `/hchk`.
 
 ## Backends enchufables
 
@@ -81,6 +85,11 @@ Ojo con dos detalles:
   lo usan como **tamaño del pool de conexiones**. Los ajustes reales del servidor se leen de
   `gunicorn/.env` (opcional, ver `gunicorn/.env.example`); sin ese fichero valen los valores
   por defecto de `gunicorn/gunicorn.py`.
+  Como el pool de Timescale se abre con `max_overflow=0`, ese valor es además el techo de
+  consultas simultáneas de `/api/v1/time-series/` por proceso: los manejadores son síncronos y
+  FastAPI los despacha a su pool de hilos, así que las peticiones que pasen del tamaño del pool
+  esperan en `pool_timeout` (30 s) y luego fallan con `sqlalchemy.exc.TimeoutError`. Dimensiónalo
+  con la concurrencia esperada del endpoint, no con el número de workers de gunicorn.
 - `app/.env` no se versiona.
 
 ## Construcción y ejecución
@@ -119,20 +128,11 @@ Se ejecutan dentro del contenedor:
 docker compose run --rm --no-deps aether-link pytest ./app/tests/ -q
 ```
 
-> **Nota de subsanación (COD-102).** `pytest` ya no es una dependencia de tiempo de
-> ejecución: se ha movido al grupo `test` del `pyproject.toml`, para que no viaje en la
-> imagen de producción.
->
-> - Para que el comando de arriba siga funcionando, el `Dockerfile` debe sincronizar
->   también ese grupo, igual que ya hace `queues-consumer`:
->   `uv sync --locked --no-install-project --all-groups --no-cache`.
-> - En local, el grupo hay que pedirlo de forma explícita, porque el grupo que `uv`
->   selecciona por defecto es `dev`, no `test`:
->   `uv sync --group test && pytest ./app/tests/ -q`.
->   Un `uv sync` a secas deja el entorno **sin `pytest`**. Esa es exactamente la causa
->   raíz de FUN-019 en `queues-consumer`, donde se confundió con una dependencia sin
->   declarar; allí se ha fijado `default-groups = ["test"]`, que aquí no se puede usar
->   porque el `Dockerfile` no selecciona grupos y volvería a meter `pytest` en la imagen.
+> **`pytest` está declarado en el grupo `test`**, no entre las dependencias de tiempo de
+> ejecución. Fuera del contenedor hay que pedirlo de forma explícita, porque el grupo que
+> `uv` selecciona por omisión es `dev`: `uv sync --group test && pytest ./app/tests/ -q`.
+> Un `uv sync` a secas deja el entorno **sin `pytest`**. Dentro de la imagen sí está,
+> porque su `uv sync` usa `--all-groups`.
 
 Las pruebas son unitarias y no necesitan ni base de datos ni broker: los backends se sustituyen
 por dobles.

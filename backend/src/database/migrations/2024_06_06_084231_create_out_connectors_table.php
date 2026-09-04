@@ -20,6 +20,8 @@ return new class extends Migration
             $table->date('last_connection')->nullable();
             $table->morphs('connectable');
             $table->timestamps();
+            $table->integer('retries')->default(0);
+            $table->boolean('use_readable_names')->default(false);
         });
     }
 

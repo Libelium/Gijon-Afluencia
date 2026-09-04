@@ -17,8 +17,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('type');
             $table->string('function');
-            $table->boolean('active')->default(true);
+            $table->boolean('up')->default(true);
             $table->timestamps();
+            $table->boolean('disabled')->default(false);
         });
     }
 

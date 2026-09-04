@@ -21,7 +21,7 @@ class MintakaHttpClient:
         """
         Check if the data source is reachable (mintaka info endpoint)
         """
-        response = requests.get(self.service_url + "/info")
+        response = requests.get(self.service_url + "/info", timeout=5)
         logging.info(
             "Mintaka health check: " + str(response.status_code) + " " + response.text
         )

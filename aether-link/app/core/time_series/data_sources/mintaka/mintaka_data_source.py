@@ -116,8 +116,6 @@ class MintakaDataSource(DataSource):
         for multiple requests.
         """
 
-        self.tenant = request.options.tenant
-
         time_series_response = TimeSeriesResponse(
             time_series=[],
             options=request.options,
@@ -428,7 +426,9 @@ class MintakaDataSource(DataSource):
         query_builder = MintakaQueryBuilder(session)
         query_builder.temporalServiceUrl(self.service_url)
         query_builder.contextUrl(self.context_url)
-        query_builder.ngsiLdTenant(self.tenant)
+        # module-level singleton: the tenant comes from the request options, not from the
+        # instance, which only holds the configured one
+        query_builder.ngsiLdTenant(options.tenant if options else self.tenant)
         query_builder.filterAttrs(attrs)
 
         if options is None:

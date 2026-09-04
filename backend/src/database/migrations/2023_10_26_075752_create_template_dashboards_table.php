@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('dashboard_id')->references('id')->on('dashboards')->onDelete('cascade');
             $table->string('template_type');
             $table->timestamps();
+            $table->jsonb('config')->nullable();
         });
     }
 

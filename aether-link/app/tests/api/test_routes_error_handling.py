@@ -5,12 +5,12 @@ The two proxy route modules had no test coverage at all, which is how a wrong
 `HTTPException` import, two pairs of duplicate handler names, an arity mismatch
 against the IOTA proxy and three `UnboundLocalError` fall-throughs all survived.
 
-These tests drive the handlers directly with `asyncio.run` instead of going
-through `fastapi.testclient.TestClient`, so they need no HTTP client dependency
-beyond what the project already declares.
+These tests drive the handlers directly instead of going through
+`fastapi.testclient.TestClient`, so they need no HTTP client dependency beyond
+what the project already declares. All of them are plain `def`, so they can be
+called without an event loop.
 """
 
-import asyncio
 import inspect
 from collections import Counter
 from unittest.mock import MagicMock, patch
@@ -79,10 +79,8 @@ def test_get_services_by_entity_type_matches_the_proxy_signature():
     """
     proxy = MagicMock()
     with patch.object(iot_agent, "iota_proxy", proxy):
-        asyncio.run(
-            iot_agent.get_services_by_entity_type(
-                entity_type="AirQualityObserved", tenant="tenantA", scope="/scopeA"
-            )
+        iot_agent.get_services_by_entity_type(
+            entity_type="AirQualityObserved", tenant="tenantA", scope="/scopeA"
         )
 
     proxy.get_services.assert_called_once()
@@ -111,10 +109,8 @@ def test_iot_agent_reraises_http_exception_instead_of_returning_200():
     )
     with patch.object(iot_agent, "iota_proxy", proxy):
         with pytest.raises(HTTPException) as excinfo:
-            asyncio.run(
-                iot_agent.get_services_by_entity_type(
-                    entity_type="Nope", tenant="tenantA", scope="/scopeA"
-                )
+            iot_agent.get_services_by_entity_type(
+                entity_type="Nope", tenant="tenantA", scope="/scopeA"
             )
     assert excinfo.value.status_code == 404
 
@@ -149,10 +145,8 @@ def test_entities_handlers_do_not_fall_through_with_unbound_result(
     response = Response()
 
     with patch.object(context_broker, "context_broker_proxy", proxy):
-        body = asyncio.run(
-            getattr(context_broker, handler_name)(
-                request=MagicMock(), response=response, tenant="t", scope="/s"
-            )
+        body = getattr(context_broker, handler_name)(
+            request=MagicMock(), response=response, tenant="t", scope="/s"
         )
 
     assert response.status_code == 422
@@ -176,10 +170,8 @@ def test_entities_handlers_map_unreachable_broker_to_502(handler_name, proxy_met
     response = Response()
 
     with patch.object(context_broker, "context_broker_proxy", proxy):
-        body = asyncio.run(
-            getattr(context_broker, handler_name)(
-                request=MagicMock(), response=response, tenant="t", scope="/s"
-            )
+        body = getattr(context_broker, handler_name)(
+            request=MagicMock(), response=response, tenant="t", scope="/s"
         )
 
     assert response.status_code == 502
@@ -192,10 +184,8 @@ def test_get_entity_maps_upstream_status():
     response = Response()
 
     with patch.object(context_broker, "context_broker_proxy", proxy):
-        body = asyncio.run(
-            context_broker.get_entity(
-                urn="urn:ngsi-ld:Device:1", response=response, tenant="t", scope="/s"
-            )
+        body = context_broker.get_entity(
+            urn="urn:ngsi-ld:Device:1", response=response, tenant="t", scope="/s"
         )
 
     assert response.status_code == 503
@@ -208,10 +198,8 @@ def test_list_entities_by_type_maps_upstream_status():
     response = Response()
 
     with patch.object(context_broker, "context_broker_proxy", proxy):
-        body = asyncio.run(
-            context_broker.list_entities_by_type(
-                types="Device", response=response, tenant="t", scope="/s"
-            )
+        body = context_broker.list_entities_by_type(
+            types="Device", response=response, tenant="t", scope="/s"
         )
 
     assert response.status_code == 400

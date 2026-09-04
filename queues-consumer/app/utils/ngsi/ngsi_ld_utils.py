@@ -66,7 +66,12 @@ def get_command_name(attr_key: str):
     Get the command name from the attribute key,
     the attribute must be like "command_status" or "command_info"
     """
-    return attr_key.split("_")[0]
+    # Strip the suffix instead of splitting on "_": command names carry
+    # underscores themselves ("w_ota_status" is the command "w_ota").
+    for suffix in ("_info", "_status"):
+        if attr_key.endswith(suffix):
+            return attr_key[: -len(suffix)]
+    return attr_key
 
 
 def is_observed_attribute(attr_value: Any):

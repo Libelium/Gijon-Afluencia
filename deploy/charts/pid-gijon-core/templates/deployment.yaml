@@ -1,5 +1,32 @@
 {{- range $name, $component := .Values.components }}
 {{- if $component.enabled }}
+{{- $caPath := "" }}
+{{- if $component.config }}
+{{- $caPath = index $component.config "RABBITMQ_CA_FILE_PATH" | default "" }}
+{{- end }}
+{{- $caCert := $component.rabbitmqCaCert | default "" }}
+{{- $caSecret := $component.rabbitmqCaSecret | default "" }}
+{{- if and $caPath (not $caCert) (not $caSecret) }}
+{{- fail (printf "components.%s: RABBITMQ_CA_FILE_PATH=%s monta un Secret que nadie crea. Pon el PEM en components.%s.rabbitmqCaCert, o declara en components.%s.rabbitmqCaSecret el nombre del Secret que aportas por fuera (con la clave %s). Sin ninguno de los dos el pod se quedaria en ContainerCreating." $name $caPath $name $name (base $caPath)) }}
+{{- end }}
+{{- if and $caPath $caCert }}
+---
+# CA del broker. Va aqui, y no en secret.yaml, porque ese solo emite el Secret de
+# `secrets:` (variables de entorno) y esto es un fichero montado.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}-rabbitmq-ca
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $name }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+type: Opaque
+data:
+  {{ base $caPath }}: {{ $caCert | b64enc }}
+{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -52,6 +79,9 @@ spec:
         # y nada ha cambiado, que es el peor de los resultados posibles. Al meter el checksum en
         # la plantilla del pod, cambiar un valor cambia el spec y Kubernetes rueda el Deployment.
         checksum/config: {{ toYaml (dict "config" $component.config "secrets" $component.secrets) | sha256sum }}
+        {{- if $caCert }}
+        checksum/rabbitmq-ca: {{ $caCert | sha256sum }}
+        {{- end }}
         {{- if $component.podAnnotations }}
         {{- toYaml $component.podAnnotations | nindent 8 }}
         {{- end }}
@@ -177,13 +207,28 @@ spec:
           resources:
             {{- toYaml $component.resources | nindent 12 }}
           {{- end }}
-          {{- if $component.volumeMounts }}
+          {{- if or $component.volumeMounts $caPath }}
           volumeMounts:
-            {{- toYaml $component.volumeMounts | nindent 12 }}
+            {{- with $component.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if $caPath }}
+            - name: rabbitmq-ca
+              mountPath: {{ $caPath }}
+              subPath: {{ base $caPath }}
+              readOnly: true
+            {{- end }}
           {{- end }}
-      {{- if $component.volumes }}
+      {{- if or $component.volumes $caPath }}
       volumes:
-        {{- toYaml $component.volumes | nindent 8 }}
+        {{- with $component.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if $caPath }}
+        - name: rabbitmq-ca
+          secret:
+            secretName: {{ $caSecret | default (printf "%s-rabbitmq-ca" (include "pid-gijon-core.kebabcase" $name)) }}
+        {{- end }}
       {{- end }}
       hostname: {{ include "pid-gijon-core.kebabcase" $name }}
       restartPolicy: Always

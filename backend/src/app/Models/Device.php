@@ -120,31 +120,4 @@ class Device extends AuditableModel
     {
         return $this->morphMany(Virtualization::class, 'virtualization');
     }
-
-    /**
-     * Get the device files associated with the device.
-     * Returns two types of files:
-     * 1. Generic files for the device type (from pivot table device_file_device_type, resource_id is null)
-     * 2. Specific files for this device (resource_type='devices' and resource_id=device.id)
-     */
-    public function deviceFiles()
-    {
-        $deviceCode = $this->deviceType->code ?? null;
-
-        return DeviceFile::query()
-            ->with('deviceTypePivots')
-            ->where(function ($query) use ($deviceCode) {
-                $query->where(function ($subQuery) use ($deviceCode) {
-                    // Search in pivot table for device_code match
-                    $subQuery->whereHas('deviceTypePivots', function ($pivotQuery) use ($deviceCode) {
-                        $pivotQuery->where('device_code', $deviceCode);
-                    })
-                        ->whereNull('resource_id');
-                })
-                    ->orWhere(function ($subQuery) {
-                        $subQuery->where('resource_type', 'devices')
-                            ->where('resource_id', $this->id);
-                    });
-            });
-    }
 }

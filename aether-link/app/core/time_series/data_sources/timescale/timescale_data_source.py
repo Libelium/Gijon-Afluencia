@@ -10,9 +10,6 @@ from app.core.time_series.data_sources.timescale.db_settings import DBSettings
 from app.core.configurable_service.configurable_service import ServiceParamDescription
 from aether_pylib.time_series.time_series_request import TimeSeriesRequest
 from aether_pylib.time_series.time_series_response import TimeSeriesResponse
-from aether_pylib.time_series.time_series_hash_response import (
-    TimeSeriesHashResponse,
-)
 from aether_pylib.time_series.delete_time_series_request import (
     DeleteTimeSeriesRequest,
 )
@@ -22,7 +19,6 @@ from aether_pylib.time_series.delete_time_series_response import (
 from aether_pylib.time_series.deleted_time_series import DeletedTimeSeries
 import app.core.time_series.data_sources.timescale.query.query_builder as ts_qb
 import app.core.time_series.data_sources.timescale.query.query_parser as ts_qp
-import app.core.time_series.data_sources.timescale.query.timeseries_hash_query as ts_hash
 from app.core.config.logging import appLogging as logging
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -56,10 +52,6 @@ class TimescaleDatasource(DataSource):
             raise ValueError("Not all required parameters were provided")
 
         self.connection_manager = ConnectionManager(self.db_settings)
-        # First call to the hash endpoint per pod lifetime ensures pgcrypto is
-        # available; we cache the success flag so subsequent requests skip the
-        # DDL roundtrip.
-        self._pgcrypto_ready: bool = False
 
     def params_description() -> ServiceParamDescription:
         """
@@ -105,10 +97,9 @@ class TimescaleDatasource(DataSource):
         }
 
     def health_check(self):
-        db = next(self.connection_manager.get_session())
         try:
-            db.execute(text("SELECT 1"))
-            db.close()
+            with self.connection_manager.health_engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
         except Exception as e:
             logging.error(f"Error executing health check query: {e}")
             return False
@@ -164,69 +155,6 @@ class TimescaleDatasource(DataSource):
         return TimeSeriesResponse(
             time_series=time_series,
             options=request.options,
-        )
-
-    def get_time_series_hash(
-        self, requests: List[TimeSeriesRequest]
-    ) -> List[TimeSeriesHashResponse]:
-        """
-        Compute a deterministic sha256 digest of each request's underlying rows
-        directly inside Postgres (pgcrypto). One TimeSeriesHashResponse per
-        request element, in the same order.
-        """
-        return [self.__hash_single_request(request) for request in requests]
-
-    def __ensure_pgcrypto(self, db: Session) -> None:
-        if self._pgcrypto_ready:
-            return
-        db.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
-        db.commit()
-        self._pgcrypto_ready = True
-        logging.info("pgcrypto extension ensured on the platform timescale DB")
-
-    def __hash_single_request(
-        self, request: TimeSeriesRequest
-    ) -> TimeSeriesHashResponse:
-        if request.options.aggregation:
-            raise HTTPException(
-                status_code=400,
-                detail="The hash endpoint does not support aggregation",
-            )
-
-        db: Session = next(self.connection_manager.get_session())
-
-        try:
-            self.__ensure_pgcrypto(db)
-            data_hash, row_count = ts_hash.execute_hash_query(
-                session=db,
-                tenant=request.options.tenant,
-                scope=request.options.scope,
-                entity_ids=request.device_ids or [],
-                attr_ids=request.measure_ids or [],
-                start_date=request.options.start_date,
-                end_date=request.options.end_date,
-            )
-        except HTTPException:
-            raise
-        except Exception as e:
-            logging.error(f"Error executing hash query: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error executing time series hash query: {e}",
-            )
-        finally:
-            db.close()
-
-        return TimeSeriesHashResponse(
-            tenant=request.options.tenant,
-            scope=getattr(request.options, "scope", None),
-            entity_ids=[str(d) for d in (request.device_ids or [])],
-            measure_ids=request.measure_ids or [],
-            start_date=request.options.start_date,
-            end_date=request.options.end_date,
-            row_count=row_count,
-            algorithm="sha256",
-            data_hash=data_hash,
         )
 
     def delete_time_series(

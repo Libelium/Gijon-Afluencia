@@ -18,13 +18,15 @@ return new class extends Migration
             $table->id();
             $table->string("name");
             $table->string("email")->unique();
-            $table->string("password");
-            $table->string("remember_token")->nullable();
             $table->boolean("enabled")->default(true);
-            $table->string("support_password")->nullable();
-            $table->integer("created_by")->nullable();
-            $table->string("level")->nullable();
             $table->timestamps();
+            $table->timestamp('last_activity')->nullable();
+            $table->string('keycloak_client_id')->default('pending');
+            $table->boolean('blocked_by_admin')->default(false)->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+            $table->string('status', 20)->default('active');
+            $table->index('status');
         });
     }
 

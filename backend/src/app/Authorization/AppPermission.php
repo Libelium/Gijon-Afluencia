@@ -31,19 +31,12 @@ enum AppPermission: string
     case DATA_SOURCES_ENTITIES_DECRYPT_READ = 'data_sources.entities.decrypt.read';
 
         // ----------------
-        // INCIDENTS MODULE
-    case INCIDENTS_REVIEW = 'incidents.review';
-    case INCIDENTS_ADMIN = 'incidents.admin';
-
-        // ----------------
         // ANALYTICS MODULE
     case ANALYTICS_READ = 'analytics.read';
 
         //      DASHBOARDS
     case DASHBOARDS_READ = 'dashboards.read';
     case DASHBOARDS_UPDATE = 'dashboards.update';
-
-        //          DASHBOARD AI
 
         //          DASHBOARD CUSTOM
     case DASHBOARDS_CUSTOM_READ = 'dashboards.custom.read';
@@ -93,63 +86,11 @@ enum AppPermission: string
 
         //          DASHBOARD TEMPLATES
     case DASHBOARDS_TEMPLATES_READ = 'dashboards.template.read';
-
-        //          DASHBOARD TEMPLATES - AIR QUALITY
-
-        //          DASHBOARD TEMPLATES - NOISE LEVEL
-
-        //          DASHBOARD TEMPLATES - WEATHER
-
-        //          DASHBOARD TEMPLATES - WATER QUALITY
-
         //          DASHBOARD TEMPLATES - CROWD MONITORING
     case DASHBOARDS_TEMPLATES_CM_READ = 'dashboards.templates_cm.read';
     case DASHBOARDS_TEMPLATES_CM_SIMPLE_READ = 'dashboards.templates_cm_simple.read';
 
-        //          DASHBOARD TEMPLATES - PARKING
-
-        //          DASHBOARD TEMPLATES - DEVICES
-
-        //          DASHBOARD TEMPLATES - GRAFANA
-        //          DASHBOARD TEMPLATES - TRAFFIC
-
-        //          DASHBOARD TEMPLATES - ENVAIR EMISSIONS
-
-        //          DASHBOARD TEMPLATES - TOURISTIC DESTINATIONS
-
-        //          DASHBOARD TEMPLATES - CONSUMPTION MANAGEMENT
-        //          DASHBOARD TEMPLATES - WEATHER SIMULATIONS
-
-        //          DASHBOARD TEMPLATES - MUNICIPAL VERTICALS — one permission per vertical
-        //          V01 — Gestão de Ocorrências
-        //          V02 — Gestão de Empreitadas
-        //          V03 — Gestão de Infraestruturas Municipais e Escolares
-        //          V04 — Gestão do Orçamento Participativo
-        //          V05 — Gestão de Parque Empresarial
-        //          V06 — Gestão de Transporte a Pedido
-        //          V07 - Gestão de iluminação pública
-        //          V08 — Gestão de Consumos de Água
-        //          V09 — Gestão de Rega de Espaços Verdes
-        //          V10 — Gestão de Arvoredo
-        //          V11 — Gestão de Resíduos Sólidos
-        //          V12 — Monitorização da Qualidade do Ar
-        //          V13 — Analítica de Vídeo
-        //          V14 — Gestão de Parque Edificado
-        //          V15 — Agenda Cultural
-        //          V16 — Gestão de Eventos
-        //          V17 — Gestão de Consumos Energéticos
-        //          V18 — Gestão de Biblioteca
-        //          V19 — Gestão de População Mayor
-        //          V20 — Gestão de Equipamentos
-
-        //          DASHBOARD TEMPLATES - SCO
-
-        //      REPORTS
-    case REPORTS_READ = 'reports.read';
-    case REPORTS_UPDATE = 'reports.update';
         //      CHART EXPORTS
-    case CHART_EXPORTS_READ = 'chart_exports.read';
-    case CHART_EXPORTS_UPDATE = 'chart_exports.update';
 
         // ----------------
         // ALARMS
@@ -165,18 +106,6 @@ enum AppPermission: string
         // IN CONNECTORS
     case IN_CONNECTORS_READ = 'in_connectors.read';
     case IN_CONNECTORS_UPDATE = 'in_connectors.update';
-
-        // ----------------
-        // ENVAIR
-
-        // ----------------
-        // NEBULA
-
-        // ----------------
-        // GRID
-
-        // ----------------
-        // VEC
 
         // ----------------
         // ADMINISTRATION
@@ -205,16 +134,6 @@ enum AppPermission: string
     case APPLICATION_ADMIN = 'application.admin';
 
         // ----------------
-        // WORKSPACES
-    case WORKSPACES_READ = 'workspaces.read';
-    case WORKSPACES_UPDATE = 'workspaces.update';
-
-        // ----------------
-        // HOME LAYOUTS
-    case HOME_LAYOUTS_READ = 'home_layouts.read';
-    case HOME_LAYOUTS_UPDATE = 'home_layouts.update';
-
-        // ----------------
         // BOOTSTRAP
     case BOOTSTRAP_READ = 'bootstrap.read';
     case BOOTSTRAP_UPDATE = 'bootstrap.update';
@@ -227,49 +146,6 @@ enum AppPermission: string
     case DLM_IMPORTATION_READ = 'dlm.importation.read';
     case DLM_IMPORTATION_UPDATE = 'dlm.importation.update';
 
-        // ----------------
-        // CROWD MONITORING ADVANCED
-
-        // ----------------
-        // TRAFFIC MONITORING ADVANCED
-
-        // ----------------
-        // PARKING MONITORING ADVANCED
-
-        // ----------------
-        // AI MARKETPLACE
-
-        // ----------------
-        // BLOCKCHAIN
-
-        // ----------------
-        // RESELLERS
-
-    case RESELLER_READ = 'reseller.read';
-    case RESELLER_UPDATE = 'reseller.update';
-
-        // METAWORLDX
-
-        // ----------------
-        // CHATBOT
-
-        // ----------------
-        // MCP
-
-        // ----------------
-        // MOCK BUILDER
-
-        // ----------------
-        // OPENWEATHER
-
-        // ----------------
-        // CROWD SIMULATIONS
-
-        // WRF SIMULATIONS
-    case WRF_SIMULATIONS_READ = 'wrf_simulations.read';
-    case WRF_SIMULATIONS_UPDATE = 'wrf_simulations.update';
-
-        // ----------------
 
         // BACKGROUND JOBS
     case BACKGROUND_JOBS_READ = 'background_jobs.read';
@@ -327,8 +203,6 @@ enum AppPermission: string
             self::DASHBOARDS_TEMPLATES_CM_SIMPLE_READ,
             // self::DLM_IMPORTATION_READ,
             // self::DLM_IMPORTATION_UPDATE,
-            self::HOME_LAYOUTS_READ,
-            self::HOME_LAYOUTS_UPDATE,
         ];
 
         return $hidden;

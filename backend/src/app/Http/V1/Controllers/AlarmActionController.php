@@ -10,7 +10,6 @@ use App\Http\V1\Requests\PaginationRequest;
 use App\Http\V1\Resources\AlarmActionResource;
 use App\Models\Actions\Action;
 use App\Models\Actions\ActionEmail;
-use App\Models\Actions\ActionPush;
 use App\Models\Actions\ActionHttpPush;
 use App\Models\Actions\ActionTelegram;
 use App\Models\Actions\ActionWhatsapp;
@@ -58,13 +57,6 @@ class AlarmActionController extends Controller
                                     'destination' => $action['to'],
                                     'subject' => $action['subject'],
                                     'content' => $action['body'],
-                                ]);
-                                break;
-                            case 'push':
-                                $actionModel = new ActionPush([
-                                    'destination_user_id' => $user->id,
-                                    'title' => $action['title'],
-                                    'content' => $action['content'],
                                 ]);
                                 break;
                             case 'http_push':
@@ -155,7 +147,6 @@ class AlarmActionController extends Controller
 
         // Select orphaned actionables not used in any action
         $actionEmails = ActionEmail::whereDoesntHave('action')->get();
-        $actionPushes = ActionPush::whereDoesntHave('action')->get();
         $actionHttpPushes = ActionHttpPush::whereDoesntHave('action')->get();
         $actionTelegrams = ActionTelegram::whereDoesntHave('action')->get();
         $actionWhatsapps = ActionWhatsapp::whereDoesntHave('action')->get();
@@ -164,7 +155,6 @@ class AlarmActionController extends Controller
 
         // Delete orphaned actionables
         ActionEmail::destroy($actionEmails->pluck('id')->toArray());
-        ActionPush::destroy($actionPushes->pluck('id')->toArray());
         ActionHttpPush::destroy($actionHttpPushes->pluck('id')->toArray());
         ActionTelegram::destroy($actionTelegrams->pluck('id')->toArray());
         ActionWhatsapp::destroy($actionWhatsapps->pluck('id')->toArray());

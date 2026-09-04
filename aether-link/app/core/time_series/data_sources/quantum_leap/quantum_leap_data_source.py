@@ -20,7 +20,8 @@ from app.core.time_series.data_sources.quantum_leap.models.md_ets_metadata impor
 )
 from app.core.time_series.data_sources.quantum_leap.schemas.entity_schema import Entity
 from sqlalchemy.orm import Session
-from sqlalchemy import Table
+from sqlalchemy import Table, create_engine, text
+from sqlalchemy.pool import NullPool
 import app.core.time_series.data_sources.quantum_leap.query.entity_search as entity_search
 import app.core.time_series.data_sources.quantum_leap.quantum_leam_constants as ql_constants
 import app.core.time_series.data_sources.quantum_leap.models.utils as model_utils
@@ -57,6 +58,16 @@ class QuantumLeapDataSource(DataSource):
             raise ValueError("Not all required parameters were provided")
 
         self.connection_manager = ConnectionManager(self.db_settings)
+        # the health check does not share the API pool, otherwise a busy API would make
+        # readiness fail on load instead of on a real outage
+        self.health_engine = create_engine(
+            self.db_settings.connection_uri,
+            poolclass=NullPool,
+            connect_args={
+                "connect_timeout": 3,
+                "options": "-c statement_timeout=3000",
+            },
+        )
 
     def params_description() -> ServiceParamDescription:
         """
@@ -105,7 +116,14 @@ class QuantumLeapDataSource(DataSource):
         """
         Check if the data source is healthy
         """
-        return False
+        try:
+            with self.health_engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
+        except Exception as e:
+            logging.error(f"Error executing health check query: {e}")
+            return False
+
+        return True
 
     def __preprocess(self, requests: List[TimeSeriesRequest], session: Session):
         """

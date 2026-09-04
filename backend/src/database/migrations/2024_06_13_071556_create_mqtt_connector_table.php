@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('sslCert')->nullable();
             $table->boolean('ssl');
             $table->jsonb('topicTemplate');
-            $table->jsonb('messageTemplate');
+            $table->jsonb('payload_config');
             $table->timestamps();
         });
     }

@@ -4,7 +4,6 @@ namespace App\Helpers;
 
 use App\Helpers\AetherLinkHelper;
 use App\Http\V1\Controllers\OrganizationController;
-use App\Models\ProbeType;
 use App\Models\DeviceType;
 use App\Models\Organization;
 use App\Repositories\PreferenceRepository;
@@ -20,7 +19,7 @@ use Exception;
 class ServiceProvisioningHelper
 {
     /**
-     * Compares local device/probe types with remote IOTA services and provisions the missing ones.
+     * Compares local device types with remote IOTA services and provisions the missing ones.
      *
      * @param FiwareTenant $tenant The FIWARE tenant to check.
      * @param FiwareScope $scope The FIWARE scope to check.
@@ -28,11 +27,10 @@ class ServiceProvisioningHelper
      * @return array An array containing collections of services that were provisioned.
      * @throws Exception Re-throws any exception for the caller to handle.
      */
-    public static function getDevicesAndProbesAndProvision(FiwareTenant $tenant, FiwareScope $scope, ?string $datamodel = null): array
+    public static function getDevicesAndProvision(FiwareTenant $tenant, FiwareScope $scope, ?string $datamodel = null): array
     {
         try {
             $devicesDatamodels = self::generateDevicesDatamodelsList();
-            $probesDatamodels  = self::generateProbesDatamodelsList();
 
             $remoteIotaServices = AetherLinkHelper::getIotaServices($tenant->name, $scope->name, $datamodel);
 
@@ -42,14 +40,11 @@ class ServiceProvisioningHelper
                     : AetherLinkHelper::getIotaServices($tenant->name, $scope->name)
             );
 
-            $provisionPayloadDevices = self::buildProvisionPayload($devicesDatamodels, false, $existingApiKeyPrefixes);
-            $provisionPayloadProbes  = self::buildProvisionPayload($probesDatamodels, true, $existingApiKeyPrefixes);
+            $provisionPayloadDevices = self::buildProvisionPayload($devicesDatamodels, $existingApiKeyPrefixes);
 
             $allDevices = data_get($provisionPayloadDevices, 'services', []);
-            $allProbes  = data_get($provisionPayloadProbes, 'services', []);
 
             $devices = collect($allDevices);
-            $probes  = collect($allProbes);
             $remote  = collect($remoteIotaServices);
 
             $extractLocalKey = function (array $s): string {
@@ -76,15 +71,7 @@ class ServiceProvisioningHelper
                 return $remoteCompositeKeys->contains($extractLocalKey($s));
             })->values();
 
-            $probesToProvision = $probes->reject(function ($s) use ($remoteCompositeKeys, $extractLocalKey) {
-                return $remoteCompositeKeys->contains($extractLocalKey($s));
-            })->values();
-
-
-            $services = array_merge(
-                $devicesToProvision->toArray(),
-                $probesToProvision->toArray()
-            );
+            $services = $devicesToProvision->toArray();
 
             $response = self::provisionServices(
                 $tenant->name,
@@ -103,7 +90,7 @@ class ServiceProvisioningHelper
                 );
             }
 
-            $allEntityTypes = $devices->merge($probes)
+            $allEntityTypes = $devices
                 ->pluck('entity_type')
                 ->filter()
                 ->unique()
@@ -114,7 +101,6 @@ class ServiceProvisioningHelper
 
             return [
                 'devicesToProvision' => $devicesToProvision,
-                'probesToProvision'  => $probesToProvision
             ];
         } catch (\Throwable $e) {
             throw new Exception("Error getting IOTA services: " . $e->getMessage(), 0, $e);
@@ -180,7 +166,7 @@ class ServiceProvisioningHelper
                         $result[$org->id] = ['error' => 'mainScope or its tenant not found'];
                         continue;
                     }
-                    $diff = self::getDevicesAndProbesAndProvision($mainScope->tenant, $mainScope);
+                    $diff = self::getDevicesAndProvision($mainScope->tenant, $mainScope);
 
                     $dataScopePreference = 'platformDataScope';
                     $dataScopeId = PreferenceRepository::getOrganizationPreference($org, $dataScopePreference);
@@ -199,7 +185,6 @@ class ServiceProvisioningHelper
                     $result[$org->id] = [
                         'organization'        => $org->name,
                         'devicesToProvision'  => $diff['devicesToProvision'],
-                        'probesToProvision'   => $diff['probesToProvision'],
                         'entitiesToProvision' => $entitiesToProvision,
                     ];
                 } catch (\Throwable $e) {
@@ -212,7 +197,7 @@ class ServiceProvisioningHelper
     }
 
     /**
-     * Provisions the main services (devices and probes) for a specific organization.
+     * Provisions the main services for a specific organization.
      *
      * @param Organization $org The organization to provision services for.
      * @return void
@@ -223,13 +208,10 @@ class ServiceProvisioningHelper
 
         $devicesDatamodels = self::generateDevicesDatamodelsList();
         self::provisionService($scope->tenant->name, $scope->name, $devicesDatamodels);
-
-        $probesDatamodels = self::generateProbesDatamodelsList();
-        self::provisionService($scope->tenant->name, $scope->name, $probesDatamodels, true);
     }
 
     /**
-     * Provisions the main services (devices and probes) on an explicit scope and
+     * Provisions the main services on an explicit scope and
      * subscribes it to the main datamodels. Unlike provisionMainServices, this
      * does not look the scope up by organization preference, which makes it
      * suitable for additional (slug based) tenants.
@@ -244,23 +226,18 @@ class ServiceProvisioningHelper
         $devicesDatamodels = self::generateDevicesDatamodelsList();
         self::provisionService($scope->tenant->name, $scope->name, $devicesDatamodels);
 
-        $probesDatamodels = self::generateProbesDatamodelsList();
-        self::provisionService($scope->tenant->name, $scope->name, $probesDatamodels, true);
-
         $datamodels = array_values(self::generateDatamodelsList());
         self::createDatamodelSubscriptions($scope, $datamodels);
     }
 
     /**
-     * Generates a combined list of datamodels for all devices and probes.
+     * Generates the list of datamodels for all device types.
      *
      * @return array A map of [code => datamodel].
      */
     public static function generateDatamodelsList(): array
     {
-        $devicesDatamodels = self::generateDevicesDatamodelsList();
-        $probesDatamodels = self::generateProbesDatamodelsList();
-        return array_filter(array_merge($devicesDatamodels, $probesDatamodels));
+        return array_filter(self::generateDevicesDatamodelsList());
     }
 
     /**
@@ -290,32 +267,19 @@ class ServiceProvisioningHelper
     }
 
     /**
-     * Generates a list of datamodels for all probe types in the database.
-     *
-     * @return array A map of [code => datamodel].
-     */
-    private static function generateProbesDatamodelsList(): array
-    {
-        return ProbeType::all()->mapWithKeys(function ($probe) {
-            return [$probe->code => $probe->fiware_properties['default_datamodel'] ?? $probe->name];
-        })->toArray();
-    }
-
-    /**
      * Builds the provisioning payload and sends it to the provisioning endpoint.
      *
      * @param string $tenant The FIWARE tenant name.
      * @param string $scope The FIWARE scope name.
      * @param array $datamodels A map of [code => datamodel] to provision.
-     * @param bool $provisionAttributes Whether to include static attributes in the payload.
      * @return mixed The response from the provisioning service.
      */
-    public static function provisionService(string $tenant, string $scope, array $datamodels, bool $provisionAttributes = false)
+    public static function provisionService(string $tenant, string $scope, array $datamodels)
     {
         return self::provisionServices(
             $tenant,
             $scope,
-            self::buildProvisionPayload($datamodels, $provisionAttributes)
+            self::buildProvisionPayload($datamodels)
         );
     }
 
@@ -330,7 +294,7 @@ class ServiceProvisioningHelper
      */
     public static function provisionServiceWithMappings(string $tenant, string $scope, array $datamodels, array $attributeMappings = [])
     {
-        $services = self::buildProvisionPayload($datamodels, false);
+        $services = self::buildProvisionPayload($datamodels);
 
         // Add attribute mappings to all services
         if (!empty($attributeMappings) && isset($services['services'])) {
@@ -419,11 +383,10 @@ class ServiceProvisioningHelper
      * Builds the final service payload array for the IOTA provisioning API.
      *
      * @param array $datamodels A map of [code => datamodel].
-     * @param bool $provisionAttributes Whether to include static attributes.
      * @param array $existingApiKeys A map of [code => apikey prefix] to reuse instead of generating new ones.
      * @return array The structured payload.
      */
-    private static function buildProvisionPayload(array $datamodels, bool $provisionAttributes, array $existingApiKeys = []): array
+    private static function buildProvisionPayload(array $datamodels, array $existingApiKeys = []): array
     {
         // Store API keys for unique codes
         $apiKeys = [];
@@ -444,7 +407,7 @@ class ServiceProvisioningHelper
 
 
 
-            $services[] = self::buildService($code, $datamodel, $apiKey, $provisionAttributes);
+            $services[] = self::buildService($code, $datamodel, $apiKey);
         }
 
         return ['services' => $services];
@@ -454,26 +417,20 @@ class ServiceProvisioningHelper
     /**
      * Builds the array structure for a single service.
      *
-     * @param string $code The original device/probe code.
+     * @param string $code The original device code.
      * @param string $datamodel The entity type for the service.
      * @param string $apikey The generated API key.
-     * @param bool $provisionAttributes Whether to include static attributes.
      * @return array The service array.
      */
-    private static function buildService(string $code, string $datamodel, string $apikey, bool $provisionAttributes): array
+    private static function buildService(string $code, string $datamodel, string $apikey): array
     {
-
-        if ($provisionAttributes) {
-            $probeType = ProbeType::where('code', $code)->first();
-            $attributes = FiwareProvisioningHelper::buildAttributesPayload($probeType->id, get_class($probeType), $datamodel);
-        }
         return [
             'apikey' => $apikey,
             'entity_type' => $datamodel,
             'resource' => '/iot/json',
             'transport' => 'HTTP',
             'internal_attributes' => ['device_type_code' => $code],
-            'attributes' => $attributes ?? [],
+            'attributes' => [],
         ];
     }
 

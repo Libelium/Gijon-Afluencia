@@ -10,7 +10,7 @@ integración: aquí se define quién puede autenticarse, con qué clientes y con
 | --- | --- |
 | Base | `quay.io/keycloak/keycloak:25.0` |
 | Realm | se importa desde `realm.json` en el primer arranque |
-| Temas | `pidtheme` (login + correo) y `pidtheme-mobile` |
+| Temas | `pidtheme` (login + correo) |
 | Base de datos | PostgreSQL 16 (el `docker-compose.yml` levanta la suya) |
 | Consola | http://localhost:8080 |
 | Salud | http://localhost:9010/health (puerto 9000 dentro del contenedor) |
@@ -24,7 +24,6 @@ bootstrap-keycloak-backend.sh    entrypoint: resuelve placeholders y arranca con
 realm.json                       configuración del realm (clientes, roles, flujos, temas)
 change-password-client.json      definición suelta del cliente de cambio de contraseña
 pidtheme/                        tema de login y de correo (5 idiomas: es, en, ca, el, pt)
-pidtheme-mobile/                 variante del login para la app móvil (hereda de pidtheme)
 i18n_validity_check.py           comprueba que ningún idioma se quede sin traducir
 docker-compose.yml               Keycloak + su PostgreSQL
 ```
@@ -56,7 +55,7 @@ nunca con un valor adivinable a partir del código fuente. El valor de `KC_LARAV
 debe coincidir con el configurado en el backend.
 
 Otras variables de interés (todas documentadas en `.env.example`): `BACKEND_URL` (obligatoria),
-`KC_DEFAULT_LOCALE`, `KC_REGISTRATION_ALLOWED`, `KC_MOBILE_CLIENT_ENABLED` y los colores de marca
+`KC_DEFAULT_LOCALE`, `KC_REGISTRATION_ALLOWED` y los colores de marca
 `KC_BRAND_PRIMARY` / `KC_BRAND_SECONDARY` / `KC_BRAND_INDIGO`.
 
 ### URLs de retorno OAuth

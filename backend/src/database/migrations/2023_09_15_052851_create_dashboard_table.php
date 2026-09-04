@@ -24,6 +24,10 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
             $table->timestamps();
+            $table->jsonb('date_range')->nullable();
+            $table->boolean('view_mode')->nullable();
+            $table->boolean('hidden')->default(false);
+            $table->boolean('is_published')->default(false);
         });
     }
 

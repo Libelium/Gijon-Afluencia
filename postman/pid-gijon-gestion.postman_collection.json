@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "c82d9c29-c119-5063-0910-9d9004481b72",
     "name": "PID Gijón — API de gestión",
-    "description": "API de lectura y gestión de la Plataforma de Integración de Datos del Ayuntamiento de Gijón.\n\nEl dato **no entra por aquí**: la ingesta va por el núcleo FIWARE (sensor → IoT Agent → Orion-LD → RabbitMQ → consumidores). Esta API cubre entidades, dispositivos, series temporales, cuadros de mando, alarmas y preferencias.\n\nAutenticación por *bearer token* JWT emitido por Keycloak (`POST /V1/login`). Las rutas bajo `/internal` no llevan token: solo son accesibles desde la red interna y las consume el gateway APISIX para validar permiso de escritura por tenant.",
+    "description": "API de lectura y gestión de la Plataforma de Integración de Datos del Ayuntamiento de Gijón.\n\nEl dato **no entra por aquí**: la ingesta va por el núcleo FIWARE (sensor → IoT Agent → Orion-LD → RabbitMQ → consumidores). Esta API cubre entidades, dispositivos, series temporales, cuadros de mando, alarmas y preferencias.\n\nAutenticación por *bearer token* JWT emitido por Keycloak. La API no tiene endpoint de inicio de sesión: el acceso desde el navegador es código de autorización + PKCE contra Keycloak. La petición «Obtener token (Keycloak)» de esta colección pide uno con la concesión directa del cliente confidencial del backend y lo guarda en `{{token}}`. Las rutas bajo `/internal` no llevan token: solo son accesibles desde la red interna y las consume el gateway APISIX para validar permiso de escritura por tenant.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -1277,38 +1277,72 @@
       "name": "Autenticación y usuario",
       "item": [
         {
-          "name": "Login",
+          "name": "Obtener token (Keycloak)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.access_token) {",
+                  "    pm.collectionVariables.set('token', body.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "application/x-www-form-urlencoded"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/V1/login",
+              "raw": "{{keycloakUrl}}/realms/{{keycloakRealm}}/protocol/openid-connect/token",
               "host": [
-                "{{baseUrl}}"
+                "{{keycloakUrl}}"
               ],
               "path": [
-                "V1",
-                "login"
+                "realms",
+                "{{keycloakRealm}}",
+                "protocol",
+                "openid-connect",
+                "token"
               ]
             },
-            "description": "",
+            "description": "El token lo emite Keycloak, no la API. Los clientes de navegador usan código de autorización + PKCE; esta petición usa la concesión directa del cliente confidencial del backend (lleva secreto) para poder probar la colección sin navegador. La respuesta se guarda en la variable `token` de la colección.",
             "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{keycloakClientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{keycloakClientSecret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
                 }
-              }
+              ]
             },
             "auth": {
               "type": "noauth"
@@ -1340,7 +1374,7 @@
                 "logout"
               ]
             },
-            "description": "",
+            "description": "El cuerpo admite un `refreshToken` opcional: si se aporta, la sesión se revoca por la vía OIDC del cliente y, si eso falla, por la vía administrativa del realm. Sin él se usa directamente la vía administrativa. Responde 502 si la sesión no se ha podido revocar en Keycloak.",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1349,166 +1383,6 @@
                   "language": "json"
                 }
               }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/password/change",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "password",
-                "change"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Password",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/password/change",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "password",
-                "change"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Reset Link",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/password/recovery",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "password",
-                "recovery"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh Kc Token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/refresh-token",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "refresh-token"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
             }
           },
           "response": []
@@ -2011,85 +1885,6 @@
           "response": []
         },
         {
-          "name": "Get Image",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/dashboards/images/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "dashboards",
-                "images",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Set Image",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/dashboards/images/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "dashboards",
-                "images",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Index",
           "request": {
             "method": "POST",
@@ -2404,64 +2199,6 @@
           "response": []
         },
         {
-          "name": "Get Uploaded Images",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/dashboards/uploaded-images",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "dashboards",
-                "uploaded-images"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Get Uploaded Image",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/dashboards/uploaded-images/{filename}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "dashboards",
-                "uploaded-images",
-                "{filename}"
-              ],
-              "variable": [
-                {
-                  "key": "filename",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
           "name": "Destroy",
           "request": {
             "method": "DELETE",
@@ -2707,85 +2444,6 @@
               "path": [
                 "V1",
                 "panels"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Image",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/panels/images/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "panels",
-                "images",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Set Image",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/panels/images/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "panels",
-                "images",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
               ]
             },
             "description": "",
@@ -3202,181 +2860,6 @@
               "variable": [
                 {
                   "key": "regulation",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Index",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/tags",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "tags"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Modifications In Batch",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/tags",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "tags"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Store",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/tags",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "tags"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Destroy",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/tags/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "tags",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Update",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/tags/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "tags",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
                   "value": "",
                   "description": ""
                 }
@@ -4777,693 +4260,6 @@
       ]
     },
     {
-      "name": "Notificaciones",
-      "item": [
-        {
-          "name": "Get Data",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/realtime/notifications",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "realtime",
-                "notifications"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Count Data",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/realtime/notifications/countData",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "realtime",
-                "notifications",
-                "countData"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Notification",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/realtime/notifications/deleteNotification/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "realtime",
-                "notifications",
-                "deleteNotification",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Read All",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/realtime/notifications/readAll",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "realtime",
-                "notifications",
-                "readAll"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Read",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/realtime/notifications/updateRead/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "realtime",
-                "notifications",
-                "updateRead",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Pantalla de inicio",
-      "item": [
-        {
-          "name": "Index",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Store",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Atomically create a default layout with widgets",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/create-default",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "create-default"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Destroy",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{home_layout}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{home_layout}"
-              ],
-              "variable": [
-                {
-                  "key": "home_layout",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Show",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{home_layout}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{home_layout}"
-              ],
-              "variable": [
-                {
-                  "key": "home_layout",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Update",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Store",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{layoutId}",
-                "widgets"
-              ],
-              "variable": [
-                {
-                  "key": "layoutId",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Batch Destroy",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/batch",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{layoutId}",
-                "widgets",
-                "batch"
-              ],
-              "variable": [
-                {
-                  "key": "layoutId",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Batch Store",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/batch",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{layoutId}",
-                "widgets",
-                "batch"
-              ],
-              "variable": [
-                {
-                  "key": "layoutId",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Batch Update",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/batch",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{layoutId}",
-                "widgets",
-                "batch"
-              ],
-              "variable": [
-                {
-                  "key": "layoutId",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Paginate",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-layouts/{layoutId}/widgets/paginate",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-layouts",
-                "{layoutId}",
-                "widgets",
-                "paginate"
-              ],
-              "variable": [
-                {
-                  "key": "layoutId",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Destroy",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-widgets/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-widgets",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Update",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/V1/home-widgets/{id}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "V1",
-                "home-widgets",
-                "{id}"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": ""
-                }
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "Preferencias",
       "item": [
         {
@@ -6295,6 +5091,36 @@
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "https://keycloak.pid.gijon.example",
+      "type": "string"
+    },
+    {
+      "key": "keycloakRealm",
+      "value": "pid-gijon",
+      "type": "string"
+    },
+    {
+      "key": "keycloakClientId",
+      "value": "laravel-backend",
+      "type": "string"
+    },
+    {
+      "key": "keycloakClientSecret",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
       "value": "",
       "type": "string"
     }

@@ -97,6 +97,58 @@ secretsStrategy:
     carrot: external-carrot
     webBack: external-web-back
 
+# -----------------------------------------------------------------------------
+# Segmentacion de red: una NetworkPolicy por componente con los saltos del flujo
+# real de la plataforma. Guia de activacion en README.md.
+#
+# DESACTIVADA POR DEFECTO A PROPOSITO: con un CNI que no implemente
+# NetworkPolicy (kindnet, flannel a secas) la politica se admite y no filtra
+# nada, es decir, da falsa sensacion de seguridad.
+#
+# El egreso va en un interruptor propio porque las bases, el broker, el SMTP y
+# el almacen de objetos son EXTERNOS al chart: activarlo sin declarar antes
+# `egress.infrastructureNamespaces` o `egress.externalCIDRs` deja a los
+# componentes sin poder salir.
+# -----------------------------------------------------------------------------
+networkPolicy:
+  enabled: false
+
+  # Namespaces de los Gateways que pueden entrar a los componentes publicos.
+  # Por defecto, el de `gateway.namespace`.
+  gatewayNamespaces: []
+  # Namespaces desde los que se permite el scrapeo de metricas (Prometheus).
+  # Vacio con algun `serviceMonitor.enabled` el chart FALLA al renderizar: sin
+  # esto la politica cortaria el scrapeo sin dar ningun error.
+  monitoringNamespaces: []
+  # Redes de los NODOS, para las sondas del kubelet: si el CNI las somete a
+  # politica, los liveness/readiness dejan de responder y no hay selector
+  # portable para el kubelet. Nunca el CIDR de pods del CNI: eso abriria todos
+  # los puertos a cualquier pod del cluster sin que helm avise.
+  kubeletCIDRs: []
+  # - 192.0.2.0/24
+  # Cualquier otro salto de entrada, por componente, en
+  # components.<nombre>.networkPolicy:
+  #   extraIngress:
+  #     - from:
+  #         - ipBlock:
+  #             cidr: 192.0.2.0/24
+
+  egress:
+    enabled: false
+    # El DNS del cluster: sin esto ningun pod resuelve nombres.
+    allowDNS: true
+    dnsNamespace: kube-system
+    dnsPodLabels:
+      k8s-app: kube-dns
+    # Namespaces con la infraestructura desplegada en el propio cluster
+    # (rabbitmq, mongodb, stackgres, minio...).
+    infrastructureNamespaces: []
+    # Destinos externos permitidos a los componentes con `egressExternal: true`
+    # (bases gestionadas, broker gestionado, SMTP, S3). Sin esto, todo lo que
+    # este fuera del cluster queda cortado.
+    externalCIDRs: []
+    # - 10.0.0.0/8
+
 # =============================================================================
 # COMPONENTS
 #
@@ -131,6 +183,19 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Egreso externo: TimescaleDB.
+    networkPolicy:
+      ingressFromComponents:
+        - webBack
+        - fiwareManager
+        - cbConsumer
+        - genericConsumer
+        - carrot
+      egressToComponents:
+        - orionLd
+        - iotAgentJson
+        - carrot
+      egressExternal: true
     ports:
       - containerPort: 8000
         protocol: TCP
@@ -138,9 +203,11 @@ components:
     service:
       - port: 8000
         name: aether
+    # Liveness en /alive: /hchk comprueba las dependencias y devuelve 503, con lo que una
+    # caida de Orion-LD, del IoT Agent o de Timescale mataria el pod. Readiness si va a /hchk.
     livenessProbe:
       httpGet:
-        path: /hchk
+        path: /alive
         port: aether
       initialDelaySeconds: 15
       periodSeconds: 30
@@ -211,6 +278,16 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Entra por el Gateway la ingesta de
+    # las fuentes que no hablan FIWARE (LIDAR). Egreso externo: MongoDB.
+    networkPolicy:
+      ingressFromGateway: true
+      ingressFromComponents:
+        - webBack
+      egressToComponents:
+        - iotAgentJson
+        - aetherLink
+      egressExternal: true
     ports:
       - containerPort: 8000
         protocol: TCP
@@ -279,6 +356,11 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Estatico: quien llama a la API y a
+    # Keycloak es el navegador, no el pod.
+    networkPolicy:
+      ingressFromGateway: true
+      egressExternal: false
     ports:
       - containerPort: 8080
         protocol: TCP
@@ -351,6 +433,19 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Entra por el Gateway el trafico de
+    # los sensores (7896). Egreso externo: MongoDB y, si se usa, el broker MQTT.
+    networkPolicy:
+      ingressFromGateway: true
+      ingressFromComponents:
+        - aetherLink
+        - fiwareManager
+        - orionLd
+        - cbConsumer
+        - genericConsumer
+      egressToComponents:
+        - orionLd
+      egressExternal: true
     ports:
       - containerPort: 7896
         protocol: TCP
@@ -444,6 +539,19 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Egreso a carrot: es el destino de las
+    # notificaciones de suscripcion. Egreso externo: MongoDB.
+    networkPolicy:
+      # Solo los tres que declaran egreso a Orion. fiware-manager y los consumidores
+      # hablan con Orion a traves de aether-link, no directamente.
+      ingressFromComponents:
+        - iotAgentJson
+        - aetherLink
+        - webBack
+      egressToComponents:
+        - carrot
+        - iotAgentJson
+      egressExternal: true
     ports:
       - containerPort: 1026
         protocol: TCP
@@ -563,6 +671,14 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Nadie le entra: consume de RabbitMQ.
+    # Egreso externo: broker, PostgreSQL y TimescaleDB.
+    networkPolicy:
+      egressToComponents:
+        - aetherLink
+        - iotAgentJson
+        - keycloak
+      egressExternal: true
     serviceMonitor:
       enabled: false
       port: metrics
@@ -632,6 +748,9 @@ components:
       RABBITMQ_PORT: <CHANGE_ME>          # 5672 (amqp) or 5671 (amqps)
       RABBITMQ_SECURITY: <CHANGE_ME>      # amqp | amqps
       RABBITMQ_VHOST: pid-gijon
+      # Solo con amqps: ruta del PEM de la CA del broker dentro del contenedor. Vacia = almacen
+      # de confianza del sistema. Si se rellena, el chart monta ahi el PEM de rabbitmqCaCert.
+      RABBITMQ_CA_FILE_PATH: ""
       # Container-internal working dirs (do not change).
       QUEUE_CONSUMER_WORKERS: "1"
       UVICORN_WORKERS: "1"
@@ -651,6 +770,11 @@ components:
       # -- Optional integrations
       # GRID_WRF_URL: <CHANGE_ME>         # TODO: weather grid service
       # TILEMAPPER_URL: <CHANGE_ME>       # TODO: tile-mapper service
+    # PEM de la CA del broker, montado en la ruta de config.RABBITMQ_CA_FILE_PATH.
+    rabbitmqCaCert: ""
+    # Alternativa: Secret que aportas por fuera, con la clave igual al nombre de fichero de esa
+    # ruta. Con la ruta puesta y ninguno de los dos, el chart falla al renderizar.
+    rabbitmqCaSecret: ""
     secrets: {}
     #   DB_USERNAME / DB_PASSWORD                       # TODO: set
     #   TS_DB_USERNAME / TS_DB_PASSWORD                 # TODO: set
@@ -686,6 +810,14 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Igual que cb-consumer, mas el almacen
+    # de objetos en el egreso externo.
+    networkPolicy:
+      egressToComponents:
+        - aetherLink
+        - iotAgentJson
+        - keycloak
+      egressExternal: true
     serviceMonitor:
       enabled: false
       port: metrics
@@ -736,6 +868,7 @@ components:
       RABBITMQ_PORT: <CHANGE_ME>
       RABBITMQ_SECURITY: <CHANGE_ME>
       RABBITMQ_VHOST: pid-gijon
+      RABBITMQ_CA_FILE_PATH: ""   # solo con amqps; vease cbConsumer
       QUEUE_CONSUMER_WORKERS: "1"
       UVICORN_WORKERS: "1"
       WORKER_CONCURRENCY: "8"
@@ -751,6 +884,15 @@ components:
       QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_TIMEOUT: "5"
       QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_PRIORITY: "15"
       QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_TIMEOUT: "5"
+      # -- Motor de alarmas. Los canales de aviso estan apagados hasta que se
+      # rellenan sus secretos (TELEGRAM_BOT_TOKEN, WHATSAPP_ACCESS_TOKEN,
+      # SMS_API_KEY / SMS_API_SECRET, mas abajo).
+      TELEGRAM_ENABLED: "false"
+      SMS_ENABLED: "false"
+      WHATSAPP_ENABLED: "false"
+      INACTIVITY_ALARM_CHECK_INTERVAL: "3600"
+      QUEUE_TASK_CONFIG_PLATFORM_ALARMS_ENTITY_DATA_CHECK_TIMEOUT: "60"
+      QUEUE_TASK_CONFIG_PLATFORM_ALARMS_CHECK_INACTIVITY_TIMEOUT: "600"
       # -- Optional integrations (uncomment + set the matching secrets)
       # WEB_FRONT_URL: <CHANGE_ME>   # TODO: public frontend URL
       # GRID_WRF_URL: <CHANGE_ME>         # TODO: weather grid service
@@ -760,13 +902,12 @@ components:
       # SMS_PROVIDER: aws_sns
       # SMS_FROM: PIDGIJON
       # SMS_AWS_REGION: <CHANGE_ME>
-      # POLYGON_ENABLED: "false"          # blockchain anchoring (optional)
+    rabbitmqCaCert: ""          # PEM de la CA del broker; vease cbConsumer
+    rabbitmqCaSecret: ""        # o el Secret que lo aporta; vease cbConsumer
     secrets: {}
     #   Same base keys as cb-consumer. # TODO: set
     #   Optional integrations (only if the matching config above is enabled):
     #   TELEGRAM_BOT_TOKEN, WHATSAPP_ACCESS_TOKEN, SMS_API_KEY, SMS_API_SECRET,
-    #   POLYGON_RPC_URL, POLYGON_CHAIN_ID, POLYGON_PRIVATE_KEY, POLYGON_GAS_LIMIT,
-    #   POLYGON_TX_EXPLORER_BASE, POLYGON_TX_RECEIPT_TIMEOUT, BLOCKCHAIN_AETHER_LINK_TIMEOUT
 
   # ---------------------------------------------------------------------------
   # carrot — receives context-broker notifications and routes them to RabbitMQ.
@@ -792,6 +933,15 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Egreso externo: RabbitMQ.
+    networkPolicy:
+      ingressFromComponents:
+        - orionLd
+        - webBack
+        - aetherLink
+      egressToComponents:
+        - aetherLink
+      egressExternal: true
     serviceMonitor:
       enabled: false
       port: metrics
@@ -842,6 +992,7 @@ components:
       RABBITMQ_PORT: <CHANGE_ME>
       RABBITMQ_SECURITY: <CHANGE_ME>      # amqp | amqps
       RABBITMQ_VHOST: pid-gijon
+      RABBITMQ_CA_FILE_PATH: ""           # solo con amqps; vease cbConsumer
       TIMESERIES_TYPE: timescale
       UVICORN_WORKERS: "3"
       WORKER_CONCURRENCY: "10"
@@ -856,6 +1007,8 @@ components:
       QUEUE_TASK_CONFIG_PLATFORM_SYNC_REALTIME_TIMEOUT: "5"
       QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_PRIORITY: "15"
       QUEUE_TASK_CONFIG_PLATFORM_SYNC_TIMESERIES_TIMEOUT: "5"
+    rabbitmqCaCert: ""          # PEM de la CA del broker; vease cbConsumer
+    rabbitmqCaSecret: ""        # o el Secret que lo aporta; vease cbConsumer
     secrets: {}
     #   RABBITMQ_USER / RABBITMQ_PASSWORD   # TODO: set
 
@@ -883,6 +1036,19 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). Egreso externo: PostgreSQL, SMTP y el
+    # almacen de objetos.
+    networkPolicy:
+      ingressFromGateway: true
+      ingressFromComponents:
+        - keycloak
+      egressToComponents:
+        - aetherLink
+        - fiwareManager
+        - carrot
+        - keycloak
+        - orionLd
+      egressExternal: true
     ports:
       - containerPort: 80
         protocol: TCP
@@ -960,16 +1126,18 @@ components:
       LOG_DEPRECATIONS_CHANNEL: "null"
       LOG_LEVEL: info
       LOG_QUERIES: "0"
-      MAIL_ENCRYPTION: tls
-      MAIL_FROM_ADDRESS: <CHANGE_ME>
-      MAIL_FROM_NAME: PID Gijón
-      MAIL_HOST: <CHANGE_ME>
-      MAIL_MAILER: smtp
-      MAIL_PORT: "587"
       MEMCACHED_HOST: 127.0.0.1
       ON_PREMISE: "false"
       SESSION_DRIVER: file
       SESSION_LIFETIME: "120"
+      # Redes de las que se aceptan las cabeceras X-Forwarded-*. Recortala al CIDR de la
+      # pasarela; vacia no es "por omision", sino no confiar en ningun proxy, y con eso se
+      # pierden la IP real y el esquema https.
+      TRUSTED_PROXIES: 127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      # Clientes cuyo `azp` se admite: la clave publica es la del realm entero, asi que sin
+      # esta lista vale cualquier token suyo. El guard suma solos KEYCLOAK_CLIENT_ID y el
+      # frontal; vacia no restringe.
+      KEYCLOAK_ALLOWED_CLIENTS: pid-gijon-client
       TELEGRAM_ENABLED: "false"
       SMS_ENABLED: "false"
       WHATSAPP_ENABLED: "false"
@@ -996,7 +1164,6 @@ components:
     #     web-back checks the X-Gateway-Secret header against it and FAILS CLOSED — those
     #     endpoints answer 503 while it is empty. If the optional APISIX chart is deployed,
     #     give it the SAME value as fiware.backend.gatewaySecret.
-    #   MAIL_USERNAME / MAIL_PASSWORD
     #   Object storage:  AWS_S3_KEY / AWS_S3_SECRET (+ *_IMAGES_*)
     #   Optional integrations: DLM_TOKEN, STATUSCAKE_API_KEY, OPENWEATHERMAP_API_KEY,
     #     TELEGRAM_CLIENT_ID, SMS_AWS_KEY, SMS_AWS_SECRET
@@ -1037,6 +1204,19 @@ components:
     pdb:
       enabled: false
       minAvailable: 1
+    # Segmentacion de red (networkPolicy.enabled). ingressFromSelf y egressToSelf por el
+    # cluster de jgroups (7800/57800). Egreso externo: PostgreSQL y SMTP.
+    networkPolicy:
+      ingressFromGateway: true
+      ingressFromComponents:
+        - webBack
+        - cbConsumer
+        - genericConsumer
+      ingressFromSelf: true
+      egressToSelf: true
+      egressToComponents:
+        - webBack
+      egressExternal: true
     # Clustered cache via JGroups DNS discovery (works with 1+ replicas; required
     # for HA when replicas > 1).
     args:

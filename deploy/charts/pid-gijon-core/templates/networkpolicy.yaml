@@ -1,0 +1,135 @@
+{{/*
+Una NetworkPolicy por componente, con denegacion por defecto: seleccionar el pod ya
+deniega todo el trafico del tipo declarado y solo se abren los saltos declarados.
+El egreso va en un interruptor aparte porque las bases, el broker y el SMTP viven
+fuera del chart: activarlo sin rellenar networkPolicy.egress.* corta trafico legitimo.
+*/}}
+{{- if .Values.networkPolicy.enabled }}
+{{- $np := .Values.networkPolicy }}
+{{- $egress := $np.egress | default dict }}
+{{- range $name, $component := .Values.components }}
+{{- $cnp := $component.networkPolicy | default dict }}
+{{- if and $component.enabled (or (not (hasKey $cnp "enabled")) $cnp.enabled) }}
+{{- $svc := printf "pid-gijon-%s" (include "pid-gijon-core.kebabcase" $name) }}
+{{- $gatewayNs := $np.gatewayNamespaces | default (list $.Values.gateway.namespace) }}
+{{- $monitoringNs := $np.monitoringNamespaces | default (list) }}
+{{- $kubeletCIDRs := $np.kubeletCIDRs | default (list) }}
+{{- $fromComponents := $cnp.ingressFromComponents | default (list) }}
+{{- $toComponents := $cnp.egressToComponents | default (list) }}
+{{- $sm := $component.serviceMonitor | default dict }}
+{{- if and $sm.enabled (not $monitoringNs) (not $cnp.extraIngress) }}
+{{- fail (printf "networkPolicy.enabled junto a components.%s.serviceMonitor.enabled sin networkPolicy.monitoringNamespaces: la politica cortaria el scrapeo de Prometheus sin dar ningun error. Declara el namespace de Prometheus en networkPolicy.monitoringNamespaces, o abre el scrapeo a mano en components.%s.networkPolicy.extraIngress." $name $name) }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pid-gijon-core.kebabcase" $name }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: {{ $svc }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      service: {{ $svc }}
+  policyTypes:
+    - Ingress
+    {{- if $egress.enabled }}
+    - Egress
+    {{- end }}
+  {{- if or $fromComponents $cnp.ingressFromSelf (and $cnp.ingressFromGateway $gatewayNs) $monitoringNs $kubeletCIDRs $cnp.extraIngress }}
+  ingress:
+    {{- if or $fromComponents $cnp.ingressFromSelf }}
+    - from:
+        {{- range $peer := $fromComponents }}
+        - podSelector:
+            matchLabels:
+              service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $peer }}
+        {{- end }}
+        {{- if $cnp.ingressFromSelf }}
+        - podSelector:
+            matchLabels:
+              service: {{ $svc }}
+        {{- end }}
+    {{- end }}
+    {{- if and $cnp.ingressFromGateway $gatewayNs }}
+    - from:
+        {{- range $ns := $gatewayNs }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $ns }}
+        {{- end }}
+    {{- end }}
+    {{- if $monitoringNs }}
+    - from:
+        {{- range $ns := $monitoringNs }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $ns }}
+        {{- end }}
+    {{- end }}
+    {{- if $kubeletCIDRs }}
+    - from:
+        {{- range $cidr := $kubeletCIDRs }}
+        - ipBlock:
+            cidr: {{ $cidr }}
+        {{- end }}
+    {{- end }}
+    {{- with $cnp.extraIngress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- if $egress.enabled }}
+  egress:
+    {{- if ne $egress.allowDNS false }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $egress.dnsNamespace | default "kube-system" }}
+          podSelector:
+            matchLabels:
+              {{- toYaml ($egress.dnsPodLabels | default (dict "k8s-app" "kube-dns")) | nindent 14 }}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+    {{- if or $toComponents $cnp.egressToSelf }}
+    - to:
+        {{- range $peer := $toComponents }}
+        - podSelector:
+            matchLabels:
+              service: pid-gijon-{{ include "pid-gijon-core.kebabcase" $peer }}
+        {{- end }}
+        {{- if $cnp.egressToSelf }}
+        - podSelector:
+            matchLabels:
+              service: {{ $svc }}
+        {{- end }}
+    {{- end }}
+    {{- if and $cnp.egressExternal $egress.infrastructureNamespaces }}
+    - to:
+        {{- range $ns := $egress.infrastructureNamespaces }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $ns }}
+        {{- end }}
+    {{- end }}
+    {{- if and $cnp.egressExternal $egress.externalCIDRs }}
+    - to:
+        {{- range $cidr := $egress.externalCIDRs }}
+        - ipBlock:
+            cidr: {{ $cidr }}
+        {{- end }}
+    {{- end }}
+    {{- with $cnp.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -2,7 +2,6 @@
 
 namespace App\Http\V1\Resources;
 
-use Illuminate\Support\Facades\Storage;
 
 class DashboardResource extends \App\Http\V1\Resources\DefaultPermissionsResource
 {
@@ -19,6 +18,7 @@ class DashboardResource extends \App\Http\V1\Resources\DefaultPermissionsResourc
             'name' => $this->name,
             'description' => $this->description,
             'slug' => $this->slug,
+            'isPublished' => (bool) $this->is_published,
             'type' => $this->type,
             'timezone' => $this->timezone,
             'layout' => $this->layout,
@@ -38,32 +38,7 @@ class DashboardResource extends \App\Http\V1\Resources\DefaultPermissionsResourc
             'publicViewIcon' => isset($this->public_view_icon) ? $this->public_view_icon : null,
             'publicViewDarkIcon' => isset($this->public_view_dark_icon) ? $this->public_view_dark_icon : null,
             'creatorPreferences' => isset($this->creator_preferences) ? $this->creator_preferences : null,
-            'tags' => TagResource::collection($this->whenLoaded('tags')),
-            'previewImage' => $this->preview_image ?? null,
-            'previewImageUrl' => $this->getPreviewImageUrl(),
         ];
     }
 
-    /**
-     * Get temporary URL for preview image if it exists
-     *
-     * @return string|null
-     */
-    protected function getPreviewImageUrl(): ?string
-    {
-        if (!$this->preview_image || !str_starts_with($this->preview_image, 'org_')) {
-            return null;
-        }
-
-        $basePath = config('filesystems.paths.dashboard_images');
-        $path = $basePath . '/' . $this->preview_image;
-
-        $exists = Storage::disk('s3')->exists($path);
-
-        if (!$exists) {
-            return null;
-        }
-
-        return Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
-    }
 }

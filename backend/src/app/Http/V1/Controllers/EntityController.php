@@ -5,7 +5,6 @@ namespace App\Http\V1\Controllers;
 use App\Authorization\AppPermission;
 use App\Models\Entity;
 use App\Helpers\AetherLinkHelper;
-use App\Helpers\NotificationHelper;
 use App\Models\EntityGroup;
 use App\Http\V1\Controllers\Controller;
 use App\Http\V1\Requests\Entities\CreateEntityRequest;
@@ -201,52 +200,6 @@ class EntityController extends Controller
 
         if (!$result["updated"]) {
             return response($result["response"], $result["status"]);
-        }
-
-        // Best-effort: notify the reporter when an operator changes an Incident's status.
-        if ($entity->datamodel === 'Incident' && array_key_exists('status', $attrsToUpdate)) {
-            try {
-                NotificationHelper::notifyIncidentReporter(
-                    $entity->id,
-                    (int) Auth::id(),
-                    'notifications.incidentStatus',
-                    'notifications.incidentStatusSub',
-                    'tabler-refresh',
-                    ['ref' => NotificationHelper::incidentRef($entity->id), 'status' => $attrsToUpdate['status']['value'] ?? null],
-                );
-            } catch (\Throwable $e) {
-                Log::warning('incident.status.notify.failed', ['error' => $e->getMessage()]);
-            }
-        }
-
-        // Notify the NEW assignee(s) when an AssetIntervention is (re)assigned. Compares against the
-        // current mirror (still the OLD value — updated asynchronously) so re-sending the same
-        // assignment does not re-notify. Best-effort.
-        if ($entity->datamodel === 'AssetIntervention'
-            && (array_key_exists('assignedTo', $attrsToUpdate) || array_key_exists('assignedTeam', $attrsToUpdate))) {
-            $newAssignedTo = array_key_exists('assignedTo', $attrsToUpdate) ? ($attrsToUpdate['assignedTo']['value'] ?? null) : null;
-            $newAssignedTeam = array_key_exists('assignedTeam', $attrsToUpdate) ? ($attrsToUpdate['assignedTeam']['value'] ?? null) : null;
-
-            $assignedToChanged = $newAssignedTo !== null
-                && (string) $newAssignedTo !== (string) NotificationHelper::incidentAttr($entity->id, 'assignedTo');
-            $assignedTeamChanged = $newAssignedTeam !== null
-                && (string) $newAssignedTeam !== (string) NotificationHelper::incidentAttr($entity->id, 'assignedTeam');
-
-            if ($assignedToChanged || $assignedTeamChanged) {
-                try {
-                    NotificationHelper::notifyAssignees(
-                        $assignedToChanged ? (string) $newAssignedTo : null,
-                        $assignedTeamChanged ? (string) $newAssignedTeam : null,
-                        (int) Auth::id(),
-                        [
-                            'ref'  => NotificationHelper::incidentRef($entity->id),
-                            'name' => NotificationHelper::incidentAttr($entity->id, 'name'),
-                        ],
-                    );
-                } catch (\Throwable $e) {
-                    Log::warning('intervention.reassign.notify.failed', ['error' => $e->getMessage()]);
-                }
-            }
         }
 
         // Update units in EntityProperty table for each attribute that has unitCode

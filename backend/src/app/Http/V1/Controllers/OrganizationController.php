@@ -19,14 +19,12 @@ use App\Models\FiwareScope;
 use App\Helpers\UserLocaleSyncHelper;
 use App\Helpers\ServiceProvisioningHelper;
 use App\Helpers\MfaRoleSyncHelper;
-use App\Helpers\UserHelper;
 use App\Services\UserDeletion\UserDeletionService;
 
 
 class OrganizationController extends Controller
 {
     public function __construct(
-        private readonly UserHelper $userHelper,
         private readonly UserDeletionService $deletionService
     ) {}
 

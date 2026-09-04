@@ -134,13 +134,15 @@ class OrionLdProxy(ContextBrokerProxy):
         """
         Create a subscription in the Context Broker for a given data type
         """
-        self.tenant = tenant if tenant else self.tenant
+        # this proxy is a module-level singleton and the handlers run concurrently, so
+        # keeping the tenant on the instance let another request overwrite it
+        tenant = tenant or self.tenant
         if len(types) == 0:
             return True
 
         platform_sub = sub_crud.get_sub(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             self.platform_subscription_urn,
@@ -169,7 +171,7 @@ class OrionLdProxy(ContextBrokerProxy):
         # update the subscription
         patch = sub_crud.patch_sub(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             platform_sub.id,
@@ -183,13 +185,13 @@ class OrionLdProxy(ContextBrokerProxy):
         """
         Delete a subscription in the Context Broker for a given data type
         """
-        self.tenant = tenant if tenant else self.tenant
+        tenant = tenant or self.tenant
         if len(types) == 0:
             return True
 
         platform_sub = sub_crud.get_sub(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             self.platform_subscription_urn,
@@ -209,7 +211,7 @@ class OrionLdProxy(ContextBrokerProxy):
             # delete the subscription
             return sub_crud.delete_sub(
                 self.orion_ld_service,
-                self.tenant,
+                tenant,
                 scope,
                 self.context_url,
                 platform_sub.id,
@@ -222,7 +224,7 @@ class OrionLdProxy(ContextBrokerProxy):
         # update the subscription
         patch = sub_crud.patch_sub(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             platform_sub.id,
@@ -235,10 +237,10 @@ class OrionLdProxy(ContextBrokerProxy):
         """
         List the subscriptions in the Context Broker for a given data type
         """
-        self.tenant = tenant if tenant else self.tenant
+        tenant = tenant or self.tenant
         platform_subscription = sub_crud.get_sub(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             self.platform_subscription_urn,
@@ -303,14 +305,14 @@ class OrionLdProxy(ContextBrokerProxy):
         but not new entities
         """
 
-        self.tenant = tenant if tenant else self.tenant
+        tenant = tenant or self.tenant
         json_body = self.__build_entity_operations_body(request)
 
         params = self.__build_url_params_for_entity_operations_update(request)
 
         response = entity_crud.update_entities(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             json_body,
@@ -332,7 +334,7 @@ class OrionLdProxy(ContextBrokerProxy):
 
         cmds_update_result = entity_crud.send_commands(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             cmds_by_entity,
@@ -524,10 +526,10 @@ class OrionLdProxy(ContextBrokerProxy):
         Delete an attribute from an entity in the Context Broker.
         Returns a dict with the result of the operation.
         """
-        self.tenant = tenant if tenant else self.tenant
+        tenant = tenant or self.tenant
         response = entity_crud.delete_entity_attribute(
             self.orion_ld_service,
-            self.tenant,
+            tenant,
             scope,
             self.context_url,
             entity_id,

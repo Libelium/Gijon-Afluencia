@@ -25,7 +25,7 @@ primer fallo, vuelve a lanzarlas y repite.**
 | Requisitos previos | tests.env cargado, clúster accesible | — |
 | Cargas del clúster | Pods de PostgreSQL / MongoDB / RabbitMQ / MinIO listos (solo los charts incluidos que hayas desplegado), todos los deployments de pid-gijon-core listos, sin patologías `ImagePullBackOff`/`CrashLoopBackOff`/`Pending`, valores de post-instalación de Keycloak aplicados (sin marcadores `REPLACE_AFTER_KEYCLOAK_SETUP`) | kubectl |
 | Endpoints públicos | `/api/hchk` de web-back, realm `pid-gijon` de Keycloak, `/hchk` de fiware-manager, interfaz web — todo por HTTPS público, desde fuera del clúster | red |
-| Autenticación | Inicio de sesión de administración por `/api/V1/login` (cadena web-back → Keycloak) | red |
+| Autenticación | Token de administración emitido por Keycloak y aceptado por la API (cadena Keycloak → web-back) | red |
 | Ciclo de vida de un dispositivo | Resolver el dispositivo de `TEST_DEVICE_SERIAL` → enviar medidas por HTTP → la entidad refleja el dato (tubería de orion-ld) → ida y vuelta de un comando (`getCmd=1`) | red |
 | Persistencia del dato | Las medidas aterrizan en el almacén de series temporales y se pueden recuperar por la API pública de series (carrot → RabbitMQ → consumidores → TimescaleDB) | red |
 | Airflow *(opcional)* | Despliega una copia de usar y tirar del DAG `custom_iota_post` (`kubectl cp` al dag-processor y a los workers: Airflow 3 no tiene API de subida), crea sus Variables, lanza una ejecución, confirma que el IoT Agent aprovisionó la entidad en Orion-LD y luego borra el DAG y las Variables | red + kubectl |
@@ -62,7 +62,7 @@ ningún controlador concreto.
          no forman parte del despliegue de pid-gijon.)
 
   Autenticación
-   — Inicio de sesión de administración por /api/V1/login
+   — Token de administración de Keycloak aceptado por la API
        (bloqueada: falló el requisito «API de la plataforma accesible (web-back /api/hchk)»)
 ```
 
@@ -87,7 +87,8 @@ contraseña de administración: está excluido de git, guárdalo a buen recaudo.
 | Variable | Por defecto (generado) | Significado |
 |----------|------------------------|-------------|
 | `API_URL`, `FIWARE_MANAGER`, `KEYCLOAK_URL`, `FRONTEND_URL` | a partir de tus `DOMAIN_*` | Endpoints públicos bajo prueba. |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | usuario de administración sembrado; **contraseña vacía** | Inicio de sesión en la plataforma. El usuario es por defecto el administrador sembrado del realm (`admin@example.com`; se cambia con `TESTS_ADMIN_USERNAME` en `config.env`). La contraseña no la genera este instalador: rellénala. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | usuario de administración sembrado; **contraseña vacía** | Credenciales con las que la batería pide el token a Keycloak. El usuario es por defecto el administrador sembrado del realm (`admin@example.com`; se cambia con `TESTS_ADMIN_USERNAME` en `config.env`). La contraseña no la genera este instalador: rellénala. |
+| `KEYCLOAK_CLIENT_ID` / `KEYCLOAK_CLIENT_SECRET` | `laravel-backend`; secreto tomado de `SECRETS.env` | Cliente **confidencial** con el que se pide el token. La API de gestión no tiene endpoint de inicio de sesión —el acceso es código + PKCE contra Keycloak, que no se puede reproducir sin navegador—, así que la batería va al proveedor de identidad con la concesión directa de este cliente. |
 | `DATA_API_KEY` | vacío | Clave de API del dispositivo (parámetro `k=`). Vacío → **se descubre sola** (ver más abajo); ponla a mano solo si el descubrimiento no puede llegar al IoT Agent. |
 | `DEVICE_TYPE` | `one_fiware` | Tipo del dispositivo bajo prueba. |
 | `TEST_DEVICE_SERIAL` | vacío | **Serial de un dispositivo ya aprovisionado** contra el que verificar el camino del dato. La API de gestión no expone el alta de dispositivos, así que la batería no puede crearse uno desechable. Vacío → se saltan las etapas 5 y 6. La batería **solo lee**: es seguro apuntarla a un dispositivo real. |

@@ -12,6 +12,7 @@ PLATFORM_EXCHANGE = Exchange("platform", type="direct")
 QUEUE_PREFIX = "platform"
 SYNC_PREFIX = "sync"
 DATA_PREFIX = "data"
+ALARMS_PREFIX = "alarms"
 CROWD_PREFIX = "crowd"
 DATA_CACHE_PREFIX = "data-cache"
 
@@ -104,6 +105,38 @@ SYNC_QUEUES = [
 ]
 
 ALL_QUEUES += SYNC_QUEUES
+
+"""
+ALARMS QUEUES
+"""
+ALARMS_ENTITY_DATA_CHECK_QUEUE_NAME = f"{QUEUE_PREFIX}.{ALARMS_PREFIX}.entity_data_check"
+ALARMS_CHECK_INACTIVITY_QUEUE_NAME = f"{QUEUE_PREFIX}.{ALARMS_PREFIX}.check_inactivity"
+
+ALARMS_ENTITY_DATA_CHECK_QUEUE = Queue(
+    name=ALARMS_ENTITY_DATA_CHECK_QUEUE_NAME,
+    routing_key=ALARMS_ENTITY_DATA_CHECK_QUEUE_NAME,
+    exchange=PLATFORM_EXCHANGE,
+    consumer_arguments={
+        "x-priority": settings.QUEUE_TASK_CONFIG.get_config_param(
+            ALARMS_ENTITY_DATA_CHECK_QUEUE_NAME, "priority"
+        )
+    },
+)
+
+ALARMS_CHECK_INACTIVITY_QUEUE = Queue(
+    name=ALARMS_CHECK_INACTIVITY_QUEUE_NAME,
+    routing_key=ALARMS_CHECK_INACTIVITY_QUEUE_NAME,
+    exchange=PLATFORM_EXCHANGE,
+    consumer_arguments={
+        "x-priority": settings.QUEUE_TASK_CONFIG.get_config_param(
+            ALARMS_CHECK_INACTIVITY_QUEUE_NAME, "priority"
+        )
+    },
+)
+
+ALARMS_QUEUES = [ALARMS_ENTITY_DATA_CHECK_QUEUE, ALARMS_CHECK_INACTIVITY_QUEUE]
+
+ALL_QUEUES += ALARMS_QUEUES
 
 """
 DATA QUEUES

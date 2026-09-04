@@ -19,17 +19,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // load data from out_connectors_has_entities
-        $outConnectorsHasEntities = DB::table('out_connectors_has_entities')->get();
-        foreach ($outConnectorsHasEntities as $outConnectorsHasEntity) {
-            DB::table('out_connectors_has_models')->insert([
-                'out_connector_id' => $outConnectorsHasEntity->out_connector_id,
-                'model_id' => $outConnectorsHasEntity->entity_id,
-                'model_type' => 'entities',
-                'created_at' => $outConnectorsHasEntity->created_at,
-                'updated_at' => $outConnectorsHasEntity->updated_at,
-            ]);
-        }
     }
 
     /**

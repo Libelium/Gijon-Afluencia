@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id(); 
             $table->string('username', 100);
             $table->text('password_hash'); 
-            $table->text('password_encrypted')->nullable(); 
-            $table->string('password_salt', 32)->nullable();
             $table->boolean('is_admin')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps(); 
+            $table->foreignId('organization_id')->nullable()->constrained('organizations')->nullOnDelete();
+            $table->index('organization_id', 'idx_mqtt_users_organization_id');
         });
 
         // Add indexes for performance

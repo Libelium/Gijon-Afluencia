@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('grouping_interval')->nullable();
             $table->integer('grouping_interval_value')->nullable();
             $table->timestamps();
+            $table->json('period')->nullable();
+            $table->double('grouping_function_value')->nullable();
+            $table->jsonb('offset')->nullable();
         });
     }
 

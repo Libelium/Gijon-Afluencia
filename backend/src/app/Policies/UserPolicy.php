@@ -163,69 +163,6 @@ class UserPolicy
     }
 
     /**
-     * Incidents moderation block. NOT same-org (staff and citizens live in
-     * different orgs); instead strictly DESCENDING by incidents tier: admin > operator > citizen. So a
-     * citizen blocks nobody, an operator blocks citizens, an admin blocks operators + citizens.
-     * (APPLICATION_ADMIN bypasses via before(); block-reporter reach is also bounded by EntityPolicy@read.)
-     */
-    public function moderateBlock(User $user, User $target): Response
-    {
-        if ($user->organization_id !== $target->organization_id) {
-            return Response::deny('You are not allowed to block users from other organizations.');
-        }
-
-        if ($user->id === $target->id) {
-            return Response::deny('You cannot block yourself.');
-        }
-
-        if ($target->isOrganizationAdmin()) {
-            return Response::deny('You cannot block an organization administrator.');
-        }
-
-        if ($this->incidentsTier($user) > $this->incidentsTier($target)) {
-            return Response::allow();
-        }
-
-        return Response::deny('You are not allowed to block this user.');
-    }
-
-    /**
-     * Incidents account deletion. Always allows deleting one's OWN account. Never an org admin. (APPLICATION_ADMIN
-     * bypasses via before(); IncidentsUserController does the operator team/intervention cleanup.)
-     */
-    public function moderateDelete(User $user, User $target): Response
-    {
-        if ($user->organization_id !== $target->organization_id) {
-            return Response::deny('You are not allowed to delete users from other organizations.');
-        }
-        if ($user->id === $target->id) {
-            return Response::allow();
-        }
-
-        if ($target->isOrganizationAdmin()) {
-            return Response::deny('You cannot delete an organization administrator.');
-        }
-
-        if ($user->can(AppPermission::INCIDENTS_ADMIN->value)) {
-            return Response::allow();
-        }
-
-        return Response::deny('You are not allowed to delete this user.');
-    }
-
-    /** Incidents-module tier of a user: 3 = admin, 2 = operator/reviewer, 1 = citizen/none. */
-    private function incidentsTier(User $user): int
-    {
-        if ($user->can(AppPermission::INCIDENTS_ADMIN->value)) {
-            return 3;
-        }
-        if ($user->can(AppPermission::INCIDENTS_REVIEW->value)) {
-            return 2;
-        }
-        return 1;
-    }
-
-    /**
      * Determine whether the user can create a role
      *
      * @param \App\Models\User  $user
@@ -239,25 +176,6 @@ class UserPolicy
 
         if (!$allowed) {
             return Response::deny('You are not allowed to create user');
-        }
-
-        return Response::allow();
-    }
-
-    /**
-     * Determine whether the user can create OPERATOR (field-worker) users. This is the incidents-admin
-     * ability (incidents.admin) that only allows creating users with the operator role — the
-     * dedicated IncidentsUserController@store forces that role. Kept separate from create() so
-     * granting it never widens general user management (roles.update).
-     */
-    public function createOperator(User $user): Response
-    {
-        $allowed = $user->can(AppPermission::INCIDENTS_ADMIN->value);
-
-        ResourceLimitsHelper::canCreateOrFail($user, User::class);
-
-        if (!$allowed) {
-            return Response::deny('You are not allowed to create operator users');
         }
 
         return Response::allow();

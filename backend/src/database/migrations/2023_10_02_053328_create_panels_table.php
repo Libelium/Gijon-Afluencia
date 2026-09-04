@@ -17,6 +17,8 @@ return new class extends Migration
             $table->json('chart');
             $table->foreignId('dashboard_id')->references('id')->on('dashboards')->onDelete('cascade');
             $table->timestamps();
+            $table->boolean('relative_time')->default(false);
+            $table->jsonb('date_range')->nullable();
         });
     }
 

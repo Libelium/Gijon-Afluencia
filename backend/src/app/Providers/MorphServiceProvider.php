@@ -5,7 +5,6 @@ namespace App\Providers;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use App\Models\Actions\ActionEmail;
 use App\Models\Actions\ActionEntityCommand;
-use App\Models\Actions\ActionPush;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -25,7 +24,6 @@ class MorphServiceProvider extends ServiceProvider
     {
         Relation::morphMap([
             'action_email' => ActionEmail::class,
-            'action_push' => ActionPush::class,
             'action_entity_command' => ActionEntityCommand::class,
         ]);
     }

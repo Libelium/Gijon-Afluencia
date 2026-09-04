@@ -7,8 +7,6 @@ from models.fiware_scope_model import FiwareScope
 import models.crud.crud_tenant_scope as crud_tenant_scope
 import models.crud.crud_user as crud_user
 import models.resource_permission_model as resource_permission_model
-import models.workspace_model as workspace_model
-import models.workspace_has_users_model as workspace_has_users_model
 from datetime import datetime, timedelta
 from config.logging import appLogging as logging
 from sqlalchemy.sql import func

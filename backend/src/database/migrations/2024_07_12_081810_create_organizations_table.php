@@ -16,19 +16,12 @@ return new class extends Migration {
             $table->string('name');
             $table->foreignId('admin')->constrained('users');
             $table->timestamps();
+            $table->string('bp_id')->nullable(); // Agregar el campo bp_id
         });
 
         // STEP 2: Add organization_id to the users table (1:N)
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('organization_id')->nullable()->constrained();
-        });
-
-        // STEP 3: Create the device_organization pivot table (N:M)
-        Schema::create('device_organization', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('organization_id')->constrained();
-            $table->foreignId('device_id')->constrained();
-            $table->timestamps();
         });
 
         // STEP 4: Create the organization_preference pivot table (N:M)
@@ -47,7 +40,6 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('organization_preference');
-        Schema::dropIfExists('device_organization');
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['organization_id']);
             $table->dropColumn('organization_id');

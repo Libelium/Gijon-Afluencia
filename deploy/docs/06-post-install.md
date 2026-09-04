@@ -53,7 +53,7 @@ Realm: **`pid-gijon`**. Clientes que usa la plataforma:
 | Cliente | Tipo | Lo usa |
 |---------|------|--------|
 | `pid-gijon-client` | público | Interfaz web / inicio de sesión interactivo. |
-| `laravel-backend` | confidencial | `web-back` (tiene secreto de cliente). |
+| `laravel-backend` | confidencial | `web-back` (tiene secreto de cliente) y el token de administración de la batería de verificación. |
 | `queues-consumer-client` | público | `cb-consumer`, `generic-consumer`. |
 | `change-password-client` | confidencial | Flujo de cambio de contraseña por administración, usado por `web-back`. |
 

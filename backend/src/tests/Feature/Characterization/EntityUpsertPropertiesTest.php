@@ -17,12 +17,12 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * CHARACTERIZATION TESTS — EntityController::upsertProperties (GDTIS-PT01-COD-075).
+ * CHARACTERIZATION TESTS — EntityController::upsertProperties.
  *
  * upsertProperties is the highest-NPath method in the codebase (190 464 paths, ~1 180-line
- * controller). The plan requires a safety net BEFORE the god-controller refactor tracked as
- * COD-065..068. These tests describe what the endpoint does TODAY — including behaviour that is
- * arguably wrong (each such case is called out in a comment). They are not a specification: if
+ * controller). They are a safety net BEFORE the god-controller refactor, and describe what the
+ * endpoint does TODAY — including behaviour that is arguably wrong (each such case is called out
+ * in a comment). They are not a specification: if
  * the refactor deliberately changes one of these behaviours, the assertion is updated in the same
  * commit, on purpose, and the change is visible in review. Silent drift is what they prevent.
  *
@@ -362,18 +362,6 @@ class EntityUpsertPropertiesTest extends TestCase
         $this->putInAssetIntervention($device);
 
         $this->patchProperties(['status' => 'closed'], $device->id)->assertOk();
-    }
-
-    /**
-     * Notifications are explicitly best-effort: NotificationHelper failures are caught and logged,
-     * and must never turn a successful broker update into an error response. Here the incident has
-     * no `reportedBy` property, so the helper returns early — the point is that the 200 stands.
-     */
-    public function test_a_status_update_still_succeeds_when_there_is_nobody_to_notify(): void
-    {
-        $incident = $this->makeEntity('Incident');
-
-        $this->patchProperties(['status' => 'closed'], $incident->id)->assertOk();
     }
 
     // ----------------------------------------------------------------- helpers

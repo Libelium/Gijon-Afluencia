@@ -11,8 +11,6 @@ use App\Authorization\AppResourcePermission;
 use Spatie\Permission\Models\Role;
 use App\Authorization\AppPermission;
 use App\Models\FiwareTenant;
-use App\Models\Workspace;
-use App\Repositories\WorkspaceRepository;
 
 class SaasOrganizationsSeeder extends Seeder
 {
@@ -70,16 +68,6 @@ class SaasOrganizationsSeeder extends Seeder
         $qcUser->assignRole('qc_admin');
 
         $nexusUser->giveResourcePermissionsTo($defaultPermissions, $qcUser);
-
-        // create qc workspace
-        $qcWorkspace = Workspace::create([
-            'name' => 'QC',
-            'description' => 'Quality Control',
-            'user_id' => $qcUser->id,
-            'collaborative' => false
-        ]);
-
-        $qcUser->giveResourcePermissionsTo($defaultPermissions, $qcWorkspace);
 
         $orgController = app(OrganizationController::class);
         $orgController->setupOrganizationFiwareScopes($rootOrg);

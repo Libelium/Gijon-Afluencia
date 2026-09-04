@@ -19,7 +19,6 @@ from models.crud.crud_entity import (
     get_or_create_entity,
     get_related_devices,
 )
-import jobs.sync.entity_workspace_context_sync as entity_workspace_context_sync
 
 from schemas.context_broker_notification_schema import ContextBrokerNotification
 from schemas.entity_data_notification import EntityDataNotification
@@ -68,13 +67,10 @@ class EntitySync(Job):
 
         optional_job_observers = [
             self.enqueue_save_realtime,
+            self.enqueue_alarms_job,
         ]
 
         default_observers = base_observers + optional_job_observers
-
-        # IMPORTANT: sync_entity_workspace MUST ALWAYS be added last to the array.
-        if notification.recently_created:
-            default_observers.append(self.sync_entity_workspace)
 
         # TIP: update this to filter new datamodels
         observer_map = {"CrowdFlowEvent": (base_observers + [self.save_cfe_commands])}
@@ -242,6 +238,19 @@ class EntitySync(Job):
 
         save_realtime_job.delay(entity_data_notification)
 
+    def enqueue_alarms_job(
+        self, entity_data_notification: EntityDataNotification
+    ) -> None:
+        """
+        Enqueues a job to evaluate the threshold alarms of the entity.
+        """
+
+        # Deferred import: tasks.alarms pulls in the alarm engine, which imports
+        # jobs. Breaks the cycle and keeps an engine failure inside this observer.
+        from tasks.alarms import alarms_job
+
+        alarms_job.delay(entity_data_notification)
+
     def __is_expired(self, entity_id: int) -> bool:
         """
         Handles the data of an entity, ensuring only devices with valid subscriptions are updated.
@@ -288,16 +297,3 @@ class EntitySync(Job):
             )
             self.enqueue_save_realtime(entity_data_notification)
 
-    def sync_entity_workspace(
-        self, entity_data_notification: EntityDataNotification
-    ) -> None:
-        """
-        Ensures that if an entity was recently created and is associated with a device,
-        and that device is linked to a workspace, the entity is added to the workspace's list of entities.
-        It also checks whether the workspace has 'read' or 'update' permissions on the device and applies
-        the same permission level to the newly linked entity.
-        """
-
-        entity_workspace_context_sync.sync_entity_workspace_context(
-            entity_data_notification, self.db
-        )

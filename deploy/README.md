@@ -160,7 +160,7 @@ objetos donde `fiware-manager` archiva la trama LIDAR (`OTE_ARCHIVE_PREFIX`, por
 ./tests/run-tests.sh prod
 ```
 
-Cargas de trabajo del clúster, endpoints públicos, inicio de sesión, el camino completo del dato de
+Cargas de trabajo del clúster, endpoints públicos, la cadena de identidad, el camino completo del dato de
 un dispositivo y la persistencia de series temporales: cada fallo viene con el comando que hay que
 ejecutar a continuación. Las comprobaciones se ejecutan en orden de dependencia, así que arregla el
 *primer* fallo y vuelve a lanzarlas. Las etapas del camino del dato necesitan un dispositivo ya
@@ -205,9 +205,9 @@ plataforma en sí; de eso se encarga el fichero de compose de cada componente, c
 
 ```bash
 cp deploy/.env.example deploy/.env
-# OBLIGATORIO antes de levantar: .env.example ya no trae contrasenas por defecto
-# (GDTIS-PT01-SEC-039). Rellena cada valor vacio, p. ej. con `openssl rand -hex 24`.
-# Sin ellas `docker compose` se niega a arrancar, que es el comportamiento buscado.
+# OBLIGATORIO antes de levantar: rellena cada valor vacío, por ejemplo con
+# `openssl rand -hex 24`. Sin ellos `docker compose` se niega a arrancar, que es
+# el comportamiento buscado.
 $EDITOR deploy/.env
 docker compose -f deploy/docker-compose.core.yml --env-file deploy/.env up -d
 docker compose -f deploy/docker-compose.core.yml --env-file deploy/.env ps

@@ -15,15 +15,6 @@ class Entity extends AuditableModel
 
     protected static array $searchable = ['urn', 'datamodel', 'name'];
 
-    /** Datamodels only an incidents-admin may create/edit (not plain operators). */
-    public const ADMIN_MANAGED_DATAMODELS = ['OperatorsTeam'];
-
-    /** Whether creating/editing an entity of this datamodel requires the incidents-admin permission. */
-    public static function requiresIncidentsAdmin(?string $datamodel): bool
-    {
-        return in_array($datamodel, self::ADMIN_MANAGED_DATAMODELS, true);
-    }
-
     /**
      * The attributes that are mass assignable.
      *
@@ -113,11 +104,6 @@ class Entity extends AuditableModel
     public function virtualizations()
     {
         return $this->morphMany(Virtualization::class, 'virtualization');
-    }
-
-    public function wrfDomain()
-    {
-        return $this->hasOne(WRFDomain::class, 'entity_id');
     }
 
 

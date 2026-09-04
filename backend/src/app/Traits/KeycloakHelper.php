@@ -9,38 +9,18 @@ use Illuminate\Support\Facades\Log;
 
 trait KeycloakHelper
 {
-    public function validateUser(string $user, string $password): array
-    {
-        if ($user === null || $password === null) {
-            return ['status' => 400, 'message' => "User or password not provided"];
-        }
-
-        $response = Http::asForm()->post(env('KEYCLOAK_URL') . '/realms/' . env('KEYCLOAK_REALM') . '/protocol/openid-connect/token', [
-            'client_id' => env('KEYCLOAK_CLIENT_ID'),
-            'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
-            'username' => $user,
-            'password' => $password,
-            'grant_type' => 'password'
-        ]);
-
-        if ($response->status() !== 200) {
-            return ['status' => $response->status(), 'message' => $response->json()];
-        }
-        return ['status' => $response->status(), 'access_token' => $response->json()['access_token'], 'refreshToken' => $response->json()['refresh_token']];
-    }
-
     public function validateUserWithCode(string $code): array
     {
         if ($code === null) {
             return ['status' => 400, 'message' => "Code not provided"];
         }
 
-        $response = Http::asForm()->post(env('KEYCLOAK_URL') . '/realms/' . env('KEYCLOAK_REALM') . '/protocol/openid-connect/token', [
-            'client_id' => env('KEYCLOAK_CLIENT_ID'),
-            'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
+        $response = Http::asForm()->post(config('keycloak.url') . '/realms/' . config('keycloak.realm') . '/protocol/openid-connect/token', [
+            'client_id' => config('keycloak.client_id'),
+            'client_secret' => config('keycloak.client_secret'),
             'code' => $code,
             'grant_type' => 'authorization_code',
-            'redirect_uri' => env('KEYCLOAK_REDIRECT_URI')
+            'redirect_uri' => config('keycloak.redirect_uri')
         ]);
 
         if ($response->status() !== 200) {
@@ -51,10 +31,10 @@ trait KeycloakHelper
 
     private function getAdminToken()
     {
-        $response = Http::asForm()->post(env('KEYCLOAK_URL') . '/realms/' . env('KC_MASTER_REALM') . '/protocol/openid-connect/token', [
-            'client_id' => env('KC_ADMIN_CLIENT'),
-            'username' => env('KC_ADMIN_USER'),
-            'password' => env('KC_ADMIN_PASSWORD'),
+        $response = Http::asForm()->post(config('keycloak.url') . '/realms/' . config('keycloak.admin.realm') . '/protocol/openid-connect/token', [
+            'client_id' => config('keycloak.admin.client'),
+            'username' => config('keycloak.admin.username'),
+            'password' => config('keycloak.admin.password'),
             'grant_type' => 'password'
         ]);
 
@@ -82,32 +62,6 @@ trait KeycloakHelper
         }
     }
 
-    public function changeKeycloakPassword(string $user_id, string $password): bool
-    {
-        if ($user_id === null || $password === null) {
-            return "User or password not provided";
-        }
-        try {
-            $token = $this->getAdminToken();
-
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $user_id . '/reset-password';
-
-
-            $response = Http::withToken($token)->put($url, [
-                'temporary' => false,
-                'type' => 'password',
-                'value' => $password
-            ]);
-
-            if ($response->status() !== 204) {
-                return false;
-            }
-        } catch (\Exception $e) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Deletes a user from Keycloak.
      *
@@ -122,7 +76,7 @@ trait KeycloakHelper
         }
         try {
             $token = $this->getAdminToken();
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $user_id;
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $user_id;
 
             $response = Http::withToken($token)->delete($url);
 
@@ -145,7 +99,7 @@ trait KeycloakHelper
         }
         try {
             $token = $this->getAdminToken();
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $user_id;
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $user_id;
 
             $response = Http::withToken($token)->put($url, [
                 'enabled' => false
@@ -167,7 +121,7 @@ trait KeycloakHelper
         }
         try {
             $token = $this->getAdminToken();
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $user_id;
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $user_id;
 
             $response = Http::withToken($token)->put($url, [
                 'enabled' => true
@@ -197,7 +151,7 @@ trait KeycloakHelper
         }
         try {
             $token = $this->getAdminToken();
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $user_id;
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $user_id;
 
             // Read the full representation first, then merge the locale and PUT it all back.
             $current = Http::withToken($token)->get($url);
@@ -224,19 +178,153 @@ trait KeycloakHelper
         return true;
     }
 
-    public function refreshToken(string $refreshToken): array
+    /**
+     * The OIDC logout is tried first when the caller owns the refresh token, as it closes only
+     * that session; the administrative route is the fallback. Returns null when no route was
+     * applicable, so the caller does not read it as a failed revocation.
+     */
+    public function revokeSession(?string $keycloakUserId, ?string $refreshToken): ?bool
     {
-        $response = Http::asForm()->post(env('KEYCLOAK_URL') . '/realms/' . env('KEYCLOAK_REALM') . '/protocol/openid-connect/token', [
-            'client_id' => env('KEYCLOAK_CLIENT_ID'),
-            'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
-            'refresh_token' => $refreshToken,
-            'grant_type' => 'refresh_token'
-        ]);
-
-        if ($response->status() !== 200) {
-            return ['status' => $response->status(), 'message' => $response->json()];
+        if ($refreshToken && !$this->ownsRefreshToken($keycloakUserId, $refreshToken)) {
+            $refreshToken = null;
         }
-        return ['status' => $response->status(), 'access_token' => $response->json()['access_token'], 'refreshToken' => $response->json()['refresh_token']];
+
+        if ($refreshToken && $this->logoutWithRefreshToken($refreshToken)) {
+            return true;
+        }
+
+        // The administrative route needs the user's 'sub'; anything else (such as the 'pending'
+        // seeded users start with) just returns a 404.
+        if (!$this->isKeycloakUserId($keycloakUserId)) {
+            Log::warning('keycloak.session.revoke.no_user_id', ['user' => $keycloakUserId]);
+
+            return $refreshToken ? false : null;
+        }
+
+        return $this->logoutUserSessions($keycloakUserId);
+    }
+
+    /**
+     * The refresh token arrives in the request body, so it is only used when its 'sub' is the
+     * authenticated user's: another user's token would close someone else's session. The
+     * signature needs no checking, Keycloak itself rejects a forged token on revocation.
+     */
+    private function ownsRefreshToken(?string $keycloakUserId, ?string $refreshToken): bool
+    {
+        if ($refreshToken === null || !$this->isKeycloakUserId($keycloakUserId)) {
+            return false;
+        }
+
+        $subject = $this->jwtSubject($refreshToken);
+
+        if ($subject !== $keycloakUserId) {
+            Log::warning('keycloak.session.revoke.refresh_token_mismatch', ['user' => $keycloakUserId]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function jwtSubject(string $token): ?string
+    {
+        $payload = explode('.', $token)[1] ?? '';
+        $claims = json_decode((string) base64_decode(strtr($payload, '-_', '+/'), true), true);
+        $subject = is_array($claims) ? ($claims['sub'] ?? null) : null;
+
+        return is_string($subject) ? $subject : null;
+    }
+
+    private function isKeycloakUserId(?string $keycloakUserId): bool
+    {
+        return $keycloakUserId !== null
+            && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $keycloakUserId) === 1;
+    }
+
+    /**
+     * Username is tried as well as email: in this realm the username is the e-mail itself, and
+     * accounts created by hand do not always carry the email attribute.
+     */
+    public function findKeycloakUserIdByEmail(?string $email): ?string
+    {
+        if (empty($email)) {
+            return null;
+        }
+
+        return $this->queryKeycloakUserId(['email' => $email, 'exact' => 'true'])
+            ?? $this->queryKeycloakUserId(['username' => strtolower($email), 'exact' => 'true']);
+    }
+
+    private function queryKeycloakUserId(array $criteria): ?string
+    {
+        try {
+            $token = $this->getAdminToken();
+
+            if (!$token) {
+                return null;
+            }
+
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users';
+
+            $response = Http::withToken($token)->get($url, $criteria);
+
+            if (!$response->successful()) {
+                Log::error('keycloak.user.find', ['status' => $response->status()]);
+
+                return null;
+            }
+
+            $id = $response->json()[0]['id'] ?? null;
+        } catch (\Exception $e) {
+            Log::error('keycloak.user.find.exception', ['error' => $e->getMessage()]);
+
+            return null;
+        }
+
+        return is_string($id) && $this->isKeycloakUserId($id) ? $id : null;
+    }
+
+    private function logoutWithRefreshToken(string $refreshToken): bool
+    {
+        try {
+            $url = config('keycloak.url') . '/realms/' . config('keycloak.realm') . '/protocol/openid-connect/logout';
+
+            $response = Http::asForm()->post($url, [
+                'client_id' => config('keycloak.client_id'),
+                'client_secret' => config('keycloak.client_secret'),
+                'refresh_token' => $refreshToken,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('keycloak.session.logout.exception', ['error' => $e->getMessage()]);
+            return false;
+        }
+
+        if (!$response->successful()) {
+            Log::warning('keycloak.session.logout', ['status' => $response->status()]);
+            return false;
+        }
+
+        return true;
+    }
+
+    private function logoutUserSessions(string $keycloakUserId): bool
+    {
+        try {
+            $token = $this->getAdminToken();
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $keycloakUserId . '/logout';
+
+            $response = Http::withToken($token)->post($url);
+        } catch (\Exception $e) {
+            Log::error('keycloak.session.admin_logout.exception', ['user' => $keycloakUserId, 'error' => $e->getMessage()]);
+            return false;
+        }
+
+        if (!$response->successful()) {
+            Log::error('keycloak.session.admin_logout', ['user' => $keycloakUserId, 'status' => $response->status()]);
+            return false;
+        }
+
+        return true;
     }
 
     private function generateRandomPassword(int $length = 16): string
@@ -271,7 +359,7 @@ trait KeycloakHelper
         }
         $token = $this->getAdminToken();
 
-        $response = Http::withToken($token)->post(env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users', [
+        $response = Http::withToken($token)->post(config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users', [
             "username" => $email,
             'firstName' => $name,
             'email' => $email,
@@ -325,7 +413,7 @@ trait KeycloakHelper
     {
         try {
             $token = $this->getAdminToken();
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/roles/' . $roleName;
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/roles/' . $roleName;
 
             $response = Http::withToken($token)->get($url);
 
@@ -351,7 +439,7 @@ trait KeycloakHelper
                 return false;
             }
 
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $userId . '/role-mappings/realm';
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $userId . '/role-mappings/realm';
 
             $response = Http::withToken($token)->post($url, [
                 [
@@ -383,7 +471,7 @@ trait KeycloakHelper
                 return false;
             }
 
-            $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/users/' . $userId . '/role-mappings/realm';
+            $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/users/' . $userId . '/role-mappings/realm';
 
             $response = Http::withToken($token)->delete($url, [
                 [
@@ -414,7 +502,7 @@ trait KeycloakHelper
             return $results;
         }
 
-        $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM') . '/events';
+        $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm') . '/events';
 
         foreach ($userIds as $userId) {
             try {
@@ -463,9 +551,9 @@ trait KeycloakHelper
         // Currently only UPDATE_PASSWORD is sent, so Keycloak redirects the user
         // directly to the reset password screen. If multiple actions were passed,
         // Keycloak would show an intermediate screen listing all pending actions first.  
-        $url = env('KEYCLOAK_URL') . '/admin/realms/' . env('KEYCLOAK_REALM')
+        $url = config('keycloak.url') . '/admin/realms/' . config('keycloak.realm')
             . '/users/' . $keycloakUserId . '/execute-actions-email'
-            . '?client_id=' . env('KEYCLOAK_FRONTEND_CLIENT_ID', 'pid-gijon-client') . '&redirect_uri=' . urlencode(env('FRONTEND_URL'));
+            . '?client_id=' . config('keycloak.frontend_client_id') . '&redirect_uri=' . urlencode(config('keycloak.frontend_url'));
 
         $response = Http::withToken($token)->put($url, ['UPDATE_PASSWORD']);
         return $response->successful();

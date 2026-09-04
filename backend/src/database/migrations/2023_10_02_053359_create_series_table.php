@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('type');
             $table->foreignId('panel_id')->references('id')->on('panels')->onDelete('cascade');
             $table->timestamps();
+            $table->integer('precision')->nullable();
+            $table->string('style')->nullable();
         });
     }
 

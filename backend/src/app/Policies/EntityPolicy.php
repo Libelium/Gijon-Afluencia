@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Repositories\PermissionRepository;
 
 use App\Models\Entity;
 use App\Models\User;
@@ -54,12 +53,6 @@ class EntityPolicy
     {
         if ($user->can(AppPermission::APPLICATION_ADMIN->value)) {
             return Response::allow();
-        }
-
-        // Admin-managed datamodels (e.g. OperatorsTeam) require incidents.admin, not just the
-        // generic data_sources.entities.update that plain operators also hold.
-        if (Entity::requiresIncidentsAdmin($entity->datamodel) && !$user->can(AppPermission::INCIDENTS_ADMIN->value)) {
-            return Response::deny('Only an incidents admin can edit operator teams');
         }
 
         $allowed = $user->can(AppPermission::DATA_SOURCES_ENTITIES_UPDATE->value);

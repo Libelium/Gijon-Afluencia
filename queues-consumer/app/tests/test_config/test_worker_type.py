@@ -16,6 +16,7 @@ class TestWorkerTypeEnum:
 
     EXPECTED_DOMAIN_WORKERS = {
         WorkerType.SYNC,
+        WorkerType.ALARMS,
         WorkerType.DATA,
         WorkerType.CROWD,
         WorkerType.DATA_CACHE,
@@ -135,7 +136,7 @@ class TestGetQueues:
 
     def test_all_domain_queues_are_non_empty(self):
         domain_workers = [
-            WorkerType.SYNC, WorkerType.DATA,
+            WorkerType.SYNC, WorkerType.ALARMS, WorkerType.DATA,
             WorkerType.CROWD, WorkerType.DATA_CACHE,
         ]
         for worker in domain_workers:
@@ -145,7 +146,7 @@ class TestGetQueues:
     def test_universal_is_superset_of_all_domain_queues(self):
         all_queues = set(WorkerType.UNIVERSAL.get_queues())
         domain_workers = [
-            WorkerType.SYNC, WorkerType.DATA,
+            WorkerType.SYNC, WorkerType.ALARMS, WorkerType.DATA,
             WorkerType.CROWD, WorkerType.DATA_CACHE,
         ]
         for worker in domain_workers:
@@ -189,6 +190,7 @@ class TestGetTaskModules:
 
     @pytest.mark.parametrize("worker_type, expected_module", [
         (WorkerType.SYNC,           "tasks.sync"),
+        (WorkerType.ALARMS,         "tasks.alarms"),
         (WorkerType.DATA,           "tasks.data"),
         (WorkerType.CROWD,          "tasks.crowd"),
         (WorkerType.DATA_CACHE,     "tasks.data_cache"),
@@ -224,7 +226,8 @@ class TestGetTaskModules:
 
     def test_all_task_modules_are_the_expected_ones(self):
         assert set(_ALL_TASK_MODULES) == {
-            "tasks.sync", "tasks.data", "tasks.crowd", "tasks.data_cache",
+            "tasks.sync", "tasks.alarms", "tasks.data", "tasks.crowd",
+            "tasks.data_cache",
         }
 
     def test_no_duplicate_modules_in_any_worker_type(self):

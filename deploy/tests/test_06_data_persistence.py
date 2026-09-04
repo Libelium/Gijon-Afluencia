@@ -23,6 +23,7 @@ SECTION = "Data persistence (timeseries)"
 
 DATA_POINTS = 5
 PERSISTENCE_WAIT_SECONDS = 5
+SEND_WINDOW_OFFSET_SECONDS = 60
 # Reuse the shared propagation budget: persistence is the slowest async chain
 # (carrot → RabbitMQ → consumers → TimescaleDB), so it must not be tighter than
 # the entity-update poll.
@@ -91,7 +92,10 @@ def test_data_persists_to_timeseries():
 
 def _send_data_points(device):
     sent = []
-    base_time = datetime.now(timezone.utc)
+    # Series rows are keyed by (time, entity, attr), and the lifecycle stage
+    # sends without TimeInstant, so starting at "now" would let one of these
+    # points share a second with those sends and overwrite it.
+    base_time = datetime.now(timezone.utc) - timedelta(seconds=SEND_WINDOW_OFFSET_SECONDS)
     for index in range(DATA_POINTS):
         temperature = api.generate_random_temperature()
         timestamp = base_time + timedelta(seconds=index)

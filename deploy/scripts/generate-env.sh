@@ -126,6 +126,28 @@ MONGO_PORT="${EXTERNAL_MONGO_PORT:-27017}"
 RABBITMQ_HOST="${EXTERNAL_RABBITMQ_HOST:-pid-gijon.rabbitmq.svc.cluster.local}"
 RABBITMQ_PORT="${EXTERNAL_RABBITMQ_PORT:-5672}"
 RABBITMQ_SECURITY="${EXTERNAL_RABBITMQ_SECURITY:-amqp}"
+# Ruta del PEM de la CA dentro del contenedor de los consumidores; vacia = almacen de
+# confianza del sistema. Con ruta, el PEM va por fuera (este values se regenera en cada
+# ejecucion), asi que se declaran los Secrets que aporta el operador.
+RABBITMQ_CA_FILE_PATH="${EXTERNAL_RABBITMQ_CA_FILE_PATH:-}"
+if [ -n "$RABBITMQ_CA_FILE_PATH" ]; then
+    RABBITMQ_CA_SECRET_CARROT="carrot-rabbitmq-ca"
+    RABBITMQ_CA_SECRET_CB_CONSUMER="cb-consumer-rabbitmq-ca"
+    RABBITMQ_CA_SECRET_GENERIC_CONSUMER="generic-consumer-rabbitmq-ca"
+else
+    RABBITMQ_CA_SECRET_CARROT=""
+    RABBITMQ_CA_SECRET_CB_CONSUMER=""
+    RABBITMQ_CA_SECRET_GENERIC_CONSUMER=""
+fi
+
+# Redes de las que el backend acepta las cabeceras X-Forwarded-*; recortala al CIDR de la
+# pasarela en config.env. Se usa `-` y no `:-` a proposito: dejarla presente y vacia se
+# respeta como "ningun proxy de confianza" y el defecto solo entra si no esta declarada.
+TRUSTED_PROXIES="${TRUSTED_PROXIES-127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
+
+# Clientes emisores admitidos por el guard. Mismo criterio con `-`: presente y vacia
+# significa no restringir, y el defecto solo entra si no esta declarada.
+KEYCLOAK_ALLOWED_CLIENTS="${KEYCLOAK_ALLOWED_CLIENTS-pid-gijon-client}"
 
 URL_API="https://${DOMAIN_API}"
 URL_KEYCLOAK="https://${DOMAIN_KEYCLOAK}"
@@ -207,6 +229,11 @@ ok "Secrets ready"
 # config.env if your installation uses a different admin login.
 TESTS_ADMIN_USERNAME="${TESTS_ADMIN_USERNAME:-admin@${BASE_DOMAIN}}"
 
+# La API de gestion no tiene endpoint de inicio de sesion: la bateria pide el
+# token al proveedor de identidad con el cliente confidencial del backend, el
+# mismo que usa web-back (KEYCLOAK_CLIENT_SECRET ya se propaga a tests.env).
+KEYCLOAK_CLIENT_ID_TESTS="${KEYCLOAK_CLIENT_ID_TESTS:-laravel-backend}"
+
 # Operator-supplied verification values are NOT generated here — they are
 # preserved across re-runs (like SECRETS.env), so regenerating an environment
 # never wipes a filled-in admin password or a pinned API key. Precedence:
@@ -249,7 +276,9 @@ VARS=(PROJECT_NAME ENVIRONMENT IMAGE_REGISTRY GATEWAY_NAMESPACE GATEWAY_PUBLIC
   CONTEXT_URL TAG_AETHER_LINK TAG_FIWARE_MANAGER
   TAG_QUEUES_CONSUMER TAG_WEB_BACK TAG_KEYCLOAK TAG_FRONTEND PG_HOST PG_PORT
   MONGO_HOST MONGO_PORT MONGO_USER MONGO_PASSWORD RABBITMQ_HOST RABBITMQ_PORT
-  RABBITMQ_SECURITY RABBITMQ_VHOST RABBITMQ_USER RABBITMQ_PASSWORD
+  RABBITMQ_SECURITY RABBITMQ_CA_FILE_PATH RABBITMQ_VHOST RABBITMQ_USER RABBITMQ_PASSWORD
+  RABBITMQ_CA_SECRET_CARROT RABBITMQ_CA_SECRET_CB_CONSUMER RABBITMQ_CA_SECRET_GENERIC_CONSUMER
+  TRUSTED_PROXIES KEYCLOAK_ALLOWED_CLIENTS
   KEYCLOAK_ADMIN_USER KEYCLOAK_REALM KEYCLOAK_PUBLIC_CLIENT S3_BUCKET S3_REGION STORAGE_TYPE
   KC_BRAND_PRIMARY KC_BRAND_SECONDARY KC_BRAND_INDIGO KC_BRAND_LOGIN_IMAGE
   MINIO_ENDPOINT STORAGE_ENDPOINT STORAGE_PATH_STYLE STORAGE_ACCESS_KEY
@@ -265,6 +294,7 @@ VARS=(PROJECT_NAME ENVIRONMENT IMAGE_REGISTRY GATEWAY_NAMESPACE GATEWAY_PUBLIC
   KC_ADMIN_PASSWORD KEYCLOAK_CLIENT_SECRET
   KEYCLOAK_PUBLIC_KEY KC_IMPERSONATION_CLIENT_SECRET KC_IMPERSONATION_USERNAME
   KC_IMPERSONATION_PASSWORD TESTS_ADMIN_USERNAME TESTS_ADMIN_PASSWORD
+  KEYCLOAK_CLIENT_ID_TESTS
   TESTS_DATA_API_KEY TESTS_TENANT TESTS_CHECK_POSTGRES
   TESTS_CHECK_MONGODB TESTS_CHECK_RABBITMQ TESTS_CHECK_MINIO
   TESTS_AIRFLOW_URL TESTS_AIRFLOW_USERNAME TESTS_AIRFLOW_PASSWORD
@@ -308,6 +338,13 @@ else
 fi
 
 render pid-gijon-core.values.yaml.tpl pid-gijon-core.values.yaml
+
+# El values del entorno se regenera en cada ejecucion, asi que el PEM no puede vivir ahi.
+if [ -n "$RABBITMQ_CA_FILE_PATH" ]; then
+    warn "  RabbitMQ CA: crea los Secrets carrot-rabbitmq-ca, cb-consumer-rabbitmq-ca y"
+    warn "               generic-consumer-rabbitmq-ca con la clave $(basename "$RABBITMQ_CA_FILE_PATH")"
+    warn "               (el PEM de la CA) o los tres consumidores no arrancaran"
+fi
 
 # Optional APISIX FIWARE gateway (opt-in via APISIX_ENABLED).
 if [ "$APISIX_ENABLED" = "true" ]; then

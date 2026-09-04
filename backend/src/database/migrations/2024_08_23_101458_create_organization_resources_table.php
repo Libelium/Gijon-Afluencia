@@ -10,7 +10,6 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::drop('device_organization');
         Schema::create('organization_has_resource', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->references('id')->on('organizations')->onDelete('cascade');
@@ -40,12 +39,5 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('organization_has_resource');
-
-        Schema::create('device_organization', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('organization_id')->references('id')->on('organizations')->onDelete('cascade');
-            $table->foreignId('device_id')->references('id')->on('devices')->onDelete('cascade');
-            $table->timestamps();
-        });
     }
 };

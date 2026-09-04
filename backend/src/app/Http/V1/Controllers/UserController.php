@@ -6,27 +6,23 @@ use App\Http\V1\Requests\Users\UserUpdateRequest;
 use App\Models\User;
 use App\Http\V1\Resources\UserResource;
 use App\Http\V1\Controllers\Controller;
-use App\Models\AccessAttempt;
-use App\Repositories\AccessAttemptRepository;
-use App\Repositories\PreferenceRepository;
 use App\Traits\KeycloakHelper;
-use App\Traits\VCHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UserController extends Controller
 {
 
     use KeycloakHelper;
-    use VCHelper;
     /**
      * To take detail of current user
      */
     public function show(int $id): Response
     {
 
-        $user = User::with('lastLogin')->findOrFail($id);
+        $user = User::findOrFail($id);
 
         $this->authorize('read', $user);
 
@@ -37,7 +33,6 @@ class UserController extends Controller
     {
         $user = Auth::user();
         // no need to authorize, because the user is the same as the logged user
-        $user->load('lastLogin');
 
         return response(new UserResource($user), 200);
     }
@@ -60,121 +55,63 @@ class UserController extends Controller
         return response(new UserResource($user), 200);
     }
 
-    public function getPublicIp()
-    {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
-            return $ip;
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-            return $ip;
-        } else {
-            $ip = $_SERVER['REMOTE_ADDR'];
-            return $ip;
-        }
-    }
-
-    public function login(Request $request)
-    {
-        $request->validate([
-            'username' => 'required',
-            'password' => 'required',
-        ]);
-
-        $user = User::where('email', strtolower($request->username))->first();
-
-        // Dont use firstOrFail, because we dont want ot inform if the user exists or not
-        # First check if the user exists. If not, return an error
-        if (!$user) {
-            return response()->json(['email' => 'The provided credentials are incorrect'], 401);
-        }
-
-        # Once we know the user exists, check if the user is locked or blocked
-        if (!$user->enabled) {
-            return response()->json(['error' => 'The user is locked'], 401);
-        }
-
-        $kcResponse = $this->validateUser($request->username, $request->password);
-        $validLogin = $kcResponse['status'] !== 200 ? false : true;
-
-        $preferences = PreferenceRepository::getUserPreferences($user->id);
-        $shouldLog = $preferences['accessLogEnabled'] === 'true';
-        $maxAccessAttempts = (int) $preferences['maxAccessAttempts'];
-
-        if ($shouldLog || !$validLogin) {
-            $this->saveAttempt($request->username, $this->getPublicIp(), $validLogin);
-        }
-
-        if ($validLogin) {
-
-            if (!$shouldLog) {
-                AccessAttemptRepository::cleanLogsUntilLastSuccess($request->username);
-            }
-
-            return response()->json([
-                'id' => $user->id,
-                'token' => $kcResponse['access_token'],
-                'refreshToken' => $kcResponse['refreshToken']
-            ]);
-        }
-
-        $blockIntervalCheck = config('app.limits.login.block_interval_check_min');
-
-        $shouldLock = AccessAttemptRepository::shouldLock(
-            $request->username,
-            $maxAccessAttempts,
-            $blockIntervalCheck
-        );
-
-        if ($shouldLock) {
-            $user->enabled = false;
-            $user->save();
-            return response()->json(['error' => 'The user is locked'], 401);
-        }
-
-        // keep the validation format (email =>) just in case for the front end
-        return response()->json(['email' => 'The provided credentials are incorrect'], 401);
-    }
-
-    public function refreshKcToken(Request $request)
-    {
-        $request->validate([
-            'refreshToken' => 'required'
-        ]);
-
-        $kcResponse = $this->refreshToken($request->refreshToken);
-
-        if ($kcResponse['status'] !== 200) {
-            return response()->json(['error' => 'Invalid refresh token'], 401);
-        }
-
-        return response()->json([
-            'token' => $kcResponse['access_token'],
-            'refreshToken' => $kcResponse['refreshToken']
-        ]);
-    }
-
     /**
      * Logout user (Revoke the token)
      */
     public function logout(Request $request)
     {
         $user = Auth::user();
-        // $user->currentAccessToken()->delete();
+
+        $revoked = $this->revokeSession($this->resolveKeycloakUserId($user), $request->input('refreshToken'));
+
+        // Under the Keycloak guard there is no Sanctum token, but if the request carries one it
+        // must go: the local session has to fall even when the remote revocation failed.
+        $localToken = $user?->currentAccessToken();
+        if ($localToken instanceof PersonalAccessToken) {
+            $localToken->delete();
+        }
+
+        // A failed revocation and an unidentifiable session (null) are told apart, but in both
+        // cases the session is still alive in Keycloak, so neither answers 200.
+        if ($revoked === null) {
+            return response()->json(
+                ['error' => 'The identity provider session could not be identified'],
+                502
+            );
+        }
+
+        if ($revoked === false) {
+            return response()->json(
+                ['error' => 'The session could not be revoked in the identity provider'],
+                502
+            );
+        }
 
         return response()->json(['success' => true], 200);
     }
 
     /**
-     * Logout user from all sessions (Revoke all tokens)
+     * Keycloak user id. The local column starts as the seeder's 'pending' and goes stale if the
+     * user is recreated in the realm, so a value that is not a UUID is resolved by email and
+     * persisted.
      */
-    private function saveAttempt(string $email, string $ip, bool $success)
+    private function resolveKeycloakUserId(?User $user): ?string
     {
-        $accessAttempt = new AccessAttempt([
-            'email' => $email,
-            'ip' => $ip,
-            'success' => $success
-        ]);
-        $accessAttempt->save();
+        if (!$user) {
+            return null;
+        }
+
+        if ($this->isKeycloakUserId($user->keycloak_client_id)) {
+            return $user->keycloak_client_id;
+        }
+
+        $resolved = $this->findKeycloakUserIdByEmail($user->email);
+
+        if ($resolved) {
+            $user->keycloak_client_id = $resolved;
+            $user->save();
+        }
+
+        return $resolved;
     }
 }

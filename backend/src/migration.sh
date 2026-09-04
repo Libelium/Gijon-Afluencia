@@ -23,11 +23,9 @@ echo "Running seeders"
 php artisan db:seed --class=DeviceTypesSeeder
 
 php artisan app:update-custom-datamodels
-php artisan app:update-probes-custom-datamodels
 
 php artisan db:seed --class=SyncSeeder
 php artisan db:seed --class=SaasOrganizationsSeeder
 php artisan db:seed --class=MqttUserSeeder
-php artisan db:seed --class=PublicIncidentsWorkspaceSeeder
 php artisan keycloak:sync-user-locales
 echo "Seeders completed."

@@ -33,6 +33,13 @@ class Config:
     frontend_url: str = field(default_factory=lambda: _env("FRONTEND_URL"))
     keycloak_realm: str = field(default_factory=lambda: _env("KEYCLOAK_REALM", "pid-gijon"))
 
+    keycloak_client_id: str = field(
+        default_factory=lambda: _env("KEYCLOAK_CLIENT_ID", "laravel-backend")
+    )
+    keycloak_client_secret: str = field(
+        default_factory=lambda: _env("KEYCLOAK_CLIENT_SECRET")
+    )
+
     # Platform credentials
     admin_username: str = field(default_factory=lambda: _env("ADMIN_USERNAME"))
     admin_password: str = field(default_factory=lambda: _env("ADMIN_PASSWORD"))

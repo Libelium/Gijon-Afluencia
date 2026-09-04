@@ -10,14 +10,10 @@ use App\Models\EntityGroup;
 use App\Models\Organization;
 use App\Models\FiwareTenant;
 use App\Models\Regulation;
-use App\Models\Probe;
 use App\Models\FiwareScope;
 use App\Models\Dashboard;
 use App\Models\OutConnectors\OutConnector;
-use App\Models\Workspace;
 use App\Models\Log\Line;
-use App\Models\Reports\Report;
-use App\Models\Download;
 use App\Models\User;
 use App\Models\Alarm;
 use App\Models\BackgroundJob;
@@ -32,15 +28,11 @@ class LogsRepository
         'out_connectors' => OutConnector::class,
         'entities' => Entity::class,
         'entity_groups' => EntityGroup::class,
-        'reports' => Report::class,
         'organizations' => Organization::class,
         'users' => User::class,
-        'downloads' => Download::class,
-        'workspaces' => Workspace::class,
         'dashboards' => Dashboard::class,
         'fiware_tenants' => FiwareTenant::class,
         'regulations' => Regulation::class,
-        'probes' => Probe::class,
         'fiware_scopes' => FiwareScope::class,
         'alarms' => Alarm::class,
         'background_jobs' => BackgroundJob::class,

@@ -26,7 +26,7 @@ class Queue:
         return self.__routing_key
 
     def publish(self, client, message: dict) -> None:
-        """Publish the queue with the RabbitClient, this one must be connected before"""
+        """Publish the message on the given client, which must already be connected."""
         client.channel.basic_publish(
             exchange="",
             routing_key=self.routing_key,

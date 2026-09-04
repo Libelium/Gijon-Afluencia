@@ -64,12 +64,6 @@ class User extends Authenticatable implements AuditableContract, Limitable
         return $this->hasMany(\App\Models\Preferencable::class);
     }
 
-    /** Mobile push delivery addresses (one per app install that opted in). */
-    public function pushNotificationTokens()
-    {
-        return $this->hasMany(\App\Models\PushNotificationToken::class);
-    }
-
     public function apiKey()
     {
         return $this->hasOne(\App\Models\ApiKey::class);
@@ -85,27 +79,9 @@ class User extends Authenticatable implements AuditableContract, Limitable
         return $this->organization->admin == $this->id;
     }
 
-    public function lastLogin()
-    {
-        return $this->hasOne(\App\Models\AccessAttempt::class, 'email', 'email')
-            ->where('success', true)
-            ->orderBy('created_at', 'desc')
-            ->offset(1);
-    }
-
     public function roles()
     {
         return $this->morphToMany(Role::class, 'model', 'model_has_roles');
-    }
-
-    public function workspaces()
-    {
-        return $this->belongsToMany(\App\Models\Workspace::class, 'workspace_has_users');
-    }
-
-    public function workspacesOwned()
-    {
-        return $this->hasMany(\App\Models\Workspace::class, 'user_id');
     }
 
     public function resourceLimits()
