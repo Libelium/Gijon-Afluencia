@@ -71,20 +71,11 @@ class UserResource extends JsonResource
             'enabled' => $this->enabled,
             'preferences' => $preferences,
             'organization' => new OrganizationResource($this->organization),
-            'last_login_date' => $this->last_login_date,
-            'last_login_time' => $this->last_login_time,
-            'ip' => $this->ip,
             'roles' => $roles,
             'permissions' => $final_permissions,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'blocked_by_admin' => $this->blocked_by_admin,
         ];
-
-        if ($this->lastLogin) {
-            $user_resource['ip'] = $this->lastLogin->ip;
-            $user_resource['last_login_date'] = $this->lastLogin->created_at->format('Y-m-d');
-            $user_resource['last_login_time'] = $this->lastLogin->created_at->format('H:i:s');
-        }
 
         return $user_resource;
     }

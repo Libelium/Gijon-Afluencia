@@ -13,7 +13,6 @@ use App\Repositories\OrganizationRepository;
 use App\Repositories\ResourcePermissionRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Http\V1\Resources\DefaultPaginationResource;
@@ -47,10 +46,6 @@ class DashboardController extends Controller
             'filter' => 'string',
             'template_type' => 'array',
             'template_type.*' => 'string',
-            'tags' => 'nullable|array',
-            'tags.*' => 'integer',
-            'excludeTags' => 'nullable|array',
-            'excludeTags.*' => 'integer',
             'fields' => 'string',
             'hidden' => 'nullable|in:0,1,true,false,all',
         ]);
@@ -99,20 +94,22 @@ class DashboardController extends Controller
             'name' => 'required|string|max:255|min:3',
             'description' => 'string|max:255|min:3|nullable',
             'slug' => 'string|max:255|min:3|unique:dashboards|nullable',
+            'isPublished' => 'boolean|nullable',
             'type' => 'required|string|max:255|min:3',
             'timezone' => 'required|string|max:255|min:3',
-            'tags' => 'array|nullable',
-            'tags.*' => 'integer|exists:tags,id',
         ]);
 
         $user = Auth::user();
 
         $this->authorize('create', Dashboard::class);
 
+        $slug = $this->resolvePublicSlug($request->slug, null);
+
         $dashboard = Dashboard::create([
             'name' => $request->name,
             'description' => $request->description,
-            'slug' => $request->slug,
+            'slug' => $slug,
+            'is_published' => $slug !== null && $request->boolean('isPublished'),
             'type' => $request->type,
             'timezone' => $request->timezone,
             'user_id' => $user->id,
@@ -123,26 +120,18 @@ class DashboardController extends Controller
                 'xs' => [],
                 'xxs' => [],
             ],
-            'preview_image' => $request->previewImage,
         ]);
-
-        if ($request->has('tags') && is_array($request->tags)) {
-            $dashboard->tags()->sync($request->tags);
-        }
 
         $default_permissions = AppResourcePermission::defaultPermissions();
         $user->giveResourcePermissionsTo($default_permissions, $dashboard, true);
 
         OrganizationRepository::assignResourceToOrganization($user->organization_id, $dashboard);
 
-        $dashboard->load('tags');
         return response()->json($dashboard, 200);
     }
 
     private function buildDashboardResource(Dashboard $dashboard)
     {
-        $dashboard->load('tags');
-
         if ($dashboard->type == 'Template') {
             $template = $dashboard->template()->with('devices.device')->with('entities.entity')->with('regulation')->with('groups.group')->first();
             if ($template) {
@@ -193,9 +182,30 @@ class DashboardController extends Controller
         return $this->buildDashboardResource($dashboard)->response()->setStatusCode(200);
     }
 
+    /**
+     * Public slug with enough entropy not to be guessable from the name. An already issued slug
+     * is kept when the request repeats it (or its suffix-less base) so shared links stay valid.
+     */
+    private function resolvePublicSlug(?string $requested, ?string $current): ?string
+    {
+        if ($requested === null || $requested === '') {
+            return null;
+        }
+
+        $base = Str::substr(Str::slug($requested), 0, 240);
+
+        if ($current !== null && ($current === $requested
+            || preg_match('/^' . preg_quote($base, '/') . '-[a-z0-9]{12}$/', $current) === 1)) {
+            return $current;
+        }
+
+        return $base . '-' . Str::lower(Str::random(12));
+    }
+
     public function getPublicDashboard($slug)
     {
-        $dashboard = Dashboard::where('slug', $slug)->first();
+        // 404 and not 403 when it is not published: a 403 would confirm the slug exists.
+        $dashboard = Dashboard::publishedBySlug($slug);
 
         if (!$dashboard) {
             return response()->json([
@@ -258,38 +268,39 @@ class DashboardController extends Controller
                 Rule::unique('dashboards')->ignore($id),
                 'nullable'
             ],
+            'isPublished' => 'boolean|nullable',
             'type' => 'string|max:255|min:3',
             'timezone' => 'string|max:255|min:3',
             'layout.*' => 'array|nullable',
             'dateRange' => 'array|nullable',
             'viewMode' => 'boolean|nullable',
             'hidden' => 'boolean|nullable',
-            'tags' => 'array|nullable',
-            'tags.*' => 'integer|exists:tags,id',
         ]);
 
         $dashboard = Dashboard::findOrFail($id);
 
         $this->authorize('update', $dashboard);
 
+        // Partial update: a request carrying neither slug nor isPublished (the front-end PUT
+        // sends only name and description) must not unpublish the dashboard.
+        $slug = $request->has('slug')
+            ? $this->resolvePublicSlug($request->slug, $dashboard->slug)
+            : $dashboard->slug;
+
         $dashboard->update([
             'name' => $request->name ?? $dashboard->name,
             'description' => $request->description ?? $dashboard->description,
-            'slug' => $request->slug,
+            'slug' => $slug,
+            'is_published' => $slug !== null
+                && ($request->has('isPublished') ? $request->boolean('isPublished') : $dashboard->is_published),
             'type' => $request->type ?? $dashboard->type,
             'timezone' => $request->timezone ?? $dashboard->timezone,
             'layout' => $request->layout ?? $dashboard->layout,
             'date_range' => $request->dateRange ?? $dashboard->date_range,
-            'preview_image' => $request->previewImage ?? $dashboard->preview_image,
             'view_mode' => $request->viewMode ?? $dashboard->view_mode,
             'hidden' => $request->has('hidden') ? (bool) $request->hidden : $dashboard->hidden,
         ]);
 
-        if ($request->has('tags')) {
-            $dashboard->tags()->sync($request->tags ?? []);
-        }
-
-        $dashboard->load('tags');
         return response()->json($dashboard, 200);
     }
 
@@ -825,149 +836,5 @@ class DashboardController extends Controller
         $dashboard->template->save();
 
         return response()->json($dashboard, 200);
-    }
-
-    public function setImage(Request $request, $id)
-    {
-        $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
-            'imageName' => 'required|string|max:100|min:1',
-        ]);
-        if ($id != 0) {
-            $dashboard = Dashboard::findOrFail($id);
-            $this->authorize('update', $dashboard);
-        } else {
-            $dashboard = null;
-        }
-
-        $file = $request->file('image');
-
-        // Validate the REAL content type from the file's magic bytes — never the
-        // client-declared Content-Type/extension
-        $allowedTypes = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
-        $mime = $file->getMimeType();   
-        if (!array_key_exists($mime, $allowedTypes)) {
-            return response()->json(['message' => 'Unsupported image type'], 422);
-        }
-
-        // Re-encode the image to strip any embedded payload (polyglot / webshell).
-        $bytes = file_get_contents($file->getRealPath());
-        if (extension_loaded('gd')) {
-            $image = @imagecreatefromstring($bytes);
-            if ($image === false) {
-                return response()->json(['message' => 'Invalid image content'], 422);
-            }
-            ob_start();
-            if ($mime === 'image/png') {
-                imagealphablending($image, false);
-                imagesavealpha($image, true);
-                imagepng($image);
-            } else {
-                imagejpeg($image, null, 90);
-            }
-            $bytes = ob_get_clean();
-            imagedestroy($image);
-        }
-
-        $user = Auth::user();
-        $organizationId = $user->organization_id;
-
-        // Random, non-guessable filename; extension derived from the validated MIME
-        // (no longer predictable as org_{id}_{name}.{clientExtension}).
-        $filename = 'org_' . $organizationId . '_' . Str::uuid() . '.' . $allowedTypes[$mime];
-        $path = config('filesystems.paths.dashboard_images') . '/' . $filename;
-
-        Storage::disk('s3')->put($path, $bytes);
-        if ($dashboard) {
-            $dashboard->update(['preview_image' => $filename]);
-        }
-
-        return response()->json([
-            'message' => 'Image uploaded successfully',
-            'filename' => $filename,
-        ], 200);
-    }
-
-    public function getImage($id)
-    {
-        $dashboard = Dashboard::findOrFail($id);
-
-        $this->authorize('read', $dashboard);
-
-        $filename = $dashboard->preview_image;
-
-        if (!$filename) {
-            return response()->json(['message' => 'No image found'], 404);
-        }
-
-        $path = config('filesystems.paths.dashboard_images') . '/' . $filename;
-
-        if (!Storage::disk('s3')->exists($path)) {
-            return response()->json(['message' => 'Image file not found'], 404);
-        }
-
-        $file = Storage::disk('s3')->get($path);
-        $mimeType = Storage::disk('s3')->mimeType($path);
-
-        return response($file, 200, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
-        ]);
-    }
-
-    public function getUploadedImages()
-    {
-        $user = Auth::user();
-        $organizationId = $user->organization_id;
-
-        $this->authorize('list', Dashboard::class);
-
-        $basePath = ltrim(config('filesystems.paths.dashboard_images'), '/');
-        $prefix = $basePath . '/org_' . $organizationId . '_';
-        $files = Storage::disk('s3')->files($basePath);
-
-        $images = collect($files)
-            ->filter(function ($file) use ($prefix) {
-                return str_starts_with($file, $prefix);
-            })
-            ->map(function ($file) {
-                $filename = basename($file);
-                $name = preg_replace('/^org_\d+_/', '', $filename);
-                $name = pathinfo($name, PATHINFO_FILENAME);
-                $url = Storage::disk('s3')->temporaryUrl($file, now()->addMinutes(15));
-
-                return [
-                    'filename' => $filename,
-                    'name' => $name,
-                    'url' => $url,
-                ];
-            })
-            ->values();
-
-        return response()->json($images, 200);
-    }
-
-    public function getUploadedImage($filename)
-    {
-        $user = Auth::user();
-        $organizationId = $user->organization_id;
-
-        if (!str_starts_with($filename, 'org_' . $organizationId . '_')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $path = config('filesystems.paths.dashboard_images') . '/' . $filename;
-
-        if (!Storage::disk('s3')->exists($path)) {
-            return response()->json(['message' => 'Image file not found'], 404);
-        }
-
-        $file = Storage::disk('s3')->get($path);
-        $mimeType = Storage::disk('s3')->mimeType($path);
-
-        return response($file, 200, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
-        ]);
     }
 }

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('color');
             $table->foreignId('panel_id')->references('id')->on('panels')->onDelete('cascade');
             $table->timestamps();
+            $table->string('datamodel')->nullable();
+            $table->string('measure')->nullable();
         });
     }
 

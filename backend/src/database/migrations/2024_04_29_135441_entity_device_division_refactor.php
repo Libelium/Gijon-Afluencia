@@ -52,6 +52,9 @@ return new class extends Migration {
             $table->timestamp('subscribed_until')->nullable();
             $table->jsonb('properties')->nullable();
             $table->timestamps();
+            $table->string('case_id')->nullable();
+            $table->index('case_id');
+            $table->unique('serial');
         });
 
         // STEP 4: DEVICE ENTITY TABLE
@@ -60,27 +63,12 @@ return new class extends Migration {
             $table->foreignId('device_id')->references('id')->on('devices')->onDelete('cascade');
             $table->foreignId('entity_id')->references('id')->on('entities')->onDelete('cascade');
             $table->timestamps();
+            $table->string('entity_type')->nullable();
         });
 
-        // STEP 5: DEVICE USER TABLE
+        // STEP 5: la antigua tabla entity_user desaparece con el reparto entidad/dispositivo.
         Schema::dropIfExists('entity_user');
-        Schema::create('device_user', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('device_id')->references('id')->on('devices')->onDelete('cascade');
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('status')->nullable();
-            $table->timestamps();
-        });
 
-        // STEP 6: User entity permissions
-        Schema::create('user_entity_permissions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('tenant');
-            $table->string('scope');
-            $table->string('type');
-            $table->timestamps();
-        });
     }
 
     /**
@@ -88,8 +76,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_entity_permissions');
-
         Schema::dropIfExists('device_entity');
 
         Schema::table('entities', function (Blueprint $table) {
@@ -111,7 +97,6 @@ return new class extends Migration {
             $table->dropColumn('scope');
         });
 
-        Schema::dropIfExists('device_user');
         Schema::create('entity_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');

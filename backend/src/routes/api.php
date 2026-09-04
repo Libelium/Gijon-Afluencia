@@ -11,8 +11,6 @@ use App\Http\V1\Controllers\EntityController;
 use App\Http\V1\Controllers\EntityGroupController;
 use App\Http\V1\Controllers\FiwareTenantScopeController;
 use App\Http\V1\Controllers\HelpController;
-use App\Http\V1\Controllers\HomeLayoutController;
-use App\Http\V1\Controllers\HomeWidgetController;
 use App\Http\V1\Controllers\InactivityAlarmConditionController;
 use App\Http\V1\Controllers\LogsController;
 use App\Http\V1\Controllers\OrganizationController;
@@ -21,10 +19,7 @@ use App\Http\V1\Controllers\PermissionController;
 use App\Http\V1\Controllers\PhoneVerificationController;
 use App\Http\V1\Controllers\Realtime\RealtimeDeviceController;
 use App\Http\V1\Controllers\Realtime\RealtimeEntityController;
-use App\Http\V1\Controllers\Realtime\UserNotificationController;
 use App\Http\V1\Controllers\RegulationController;
-use App\Http\V1\Controllers\ResetPasswordController;
-use App\Http\V1\Controllers\TagController;
 use App\Http\V1\Controllers\TelegramController;
 use App\Http\V1\Controllers\TimeSeriesController;
 use App\Http\V1\Controllers\UserController;
@@ -78,17 +73,9 @@ Route::prefix("V1")->group(function () {
     //Documentation
     Route::get('documentation/{lang}', [HelpController::class, 'downloadDocumentation']);
 
-    //Api login
-    Route::post('login', [UserController::class, 'login'])->middleware('throttle:10,1');
-    Route::post('refresh-token', [UserController::class, 'refreshKcToken'])->middleware('throttle:10,1');
-
-    //Password recovery (Trottle: 10 attempts per minute)
-    Route::post('password/recovery', [ResetPasswordController::class, 'resetLink'])->middleware('throttle:10,1');
-    Route::post('password/change', [ResetPasswordController::class, 'changePassword']);
-
     //time series for public dashboards
-    Route::post('public/timeseries/{slug}', [TimeSeriesController::class, 'unauthenticated_timeseries_request']);
-    Route::get('public/dashboards/{slug}', [DashboardController::class, 'getPublicDashboard']);
+    Route::post('public/timeseries/{slug}', [TimeSeriesController::class, 'unauthenticated_timeseries_request'])->middleware('throttle:60,1');
+    Route::get('public/dashboards/{slug}', [DashboardController::class, 'getPublicDashboard'])->middleware('throttle:60,1');
 
     Route::prefix('publicOrganizations')->group(function () {
         Route::prefix('{id}/preferences')->group(function () {
@@ -103,8 +90,6 @@ Route::prefix("V1")->group(function () {
         // Api logout
         Route::post('logout', [UserController::class, 'logout'])->middleware('auth:api');
 
-        // Manually change the password of a logged user
-        Route::put('password/change', [ResetPasswordController::class, 'updatePassword']);
 
         // tenants and scopes
         Route::prefix('fiwareTenants')->group(function () {
@@ -127,7 +112,6 @@ Route::prefix("V1")->group(function () {
                 Route::get('/{preferenceName}', [UserPreferencesController::class, 'getPreference']);
                 Route::put('/{preferenceName}', [UserPreferencesController::class, 'updatePreference']);
             });
-
         });
 
         Route::apiResource('user', UserController::class, ['only' => ['show', 'update']]);
@@ -183,34 +167,12 @@ Route::prefix("V1")->group(function () {
         Route::post('dashboards/setTemplateRegulation/{id}', [DashboardController::class, 'setTemplateRegulation']);
         Route::post('dashboards/paginate', [DashboardController::class, 'index']);
         Route::post('dashboards/custom', [DashboardController::class, 'indexCustom']);
-        Route::post('dashboards/images/{id}', [DashboardController::class, 'setImage']);
-        Route::get('dashboards/images/{id}', [DashboardController::class, 'getImage']);
-        Route::get('dashboards/uploaded-images', [DashboardController::class, 'getUploadedImages']);
-        Route::get('dashboards/uploaded-images/{filename}', [DashboardController::class, 'getUploadedImage']);
         Route::post('dashboards/from-json', [DashboardController::class, 'createFromJson']);
         Route::post('dashboards/{id}/from-json', [DashboardController::class, 'updateFromJson']);
         Route::apiResource('dashboards', DashboardController::class, ['except' => ['index']]);
 
-        // Tags resource
-        Route::get('tags', [TagController::class, 'index']);
-        Route::post('tags', [TagController::class, 'store']);
-        Route::patch('tags', [TagController::class, 'modificationsInBatch']);
-        Route::put('tags/{id}', [TagController::class, 'update']);
-        Route::delete('tags/{id}', [TagController::class, 'destroy']);
-
         // Panel resource
-        Route::post('panels/images/{id}', [PanelController::class, 'setImage']);
-        Route::get('panels/images/{id}', [PanelController::class, 'getImage']);
         Route::apiResource('panels', PanelController::class);
-
-        // Notifications
-        Route::prefix('realtime/notifications')->group(function () {
-            Route::get('', [UserNotificationController::class, 'getData']);
-            Route::post('readAll', [UserNotificationController::class, 'readAll']);
-            Route::get('countData', [UserNotificationController::class, 'countData']);
-            Route::put('updateRead/{id}', [UserNotificationController::class, 'updateRead']);
-            Route::delete('deleteNotification/{id}', [UserNotificationController::class, 'deleteNotification']);
-        });
 
         // Logs
         Route::prefix('logs')->group(function () {
@@ -253,7 +215,7 @@ Route::prefix("V1")->group(function () {
 
         // Alarm notification channels
         Route::prefix('phone')->group(function () {
-            // Rate limited like login / refresh-token: the confirmation code is 6 digits and
+            // Rate limited to 10 attempts per minute: the confirmation code is 6 digits and
             // valid for 10 minutes. The controller additionally locks out after a handful of
             // wrong guesses per user + phone number.
             Route::post('verify/send',    [PhoneVerificationController::class, 'send'])->middleware('throttle:5,1');
@@ -277,19 +239,5 @@ Route::prefix("V1")->group(function () {
         Route::post('groups/paginate', [EntityGroupController::class, 'paginate']);
         Route::patch('groups/{id}/status', [EntityGroupController::class, 'updateStatus']);
         Route::apiResource('groups', EntityGroupController::class, ['except' => ['index']]);
-
-        // Home Layouts
-        Route::post('home-layouts/create-default', [HomeLayoutController::class, 'createDefaultLayout']);
-        Route::apiResource('home-layouts', HomeLayoutController::class, ['except' => ['update']]);
-        Route::patch('home-layouts/{id}', [HomeLayoutController::class, 'update']);
-
-        // Home Widgets
-        Route::post('home-layouts/{layoutId}/widgets/paginate', [HomeWidgetController::class, 'paginate']);
-        Route::post('home-layouts/{layoutId}/widgets', [HomeWidgetController::class, 'store']);
-        Route::post('home-layouts/{layoutId}/widgets/batch', [HomeWidgetController::class, 'batchStore']);
-        Route::put('home-layouts/{layoutId}/widgets/batch', [HomeWidgetController::class, 'batchUpdate']);
-        Route::delete('home-layouts/{layoutId}/widgets/batch', [HomeWidgetController::class, 'batchDestroy']);
-        Route::patch('home-widgets/{id}', [HomeWidgetController::class, 'update']);
-        Route::delete('home-widgets/{id}', [HomeWidgetController::class, 'destroy']);
     });
 });

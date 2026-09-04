@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->jsonb('commands'); // { "<entity_id>": { "<command_name>": "<value>", ... } }
             $table->timestamps();
+            $table->jsonb('meta')->nullable();
         });
     }
 

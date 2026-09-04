@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('method');
             $table->string('url');
-            $table->string('authorization')->nullable();
             $table->integer('retries')->nullable();
             $table->integer('timeout')->nullable();
             $table->boolean('bulk')->default(false);
             $table->jsonb('payload_config')->nullable();
             $table->timestamps();
+            $table->jsonb('headers')->nullable();
         });
     }
 

@@ -29,7 +29,7 @@ iot_agent_router = APIRouter()
 
 
 @iot_agent_router.get("/services/{entity_type}")
-async def get_services_by_entity_type(
+def get_services_by_entity_type(
     entity_type: str,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,
@@ -65,7 +65,7 @@ async def get_services_by_entity_type(
 
 
 @iot_agent_router.get("/services")
-async def get_services(
+def get_services(
     entity_type: Annotated[str, Query()] = None,
     device_type_code: Annotated[str, Query()] = None,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
@@ -87,7 +87,7 @@ async def get_services(
 
 
 @iot_agent_router.post("/provision/service")
-async def provision_service(
+def provision_service(
     payload: ServiceProvisionPayload,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,
@@ -103,7 +103,7 @@ async def provision_service(
 
 
 @iot_agent_router.post("/provision/device")
-async def provision_device_iota(
+def provision_device_iota(
     payload: DeviceProvisionPayload,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,
@@ -119,7 +119,7 @@ async def provision_device_iota(
 
 
 @iot_agent_router.delete("/devices")
-async def delete_devices(
+def delete_devices(
     devices: DeleteDevicesRequest,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,

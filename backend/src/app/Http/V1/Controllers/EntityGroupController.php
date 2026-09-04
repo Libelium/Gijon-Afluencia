@@ -15,9 +15,7 @@ use App\Repositories\OrganizationRepository;
 use App\Repositories\PreferenceRepository;
 use App\Authorization\AppResourcePermission;
 use App\Helpers\AetherLinkHelper;
-use App\Helpers\NotificationHelper;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class EntityGroupController extends Controller
@@ -330,20 +328,6 @@ class EntityGroupController extends Controller
         // Aggregating incidents moves them to 'assigned' (governed by the intervention now).
         if ($type === 'AssetIntervention') {
             $this->cascadeIncidentStatus($entities, 'assigned', (int) $user->id);
-
-            // Best-effort: notify the operator / team assigned at creation.
-            if ($request->assignedTo !== null || $request->assignedTeam !== null) {
-                try {
-                    NotificationHelper::notifyAssignees(
-                        $request->assignedTo !== null ? (string) $request->assignedTo : null,
-                        $request->assignedTeam !== null ? (string) $request->assignedTeam : null,
-                        (int) $user->id,
-                        ['ref' => $request->name, 'name' => $request->name],
-                    );
-                } catch (\Throwable $e) {
-                    Log::warning('intervention.assign.notify.failed', ['error' => $e->getMessage()]);
-                }
-            }
         }
 
         $group->load(['linkedEntity', 'entities']);
@@ -353,8 +337,7 @@ class EntityGroupController extends Controller
 
     /**
      * Change an AssetIntervention's status and cascade it to all its member incidents (their status
-     * is governed by the intervention). Each reporter is notified; the closure ('closed') carries a
-     * dedicated message. Only valid for `AssetIntervention` groups.
+     * is governed by the intervention). Only valid for `AssetIntervention` groups.
      */
     public function updateStatus(Request $request, int $id)
     {
@@ -381,7 +364,7 @@ class EntityGroupController extends Controller
             ]);
         }
 
-        // Cascade to the member incidents (+ notify each reporter).
+        // Cascade to the member incidents.
         $this->cascadeIncidentStatus($group->entities, $status, (int) Auth::id(), $publicNote);
 
         return response()->json(['id' => (string) $group->id, 'status' => $status]);
@@ -389,7 +372,7 @@ class EntityGroupController extends Controller
 
     /**
      * Push a status to every Incident member (direct broker write, bypassing the per-entity API
-     * guard) and notify each reporter. 'closed' uses a dedicated closure notification.
+     * guard). 'closed' also carries the public note, when there is one.
      */
     private function cascadeIncidentStatus($members, string $status, int $actorId, ?string $publicNote = null): void
     {
@@ -404,21 +387,6 @@ class EntityGroupController extends Controller
             }
 
             AetherLinkHelper::updateOnContextBroker($member->urn, $member->tenant, $member->scope, $attrs);
-
-            // Best-effort: a notify failure must not abort the cascade for the remaining members.
-            try {
-                $isClose = $status === 'closed';
-                NotificationHelper::notifyIncidentReporter(
-                    $member->id,
-                    $actorId,
-                    $isClose ? 'notifications.interventionClosed' : 'notifications.incidentStatus',
-                    $isClose ? '' : 'notifications.incidentStatusSub',
-                    $isClose ? 'tabler-checkbox' : 'tabler-refresh',
-                    ['ref' => NotificationHelper::incidentRef($member->id), 'status' => $status],
-                );
-            } catch (\Throwable $e) {
-                Log::warning('incident.cascade.notify.failed', ['error' => $e->getMessage()]);
-            }
         }
     }
 

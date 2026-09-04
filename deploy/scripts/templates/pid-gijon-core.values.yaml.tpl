@@ -130,6 +130,9 @@ components:
       RABBITMQ_PORT: "${RABBITMQ_PORT}"
       RABBITMQ_SECURITY: "${RABBITMQ_SECURITY}"
       RABBITMQ_VHOST: "${RABBITMQ_VHOST}"
+      RABBITMQ_CA_FILE_PATH: "${RABBITMQ_CA_FILE_PATH}"
+    # El PEM lo aportas por fuera: este fichero se regenera en cada ejecucion del generador.
+    rabbitmqCaSecret: "${RABBITMQ_CA_SECRET_CB_CONSUMER}"
     secrets:
       DB_USERNAME: platformdb
       DB_PASSWORD: "${DB_PASSWORD_PLATFORMDB}"
@@ -180,7 +183,9 @@ components:
       RABBITMQ_PORT: "${RABBITMQ_PORT}"
       RABBITMQ_SECURITY: "${RABBITMQ_SECURITY}"
       RABBITMQ_VHOST: "${RABBITMQ_VHOST}"
+      RABBITMQ_CA_FILE_PATH: "${RABBITMQ_CA_FILE_PATH}"
       WEB_FRONT_URL: "${URL_FRONTEND}"
+    rabbitmqCaSecret: "${RABBITMQ_CA_SECRET_GENERIC_CONSUMER}"
     secrets:
       DB_USERNAME: platformdb
       DB_PASSWORD: "${DB_PASSWORD_PLATFORMDB}"
@@ -211,6 +216,8 @@ components:
       RABBITMQ_PORT: "${RABBITMQ_PORT}"
       RABBITMQ_SECURITY: "${RABBITMQ_SECURITY}"
       RABBITMQ_VHOST: "${RABBITMQ_VHOST}"
+      RABBITMQ_CA_FILE_PATH: "${RABBITMQ_CA_FILE_PATH}"
+    rabbitmqCaSecret: "${RABBITMQ_CA_SECRET_CARROT}"
     secrets:
       RABBITMQ_USER: "${RABBITMQ_USER}"
       RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
@@ -263,10 +270,12 @@ components:
       FRONTEND_URL: "${URL_FRONTEND}"
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REDIRECT_URI: "${URL_KEYCLOAK}"
+      # Redes de las que se aceptan las cabeceras X-Forwarded-*; recortala al CIDR de la
+      # pasarela en config.env. Vacia = no confiar en ningun proxy.
+      TRUSTED_PROXIES: "${TRUSTED_PROXIES}"
+      KEYCLOAK_ALLOWED_CLIENTS: "${KEYCLOAK_ALLOWED_CLIENTS}"
       KC_IMPERSONATION_URL: http://keycloak:8080
       KC_IMPERSONATION_CLIENT_ID: "${KEYCLOAK_PUBLIC_CLIENT}"
-      MAIL_HOST: "${MAIL_HOST}"
-      MAIL_FROM_ADDRESS: "${MAIL_FROM}"
     gatewayAPI:
       enabled: true
       routes:
@@ -300,8 +309,6 @@ components:
       ENCRYPTION_ENTITIES_KEY: "${ENCRYPTION_ENTITIES_KEY}"
       # La usan los endpoints internos /api/internal/check-*-write-permission (APISIX).
       API_GATEWAY_SECRET: "${API_GATEWAY_SECRET}"
-      MAIL_USERNAME: "${MAIL_USERNAME}"
-      MAIL_PASSWORD: "${MAIL_PASSWORD}"
       AWS_S3_KEY: "${STORAGE_ACCESS_KEY}"
       AWS_S3_SECRET: "${STORAGE_SECRET_KEY}"
       AWS_S3_IMAGES_KEY: "${STORAGE_ACCESS_KEY}"

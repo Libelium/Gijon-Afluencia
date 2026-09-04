@@ -113,8 +113,6 @@ return [
     */
 
     'paths' => [
-        'dashboard_images' => env('STORAGE_PATH_DASHBOARD_IMAGES', '/dashboard/images'),
-        'incident_images' => env('STORAGE_PATH_INCIDENT_IMAGES', '/incidents/images'),
         'entity_images' => env('STORAGE_PATH_ENTITY_IMAGES', '/entities/images'),
     ],
 

@@ -135,10 +135,10 @@ class PhoneVerificationController extends Controller
     {
         $client = new SnsClient([
             'version'     => 'latest',
-            'region'      => env('SMS_AWS_REGION', 'eu-south-2'),
+            'region'      => config('services.sms.region'),
             'credentials' => [
-                'key'    => env('SMS_AWS_KEY'),
-                'secret' => env('SMS_AWS_SECRET'),
+                'key'    => config('services.sms.key'),
+                'secret' => config('services.sms.secret'),
             ],
         ]);
 
@@ -149,7 +149,7 @@ class PhoneVerificationController extends Controller
             ],
         ];
 
-        $senderId = env('SMS_FROM');
+        $senderId = config('services.sms.from');
         if ($senderId) {
             $messageAttributes['AWS.SNS.SMS.SenderID'] = [
                 'DataType'    => 'String',

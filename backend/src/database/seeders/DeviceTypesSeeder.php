@@ -345,7 +345,7 @@ class DeviceTypesSeeder extends Seeder
             // `id` esta deliberadamente fuera de $fillable (mass assignment,
             // GDTIS-PT01-SEC "Mass assignment de id"). Este seeder SI necesita
             // fijar los identificadores: 1-10 y el bloque reservado 100-119 son
-            // referencias estables (CustomDatamodelSeeder usa device_type_id => 3).
+            // referencias estables (los datamodelos personalizados usan device_type_id => 3).
             // Sin unguarded(), una instalacion nueva los renumeraria en silencio.
             $dt = DeviceType::unguarded(
                 fn () => DeviceType::updateOrCreate(

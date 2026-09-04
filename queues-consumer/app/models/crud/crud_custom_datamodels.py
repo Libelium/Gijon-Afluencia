@@ -1,5 +1,4 @@
 from typing import List, Tuple
-from models.action_email_model import ActionEmail
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from models.custom_datamodels_model import CustomDatamodel

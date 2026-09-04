@@ -87,25 +87,6 @@ def assign_default_permissions_to_user(
 
     return user_permissions
 
-def get_models_resource_relation(
-    db: Session,
-    ids: List[int]
-) -> List[ModelHasResourcePermission]:
-    """
-    Returns all ModelHasResourcePermission rows whose resource_id is in the given list of ids
-    and resource_type == 'devices'.
-    """
-    return (
-        db.query(ModelHasResourcePermission)
-          .filter(
-              ModelHasResourcePermission.resource_id.in_(ids),
-              ModelHasResourcePermission.resource_type == ResourceType.DEVICES.value,
-              ModelHasResourcePermission.model_type == ResourceType.WORKSPACES.value,
-          )
-          .all()
-    )
-    
-
 
 def bulk_create_model_has_resource_permissions(
     db: Session,

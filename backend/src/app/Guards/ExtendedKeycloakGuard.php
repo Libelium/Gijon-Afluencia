@@ -3,7 +3,9 @@
 namespace App\Guards;
 
 use App\Services\UserProvisioningService;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Log;
 use KeycloakGuard\Exceptions\UserNotFoundException;
 use KeycloakGuard\KeycloakGuard;
 
@@ -25,6 +27,8 @@ class ExtendedKeycloakGuard extends KeycloakGuard
      */
     public function validate(array $credentials = [])
     {
+        $this->validateIssuingClient();
+
         if (!$this->config['load_user_from_database']) {
             return parent::validate($credentials);
         }
@@ -47,6 +51,46 @@ class ExtendedKeycloakGuard extends KeycloakGuard
         $this->setUser($user);
 
         return true;
+    }
+
+    /**
+     * Rejects tokens issued by realm clients other than this API's: the signature is shared by
+     * the whole realm, so without this any realm token with a known email would pass.
+     */
+    protected function validateIssuingClient(): void
+    {
+        $azp = $this->decodedToken->azp ?? null;
+
+        if ($this->clientIsAllowed(is_string($azp) ? $azp : null)) {
+            return;
+        }
+
+        Log::warning('keycloak.token.client_not_allowed', ['azp' => $azp]);
+
+        throw new AuthenticationException();
+    }
+
+    /**
+     * An empty list means no restriction, the historical behaviour, so deployments that never
+     * declared it keep working. The clients named in the configuration always pass.
+     */
+    protected function clientIsAllowed(?string $azp): bool
+    {
+        $declared = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) config('keycloak.allowed_clients'))
+        )));
+
+        if ($declared === []) {
+            return true;
+        }
+
+        $allowed = array_merge($declared, array_filter([
+            config('keycloak.client_id'),
+            config('keycloak.frontend_client_id'),
+        ]), config('provisioning.self_provisioning_clients', []));
+
+        return $azp !== null && in_array($azp, $allowed, true);
     }
 
     /**

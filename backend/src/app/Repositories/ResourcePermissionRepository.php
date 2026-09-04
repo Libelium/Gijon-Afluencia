@@ -85,30 +85,12 @@ class ResourcePermissionRepository
     public static function getUserModels(
         User $user
     ): array {
-        $user = $user->load(['workspaces', 'workspacesOwned']);
-
-        $models = [
+        return [
             [
                 'model_id' => $user->id,
                 'model_type' => $user->getTable()
             ]
         ];
-
-        foreach ($user->workspaces as $workspace) {
-            $models[] = [
-                'model_id' => $workspace->id,
-                'model_type' => $workspace->getTable()
-            ];
-        }
-
-        foreach ($user->workspacesOwned as $workspace) {
-            $models[] = [
-                'model_id' => $workspace->id,
-                'model_type' => $workspace->getTable()
-            ];
-        }
-
-        return $models;
     }
 
     public static function updateQueryWithPermissionCheck(
@@ -317,7 +299,7 @@ class ResourcePermissionRepository
                               ->whereColumn('resource_id', 'entities.fiware_scope_id');
                         });
                     })
-                    // Grant must belong to the user directly or to any workspace they are a member of.
+                    // Grant must belong to the user.
                     ->where(function ($q) use ($userModels) {
                         foreach ($userModels as $m) {
                             $q->orWhere(function ($qq) use ($m) {

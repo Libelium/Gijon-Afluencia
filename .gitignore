@@ -9,6 +9,7 @@ node_modules/
 vendor/
 dist/
 __pycache__/
+*.egg-info/
 *.pyc
 .pytest_cache/
 .venv/

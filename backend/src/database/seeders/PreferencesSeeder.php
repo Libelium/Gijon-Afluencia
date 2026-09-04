@@ -33,10 +33,6 @@ class PreferencesSeeder extends Seeder
                 'default_value' => 'en-EN',
             ],
             [
-                'name' => 'homeDashboard',
-                'default_value' => null,
-            ],
-            [
                 'name' => 'maps',
                 'default_value' => 'google',
             ],
@@ -117,10 +113,6 @@ class PreferencesSeeder extends Seeder
                 'default_value' => 'false'
             ],
             [
-                'name' => 'activeLayoutId',
-                'default_value' => null,
-            ],
-            [
                 'name' => 'themeSecondaryColor',
                 'default_value' => null,
             ],
@@ -163,15 +155,6 @@ class PreferencesSeeder extends Seeder
             [
                 'name' => 'exportDeviceProperties',
                 'default_value' => 'false',
-            ],
-            [
-
-                'name' => 'incidentClosurePolicy',
-                'default_value' => 'auto',
-            ],
-            [
-                'name' => 'criticalAlertConfig',
-                'default_value' => '{"push":true,"pushMessage":"A critical (P1) incident has been reported and requires immediate attention.","email":false,"emails":[]}',
             ]
         ];
 

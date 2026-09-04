@@ -18,8 +18,6 @@ return new class extends Migration
             });
 
             DB::table('mqtt_connector')->update(['payload_type' => 'legacy']);
-
-            $table->renameColumn('messageTemplate', 'payload_config');
         });
     }
 

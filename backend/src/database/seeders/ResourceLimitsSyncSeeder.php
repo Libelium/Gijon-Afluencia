@@ -36,24 +36,6 @@ class ResourceLimitsSyncSeeder extends Seeder
         );
 
         ResourceLimit::updateOrCreate(
-            ['resource_type' => \App\Models\Reports\Report::class],
-            [
-                'value' => 500,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        ResourceLimit::updateOrCreate(
-            ['resource_type' => \App\Models\Workspace::class],
-            [
-                'value' => 500,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        ResourceLimit::updateOrCreate(
             ['resource_type' => \App\Models\Alarm::class],
             [
                 'value' => 500,
@@ -81,15 +63,6 @@ class ResourceLimitsSyncSeeder extends Seeder
         );
 
         ResourceLimit::updateOrCreate(
-            ['resource_type' => \App\Models\AIMarketplacePipeline::class],
-            [
-                'value' => 500,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        ResourceLimit::updateOrCreate(
             ['resource_type' => \App\Models\User::class],
             [
                 'value' => 500,
@@ -100,15 +73,6 @@ class ResourceLimitsSyncSeeder extends Seeder
 
         ResourceLimit::updateOrCreate(
             ['resource_type' => \Spatie\Permission\Models\Role::class],
-            [
-                'value' => 500,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        ResourceLimit::updateOrCreate(
-            ['resource_type' => \App\Models\HomeLayout::class],
             [
                 'value' => 500,
                 'created_at' => now(),

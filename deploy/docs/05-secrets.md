@@ -60,7 +60,7 @@ se obtienen durante [06-post-install.md](06-post-install.md).
 | Componente | Claves del Secret |
 |------------|-------------------|
 | `keycloak` | `KC_DB_USERNAME`, `KC_DB_PASSWORD`, `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD`, `KC_LARAVEL_BACKEND_SECRET`, `KC_REALM_MANAGEMENT_SECRET` — las dos últimas son los secretos de cliente que sustituye la importación del realm, y el entrypoint aborta si faltan (`k3s-deploy.sh` genera ambas; véase [06-post-install.md](06-post-install.md)) |
-| `webBack` | `DB_PASSWORD`, `DB_REALTIME_USERNAME`, `DB_REALTIME_PASSWORD`, `APP_KEY`, `FILE_ENCRYPTION_KEY`, `GENERIC_ENCRYPTION_KEY`, `KEYCLOAK_REALM`, `KEYCLOAK_ENCRYPTION_ALGORITHM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET` *(post-instalación)*, `KEYCLOAK_PUBLIC_KEY` *(post-instalación)*, `KC_ADMIN_*`, `KC_IMPERSONATION_*`, `ENCRYPTION_ENTITIES_KEY`, `API_GATEWAY_SECRET`, `MAIL_USERNAME`, `MAIL_PASSWORD`, claves del almacenamiento de objetos |
+| `webBack` | `DB_PASSWORD`, `DB_REALTIME_USERNAME`, `DB_REALTIME_PASSWORD`, `APP_KEY`, `FILE_ENCRYPTION_KEY`, `GENERIC_ENCRYPTION_KEY`, `KEYCLOAK_REALM`, `KEYCLOAK_ENCRYPTION_ALGORITHM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET` *(post-instalación)*, `KEYCLOAK_PUBLIC_KEY` *(post-instalación)*, `KC_ADMIN_*`, `KC_IMPERSONATION_*`, `ENCRYPTION_ENTITIES_KEY`, `API_GATEWAY_SECRET`, claves del almacenamiento de objetos |
 | `fiwareManager` | `MONGO_DB_USERNAME`, `MONGO_DB_PASSWORD`, `OTE_WEBHOOK_TOKEN` (secreto compartido del webhook LIDAR: vacío = endpoint público sin autenticar), claves del almacenamiento de objetos |
 | `orionLd` | `ORIONLD_MONGO_USER`, `ORIONLD_MONGO_PASSWORD` |
 | `iotAgentJson` | `IOTA_MONGO_USER`, `IOTA_MONGO_PASSWORD` (`IOTA_MQTT_USERNAME` / `IOTA_MQTT_PASSWORD` si usas MQTT) |
@@ -69,9 +69,9 @@ se obtienen durante [06-post-install.md](06-post-install.md).
 | `carrot` | `RABBITMQ_USER`, `RABBITMQ_PASSWORD` |
 
 Las integraciones opcionales añaden sus propias claves solo cuando activas el `config`
-correspondiente (todas vienen comentadas): por ejemplo, los secretos de notificación y blockchain
-de `genericConsumer` (`TELEGRAM_BOT_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `SMS_API_KEY`,
-`SMS_API_SECRET`, `POLYGON_*`) y los extras de `webBack` (`STATUSCAKE_API_KEY`,
+correspondiente (todas vienen comentadas): por ejemplo, los secretos de notificación de
+`genericConsumer` (`TELEGRAM_BOT_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `SMS_API_KEY`,
+`SMS_API_SECRET`) y los extras de `webBack` (`STATUSCAKE_API_KEY`,
 `OPENWEATHERMAP_API_KEY`, `SMS_AWS_KEY`, `SMS_AWS_SECRET`).
 
 ## Cambia todos los valores por defecto antes de producción

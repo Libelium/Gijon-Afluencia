@@ -84,7 +84,6 @@ COPY --from=ubi-micro-build /mnt/rootfs /
 COPY --from=ext-builder /licences/ /opt/keycloak/licences/
 
 COPY ./pidtheme /opt/keycloak/themes/pidtheme
-COPY ./pidtheme-mobile /opt/keycloak/themes/pidtheme-mobile
 COPY realm.json /opt/keycloak/data/import/realm.json
 COPY change-password-client.json /opt/keycloak/data/import/client/change-password-client.json
 

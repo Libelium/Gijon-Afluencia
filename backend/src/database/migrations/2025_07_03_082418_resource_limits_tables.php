@@ -34,13 +34,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('contract_default_resource_limits', function (Blueprint $table) {
-            $table->id();
-            $table->string('contract_name')->unique();
-            $table->string('resource_type');
-            $table->unsignedInteger('value')->default(0);
-            $table->timestamps();
-        });
     }
 
     /**
@@ -48,7 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contract_default_resource_limits');
         Schema::dropIfExists('user_resource_limits');
         Schema::dropIfExists('organization_resource_limits');
         Schema::dropIfExists('resource_limits');

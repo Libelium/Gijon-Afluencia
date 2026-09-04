@@ -54,8 +54,10 @@ class IOTAJsonLdProxy(IOTAProxy):
     def get_services(self, entity_type: str | None, device_type_code: str | None, tenant: str, scope: str):
         """Get a service from the IOTA"""
         try:
-            self.tenant = tenant if tenant else self.tenant
-            headers = {"fiware-service": self.tenant, "fiware-servicepath": scope}
+            # this proxy is a module-level singleton and the handlers run concurrently, so
+            # keeping the tenant on the instance let another request overwrite it
+            tenant = tenant or self.tenant
+            headers = {"fiware-service": tenant, "fiware-servicepath": scope}
             res = requests.get(self.iota_url + "/iot/services", headers=headers)
             services = res.json().get("services", [])
             if entity_type is None:
@@ -82,8 +84,8 @@ class IOTAJsonLdProxy(IOTAProxy):
         self, service: ServiceProvisionPayload, tenant: str, scope: str
     ):
         try:
-            self.tenant = tenant if tenant else self.tenant
-            headers = {"fiware-service": self.tenant, "fiware-servicepath": scope}
+            tenant = tenant or self.tenant
+            headers = {"fiware-service": tenant, "fiware-servicepath": scope}
             return requests.post(
                 self.iota_url + "/iot/services",
                 headers=headers,
@@ -98,8 +100,8 @@ class IOTAJsonLdProxy(IOTAProxy):
     ) -> DeviceProvisionPayload:
         """Provision a new device in the IOTA"""
         try:
-            self.tenant = tenant if tenant else self.tenant
-            headers = {"fiware-service": self.tenant, "fiware-servicepath": scope}
+            tenant = tenant or self.tenant
+            headers = {"fiware-service": tenant, "fiware-servicepath": scope}
             requests.post(
                 self.iota_url + "/iot/devices",
                 headers=headers,

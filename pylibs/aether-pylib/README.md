@@ -8,14 +8,17 @@ las peticiones y respuestas para que cada servicio no lo reimplemente por su cue
 - `context_broker/` — modelos NGSI-LD / NGSI-v2: alta, modificación y borrado de entidades,
   y suscripciones.
 - `iota/` — modelos del IoT Agent: payload de aprovisionamiento y borrado de dispositivos.
-- `time_series/` — modelos de series temporales: petición y respuesta de consulta, hash de
-  consulta, opciones, ámbito temporal (`TimeScope`) y borrado de series.
+- `time_series/` — modelos de series temporales: petición y respuesta de consulta, opciones,
+  ámbito temporal (`TimeScope`) y borrado de series.
 
 No es un servicio ejecutable: no tiene Docker ni `.env`. Se consume como dependencia.
 
 ## Requisitos
 
-Python >= 3.8. Dependencias: `pydantic`, `pandas`, `isodate`, `freezegun`.
+Python >= 3.10: los modelos usan uniones PEP 604 (`str | float | int | bool` en
+`time_series/time_series_options.py`), que Pydantic evalúa en tiempo de ejecución y no están
+disponibles en 3.9. Dependencias de ejecución: `pydantic`, `pandas`, `isodate`. Para las
+pruebas, el grupo `test`: `pytest` y `freezegun`.
 
 ## Uso
 

@@ -147,6 +147,29 @@ class Settings(BaseSettings):
     # referenced by app/api.py but never declared here, so the endpoint raised
     # AttributeError on every request.
     STREAMING_OUTPUT_DIR: str = os.getenv("STREAMING_OUTPUT_DIR", "/code/app/tmp/streaming")
+    # ---- Alarm email channel (SMTP) ----
+    # The channel stays off until MAIL_HOST is filled in: an alarm with an email
+    # action is still evaluated, only the notice is skipped.
+    MAIL_ENABLED: bool = os.getenv("MAIL_ENABLED", "false") == "true"
+    MAIL_HOST: str = os.getenv("MAIL_HOST", "")
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", 587))
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
+    MAIL_FROM: str = os.getenv("MAIL_FROM", "")
+    # starttls | ssl | none
+    MAIL_ENCRYPTION: str = os.getenv("MAIL_ENCRYPTION", "starttls")
+    MAIL_TIMEOUT: int = int(os.getenv("MAIL_TIMEOUT", 10))
+
+    # ---- Alarm HTTP push channel ----
+    # The destination URL is written by the user, so it is an SSRF vector: only
+    # the destinations listed here are called, and an empty list sends nothing.
+    # Entries are either a host ("avisos.example.org", subdomains included) or a
+    # URL prefix ("https://avisos.example.org/alarmas").
+    HTTP_PUSH_ALLOWED_DESTINATIONS: str = os.getenv(
+        "HTTP_PUSH_ALLOWED_DESTINATIONS", ""
+    )
+    HTTP_PUSH_REQUEST_TIMEOUT: int = int(os.getenv("HTTP_PUSH_REQUEST_TIMEOUT", 5))
+
     SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "aws_sns")
     SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
     SMS_API_SECRET: str = os.getenv("SMS_API_SECRET", "")

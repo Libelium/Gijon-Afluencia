@@ -7,7 +7,9 @@ ARG GID=1001
 ARG WITH_XDEBUG=false
 
 # Use the default production configuration
-COPY php.ini $PHP_INI_DIR/conf.d/
+# --chmod: COPY preserva el modo de origen, y con un umask restrictivo el fichero llega
+# sin permiso de lectura para www-data, que es quien corre el proceso.
+COPY --chmod=644 php.ini $PHP_INI_DIR/conf.d/
 
 # Hide PHP version from headers
 RUN echo 'expose_php = Off' >> $PHP_INI_DIR/conf.d/php.ini
@@ -30,6 +32,7 @@ RUN apt-get update \
     git \
     libpng-dev \
     libjpeg-dev \
+    libcap2-bin \
     && rm -r /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure pdo_mysql --with-pdo-mysql=mysqlnd
@@ -65,7 +68,7 @@ RUN usermod -u $UID www-data && groupmod -g $GID www-data
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
 # Put apache config for Laravel
-COPY apache2-laravel.conf /etc/apache2/sites-available/laravel.conf
+COPY --chmod=644 apache2-laravel.conf /etc/apache2/sites-available/laravel.conf
 
 # Apache rewrite + security headers
 RUN a2dissite 000-default.conf && a2ensite laravel.conf && a2enmod rewrite && a2enmod headers
@@ -73,7 +76,6 @@ RUN a2dissite 000-default.conf && a2ensite laravel.conf && a2enmod rewrite && a2
 COPY --chown=www-data:www-data ./src /var/www/html
 COPY --chmod=755 --chown=www-data:www-data ./src/migration.sh /var/www/html/migration.sh
 COPY --chown=www-data:www-data ./libelium_devices_fiware_datamodels/*.csv /var/www/html/storage/app/CSV/devices/
-COPY --chown=www-data:www-data ./libelium_devices_fiware_datamodels/one_sensor_datamodel.csv /var/www/html/storage/app/CSV/probes/
 
 RUN rm /var/www/html/storage/app/CSV/devices/*sensor*
 
@@ -81,9 +83,19 @@ WORKDIR /var/www/html
 
 EXPOSE 80
 
+# El contenedor ya no vuelve a root, y sin ser root Apache no puede abrir el 80: se le da la
+# capacidad al binario y se le dejan escribibles los directorios que usa el entrypoint. Bajar
+# el puerto no vale: el 80 es el que esperan los charts y los compose.
+RUN setcap 'cap_net_bind_service=+ep' /usr/sbin/apache2 \
+    && apt-get purge -y libcap2-bin \
+    && mkdir -p /var/run/apache2 /var/lock/apache2 /var/log/apache2 \
+    && chown -R www-data:www-data /var/run/apache2 /var/lock/apache2 /var/log/apache2
+
 # compile app and serve for production
 
-USER www-data
+# Numerico y no `www-data`: con `runAsNonRoot: true` kubelet solo puede verificar que el
+# usuario de la imagen no es root si viene por uid.
+USER $UID:$GID
 
 # `install` y NUNCA `update`: install resuelve desde el composer.lock versionado,
 # que viaja en el COPY ./src de arriba. `update` reresuelve el arbol entero en cada
@@ -110,5 +122,3 @@ USER www-data
 # misma, asi que la construccion sigue siendo reproducible.
 RUN composer config --no-plugins preferred-install auto \
     && composer install --no-dev --optimize-autoloader --no-interaction
-
-USER root

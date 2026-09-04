@@ -1,5 +1,6 @@
+import importlib
+import os
 import ssl
-import sys
 
 from celery import Celery
 from config.config import settings
@@ -7,31 +8,54 @@ from config.logging import appLogging as logging
 from kombu.utils.json import register_type
 from pydantic import BaseModel
 
-"""
-Configure celery app so that pydantic models can be serialized and deserialized
-"""
+# Allow-list of models accepted when decoding a message: class name -> module.
+# The class is resolved here, never from the module named by the message itself.
+# Module paths and not classes, so each worker only imports the schemas it receives.
+DESERIALIZABLE_MODELS: dict[str, str] = {
+    "AllCrowdClassificationRequest": "schemas.crowd_classification_request_schema",
+    "AllCrowdDataCacheETLRequest": "schemas.crowd_data_cache_etl_request_schema",
+    "AllCrowdFlowsMunicipalityRequest": "schemas.crowd_flows_municipality_request_schema",
+    "AllCrowdUniqueVisitorsRequest": "schemas.crowd_unique_visitors_request_schema",
+    "AllProcessVisitorsRequest": "schemas.crowd_process_visitors_request_schema",
+    "AutoSubscriptionRequestSchema": "schemas.auto_subscription_request_schema",
+    "ContextBrokerNotification": "schemas.context_broker_notification_schema",
+    "CrowdClassificationRequest": "schemas.crowd_classification_request_schema",
+    "CrowdDataCacheETLRequest": "schemas.crowd_data_cache_etl_request_schema",
+    "CrowdFlowsMunicipalityRequest": "schemas.crowd_flows_municipality_request_schema",
+    "CrowdUniqueVisitorsRequest": "schemas.crowd_unique_visitors_request_schema",
+    "DataImportationRequest": "schemas.data_importation_request",
+    "EntityDataNotification": "schemas.entity_data_notification",
+    "OneCrowdClassificationRequest": "schemas.crowd_classification_request_schema",
+    "ProcessVisitorsRequest": "schemas.crowd_process_visitors_request_schema",
+    "TypeSubscriptionMessage": "schemas.fiware_subscription_schema",
+}
 
 
 def serialize_pydantic(obj):
     """
-    Returns a dictionary with the object's data and the module and model name,
+    Returns a dictionary with the object's data and the model name,
     so that it can be reconstructed later
     """
     base_dict = obj.dict()
-    base_dict["__module_name__"] = obj.__module__
     base_dict["__model_name__"] = obj.__class__.__name__
+    base_dict["__module_name__"] = obj.__class__.__module__
     return base_dict
 
 
 def deserialize_pydantic(data):
     """
-    Returns a pydantic model from the given data,
-    it must contain the module and model name as
-    in the serialize_pydantic function
+    Returns a pydantic model from the given data, resolving the class against
+    DESERIALIZABLE_MODELS. Anything outside that list is rejected.
     """
-    module = data.pop("__module_name__")
-    model = data.pop("__model_name__")
-    model_class = getattr(sys.modules[module], model)
+    data.pop("__module_name__", None)
+    model = data.pop("__model_name__", None)
+
+    module_path = DESERIALIZABLE_MODELS.get(model)
+    if module_path is None:
+        logging.error(f"Rejected message for non-deserializable model: {model!r}")
+        raise ValueError(f"Model not allowed for deserialization: {model!r}")
+
+    model_class = getattr(importlib.import_module(module_path), model)
     return model_class(**data)
 
 
@@ -40,12 +64,29 @@ register_type(BaseModel, "BaseModel", serialize_pydantic, deserialize_pydantic)
 
 
 def ssl_options() -> dict | bool:
-    if settings.RABBITMQ.security == "amqps":
-        return {
-            "cert_reqs": ssl.CERT_NONE,
-        }
-    else:
+    """TLS for the broker, and for the result backend when it speaks amqps."""
+    if settings.RABBITMQ.security != "amqps":
         return False
+
+    # server_hostname is what makes py-amqp check the certificate name matches.
+    options = {
+        "cert_reqs": ssl.CERT_REQUIRED,
+        "server_hostname": settings.RABBITMQ.host,
+    }
+
+    # py-amqp only loads trust anchors from ca_certs, and it must be a file: a
+    # directory-only store is unusable here, so fall back to the system bundle.
+    ca_file = settings.RABBITMQ.ca_file_path or ssl.get_default_verify_paths().cafile
+    if not ca_file:
+        raise ValueError(
+            "amqps requires a CA bundle: set RABBITMQ_CA_FILE_PATH "
+            "(no system trust store available)"
+        )
+    if not os.path.isfile(ca_file):
+        raise ValueError(f"RABBITMQ CA file not found: {ca_file}")
+    options["ca_certs"] = ca_file
+
+    return options
 
 
 logging.info("Creating celery app")

@@ -63,6 +63,11 @@ return [
         ]
     ],
 
+    'fiware-manager' => [
+        // Base sobre la que se construye el endpoint de comandos del IoT Agent.
+        'commands' => env('COMMANDS_ENDPOINT'),
+    ],
+
     'queues-consumer' => [
         'publish' => env('QUEUES_CONSUMER_API_URL') . "/publish",
         // Secreto compartido con queues-consumer. El consumer es fail-closed:
@@ -109,6 +114,10 @@ return [
 
     'sms' => [
         'enabled' => env('SMS_ENABLED', false),
+        'from' => env('SMS_FROM'),
+        'region' => env('SMS_AWS_REGION', 'eu-south-2'),
+        'key' => env('SMS_AWS_KEY'),
+        'secret' => env('SMS_AWS_SECRET'),
     ],
 
     'whatsapp' => [

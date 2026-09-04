@@ -3,7 +3,6 @@
 namespace App\Models\Actions;
 
 use App\Models\User;
-use App\Models\Reports\Report;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\AuditableModel;
 
@@ -31,11 +30,6 @@ class Action extends AuditableModel
         return $this->hasOne(ActionEmail::class, 'id', 'actionable_id');
     }
 
-    public function actionPush()
-    {
-        return $this->hasOne(ActionPush::class, 'id', 'actionable_id');
-    }
-
     public function actionEntityCommand()
     {
         return $this->hasOne(ActionEntityCommand::class, 'id', 'actionable_id');
@@ -44,10 +38,5 @@ class Action extends AuditableModel
     public function alarmHasAction()
     {
         return $this->hasOne(AlarmHasAction::class);
-    }
-
-    public function reports()
-    {
-        return $this->belongsToMany(Report::class, 'report_has_actions');
     }
 }

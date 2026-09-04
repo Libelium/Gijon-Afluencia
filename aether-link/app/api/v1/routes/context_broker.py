@@ -28,6 +28,8 @@ import requests
 # `requests.exceptions.RequestException` subclasses). So the handlers now catch
 # what is actually thrown and translate it into a proper status code.
 
+# The handlers are synchronous on purpose: they talk to the broker with blocking
+# `requests`, so FastAPI runs them in its thread pool instead of the event loop.
 context_broker_router = APIRouter()
 
 
@@ -46,7 +48,7 @@ def _upstream_error(exc: requests.exceptions.RequestException, action: str) -> t
 
 
 @context_broker_router.get("/dataTypes")
-async def get_data_types(
+def get_data_types(
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,
 ):
@@ -58,7 +60,7 @@ async def get_data_types(
 
 
 @context_broker_router.get("/platformTypeSubscriptions")
-async def get_type_subscriptions(
+def get_type_subscriptions(
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,
 ):
@@ -70,7 +72,7 @@ async def get_type_subscriptions(
 
 
 @context_broker_router.patch("/platformTypeSubscriptions")
-async def patch_entity_subscriptions(
+def patch_entity_subscriptions(
     json_patch: List[dict],
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
     scope: Annotated[str | None, Header()] = settings.DEFAULT_SCOPE,
@@ -97,7 +99,7 @@ async def patch_entity_subscriptions(
 
 
 @context_broker_router.get("/entities")
-async def list_entities_by_type(
+def list_entities_by_type(
     types: str,
     response: Response,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
@@ -122,7 +124,7 @@ async def list_entities_by_type(
 
 
 @context_broker_router.post("/entities/update", status_code=207)
-async def entities_update(
+def entities_update(
     request: UpdateEntitiesRequest,
     response: Response,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
@@ -154,7 +156,7 @@ async def entities_update(
 
 
 @context_broker_router.post("/entities/create", status_code=207)
-async def entities_create(
+def entities_create(
     request: CreateEntitiesRequest,
     response: Response,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
@@ -185,7 +187,7 @@ async def entities_create(
 
 
 @context_broker_router.delete("/entities/delete", status_code=207)
-async def entities_delete(
+def entities_delete(
     request: DeleteEntitiesRequest,
     response: Response,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
@@ -213,7 +215,7 @@ async def entities_delete(
 
 
 @context_broker_router.get("/entities/{urn}")
-async def get_entity(
+def get_entity(
     urn: str,
     response: Response,
     tenant: Annotated[str, Header()] = settings.DEFAULT_TENANT,
@@ -240,7 +242,7 @@ async def get_entity(
 
 
 @context_broker_router.delete("/entities/{urn}/attrs/{attr_name}")
-async def delete_entity_attribute(
+def delete_entity_attribute(
     urn: str,
     attr_name: str,
     response: Response,

@@ -20,6 +20,9 @@ return [
 
     'default' => env('LOG_CHANNEL', 'stack'),
 
+    // Volcado de todas las consultas SQL a storage/logs (solo en entorno local).
+    'queries' => env('LOG_QUERIES'),
+
     /*
     |--------------------------------------------------------------------------
     | Deprecations Log Channel

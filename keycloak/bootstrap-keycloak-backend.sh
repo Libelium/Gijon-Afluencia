@@ -14,7 +14,6 @@ sed -i "s|__BACKEND_URL__|${BACKEND_URL}|g" /opt/keycloak/themes/pidtheme/login/
 sed -i "s|__KC_DEFAULT_LOCALE__|${KC_DEFAULT_LOCALE:-en}|g" /opt/keycloak/themes/pidtheme/login/theme.properties
 
 # White-label brand colours, all optional.
-# pidtheme-mobile inherits them via parent=pidtheme.
 KC_BRAND_PRIMARY="${KC_BRAND_PRIMARY:-#7D00F4}"
 KC_BRAND_SECONDARY="${KC_BRAND_SECONDARY:-#5800C0}"
 KC_BRAND_INDIGO="${KC_BRAND_INDIGO:-#150D5F}"
@@ -37,7 +36,6 @@ echo "Login parallax image: ${KC_BRAND_LOGIN_IMAGE:-<none, using the bundled log
 #  - KC_LARAVEL_BACKEND_SECRET   : client secret of the `laravel-backend` confidential client
 #  - KC_REALM_MANAGEMENT_SECRET  : client secret of the `realm-management` client
 #  - KC_REGISTRATION_ALLOWED     : show register link + enable the register view (default off)
-#  - KC_MOBILE_CLIENT_ENABLED    : enable the mobile public client (default off)
 #  - KC_DEFAULT_LOCALE           : UI language for all theme views (es|en|ca|el|pt, default en)
 #  - KC_APP_REDIRECT_URIS        : OAuth callback URLs (see below), default: KC_HOSTNAME
 #  - KC_APP_WEB_ORIGINS          : CORS origins for those clients, default: KC_HOSTNAME
@@ -48,7 +46,6 @@ REALM_MANAGEMENT_SECRET_SED=$(printf '%s' "${KC_REALM_MANAGEMENT_SECRET}" | sed 
 sed -i "s|__KC_LARAVEL_BACKEND_SECRET__|${LARAVEL_BACKEND_SECRET_SED}|g" "$REALM_FILE"
 sed -i "s|__KC_REALM_MANAGEMENT_SECRET__|${REALM_MANAGEMENT_SECRET_SED}|g" "$REALM_FILE"
 sed -i "s|__KC_REGISTRATION_ALLOWED__|${KC_REGISTRATION_ALLOWED:-false}|g" "$REALM_FILE"
-sed -i "s|__KC_MOBILE_CLIENT_ENABLED__|${KC_MOBILE_CLIENT_ENABLED:-false}|g" "$REALM_FILE"
 sed -i "s|__KC_DEFAULT_LOCALE__|${KC_DEFAULT_LOCALE:-en}|g" "$REALM_FILE"
 
 # ---------------------------------------------------------------------------

@@ -86,7 +86,7 @@ class IotaProvisionCommand extends Command
         $this->line("  <fg=cyan>[{$scopeType}]</> {$scope->tenant->name} / {$scope->name}");
 
         if ($scopeType === 'mainScope') {
-            $result = resolve(ServiceProvisioningHelper::class)->getDevicesAndProbesAndProvision($scope->tenant, $scope);
+            $result = resolve(ServiceProvisioningHelper::class)->getDevicesAndProvision($scope->tenant, $scope);
             $this->displayMainScopeResult($result);
         } elseif ($scopeType === 'platformDataScope') {
             $entities = resolve(ServiceProvisioningHelper::class)->getEntitiesToProvisionAndProvision($scope->tenant, $scope);
@@ -149,15 +149,14 @@ class IotaProvisionCommand extends Command
     /**
      * Displays the provisioning results for a 'mainScope' operation.
      *
-     * @param array $result The result containing devices and probes to provision.
+     * @param array $result The result containing devices to provision.
      * @return void
      */
     private function displayMainScopeResult(array $result): void
     {
         $devices = $result['devicesToProvision'];
-        $probes  = $result['probesToProvision'];
 
-        if ($devices->isEmpty() && $probes->isEmpty()) {
+        if ($devices->isEmpty()) {
             $this->line('    <fg=green>✓</> Nothing to provision.');
             return;
         }
@@ -167,14 +166,6 @@ class IotaProvisionCommand extends Command
             $this->table(
                 ['Entity Type', 'Device Type Code'],
                 $devices->map(fn($s) => [$s['entity_type'], $s['internal_attributes']['device_type_code']])->toArray()
-            );
-        }
-
-        if ($probes->isNotEmpty()) {
-            $this->line("    Probes provisioned ({$probes->count()}):");
-            $this->table(
-                ['Entity Type', 'Device Type Code'],
-                $probes->map(fn($s) => [$s['entity_type'], $s['internal_attributes']['device_type_code']])->toArray()
             );
         }
     }

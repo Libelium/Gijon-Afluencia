@@ -13,9 +13,10 @@ info:
     alarmas y preferencias.
 
 
-    Autenticación por *bearer token* JWT emitido por Keycloak (`POST /V1/login`). Las rutas bajo `/internal`
-    no llevan token: solo son accesibles desde la red interna y las consume el gateway APISIX para validar
-    permiso de escritura por tenant.'
+    Autenticación por *bearer token* JWT emitido por Keycloak. La API no participa en la sesión: el
+    token se obtiene y se renueva contra el proveedor de identidad (código de autorización + PKCE para
+    clientes de navegador). Las rutas bajo `/internal` no llevan token: solo son accesibles desde la
+    red interna y las consume el gateway APISIX para validar permiso de escritura por tenant.'
   license:
     name: EUPL-1.2
     url: https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -924,53 +925,6 @@ paths:
           description: No autenticado
         '403':
           description: Sin permiso
-  /V1/dashboards/images/{id}:
-    get:
-      tags:
-      - Cuadros de mando
-      summary: Get Image
-      operationId: Dashboard_getImage_get
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    post:
-      tags:
-      - Cuadros de mando
-      summary: Set Image
-      operationId: Dashboard_setImage_post
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
   /V1/dashboards/paginate:
     post:
       tags:
@@ -1143,40 +1097,6 @@ paths:
           application/json:
             schema:
               type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/dashboards/uploaded-images:
-    get:
-      tags:
-      - Cuadros de mando
-      summary: Get Uploaded Images
-      operationId: Dashboard_getUploadedImages_get
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/dashboards/uploaded-images/{filename}:
-    get:
-      tags:
-      - Cuadros de mando
-      summary: Get Uploaded Image
-      operationId: Dashboard_getUploadedImage_get
-      parameters:
-      - name: filename
-        in: path
-        required: true
-        schema:
-          type: string
       responses:
         '200':
           description: OK
@@ -2093,314 +2013,6 @@ paths:
           description: Sin permiso
         '404':
           description: No encontrado
-  /V1/home-layouts:
-    get:
-      tags:
-      - Pantalla de inicio
-      summary: Index
-      operationId: HomeLayout_index_get
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-    post:
-      tags:
-      - Pantalla de inicio
-      summary: Store
-      operationId: HomeLayout_store_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '201':
-          description: Creado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/home-layouts/create-default:
-    post:
-      tags:
-      - Pantalla de inicio
-      summary: Atomically create a default layout with widgets
-      operationId: HomeLayout_createDefaultLayout_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/home-layouts/{home_layout}:
-    delete:
-      tags:
-      - Pantalla de inicio
-      summary: Destroy
-      operationId: HomeLayout_destroy_delete
-      parameters:
-      - name: home_layout
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Eliminado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    get:
-      tags:
-      - Pantalla de inicio
-      summary: Show
-      operationId: HomeLayout_show_get
-      parameters:
-      - name: home_layout
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/home-layouts/{id}:
-    patch:
-      tags:
-      - Pantalla de inicio
-      summary: Update
-      operationId: HomeLayout_update_patch
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/home-layouts/{layoutId}/widgets:
-    post:
-      tags:
-      - Pantalla de inicio
-      summary: Store
-      operationId: HomeWidget_store_post
-      parameters:
-      - name: layoutId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '201':
-          description: Creado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/home-layouts/{layoutId}/widgets/batch:
-    delete:
-      tags:
-      - Pantalla de inicio
-      summary: Batch Destroy
-      operationId: HomeWidget_batchDestroy_delete
-      parameters:
-      - name: layoutId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Eliminado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    post:
-      tags:
-      - Pantalla de inicio
-      summary: Batch Store
-      operationId: HomeWidget_batchStore_post
-      parameters:
-      - name: layoutId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    put:
-      tags:
-      - Pantalla de inicio
-      summary: Batch Update
-      operationId: HomeWidget_batchUpdate_put
-      parameters:
-      - name: layoutId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/home-layouts/{layoutId}/widgets/paginate:
-    post:
-      tags:
-      - Pantalla de inicio
-      summary: Paginate
-      operationId: HomeWidget_paginate_post
-      parameters:
-      - name: layoutId
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/home-widgets/{id}:
-    delete:
-      tags:
-      - Pantalla de inicio
-      summary: Destroy
-      operationId: HomeWidget_destroy_delete
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Eliminado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    patch:
-      tags:
-      - Pantalla de inicio
-      summary: Update
-      operationId: HomeWidget_update_patch
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/login:
-    post:
-      tags:
-      - Autenticación y usuario
-      summary: Login
-      operationId: User_login_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      security: []
-      responses:
-        '200':
-          description: OK
   /V1/logout:
     post:
       tags:
@@ -2413,13 +2025,18 @@ paths:
           application/json:
             schema:
               type: object
+              properties:
+                refreshToken:
+                  type: string
       responses:
         '200':
-          description: OK
+          description: Sesión revocada
         '401':
           description: No autenticado
         '403':
           description: Sin permiso
+        '502':
+          description: La sesión no se pudo revocar en el proveedor de identidad
   /V1/logs/paginate:
     post:
       tags:
@@ -2626,53 +2243,6 @@ paths:
           description: No autenticado
         '403':
           description: Sin permiso
-  /V1/panels/images/{id}:
-    get:
-      tags:
-      - Cuadros de mando
-      summary: Get Image
-      operationId: Panel_getImage_get
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    post:
-      tags:
-      - Cuadros de mando
-      summary: Set Image
-      operationId: Panel_setImage_post
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
   /V1/panels/{panel}:
     delete:
       tags:
@@ -2766,56 +2336,6 @@ paths:
           description: Sin permiso
         '404':
           description: No encontrado
-  /V1/password/change:
-    post:
-      tags:
-      - Autenticación y usuario
-      summary: Change Password
-      operationId: ResetPassword_changePassword_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      security: []
-      responses:
-        '200':
-          description: OK
-    put:
-      tags:
-      - Autenticación y usuario
-      summary: Update Password
-      operationId: ResetPassword_updatePassword_put
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/password/recovery:
-    post:
-      tags:
-      - Autenticación y usuario
-      summary: Reset Link
-      operationId: ResetPassword_resetLink_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      security: []
-      responses:
-        '200':
-          description: OK
   /V1/phone/verify/confirm:
     post:
       tags:
@@ -3112,115 +2632,6 @@ paths:
           description: Sin permiso
         '404':
           description: No encontrado
-  /V1/realtime/notifications:
-    get:
-      tags:
-      - Notificaciones
-      summary: Get Data
-      operationId: UserNotification_getData_get
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/realtime/notifications/countData:
-    get:
-      tags:
-      - Notificaciones
-      summary: Count Data
-      operationId: UserNotification_countData_get
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/realtime/notifications/deleteNotification/{id}:
-    delete:
-      tags:
-      - Notificaciones
-      summary: Delete Notification
-      operationId: UserNotification_deleteNotification_delete
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Eliminado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/realtime/notifications/readAll:
-    post:
-      tags:
-      - Notificaciones
-      summary: Read All
-      operationId: UserNotification_readAll_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/realtime/notifications/updateRead/{id}:
-    put:
-      tags:
-      - Notificaciones
-      summary: Update Read
-      operationId: UserNotification_updateRead_put
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/refresh-token:
-    post:
-      tags:
-      - Autenticación y usuario
-      summary: Refresh Kc Token
-      operationId: User_refreshKcToken_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      security: []
-      responses:
-        '200':
-          description: OK
   /V1/regulations:
     post:
       tags:
@@ -3333,102 +2744,6 @@ paths:
       operationId: Regulation_update_patch
       parameters:
       - name: regulation
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/tags:
-    get:
-      tags:
-      - Cuadros de mando
-      summary: Index
-      operationId: Tag_index_get
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-    patch:
-      tags:
-      - Cuadros de mando
-      summary: Modifications In Batch
-      operationId: Tag_modificationsInBatch_patch
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-    post:
-      tags:
-      - Cuadros de mando
-      summary: Store
-      operationId: Tag_store_post
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '201':
-          description: Creado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-  /V1/tags/{id}:
-    delete:
-      tags:
-      - Cuadros de mando
-      summary: Destroy
-      operationId: Tag_destroy_delete
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Eliminado
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-    put:
-      tags:
-      - Cuadros de mando
-      summary: Update
-      operationId: Tag_update_put
-      parameters:
-      - name: id
         in: path
         required: true
         schema:
@@ -3856,4 +3171,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT de Keycloak. Se obtiene en `POST /V1/login` y se renueva en `POST /V1/refresh-token`.
+      description: JWT emitido por Keycloak (flujo de código con PKCE). Se obtiene y se renueva contra el proveedor de identidad.

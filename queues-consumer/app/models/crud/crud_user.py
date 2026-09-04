@@ -3,8 +3,6 @@ from models.user_model import User
 from models.model_has_roles_model import ModelHasRole
 from models.role_has_permissions_model import RoleHasPermission
 from models.permissions_model import Permission
-from models.workspace_model import Workspace
-from models.workspace_has_users_model import WorkspaceHasUser
 from models.resource_permission_model import ModelHasResourcePermission
 from sqlalchemy.orm import Session
 from db import deps
@@ -62,21 +60,6 @@ def get_users_with_permission(permission: str, db: Session) -> List[User]:
     return db.query(User).filter(User.id.in_(user_ids)).all()
 
 
-def get_user_workspaces(user_id: int, db: Session = deps.get_db) -> List[Workspace]:
-    """
-    Fetches the workspaces of a user.
-
-    :param user_id: The user ID.
-    :param db: The database session.
-    :return: A list of Workspace objects.
-    """
-    return (
-        db.query(Workspace)
-        .join(WorkspaceHasUser, Workspace.id == WorkspaceHasUser.workspace_id)
-        .filter(WorkspaceHasUser.user_id == user_id)
-        .all()
-    )
-
 
 def get_user_resource_permissions(user_id: int, resource_type: str, db: Session = deps.get_db) -> List[ModelHasResourcePermission]:
     """
@@ -87,12 +70,7 @@ def get_user_resource_permissions(user_id: int, resource_type: str, db: Session 
     :return: A list of ResourcePermission objects.
     """
     models = [{"model_type": "users", "model_id": user_id}]
-    
-    workspaces = get_user_workspaces(user_id, db)
-    
-    for workspace in workspaces:
-        models.append({"model_type": "workspaces", "model_id": workspace.id})
-    
+
     return (
         db.query(ModelHasResourcePermission)
         .filter(ModelHasResourcePermission.model_type.in_([model["model_type"] for model in models]))

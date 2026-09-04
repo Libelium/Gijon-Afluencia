@@ -21,16 +21,7 @@ class AlarmActionResource extends JsonResource
                 'subject' => $this->action->actionable->subject,
                 'body' => $this->action->actionable->content
             ];
-        } elseif ($this->action->actionable_type === 'action_push') {
-            $actionContent = [
-                'title' => $this->action->actionable->title,
-                'content' => [
-                    'description' => $this->action->actionable->content['description'] ?? '',
-                    'level' => $this->action->actionable->content['level'] ?? ''
-                ]
-            ];
-        }
-        elseif ($this->action->actionable_type === 'action_http_push') {
+        } elseif ($this->action->actionable_type === 'action_http_push') {
             $actionContent = [
                 'url_template' => $this->action->actionable->url_template,
                 'method' => $this->action->actionable->method,
@@ -61,7 +52,6 @@ class AlarmActionResource extends JsonResource
 
         $actionTypes = [
             'action_email'    => 'email',
-            'action_push'     => 'push',
             'action_http_push' => 'http_push',
             'action_telegram' => 'telegram',
             'action_whatsapp' => 'whatsapp',

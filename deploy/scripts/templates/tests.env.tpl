@@ -22,6 +22,13 @@ KEYCLOAK_REALM=${KEYCLOAK_REALM}
 ADMIN_USERNAME=${TESTS_ADMIN_USERNAME}
 ADMIN_PASSWORD=${TESTS_ADMIN_PASSWORD}
 
+# The management API has no login endpoint (sign-in is authorization code +
+# PKCE against Keycloak), so the suite mints its admin token at Keycloak with
+# the backend's confidential client. This is the same secret web-back uses; it
+# is also in SECRETS.env.
+KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID_TESTS}
+KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+
 # --- Device data path ---------------------------------------------------------
 # API key used by devices to push data (the "k" query parameter), specific to
 # your installation's device-type configuration. Leave empty: the suite

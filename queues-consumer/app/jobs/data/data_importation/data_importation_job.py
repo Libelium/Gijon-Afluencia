@@ -9,7 +9,6 @@ from jobs.data.data_importation.factory.parser_factory import ParserFactory
 from jobs.job import Job
 from models.crud.crud_entity import get_or_create_entity, get_related_devices
 from utils.task_tracker import BackgroundJobTracker
-import models.crud.crud_user_notifications as crud_user_notifications
 from schemas.data_importation_request import DataImportationRequest
 from schemas.entity_data_notification import EntityDataNotification
 import helpers.aether_link.aether_link_helper as aether_link_helper
@@ -26,7 +25,7 @@ class DataImportationJob(Job):
     2. Content parsing to generate data notifications.
     3. Processing and persistence of notifications in the databases.
     4. Temporary file cleanup.
-    5. Logging of the final status and user notification.
+    5. Logging of the final status.
     """
     def __init__(
         self,
@@ -63,7 +62,7 @@ class DataImportationJob(Job):
                 job_type="data.importation",
                 user_id=self.request.user_id,
                 name=f"Import [{file_format}] - {filename}",
-                total_steps=4,
+                total_steps=3,
                 params={"file": filename, "format": file_format},
             )
             tracker.start()
@@ -86,14 +85,6 @@ class DataImportationJob(Job):
                 self._cleanup(local_file_path)
                 tracker.step_complete(3, "Processing data")
 
-                # Step 4 - Notify user
-                tracker.step_start(4, "Saving & notifying")
-                self._send_notification(
-                    title="Data importation completed",
-                    extra_data={"notifications_count": len(notifications)},
-                )
-                tracker.step_complete(4, "Saving & notifying")
-
                 logging.info(f"Data importation completed successfully for {filename}")
                 tracker.complete()
 
@@ -101,10 +92,6 @@ class DataImportationJob(Job):
                 logging.error(
                     f"Failed to process data importation for {filename}: {e}",
                     exc_info=True,
-                )
-                self._send_notification(
-                    title="Data importation failed",
-                    extra_data={"error": str(e)},
                 )
                 tracker.fail(str(e))
                 raise
@@ -300,25 +287,3 @@ class DataImportationJob(Job):
         except Exception as e:
             logging.warning(f"Failed to clean up temporary file {file_path}: {e}")
 
-    def _send_notification(self, title: str, extra_data: dict) -> None:
-        """
-        Send a push notification to the user about the importation status.
-
-        Args:
-            title: Notification title
-            extra_data: Additional data to include in the notification
-        """
-        notification_data = {
-            "Title": title,
-            "filename": os.path.basename(self.request.storage_file_path),
-            **extra_data,
-        }
-
-        crud_user_notifications.create_user_notification(
-            self.realtime_db,
-            {
-                "user_id": self.request.user_id,
-                "title": title,
-                "data": notification_data,
-            },
-        )

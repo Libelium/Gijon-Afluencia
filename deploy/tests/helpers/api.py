@@ -95,72 +95,145 @@ def http_request(method: str, url: str, **kwargs) -> requests.Response:
 # --- authentication ----------------------------------------------------------
 
 def login() -> str:
-    """Authenticate against web-back; returns a bearer token or raises CheckFailure."""
-    if not config.admin_username or not config.admin_password:
+    """Mint an admin bearer token at Keycloak; returns it or raises CheckFailure.
+
+    La API de gestión ya no tiene endpoint de inicio de sesión: el token lo emite
+    el proveedor de identidad. La batería no puede hacer el flujo de código con
+    PKCE que usa el navegador, así que pide el token con la concesión directa del
+    cliente confidencial del backend (lleva secreto, no es el cliente público).
+    """
+    missing = [
+        name
+        for name, value in (
+            ("ADMIN_USERNAME", config.admin_username),
+            ("ADMIN_PASSWORD", config.admin_password),
+            ("KEYCLOAK_URL", config.keycloak_url),
+            ("KEYCLOAK_CLIENT_SECRET", config.keycloak_client_secret),
+        )
+        if not value
+    ]
+    if missing:
         raise CheckFailure(
-            "ADMIN_USERNAME / ADMIN_PASSWORD are not set",
-            ["Fill them in environments/<name>/tests.env with a platform admin login."],
+            f"{' / '.join(missing)} are not set",
+            [
+                "Fill them in environments/<name>/tests.env: the admin login plus the "
+                "confidential client's secret (KEYCLOAK_CLIENT_SECRET, the same value "
+                "web-back uses; it is in SECRETS.env).",
+            ],
         )
 
-    url = f"{config.api_url}/api/V1/login"
+    url = (
+        f"{config.keycloak_url.rstrip('/')}/realms/{config.keycloak_realm}"
+        "/protocol/openid-connect/token"
+    )
     response = http_request(
         "POST",
         url,
-        json={"username": config.admin_username, "password": config.admin_password},
-        headers={"Content-Type": "application/json"},
+        data={
+            "grant_type": "password",
+            "client_id": config.keycloak_client_id,
+            "client_secret": config.keycloak_client_secret,
+            "username": config.admin_username,
+            "password": config.admin_password,
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
     if response.status_code == 401:
         raise CheckFailure(
-            f"Login rejected (401) for user '{config.admin_username}'",
+            f"Keycloak rejected the credentials (401) for '{config.admin_username}'",
             [
-                "The platform does not recognise these credentials.",
-                "Verify the user exists in the Keycloak 'pid-gijon' realm and is a "
-                "platform admin (docs/06-post-install.md §6.1).",
+                "The realm does not recognise this user, or the client secret is wrong.",
+                "Verify the user exists in the Keycloak "
+                f"'{config.keycloak_realm}' realm and is a platform admin "
+                "(docs/06-post-install.md §6.1).",
+                "Verify KEYCLOAK_CLIENT_SECRET matches the "
+                f"'{config.keycloak_client_id}' client (it must not be "
+                "REPLACE_AFTER_KEYCLOAK_SETUP).",
                 "If you created a different admin user, set ADMIN_USERNAME / "
                 "ADMIN_PASSWORD in environments/<name>/tests.env.",
-                "Also confirm KEYCLOAK_PUBLIC_KEY / KEYCLOAK_CLIENT_SECRET were "
-                "filled in after the Keycloak setup (they must not be "
-                "REPLACE_AFTER_KEYCLOAK_SETUP) and web-back was re-deployed.",
+            ],
+        )
+    if response.status_code == 400:
+        raise CheckFailure(
+            f"Keycloak refused the token request (400): {response.text[:200]}",
+            [
+                "'unauthorized_client' / 'invalid_grant' here usually means the "
+                f"'{config.keycloak_client_id}' client has Direct Access Grants "
+                "disabled, or the user must change their password / complete an "
+                "action on first login.",
+                "Check the client in the Keycloak admin console.",
             ],
         )
     if response.status_code == 404:
         raise CheckFailure(
-            "Login endpoint returned 404 — the request did not reach web-back",
+            "The Keycloak token endpoint returned 404",
             [
-                "Something answered but no route matched, so the request never "
-                "reached web-back. Check your ingress/router rule for the API "
-                "hostname → web-back, and that DNS points at the right load balancer.",
-                "See the 'Public endpoints' check above — it isolates the same issue.",
+                f"No realm answered at {url}.",
+                "Check KEYCLOAK_URL / KEYCLOAK_REALM in tests.env and that the realm "
+                "was imported (docs/06-post-install.md).",
             ],
         )
     if not _is_success(response.status_code):
         raise CheckFailure(
-            f"Login failed with HTTP {response.status_code}",
+            f"Token request failed with HTTP {response.status_code}",
             [
                 f"Response body: {response.text[:300]}",
-                "Inspect web-back: kubectl logs -n pid-gijon deploy/web-back",
-                "5xx during first install often means the Keycloak realm/clients are "
-                "not configured yet (docs/06-post-install.md).",
+                "Inspect Keycloak: kubectl logs -n pid-gijon deploy/keycloak",
             ],
         )
 
-    body = response.json()
-    token = (
-        body.get("token")
-        or body.get("access_token")
-        or body.get("data", {}).get("token")
-    )
+    token = response.json().get("access_token")
     if not token:
         raise CheckFailure(
-            "Login succeeded but no token was found in the response",
-            [f"Response keys: {list(body)[:10]}"],
+            "Keycloak answered 200 but without an access_token",
+            [f"Response keys: {list(response.json())[:10]}"],
         )
     return token
 
 
 def _auth_headers(token: str) -> Dict[str, str]:
     return {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+
+
+def whoami(token: str) -> dict:
+    """Comprueba que web-back acepta el token del proveedor y resuelve al usuario.
+
+    Es la mitad que ya no cubre pedir el token: valida la clave pública del realm,
+    la lista de clientes admitidos y que el administrador exista también en la base
+    de datos de la plataforma, no solo en Keycloak.
+    """
+    response = http_request(
+        "GET",
+        f"{config.api_url}/api/V1/user",
+        headers=_auth_headers(token),
+    )
+
+    if response.status_code in (401, 403):
+        raise CheckFailure(
+            f"web-back rejected the Keycloak token (HTTP {response.status_code})",
+            [
+                "El token es válido para Keycloak pero no para la API.",
+                "Confirma que KEYCLOAK_PUBLIC_KEY es la clave del realm y que web-back "
+                "se redesplegó después de rellenarla (no puede seguir en "
+                "REPLACE_AFTER_KEYCLOAK_SETUP).",
+                f"Confirma que KEYCLOAK_ALLOWED_CLIENTS admite '{config.keycloak_client_id}' "
+                "(el guard añade solos KEYCLOAK_CLIENT_ID y el cliente del frontal).",
+                f"Confirma que existe un usuario de plataforma con el correo "
+                f"'{config.admin_username}' (docs/06-post-install.md §6.1).",
+                "Inspecciona web-back: kubectl logs -n pid-gijon deploy/web-back",
+            ],
+        )
+    if not _is_success(response.status_code):
+        raise CheckFailure(
+            f"GET /api/V1/user failed with HTTP {response.status_code}",
+            [
+                f"Response body: {response.text[:300]}",
+                "Inspecciona web-back: kubectl logs -n pid-gijon deploy/web-back",
+            ],
+        )
+
+    return response.json()
 
 
 # --- devices ------------------------------------------------------------------
@@ -176,10 +249,12 @@ def get_device_by_serial(token: str, serial: str) -> Device:
     a un dispositivo real en producción.
     """
     url = f"{config.api_url}/api/V1/devices/paginate"
+    # El endpoint filtra con "search", no con "filters", y la coincidencia es
+    # parcial: se pide una página holgada y abajo se elige el número de serie exacto.
     payload = {
-        "filters": {"serial": serial},
+        "search": serial,
         "page": 1,
-        "paginationSize": 1,
+        "paginationSize": 50,
         "orderBy": "serial",
         "orderDirection": False,
     }
@@ -195,7 +270,8 @@ def get_device_by_serial(token: str, serial: str) -> Device:
             ],
         )
 
-    rows = (response.json() or {}).get("data") or []
+    # La paginación de la API devuelve las filas en "rows", no en "data".
+    rows = (response.json() or {}).get("rows") or []
     match = next((r for r in rows if str(r.get("serial", "")).upper() == serial.upper()), None)
     if match is None:
         raise CheckFailure(

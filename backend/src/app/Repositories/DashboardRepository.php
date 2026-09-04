@@ -6,31 +6,9 @@ use App\Authorization\AppResourcePermission;
 use App\Models\Dashboard;
 use Illuminate\Http\Resources\Json\PaginatedResourceResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class DashboardRepository
 {
-    /**
-     * Generate temporary URL for preview image
-     *
-     * @param string|null $previewImage
-     * @return string|null
-     */
-    private static function getPreviewImageUrl(?string $previewImage): ?string
-    {
-        // Only generate URL for uploaded images (org_* prefix)
-        if (!$previewImage || !str_starts_with($previewImage, 'org_')) {
-            return null;
-        }
-
-        $basePath = config('filesystems.paths.dashboard_images');
-        $path = $basePath . '/' . $previewImage;
-
-        return Storage::disk('s3')->exists($path)
-            ? Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15))
-            : null;
-    }
-
     /**
      * Return paginated results using query and filters
      *
@@ -71,8 +49,8 @@ class DashboardRepository
             // filter
             ->when($request->filter, function ($query, $filter) {
                 if ($filter === 'Public') {
-                    // Si el filtro es 'public', aplicamos la condición de que el slug no sea nulo.
-                    return $query->whereNotNull('slug');
+                    // Público es el indicador explícito de publicación: tener slug no basta.
+                    return $query->where('dashboards.is_published', true);
                 } else {
                     // Si no es 'public', asumimos que es un filtro de tipo
                     // (como 'Custom' o 'Template') y aplicamos la condición existente.
@@ -85,18 +63,6 @@ class DashboardRepository
                     $q->whereIn('template_type', $templateTypes);
                 });
             })
-            // tags filter
-            ->when($request->tags, function ($query, $tags) {
-                return $query->whereHas('tags', function ($q) use ($tags) {
-                    $q->whereIn('tags.id', $tags);
-                });
-            })
-            // excludeTags filter
-            ->when($request->excludeTags, function ($query, $excludeTags) {
-                return $query->whereDoesntHave('tags', function ($q) use ($excludeTags) {
-                    $q->whereIn('tags.id', $excludeTags);
-                });
-            })
             // fields
             ->when($request->fields, function ($query, $fields) {
                 return $query->select($fields);
@@ -105,8 +71,6 @@ class DashboardRepository
             ->with('template')
             // custom
             ->with('panels')
-            // tags
-            ->with('tags')
             // group by
             ->groupBy('dashboards.id');
 
@@ -122,7 +86,6 @@ class DashboardRepository
 
         foreach ($dashboards->items() as $dashboard) {
             // Generate temporary URL for preview image
-            $dashboard->previewImageUrl = self::getPreviewImageUrl($dashboard->preview_image);
 
             if ($dashboard->type == 'Template') {
                 if ($dashboard->template) {
@@ -169,7 +132,6 @@ class DashboardRepository
                 return $query->orderBy($sort, $request->order === 'asc' ? 'asc' : 'desc');
             })
             ->with('panels')
-            ->with('tags')
             ->groupBy('dashboards.id');
 
         $query = ResourcePermissionRepository::updateQueryWithPermissionCheck(
@@ -183,7 +145,6 @@ class DashboardRepository
         $dashboards = $query->paginate($request->perPage, ['dashboards.*'], 'page', $request->page);
 
         foreach ($dashboards->items() as $dashboard) {
-            $dashboard->previewImageUrl = self::getPreviewImageUrl($dashboard->preview_image);
 
             foreach ($dashboard->panels as $panel) {
                 $panel->series = [];

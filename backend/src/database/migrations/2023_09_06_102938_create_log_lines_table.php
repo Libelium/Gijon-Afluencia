@@ -16,13 +16,12 @@ class CreateLogLinesTable extends Migration
         Schema::create('log_lines', function (Blueprint $table) {
             $table->increments('id');
             $table->text('message')->nullable();
-            $table->string('channel')->nullable();
-            $table->integer('level')->default(0);
             $table->string('level_name', 20);
             $table->dateTime('datetime')->nullable();
-            $table->jsonb('context')->nullable();
             $table->jsonb('extra')->nullable();
             $table->timestamps();
+            $table->string('resource_type')->nullable();
+            $table->integer('resource_id')->nullable();
         });
     }
 

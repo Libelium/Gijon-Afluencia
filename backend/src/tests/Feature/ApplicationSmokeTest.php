@@ -75,7 +75,9 @@ class ApplicationSmokeTest extends TestCase
     {
         $uris = array_map(fn ($r) => $r->uri(), Route::getRoutes()->getRoutes());
 
-        $this->assertContains('api/V1/login', $uris, 'The login endpoint moved.');
+        // La sesion vive entera en Keycloak: ni el inicio de sesion ni el refresco pasan por la API.
+        $this->assertNotContains('api/V1/login', $uris, 'The password-grant login endpoint came back.');
+        $this->assertNotContains('api/V1/refresh-token', $uris, 'The token refresh endpoint came back.');
         $this->assertContains('api/V1/entities/{id}/properties', $uris, 'The entity properties endpoint moved.');
         $this->assertContains('api/V1/dashboards/from-json', $uris, 'The dashboard JSON endpoint moved.');
     }

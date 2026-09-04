@@ -67,6 +67,7 @@ Compose, con el código montado para recarga en caliente) y `prod`.
 | Valor | Colas que consume |
 | --- | --- |
 | `sync` | Notificaciones del context broker, series temporales, tiempo real, suscripciones |
+| `alarms` | Evaluación de alarmas: condiciones de umbral y de inactividad |
 | `data` | Importación de datos |
 | `crowd` | ETL de la solución de análisis: visitantes, clasificación, flujos, visitantes únicos |
 | `data_cache` | Caché de los resultados de la analítica |
@@ -103,6 +104,7 @@ platform.sync.timeseries                 platform.crowd.flows_municipality[_all]
 platform.sync.realtime                   platform.crowd.unique_visitors
 platform.sync.auto_subscription_sync     platform.crowd.unique_visitors_all_job
 platform.data.importation                platform.data-cache.crowd[_all]
+platform.alarms.entity_data_check        platform.alarms.check_inactivity
 ```
 
 La prioridad y el *timeout* de cada cola se ajustan por entorno con
@@ -120,6 +122,44 @@ El punto de entrada del camino de ingesta es `EntitySync`
 ([`app/jobs/sync/entity_sync.py`](app/jobs/sync/entity_sync.py)): traduce la notificación NGSI a un
 modelo interno y ejecuta sobre ella una lista de *observers*. Añadir comportamiento a la ingesta es
 añadir un observer, no tocar el flujo.
+
+## Alarmas
+
+El motor de alarmas vive en [`app/jobs/alarms/`](app/jobs/alarms) y atiende dos colas:
+
+- `platform.alarms.entity_data_check` — evalúa las **condiciones de umbral** de las alarmas que
+  afectan a la entidad que acaba de reportar. Los valores que la notificación no trae (otras
+  medidas u otras entidades de la misma alarma) se leen de la serie temporal por el aether-link.
+- `platform.alarms.check_inactivity` — repasa las **condiciones de inactividad** comparando el
+  último dato de cada entidad con su tiempo de espera. La lanza celery beat cada
+  `INACTIVITY_ALARM_CHECK_INTERVAL` segundos, porque nadie notifica que un dato *no* ha llegado.
+
+Las condiciones de una alarma se combinan con su función lógica (`AND`, `OR`, `XOR`). Cuando el
+estado cambia, se registra el cambio, se publica el histórico en el IoT Agent (modelo de datos
+`PlatformAlarm`, opcional) y se ejecutan las acciones ligadas a esa transición (`up` o `down`).
+
+El motor ejecuta los **seis canales de acción** que la API de gestión permite configurar:
+
+| Canal | `actionable_type` | Qué hace |
+| --- | --- | --- |
+| Telegram | `action_telegram` | Mensaje al chat que enlazó la persona usuaria |
+| SMS | `action_sms` | Mensaje corto por AWS SNS |
+| WhatsApp | `action_whatsapp` | Mensaje por la API de Meta |
+| Correo | `action_email` | Correo por SMTP (`MAIL_*`), con el asunto y el cuerpo configurados |
+| Aviso HTTP | `action_http_push` | Petición a un servicio externo con el estado de la alarma |
+| Comando a la entidad | `action_entity_command` | Escribe los comandos configurados como atributos `Command` en el context broker a través del aether-link; de ahí el IoT Agent los entrega al `fiware-manager`, que los guarda pendientes hasta que el dispositivo vuelve a reportar. El comando enviado se marca como pendiente en la base de tiempo real, igual que el lanzado a mano, para que la interfaz lo muestre |
+
+Cada canal está apagado hasta que se rellena su configuración (ver `.env.example`). Si falta, la
+alarma se evalúa y se registra igual: el aviso se salta con una advertencia en el log, nunca
+interrumpe la evaluación.
+
+El **aviso HTTP** llama a una URL que escribe quien configura la alarma, así que sólo se envía a los
+destinos declarados en `HTTP_PUSH_ALLOWED_DESTINATIONS` (hosts o prefijos de URL, separados por
+comas). **La lista vacía —el valor por omisión— no envía nada.** Un host permite ese host y sus
+subdominios; un prefijo de URL se compara por partes (esquema, host, puerto y tramo de ruta), nunca
+como prefijo de cadena, y se rechazan las URL con credenciales. Además se rechazan los destinos que
+resuelven a una dirección privada o de bucle local, no se siguen redirecciones (un 30x no relaya la
+petición a otro host) y la espera está acotada por `HTTP_PUSH_REQUEST_TIMEOUT`.
 
 También se puede encolar trabajo por HTTP contra la API lateral:
 

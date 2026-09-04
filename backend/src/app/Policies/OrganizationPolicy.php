@@ -105,25 +105,6 @@ class OrganizationPolicy
         return Response::allow();
     }
 
-    public function resellerRead(User $user, Organization $organization): Response
-    {
-        if (!$user->can(AppPermission::RESELLER_READ->value)) {
-            return Response::deny('You are not a reseller');
-        }
-
-        // Reuse the organization access logic.
-        return $this->read($user, $organization);
-    }
-
-    public function resellerUpdate(User $user, Organization $organization): Response
-    {
-        if (!$user->can(AppPermission::RESELLER_UPDATE->value)) {
-            return Response::deny('You are not a reseller');
-        }
-
-        return $this->update($user, $organization);
-    }
-
     /**
      * Determine whether the user can create organizations. This requires admin permissions.
      * 

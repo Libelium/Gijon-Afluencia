@@ -3,11 +3,9 @@
 namespace App\Http\V1\Requests\Entities;
 
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\V1\Requests\FormRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Validation\Validator;
-use App\Authorization\AppPermission;
-use App\Models\Entity;
 
 class CreateEntityRequest extends FormRequest
 {
@@ -18,12 +16,6 @@ class CreateEntityRequest extends FormRequest
      */
     public function authorize()
     {
-        // Admin-managed datamodels (e.g. OperatorsTeam) require incidents.admin; see Entity.
-        $types = array_column((array) $this->input('entities', []), 'type');
-        if (array_filter($types, fn ($type) => Entity::requiresIncidentsAdmin($type))) {
-            return (bool) $this->user()?->can(AppPermission::INCIDENTS_ADMIN->value);
-        }
-
         return true;
     }
 

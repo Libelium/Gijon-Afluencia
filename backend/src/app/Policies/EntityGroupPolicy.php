@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Repositories\PermissionRepository;
 
 use App\Models\Entity;
 use App\Models\EntityGroup;

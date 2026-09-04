@@ -6,6 +6,7 @@ from enum import Enum
 
 _ALL_TASK_MODULES = [
     "tasks.sync",
+    "tasks.alarms",
     "tasks.data",
     "tasks.crowd",
     "tasks.data_cache",
@@ -15,6 +16,7 @@ _ALL_TASK_MODULES = [
 class WorkerType(str, Enum):
     # --- Domain workers (each handles a single domain) ---
     SYNC = "sync"
+    ALARMS = "alarms"
     DATA = "data"
     CROWD = "crowd"
     DATA_CACHE = "data_cache"
@@ -37,6 +39,7 @@ class WorkerType(str, Enum):
         mapping = {
             # Domain workers
             WorkerType.SYNC:            q.SYNC_QUEUES,
+            WorkerType.ALARMS:          q.ALARMS_QUEUES,
             WorkerType.DATA:            q.DATA_QUEUES,
             WorkerType.CROWD:           q.CROWD_QUEUES,
             WorkerType.DATA_CACHE:      q.DATA_CACHE_QUEUES,
@@ -78,6 +81,7 @@ _COMMON      = ("jinja2", "pika", "requests")
 _PRELOAD_MAP: dict[WorkerType, tuple[str, ...]] = {
     # Domain workers
     WorkerType.SYNC:              _COMMON,
+    WorkerType.ALARMS:            _COMMON,
     WorkerType.DATA:              _COMMON + _DATA + _SPREADSHEET,
     WorkerType.CROWD:             _COMMON + _DATA,
     WorkerType.DATA_CACHE:        _COMMON + _DATA,
@@ -96,6 +100,7 @@ _PRELOAD_MAP: dict[WorkerType, tuple[str, ...]] = {
 _TASK_MODULE_MAP: dict[WorkerType, list[str]] = {
     # Domain workers
     WorkerType.SYNC:             ["tasks.sync"],
+    WorkerType.ALARMS:           ["tasks.alarms"],
     WorkerType.DATA:             ["tasks.data"],
     WorkerType.CROWD:            ["tasks.crowd"],
     WorkerType.DATA_CACHE:       ["tasks.data_cache"],

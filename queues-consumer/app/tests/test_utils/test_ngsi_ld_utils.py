@@ -145,9 +145,10 @@ class TestNgsiLdUtils:
         [
             ("command_info", "command"),
             ("command_status", "command"),
-            ("command_info_key", "command"),
-            ("command_status_key", "command"),
-            ("not_command_key", "not"),
+            ("w_ota_info", "w_ota"),
+            ("w_ota_status", "w_ota"),
+            ("command_info_key", "command_info_key"),
+            ("not_command_key", "not_command_key"),
         ],
     )
     def test_get_command_name(self, attr_key: str, expected: str):

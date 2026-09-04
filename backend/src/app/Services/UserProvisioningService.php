@@ -54,10 +54,6 @@ class UserProvisioningService
             }
         }
 
-        // Add the new citizen to the public-incidents workspace. No-op unless the feature is
-        // enabled via env (PUBLIC_INCIDENTS_WORKSPACE + SELF_PROVISIONING_ORGANIZATION).
-        PublicIncidentsWorkspaceService::addUser($user);
-
         try {
             (new \App\Helpers\UserLocaleSyncHelper())->syncUserLocale($user);
         } catch (\Throwable $e) {

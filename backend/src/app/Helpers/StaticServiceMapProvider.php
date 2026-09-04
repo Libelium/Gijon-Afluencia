@@ -20,7 +20,6 @@ class StaticServiceMapProvider implements ServiceMapProviderInterface
         "Alarms"  => ["PlatformAlarm"],
         "Traffic" => ["TrafficFlowObserved", "TrafficFlowEvent", "TrafficCamera", "Camera"],
         "Healthcheck" => ["DeviceHealthcheck"],
-        "WRF"     => ["WRFDomain", "WRFSimulation"],
     ];
 
     /**

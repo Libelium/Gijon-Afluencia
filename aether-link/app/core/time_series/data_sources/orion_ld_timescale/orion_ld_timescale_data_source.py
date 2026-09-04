@@ -13,7 +13,8 @@ from aether_pylib.time_series.time_series_request import TimeSeriesRequest
 from aether_pylib.time_series.time_series_response import TimeSeriesResponse
 from app.core.time_series.data_sources.orion_ld_timescale.db_settings import DBSettings
 from sqlalchemy.orm import Session
-from sqlalchemy import Table
+from sqlalchemy import Table, create_engine, text
+from sqlalchemy.pool import NullPool
 from app.core.config.logging import appLogging as logging
 import app.core.time_series.data_sources.orion_ld_timescale.query.timeseries_query as ts_query
 import app.core.time_series.aggregations as aggregations
@@ -47,6 +48,17 @@ class OrionLDTimescaleDataSource(DataSource):
             raise ValueError("Not all required parameters were provided")
 
         # self.connection_manager = ConnectionManager(self.db_settings)
+
+        # get_time_series rewrites db_settings.DB with the tenant database, so the health
+        # check URI is pinned here, on the tenantless database, and gets its own pool
+        self.health_engine = create_engine(
+            self.db_settings.connection_uri,
+            poolclass=NullPool,
+            connect_args={
+                "connect_timeout": 3,
+                "options": "-c statement_timeout=3000",
+            },
+        )
 
     def params_description() -> ServiceParamDescription:
         """
@@ -95,7 +107,14 @@ class OrionLDTimescaleDataSource(DataSource):
         """
         Check if the data source is healthy
         """
-        return False # TODO: CHECK THIS
+        try:
+            with self.health_engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
+        except Exception as e:
+            logging.error(f"Error executing health check query: {e}")
+            return False
+
+        return True
 
     def get_time_series(self, requests: List[TimeSeriesRequest]) -> TimeSeriesResponse:
         """

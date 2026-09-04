@@ -2,7 +2,7 @@
 
 namespace App\Http\V1\Requests\Alarms;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\V1\Requests\FormRequest;
 
 class UpdateInactivityAlarmConditionRequest extends FormRequest
 {

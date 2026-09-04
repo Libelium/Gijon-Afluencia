@@ -85,7 +85,5 @@ Detalles a tener en cuenta:
 - Las vistas realmente sobrescritas hoy son `error.ftl`, `info.ftl`, `login.ftl`,
   `login-page-expired.ftl`, `login-reset-password.ftl`, `login-update-password.ftl`,
   `register.ftl`, `template.ftl` y `email-code-form.ftl` (esta última, de la extensión de 2FA).
-- `pidtheme-mobile` hereda de `pidtheme` (`parent=pidtheme`) y solo cambia la disposición de la
-  tarjeta de login; se asigna por cliente mediante el atributo `login_theme`.
 - Tras tocar los `messages_*.properties`, `python3 i18n_validity_check.py` comprueba que ningún
   idioma se ha quedado sin una clave.

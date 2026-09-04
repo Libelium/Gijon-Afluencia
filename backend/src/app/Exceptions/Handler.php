@@ -4,10 +4,10 @@ namespace App\Exceptions;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -58,14 +58,41 @@ class Handler extends ExceptionHandler
     {
         $response = parent::render($request, $exception);
         $statusCode = $response->getStatusCode();
-        $message = $this->getSecureMessage($exception, $statusCode);
 
-        $response->setContent(json_encode([
-            'message' => $message,
+        if ($exception instanceof ValidationException || $exception instanceof HttpResponseException) {
+            $payload = json_decode((string) $response->getContent(), true);
+
+            if (is_array($payload)) {
+                $this->writeJson($response, $payload + ['code' => $statusCode]);
+            }
+
+            return $response;
+        }
+
+        $this->writeJson($response, [
+            'message' => $this->getSecureMessage($exception, $statusCode),
             'code' => $statusCode,
-        ]));
+        ]);
 
         return $response;
+    }
+
+    /**
+     * The escaping flags are set explicitly: Illuminate\Http\JsonResponse overrides Symfony's
+     * default with 0, and the preserved ValidationException body echoes back user input.
+     */
+    private function writeJson($response, array $payload): void
+    {
+        $flags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+
+        if ($response instanceof JsonResponse) {
+            $response->setEncodingOptions($flags);
+            $response->setData($payload);
+
+            return;
+        }
+
+        $response->setContent(json_encode($payload, $flags));
     }
 
     /**
@@ -101,12 +128,12 @@ class Handler extends ExceptionHandler
      */
     private function isSafeException(Throwable $exception): bool
     {
+        // ModelNotFoundException is deliberately out: its message leaks the model class and id.
+        // HttpResponseException is out too, render() resolves it earlier and keeps its body.
         return $exception instanceof ValidationException
             || $exception instanceof AuthenticationException
             || $exception instanceof AuthorizationException
-            || $exception instanceof ModelNotFoundException
             || $exception instanceof NotFoundHttpException
-            || $exception instanceof HttpResponseException
             || $exception instanceof EntityAlreadyExistException;
     }
 

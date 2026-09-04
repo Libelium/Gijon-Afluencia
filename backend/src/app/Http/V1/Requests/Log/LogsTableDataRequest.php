@@ -2,7 +2,7 @@
 
 namespace App\Http\V1\Requests\Log;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\V1\Requests\FormRequest;
 
 class LogsTableDataRequest extends FormRequest
 {
