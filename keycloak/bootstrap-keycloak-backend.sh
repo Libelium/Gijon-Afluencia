@@ -39,6 +39,10 @@ echo "Login parallax image: ${KC_BRAND_LOGIN_IMAGE:-<none, using the bundled log
 #  - KC_DEFAULT_LOCALE           : UI language for all theme views (es|en|ca|el|pt, default en)
 #  - KC_APP_REDIRECT_URIS        : OAuth callback URLs (see below), default: KC_HOSTNAME
 #  - KC_APP_WEB_ORIGINS          : CORS origins for those clients, default: KC_HOSTNAME
+#  - KC_FRONTEND_URL             : public URL of the web interface, used to build the
+#                                  callbacks of pid-gijon-client (the browser client)
+#  - KC_FRONTEND_REDIRECT_URIS   : those callbacks, if the default is not enough
+#  - KC_FRONTEND_WEB_ORIGINS     : CORS origins for that client, default: KC_FRONTEND_URL
 #  - KC_SMTP_*                   : mail server for the MFA code and password resets (see below)
 REALM_FILE=/opt/keycloak/data/import/realm.json
 LARAVEL_BACKEND_SECRET_SED=$(printf '%s' "${KC_LARAVEL_BACKEND_SECRET}" | sed -e 's/[&|\\]/\\&/g')
@@ -90,6 +94,30 @@ fi
 sed -i "s|__KC_APP_REDIRECT_URIS__|${APP_REDIRECT_URIS}|g" "$REALM_FILE"
 sed -i "s|__KC_APP_WEB_ORIGINS__|${APP_WEB_ORIGINS}|g" "$REALM_FILE"
 echo "OAuth callback URLs: ${APP_REDIRECT_URIS}"
+
+# ---------------------------------------------------------------------------
+# Callbacks of the browser client (pid-gijon-client).
+#
+# These are NOT the ones above: the backend comes back to Keycloak's own URL to
+# exchange the code, while the browser comes back to the web interface. With the
+# interface URL missing from this client, the login cannot be completed at all.
+# `post.logout.redirect.uris` is "+" in the realm, so the logout inherits this
+# very list and needs no separate variable.
+FRONTEND_DEFAULT=""
+if [ -n "${KC_FRONTEND_URL:-}" ]; then
+  FRONTEND_DEFAULT="${KC_FRONTEND_URL%/}/login,${KC_FRONTEND_URL%/}/*"
+fi
+FRONTEND_REDIRECT_URIS=$(json_array_from_csv "${KC_FRONTEND_REDIRECT_URIS:-$FRONTEND_DEFAULT}")
+FRONTEND_WEB_ORIGINS=$(json_array_from_csv "${KC_FRONTEND_WEB_ORIGINS:-${KC_FRONTEND_URL:-}}")
+
+if [ -z "$FRONTEND_REDIRECT_URIS" ] || [ "$FRONTEND_REDIRECT_URIS" = "[]" ]; then
+  echo "ERROR: no callback for the web interface. Set KC_FRONTEND_URL (or KC_FRONTEND_REDIRECT_URIS) to its public URL, or nobody will be able to log in. Stopping container."
+  exit 1
+fi
+
+sed -i "s|__KC_FRONTEND_REDIRECT_URIS__|${FRONTEND_REDIRECT_URIS}|g" "$REALM_FILE"
+sed -i "s|__KC_FRONTEND_WEB_ORIGINS__|${FRONTEND_WEB_ORIGINS}|g" "$REALM_FILE"
+echo "Web interface callback URLs: ${FRONTEND_REDIRECT_URIS}"
 
 # ---------------------------------------------------------------------------
 # SMTP.

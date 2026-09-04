@@ -1307,6 +1307,7 @@ components:
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_HOSTNAME: <CHANGE_ME>            # public Keycloak URL (https://kc.example.com)
       KC_HOSTNAME_ADMIN: <CHANGE_ME>      # public Keycloak admin URL (usually same as KC_HOSTNAME)
+      KC_FRONTEND_URL: <CHANGE_ME>        # public frontend URL (https://app.example.com)
       KC_BOOTSTRAP_ADMIN_USERNAME: admin  # bootstrap admin username (password is a secret)
       BACKEND_URL: http://web-back        # internal backend service
       # OAuth callback URLs of the service clients. The realm no longer ships the
