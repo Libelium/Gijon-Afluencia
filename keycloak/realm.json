@@ -934,18 +934,8 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "http://keycloak.pid.svc.cluster.local:9000/login",
-        "http://keycloak.pid.svc.cluster.local:9000/app/*",
-        "http://keycloak.pid.svc.cluster.local:9000/reset-password/*",
-        "http://keycloak:9000/login",
-        "http://keycloak:9000/app/*",
-        "http://keycloak:9000/reset-password/*"
-      ],
-      "webOrigins": [
-        "http://keycloak.pid.svc.cluster.local:9000",
-        "http://keycloak:9000"
-      ],
+      "redirectUris": __KC_FRONTEND_REDIRECT_URIS__,
+      "webOrigins": __KC_FRONTEND_WEB_ORIGINS__,
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
@@ -960,7 +950,7 @@
         "oidc.ciba.grant.enabled": "false",
         "pkce.code.challenge.method": "S256",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "http://keycloak.pid.svc.cluster.local:9000/login##http://keycloak:9000/login##http://localhost:20600/login##http://localhost:20600",
+        "post.logout.redirect.uris": "+",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
       },

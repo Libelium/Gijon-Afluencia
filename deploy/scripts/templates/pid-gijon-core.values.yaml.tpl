@@ -333,6 +333,9 @@ components:
       KC_DB_URL_PORT: "${PG_PORT}"
       KC_HOSTNAME: "${URL_KEYCLOAK}"
       KC_HOSTNAME_ADMIN: "${URL_KEYCLOAK}"
+      # URL publica de la interfaz web. De aqui salen las URI de retorno del cliente
+      # del navegador: sin ella no se puede completar el inicio de sesion.
+      KC_FRONTEND_URL: "${URL_FRONTEND}"
       # Marca blanca del tema de login. Vacias no pasa nada: el entrypoint sustituye
       # entonces los violetas por defecto (`${KC_BRAND_PRIMARY:-#7D00F4}`), y la plantilla
       # descarta cualquier valor que no empiece por `#`.
