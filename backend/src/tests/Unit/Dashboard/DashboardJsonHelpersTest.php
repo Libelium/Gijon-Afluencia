@@ -2,18 +2,18 @@
 
 namespace Tests\Unit\Dashboard;
 
-use App\Http\V1\Controllers\DashboardController;
+use App\Services\Dashboards\DashboardContentService;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
 /**
- * Characterization tests for the two pure helpers that feed DashboardController::applyContentToDashboard
+ * Characterization tests for the two pure helpers that feed DashboardContentService::apply
  * (GDTIS-PT01-COD-075). They are the part of that method's NPath (358 512) that can be pinned with no
  * database at all, so they run in milliseconds and stay useful even when the DB is unavailable.
  *
- * These document CURRENT behaviour, including the sharp edges. They are the safety net for the
- * refactor tracked as COD-065..068 — if a behaviour asserted here changes, the refactor changed
- * semantics, which is exactly what must not happen silently.
+ * These document CURRENT behaviour, including the sharp edges. They were the safety net for the
+ * refactor that split that method into DashboardContentService — if a behaviour asserted here
+ * changes, the refactor changed semantics, which is exactly what must not happen silently.
  *
  * Both helpers are `private static`, so they are reached by reflection on purpose: the point is to
  * pin behaviour BEFORE the code is reshaped, not to endorse the visibility.
@@ -22,7 +22,7 @@ class DashboardJsonHelpersTest extends TestCase
 {
     private static function call(string $method, array $args)
     {
-        $ref = new ReflectionMethod(DashboardController::class, $method);
+        $ref = new ReflectionMethod(DashboardContentService::class, $method);
         $ref->setAccessible(true);
 
         return $ref->invokeArgs(null, $args);

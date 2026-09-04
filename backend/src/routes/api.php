@@ -6,6 +6,7 @@ use App\Http\V1\Controllers\AlarmActionController;
 use App\Http\V1\Controllers\AlarmConditionController;
 use App\Http\V1\Controllers\AlarmController;
 use App\Http\V1\Controllers\DashboardController;
+use App\Http\V1\Controllers\DashboardTemplateController;
 use App\Http\V1\Controllers\DeviceController;
 use App\Http\V1\Controllers\EntityController;
 use App\Http\V1\Controllers\EntityGroupController;
@@ -159,12 +160,12 @@ Route::prefix("V1")->group(function () {
         Route::apiResource('devices', DeviceController::class)->only(['show']);
 
         // Dashboard resource
-        Route::post('dashboards/setTemplateType/{id}', [DashboardController::class, 'setTemplateType']);
-        Route::post('dashboards/setTemplateConfig/{id}', [DashboardController::class, 'setTemplateConfig']);
-        Route::post('dashboards/setTemplateEntities/{id}', [DashboardController::class, 'setTemplateEntities']);
-        Route::post('dashboards/setTemplateDevices/{id}', [DashboardController::class, 'setTemplateDevices']);
-        Route::post('dashboards/setTemplateGroups/{id}', [DashboardController::class, 'setTemplateGroups']);
-        Route::post('dashboards/setTemplateRegulation/{id}', [DashboardController::class, 'setTemplateRegulation']);
+        Route::post('dashboards/setTemplateType/{id}', [DashboardTemplateController::class, 'setTemplateType']);
+        Route::post('dashboards/setTemplateConfig/{id}', [DashboardTemplateController::class, 'setTemplateConfig']);
+        Route::post('dashboards/setTemplateEntities/{id}', [DashboardTemplateController::class, 'setTemplateEntities']);
+        Route::post('dashboards/setTemplateDevices/{id}', [DashboardTemplateController::class, 'setTemplateDevices']);
+        Route::post('dashboards/setTemplateGroups/{id}', [DashboardTemplateController::class, 'setTemplateGroups']);
+        Route::post('dashboards/setTemplateRegulation/{id}', [DashboardTemplateController::class, 'setTemplateRegulation']);
         Route::post('dashboards/paginate', [DashboardController::class, 'index']);
         Route::post('dashboards/custom', [DashboardController::class, 'indexCustom']);
         Route::post('dashboards/from-json', [DashboardController::class, 'createFromJson']);
@@ -237,7 +238,6 @@ Route::prefix("V1")->group(function () {
 
         //Groups
         Route::post('groups/paginate', [EntityGroupController::class, 'paginate']);
-        Route::patch('groups/{id}/status', [EntityGroupController::class, 'updateStatus']);
         Route::apiResource('groups', EntityGroupController::class, ['except' => ['index']]);
     });
 });

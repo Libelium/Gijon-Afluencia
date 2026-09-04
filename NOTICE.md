@@ -161,6 +161,15 @@ control de atribución del mapa. Si un despliegue sustituye el proveedor de tese
   <https://opendatacommons.org/licenses/odbl/1-0/>
 - Teselas: <https://operations.osmfoundation.org/policies/tiles/>
 
+**Cartografía en tema oscuro — Esri.** El tema oscuro consume por defecto la capa «World Dark Gray
+Base» del servicio ArcGIS Online de Esri, construida con datos de Esri, HERE, Garmin y
+colaboradores de OpenStreetMap. La leyenda «Esri, HERE, Garmin, © colaboradores de OpenStreetMap»
+se muestra en el control de atribución cuando esa capa está activa. Se sustituye con
+`VITE_MAP_TILES_URL_DARK`, y en ese caso hay que sustituir también
+`VITE_MAP_TILES_ATTRIBUTION_DARK`.
+
+- Condiciones de uso: <https://www.esri.com/en-us/legal/terms/full-master-agreement>
+
 **Smart Data Models.** La plataforma modela los datos según NGSI-LD (ETSI GS CIM 009) y los Smart
 Data Models, publicados bajo Creative Commons Attribution 4.0 (CC BY 4.0) —
 <https://smartdatamodels.org>.

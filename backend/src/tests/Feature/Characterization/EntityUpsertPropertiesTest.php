@@ -5,7 +5,6 @@ namespace Tests\Feature\Characterization;
 use App\Authorization\AppPermission;
 use App\Enums\UserStatus;
 use App\Models\Entity;
-use App\Models\EntityGroup;
 use App\Models\Organization;
 use App\Models\Realtime\EntityProperty;
 use App\Models\User;
@@ -223,7 +222,7 @@ class EntityUpsertPropertiesTest extends TestCase
      * UpdateEntityRequest declares `geolocation` as "nullable|array:type,coordinates", so
      * {"geolocation": null} passes validation. The controller then hands that null straight to
      *
-     *     private function handleSmartSpotLocationUpdate(Entity $entity, array $geolocationValue)
+     *     EntityPropertyService::handleSmartSpotLocationUpdate(Entity $entity, array $geolocationValue)
      *
      * whose second parameter is a non-nullable array, so PHP raises
      *   TypeError: Argument #2 ($geolocationValue) must be of type array, null given
@@ -317,53 +316,6 @@ class EntityUpsertPropertiesTest extends TestCase
         $this->assertSame('CEL', $this->storedUnits('temperature', $other));
     }
 
-    // ----------------------------------------------------------------- Incident / AssetIntervention
-
-    public function test_an_incident_status_cannot_be_changed_from_inside_an_asset_intervention(): void
-    {
-        $incident = $this->makeEntity('Incident');
-        $this->putInAssetIntervention($incident);
-
-        $response = $this->patchProperties(['status' => 'closed'], $incident->id);
-
-        $response->assertStatus(422);
-        $this->assertSame('Incident status is governed by its AssetIntervention', $response->getContent());
-        Http::assertNothingSent();
-    }
-
-    public function test_an_incident_outside_an_intervention_can_change_status(): void
-    {
-        $incident = $this->makeEntity('Incident');
-
-        $this->patchProperties(['status' => 'closed'], $incident->id)->assertOk();
-
-        $this->assertSentAttributes(['status' => ['type' => 'Property', 'value' => 'closed']]);
-    }
-
-    /**
-     * The intervention guard is keyed on the `status` attribute only: any other attribute of an
-     * incident inside an intervention updates normally.
-     */
-    public function test_a_non_status_attribute_of_a_governed_incident_is_still_updatable(): void
-    {
-        $incident = $this->makeEntity('Incident');
-        $this->putInAssetIntervention($incident);
-
-        $this->patchProperties(['description' => 'still editable'], $incident->id)->assertOk();
-    }
-
-    /**
-     * The guard is also keyed on the datamodel: an entity in an AssetIntervention group that is
-     * not an Incident is not governed by it.
-     */
-    public function test_the_intervention_guard_only_applies_to_incidents(): void
-    {
-        $device = $this->makeEntity('Device');
-        $this->putInAssetIntervention($device);
-
-        $this->patchProperties(['status' => 'closed'], $device->id)->assertOk();
-    }
-
     // ----------------------------------------------------------------- helpers
 
     private function patchProperties(array $payload, ?int $entityId = null)
@@ -449,22 +401,6 @@ class EntityUpsertPropertiesTest extends TestCase
             'tenant'    => 'platform',
             'scope'     => '/',
         ]);
-    }
-
-    private function putInAssetIntervention(Entity $entity): EntityGroup
-    {
-        // chk_linked_entity_columns requires entity_id and type to be both NULL or both set, so a
-        // typed group must point at a linked entity.
-        $group = EntityGroup::create([
-            'name'      => '[TEST] Intervention',
-            'user_id'   => $this->admin->id,
-            'type'      => 'AssetIntervention',
-            'entity_id' => $this->makeEntity('AssetIntervention')->id,
-        ]);
-
-        $group->entities()->attach($entity->id);
-
-        return $group;
     }
 
     private function makeStoredProperty(string $name, string $value, string $units, ?Entity $entity = null): void

@@ -949,7 +949,7 @@ paths:
       tags:
       - Cuadros de mando
       summary: Set Template Config
-      operationId: Dashboard_setTemplateConfig_post
+      operationId: DashboardTemplate_setTemplateConfig_post
       parameters:
       - name: id
         in: path
@@ -976,7 +976,7 @@ paths:
       tags:
       - Cuadros de mando
       summary: Set Template Devices
-      operationId: Dashboard_setTemplateDevices_post
+      operationId: DashboardTemplate_setTemplateDevices_post
       parameters:
       - name: id
         in: path
@@ -1003,7 +1003,7 @@ paths:
       tags:
       - Cuadros de mando
       summary: Set Template Entities
-      operationId: Dashboard_setTemplateEntities_post
+      operationId: DashboardTemplate_setTemplateEntities_post
       parameters:
       - name: id
         in: path
@@ -1030,7 +1030,7 @@ paths:
       tags:
       - Cuadros de mando
       summary: Set Template Groups
-      operationId: Dashboard_setTemplateGroups_post
+      operationId: DashboardTemplate_setTemplateGroups_post
       parameters:
       - name: id
         in: path
@@ -1057,7 +1057,7 @@ paths:
       tags:
       - Cuadros de mando
       summary: Set Template Regulation
-      operationId: Dashboard_setTemplateRegulation_post
+      operationId: DashboardTemplate_setTemplateRegulation_post
       parameters:
       - name: id
         in: path
@@ -1084,7 +1084,7 @@ paths:
       tags:
       - Cuadros de mando
       summary: Set Template Type
-      operationId: Dashboard_setTemplateType_post
+      operationId: DashboardTemplate_setTemplateType_post
       parameters:
       - name: id
         in: path
@@ -1966,34 +1966,6 @@ paths:
       operationId: EntityGroup_update_patch
       parameters:
       - name: group
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: OK
-        '401':
-          description: No autenticado
-        '403':
-          description: Sin permiso
-        '404':
-          description: No encontrado
-  /V1/groups/{id}/status:
-    patch:
-      tags:
-      - Grupos de entidades
-      summary: Change an AssetIntervention's status and cascade it to all its member incidents (their
-        status
-      operationId: EntityGroup_updateStatus_patch
-      parameters:
-      - name: id
         in: path
         required: true
         schema:
