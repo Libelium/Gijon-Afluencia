@@ -108,15 +108,6 @@ class EntityGroupController extends Controller
             $rules['location.type'] = 'required_with:location|string|in:Polygon';
             $rules['location.coordinates'] = 'required_with:location|array';
         }
-        if ($type === 'AssetIntervention') {
-            // Optional assignment written at creation (operator and/or team). See storeLinkedGroup.
-            $rules['category']       = 'nullable|string';
-            $rules['assignedTo']       = 'nullable|string';
-            $rules['assignedToName']   = 'nullable|string';
-            $rules['assignedTeam']     = 'nullable|string';
-            $rules['assignedTeamName'] = 'nullable|string';
-            $rules['assignmentType']   = 'nullable|string|in:individual,team';
-        }
         $request->validate($rules);
 
         $entityIds = array_column($request->entities, 'id');
@@ -127,11 +118,6 @@ class EntityGroupController extends Controller
             if ($type !== null) {
                 $this->validateMemberEntity($entity, $type);
             }
-        }
-
-        // A member Incident belongs to at most ONE AssetIntervention (exclusive membership).
-        if ($type === 'AssetIntervention') {
-            $this->assertIncidentsNotInAnotherIntervention($entityIds);
         }
 
         if ($type !== null) {
@@ -200,11 +186,6 @@ class EntityGroupController extends Controller
             if ($entityGroup->type !== null) {
                 $this->validateMemberEntity($entity, $entityGroup->type);
             }
-        }
-
-        // Exclusive membership: a member Incident may not already belong to ANOTHER AssetIntervention.
-        if ($entityGroup->type === 'AssetIntervention') {
-            $this->assertIncidentsNotInAnotherIntervention($entityIds, $entityGroup->id);
         }
 
         $fieldsToFill = ['name', 'description'];
@@ -282,19 +263,6 @@ class EntityGroupController extends Controller
             $attributes['visitors']  = ['type' => 'Property', 'value' => 0];
         }
 
-        if ($type === 'AssetIntervention') {
-            // Starts 'open'. `refersTo` keeps the aggregated incidents as a Property array of URNs
-            // (AetherLink doesn't relay Relationship `object`).
-            if ($request->category) {
-                $attributes['category'] = ['type' => 'Property', 'value' => $request->category];
-            }
-            $attributes['status'] = ['type' => 'Property', 'value' => 'open'];
-            $attributes['operatorId'] = ['type' => 'Property', 'value' => (string) $user->id];
-            $attributes['refersTo'] = ['type' => 'Property', 'value' => $entities->pluck('urn')->values()->all()];
-
-            $attributes += $this->buildAssignmentCBAttributes($request);
-        }
-
         if (!AetherLinkHelper::createContextBrokerEntity($tenant->name, $scope->name, [[
             'id'         => $request->urn,
             'type'       => $type,
@@ -325,143 +293,9 @@ class EntityGroupController extends Controller
         $user->giveResourcePermissionsTo(AppResourcePermission::defaultPermissions(), $group, true);
         $this->enqueueLinkedEntityGroupUpdate($group->id);
 
-        // Aggregating incidents moves them to 'assigned' (governed by the intervention now).
-        if ($type === 'AssetIntervention') {
-            $this->cascadeIncidentStatus($entities, 'assigned', (int) $user->id);
-        }
-
         $group->load(['linkedEntity', 'entities']);
 
         return (new EntityGroupResource($group))->response()->setStatusCode(201);
-    }
-
-    /**
-     * Change an AssetIntervention's status and cascade it to all its member incidents (their status
-     * is governed by the intervention). Only valid for `AssetIntervention` groups.
-     */
-    public function updateStatus(Request $request, int $id)
-    {
-        $group = EntityGroup::with(['linkedEntity', 'entities'])->findOrFail($id);
-        $this->authorize('update', $group);
-
-        if ($group->type !== 'AssetIntervention') {
-            abort(422, 'Status updates are only supported for AssetIntervention groups.');
-        }
-
-        $request->validate([
-            'status' => ['required', 'string', Rule::in(self::INCIDENT_STATES)],
-            'publicNote' => ['sometimes', 'nullable', 'string'],
-        ]);
-        $status = $request->input('status');
-        $publicNoteRaw = $request->input('publicNote');
-        $publicNote = is_string($publicNoteRaw) && trim($publicNoteRaw) !== '' ? $publicNoteRaw : null;
-
-        // Update the intervention's own status in the Context Broker.
-        $linked = $group->linkedEntity;
-        if ($linked) {
-            AetherLinkHelper::updateOnContextBroker($linked->urn, $linked->tenant, $linked->scope, [
-                'status' => ['type' => 'Property', 'value' => $status],
-            ]);
-        }
-
-        // Cascade to the member incidents.
-        $this->cascadeIncidentStatus($group->entities, $status, (int) Auth::id(), $publicNote);
-
-        return response()->json(['id' => (string) $group->id, 'status' => $status]);
-    }
-
-    /**
-     * Push a status to every Incident member (direct broker write, bypassing the per-entity API
-     * guard). 'closed' also carries the public note, when there is one.
-     */
-    private function cascadeIncidentStatus($members, string $status, int $actorId, ?string $publicNote = null): void
-    {
-        foreach ($members as $member) {
-            if ($member->datamodel !== 'Incident') {
-                continue;
-            }
-
-            $attrs = ['status' => ['type' => 'Property', 'value' => $status]];
-            if ($status === 'closed' && $publicNote !== null) {
-                $attrs['publicNote'] = ['type' => 'Property', 'value' => $publicNote];
-            }
-
-            AetherLinkHelper::updateOnContextBroker($member->urn, $member->tenant, $member->scope, $attrs);
-        }
-    }
-
-    /**
-     * Build the Context Broker attributes specific to a CrowdGroup (maxCapacity + location + totalArea).
-     * Does not include initial stats (occupancy, visitors) — those are only set on creation.
-     */
-    private function buildCrowdGroupInitialCBAttributes(int $maxCapacity, ?array $polygon, ?int $totalArea = null): array
-    {
-        $attributes = [
-            'maxCapacity' => ['type' => 'Property', 'value' => $maxCapacity],
-        ];
-
-        if ($polygon) {
-            $attributes['location'] = ['type' => 'Property', 'value' => $polygon];
-        }
-
-        if ($totalArea !== null) {
-            $attributes['totalArea'] = ['type' => 'Property', 'value' => $totalArea];
-        }
-
-        return $attributes;
-    }
-
-    /**
-     * Build the Context Broker attributes for an AssetIntervention's assignment (operator and/or
-     * team). Empty when nothing is assigned. `assignedAt` is stamped whenever a target is present.
-     */
-    private function buildAssignmentCBAttributes(Request $request): array
-    {
-        $attributes = [];
-
-        if ($request->assignedTo !== null) {
-            $attributes['assignedTo'] = ['type' => 'Property', 'value' => (string) $request->assignedTo];
-        }
-        if ($request->assignedToName !== null) {
-            $attributes['assignedToName'] = ['type' => 'Property', 'value' => (string) $request->assignedToName];
-        }
-        if ($request->assignedTeam !== null) {
-            $attributes['assignedTeam'] = ['type' => 'Property', 'value' => (string) $request->assignedTeam];
-        }
-        if ($request->assignedTeamName !== null) {
-            $attributes['assignedTeamName'] = ['type' => 'Property', 'value' => (string) $request->assignedTeamName];
-        }
-        if ($request->assignmentType !== null) {
-            $attributes['assignmentType'] = ['type' => 'Property', 'value' => (string) $request->assignmentType];
-        }
-        if ($request->assignedTo !== null || $request->assignedTeam !== null) {
-            $attributes['assignedAt'] = ['type' => 'Property', 'value' => now()->toIso8601String()];
-        }
-
-        return $attributes;
-    }
-
-    /**
-     * Enforce exclusive membership: none of the given Incident entities may already belong to another
-     * AssetIntervention group. Aborts 422 listing the offending entity ids. `$excludeGroupId` skips the
-     * group being updated so re-saving its own members does not trip the guard.
-     */
-    private function assertIncidentsNotInAnotherIntervention(array $entityIds, ?int $excludeGroupId = null): void
-    {
-        $clashing = EntityGroup::query()
-            ->where('type', 'AssetIntervention')
-            ->when($excludeGroupId, fn ($q) => $q->where('id', '!=', $excludeGroupId))
-            ->whereHas('entities', fn ($q) => $q->whereIn('entities.id', $entityIds))
-            ->with(['entities' => fn ($q) => $q->whereIn('entities.id', $entityIds)])
-            ->get()
-            ->flatMap(fn ($group) => $group->entities->pluck('id'))
-            ->unique()
-            ->values()
-            ->all();
-
-        if (!empty($clashing)) {
-            abort(422, 'Incidents already belong to an intervention: ' . implode(', ', $clashing));
-        }
     }
 
     /**
@@ -484,7 +318,6 @@ class EntityGroupController extends Controller
         return match ($type) {
             'ParkingGroup'      => ['ParkingSpot'],
             'CrowdGroup'        => ['CrowdFlowEvent'],
-            'AssetIntervention' => ['Incident'],
             default             => [],
         };
     }

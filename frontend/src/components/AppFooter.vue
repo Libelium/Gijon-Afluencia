@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import DOMPurify from 'dompurify'
 import { useCustomizationStore } from '@/stores/customization'
+import { t } from '@/i18n'
 
 /**
  * Pie de pagina personalizable por organizacion (preferencia `themeCustomFooter`).
@@ -60,9 +61,18 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 </script>
 
 <template>
-  <VFooter v-if="safeHtml" class="app-footer px-4" border>
-    <!-- eslint-disable-next-line vue/no-v-html -- saneado arriba con DOMPurify -->
-    <div class="app-footer__content text-caption text-medium-emphasis" v-html="safeHtml" />
+  <!-- El pie se pinta siempre, aunque la organizacion no haya configurado el suyo: el enlace a
+       la declaracion de accesibilidad es obligatorio y no puede depender de esa preferencia. -->
+  <VFooter class="app-footer px-4" border>
+    <div class="app-footer__inner d-flex align-center justify-space-between ga-4">
+      <!-- eslint-disable-next-line vue/no-v-html -- saneado arriba con DOMPurify -->
+      <div v-if="safeHtml" class="app-footer__content text-caption text-medium-emphasis" v-html="safeHtml" />
+      <span v-else />
+
+      <RouterLink to="/accesibilidad" class="app-footer__legal text-caption flex-shrink-0">
+        {{ t('accessibility.footerLink') }}
+      </RouterLink>
+    </div>
   </VFooter>
 </template>
 
@@ -94,6 +104,15 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   padding-block: 0;
 
   background: rgb(var(--v-theme-surface));
+}
+
+.app-footer__inner {
+  inline-size: 100%;
+  max-block-size: 100%;
+}
+
+.app-footer__legal {
+  color: rgb(var(--v-theme-primary));
 }
 
 .app-footer__content {

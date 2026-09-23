@@ -6,6 +6,7 @@ use App\Models\Entity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use App\Authorization\AppResourcePermission;
+use App\DataObjects\EntityQueryFilters;
 use App\Authorization\ResourcePermissionCache;
 use App\Models\EntityHealthcheck;
 use App\Models\FiwareScope;
@@ -67,15 +68,7 @@ class EntityRepository
         int $userId,
         string $orderColumn,
         string $orderDirection,
-        string|null $tenant = null,
-        string|null $scope = null,
-        string|null $searchText = null,
-        array|null $types = null,
-        array|null $groups = null,
-        bool $onlyCanUpdate = false,
-        array|null $excluded = null,
-        array|null $bounds = null,
-        array|null $urn = null,
+        EntityQueryFilters $filters = new EntityQueryFilters(),
     ) {
         $orderColumn = OrderFieldValidator::resolveColumn(
             $orderColumn,
@@ -104,48 +97,50 @@ class EntityRepository
             $query->where('entities.urn', 'not like', $hiddenUrn);
         }
 
-        if ($excluded) {
-            foreach ($excluded as $er) {
+        if ($filters->excluded) {
+            foreach ($filters->excluded as $er) {
                 $query->where('entities.urn', 'not like', $er);
             }
         }
 
-        if ($urn) {
-            $query->where(function ($q) use ($urn) {
-                foreach ($urn as $pattern) {
+        if ($filters->urn) {
+            $urnPatterns = $filters->urn;
+            $query->where(function ($q) use ($urnPatterns) {
+                foreach ($urnPatterns as $pattern) {
                     $q->orWhere('entities.urn', 'like', $pattern);
                 }
             });
         }
 
-        if ($tenant) {
-            $query->where('entities.tenant', $tenant);
+        if ($filters->tenant) {
+            $query->where('entities.tenant', $filters->tenant);
         }
 
-        if ($scope) {
-            $query->where('entities.scope', $scope);
+        if ($filters->scope) {
+            $query->where('entities.scope', $filters->scope);
         }
 
-        if ($types) {
-            $query->whereIn('entities.datamodel', $types);
+        if ($filters->types) {
+            $query->whereIn('entities.datamodel', $filters->types);
         }
 
-        if ($groups) {
+        if ($filters->groups) {
+            $groups = $filters->groups;
             $query->join('entity_entity_group', function ($join) use ($groups) {
                 $join->on('entities.id', '=', 'entity_entity_group.entity_id')
                     ->whereIn('entity_entity_group.entity_group_id', $groups);
             });
         }
 
-        if ($searchText) {
-            $query = self::searchTextQuery($query, $searchText);
+        if ($filters->searchText) {
+            $query = self::searchTextQuery($query, $filters->searchText);
         }
 
-        if ($bounds) {
-            $query->whereIn('entities.urn', self::urnsWithinBounds($bounds, $tenant, $scope));
+        if ($filters->bounds) {
+            $query->whereIn('entities.urn', self::urnsWithinBounds($filters->bounds, $filters->tenant, $filters->scope));
         }
 
-        return self::updateRequestWithPermissionCheck($query, $userId, $onlyCanUpdate ? AppResourcePermission::UPDATE : AppResourcePermission::READ);
+        return self::updateRequestWithPermissionCheck($query, $userId, $filters->onlyCanUpdate ? AppResourcePermission::UPDATE : AppResourcePermission::READ);
     }
 
     private static function urnsWithinBounds(array $bounds, ?string $tenant, ?string $scope)
@@ -170,18 +165,9 @@ class EntityRepository
         int $page,
         string $orderColumn,
         string $orderDirection,
-        string|null $tenant = null,
-        string|null $scope = null,
-        string|null $searchText = null,
-        array|null $types = null,
-        array|null $groups = null,
-        bool $onlyCanUpdate = false,
-        array|null $excluded = null,
-        array|null $bounds = null,
-        array|null $urn = null,
+        EntityQueryFilters $filters = new EntityQueryFilters(),
     ) {
-
-        $query = self::getEntitiesQuery($userId, $orderColumn, $orderDirection, $tenant, $scope, $searchText, $types, $groups, $onlyCanUpdate, $excluded, $bounds, $urn);
+        $query = self::getEntitiesQuery($userId, $orderColumn, $orderDirection, $filters);
 
         return $query->paginate($paginationSize, ['entities.*'], 'page', $page);
     }
@@ -190,16 +176,9 @@ class EntityRepository
         int $userId,
         string $orderColumn,
         string $orderDirection,
-        string|null $tenant = null,
-        string|null $scope = null,
-        string|null $searchText = null,
-        array|null $types = null,
-        array|null $groups = null,
-        bool $onlyCanUpdate = false,
-        array|null $excluded = null,
+        EntityQueryFilters $filters = new EntityQueryFilters(),
     ) {
-
-        $query = self::getEntitiesQuery($userId, $orderColumn, $orderDirection, $tenant, $scope, $searchText, $types, $groups, $onlyCanUpdate, $excluded);
+        $query = self::getEntitiesQuery($userId, $orderColumn, $orderDirection, $filters);
 
         return $query->get(['entities.*']);
     }

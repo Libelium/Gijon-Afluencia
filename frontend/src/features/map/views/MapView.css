@@ -1,0 +1,213 @@
+/* Estilos de la vista de mapa, en su propio fichero porque son doscientas lineas y la mayoria
+   ajustan el aspecto de Leaflet. `<style scoped src>` los compila igual: el ambito sigue
+   siendo el componente. */
+/* Alto util: el mapa ocupa lo que queda bajo la barra superior, descontando el relleno
+   del contenedor de la aplicacion. Sin una altura explicita Leaflet no se dibuja. */
+.map-view {
+  height: calc(100vh - var(--v-layout-top, 64px) - 32px);
+  height: calc(100dvh - var(--v-layout-top, 64px) - 32px);
+  min-height: 420px;
+}
+
+@media (min-width: 960px) {
+  .map-view {
+    height: calc(100dvh - var(--v-layout-top, 64px) - 48px);
+  }
+}
+
+.map-canvas {
+  border: 1px solid rgb(var(--v-theme-outline));
+}
+
+/* El panel, el aviso de carga y los estados flotan por encima de los paneles de Leaflet
+   (que llegan hasta z-index 800). */
+.map-panel {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  z-index: 900;
+  width: calc(100% - 24px);
+  max-width: 360px;
+}
+
+/* En pantalla estrecha el aviso se cuelga debajo de la barra plegada del panel. */
+.map-loading {
+  position: absolute;
+  inset-block-start: 78px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 910;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-surface), 0.94);
+  border: 1px solid rgb(var(--v-theme-outline));
+  box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* En escritorio el panel solo ocupa la esquina: el centro de la franja superior queda libre. */
+@media (min-width: 960px) {
+  .map-loading {
+    inset-block-start: 12px;
+  }
+}
+
+.map-state {
+  position: absolute;
+  inset: 0;
+  z-index: 880;
+  pointer-events: none;
+}
+
+.map-state__card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.map-state--interactive .map-state__card {
+  pointer-events: auto;
+}
+
+/* Leaflet genera los marcadores, los globos de agrupacion, el bocadillo y sus controles como
+   HTML propio: su aspecto no sale de props de Vuetify, asi que se reconduce aqui a los tokens
+   del tema. Es la excepcion de la Regla 1, y tambien aqui los colores son tokens. */
+:deep(.leaflet-container) {
+  background: rgb(var(--v-theme-surface-variant));
+  font-family: inherit;
+}
+
+:deep(.entity-marker),
+:deep(.entity-cluster) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.entity-marker__dot) {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgb(var(--v-theme-primary));
+  border: 2px solid rgb(var(--v-theme-surface));
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+  transition: transform 120ms ease-out;
+}
+
+:deep(.leaflet-marker-icon:hover .entity-marker__dot) {
+  transform: scale(1.25);
+}
+
+:deep(.entity-cluster) {
+  border-radius: 50%;
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary));
+  border: 2px solid rgb(var(--v-theme-surface));
+  font-variant-numeric: tabular-nums;
+}
+
+/* El halo crece con el grupo: el tamaño del globo se lee incluso sin comparar los numeros. */
+:deep(.entity-cluster--sm) {
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%), 0 0 0 3px rgba(var(--v-theme-primary), 0.16);
+}
+
+:deep(.entity-cluster--md) {
+  box-shadow: 0 1px 5px rgb(0 0 0 / 32%), 0 0 0 5px rgba(var(--v-theme-primary), 0.18);
+}
+
+:deep(.entity-cluster--lg) {
+  box-shadow: 0 2px 6px rgb(0 0 0 / 34%), 0 0 0 7px rgba(var(--v-theme-primary), 0.2);
+}
+
+/* Un marcador pegado al panel abre su bocadillo hacia arriba, y con el orden de Leaflet
+   (pane 700) quedaria escondido detras del panel. Se sube por encima: taparlo un momento es
+   mejor que abrir una ficha que no se ve. */
+:deep(.leaflet-popup-pane) {
+  z-index: 920;
+}
+
+/* El bocadillo pone su propio relleno por defecto y deja el contenido apretado: se anula
+   para que el espaciado lo ponga la ficha con las utilidades de siempre. */
+:deep(.leaflet-popup-content-wrapper) {
+  padding: 0;
+  border-radius: 14px;
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-on-surface));
+  border: 1px solid rgb(var(--v-theme-outline));
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+
+:deep(.leaflet-popup-content) {
+  margin: 0;
+}
+
+:deep(.leaflet-popup-tip) {
+  background: rgb(var(--v-theme-surface));
+  box-shadow: none;
+}
+
+:deep(.leaflet-container .leaflet-popup-close-button) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+:deep(.leaflet-container .leaflet-popup-close-button:hover),
+:deep(.leaflet-container .leaflet-popup-close-button:focus-visible) {
+  background: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface));
+}
+
+/* Zoom: los botones de Leaflet vienen con su propio blanco y su borde gris. */
+:deep(.leaflet-control-zoom.leaflet-bar) {
+  border: 1px solid rgb(var(--v-theme-outline));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 14%);
+}
+
+:deep(.leaflet-control-zoom.leaflet-bar a) {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  font-family: inherit;
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-on-surface));
+  border-bottom: 1px solid rgb(var(--v-theme-outline));
+}
+
+:deep(.leaflet-control-zoom.leaflet-bar a:last-child) {
+  border-bottom: none;
+}
+
+:deep(.leaflet-control-zoom.leaflet-bar a:hover),
+:deep(.leaflet-control-zoom.leaflet-bar a:focus-visible) {
+  background: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-primary));
+}
+
+:deep(.leaflet-control-zoom.leaflet-bar a.leaflet-disabled) {
+  background: rgb(var(--v-theme-surface));
+  color: rgba(var(--v-theme-on-surface), 0.38);
+}
+
+/* La atribucion es obligatoria por los terminos de uso de la cartografia: se le da fondo
+   propio para que se lea en los dos temas, nunca transparencia sobre las teselas. */
+:deep(.leaflet-container .leaflet-control-attribution) {
+  padding: 3px 10px;
+  border-start-start-radius: 10px;
+  background: rgba(var(--v-theme-surface), 0.92);
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.75rem; /* el tamaño de text-caption; 11px del paquete no se lee */
+  box-shadow: none;
+}
+
+:deep(.leaflet-container .leaflet-control-attribution a) {
+  color: rgb(var(--v-theme-primary));
+}

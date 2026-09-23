@@ -10,8 +10,14 @@ import dashboardRoutes from '@/features/dashboards/routes'
 import alarmRoutes from '@/features/alarms/routes'
 import preferenceRoutes from '@/features/preferences/routes'
 import customizationRoutes from '@/features/customization/routes'
+import accessibilityRoutes from '@/features/accessibility/routes'
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: '/accesibilidad',
+    component: BlankLayout,
+    children: accessibilityRoutes,
+  },
   {
     path: '/login',
     component: BlankLayout,

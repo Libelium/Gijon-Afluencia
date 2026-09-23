@@ -78,6 +78,15 @@ base de tiempo real.
 
 ### Añadido
 
+- **Declaración de accesibilidad**, con el contenido que exige el Real Decreto 1112/2018:
+  situación de cumplimiento, contenido no accesible y sus motivos, fecha y método de
+  preparación, vía de contacto y procedimiento de reclamación. Se publica en `/accesibilidad`
+  como **vista pública** —exigir sesión para leerla dejaría fuera justo a quien no consigue
+  entrar— y se enlaza desde el pie, que a partir de ahora se muestra siempre, también cuando la
+  organización no ha configurado el suyo. La vía de contacto la aporta el despliegue
+  (`ACCESSIBILITY_CONTACT`), porque es del organismo titular y no del producto; mientras esté
+  sin rellenar, la propia declaración lo advierte en pantalla.
+
 - **Personalización de la interfaz por organización**: colores de marca, logotipos y pie de página.
   Se piden tres colores y se derivan de ellos las variantes de tema claro y oscuro con el contraste
   garantizado, en lugar de pedir seis a mano, porque un color pensado para fondo claro rara vez
@@ -173,6 +182,13 @@ base de tiempo real.
 
 ### Accesibilidad
 
+- **El tema oscuro usa una cartografía oscura propia en lugar de invertir la clara.** El filtro
+  CSS que se aplicaba invertía también las etiquetas de las teselas, de modo que su contraste
+  quedaba fuera de control: medido sobre los píxeles representados daba **4,48:1 en el nivel de
+  ampliación de entrada**, por debajo del 4,5:1 exigido. La base oscura, sin etiquetas propias,
+  no tiene ese problema, y los nombres siguen disponibles en la tabla equivalente del mapa. El
+  proveedor es configurable por entorno (`MAP_TILES_URL_DARK`, `MAP_TILES_ATTRIBUTION_DARK`).
+
 - **Cerrada la mayor parte de los hallazgos de accesibilidad de PT01.4**: enlace para saltar
   al contenido, manejo por teclado y alternativa textual en mapas y gráficas, `scope` y atributos
   ARIA en tablas y diálogos, y corrección de contrastes. Los mensajes de error llevan `role="alert"`
@@ -180,6 +196,15 @@ base de tiempo real.
   modo que la comprobación queda automatizada.
 
 ### Cambiado
+
+- **Partidas las clases y los métodos más grandes**, sin cambio de comportamiento y con las
+  pruebas de caracterización existentes como red: el motor que aplica contenido a un cuadro de
+  mando pasa a `DashboardContentService`, con un método por fase; las reglas de actualización de
+  propiedades de entidad y el análisis de ficheros salen a `EntityPropertyService` y
+  `EntityFileImportService`; la configuración de plantillas de cuadro de mando a un controlador
+  propio, con las mismas rutas; la consulta de entidades cambia doce parámetros posicionales por
+  el objeto de valor `EntityQueryFilters`; y la vista de mapa se reparte entre un componente para
+  la tabla equivalente y una hoja de estilos aparte.
 
 - **Reducidas complejidad y duplicación**, sin cambios de comportamiento: en el backend,
   `PreferenceValidator` por estrategia, el `switch` de `ResourceLimitsHelper` parametrizado,
@@ -226,6 +251,14 @@ los que tenían consecuencia:
 
 ### Eliminado
 
+- **Retirada la agrupación de incidencias en intervenciones de activo.** La API la exponía sin
+  que ningún frontal la consumiera. Se van el endpoint que cambiaba el estado del grupo y lo
+  propagaba a sus miembros, la pertenencia exclusiva de una incidencia a una sola intervención,
+  los atributos de asignación que se escribían en el broker al crearla, y el guardián que
+  impedía cambiar directamente el estado de una incidencia gobernada. El tipo de entidad
+  `Incident` del modelo de datos no se toca: lo que desaparece es la capa de gestión que lo
+  agrupaba.
+
 Nada se retira sin comprobar antes que no tiene consumidor, ni en el backend, ni en el frontend, ni en
 los servicios Python que comparten base de datos.
 
@@ -266,6 +299,11 @@ los servicios Python que comparten base de datos.
   modelo ni lector y dos preferencias que se quedaron sin uso al caer la pantalla de inicio.
 
 ### Nota de compatibilidad
+
+- **Desaparece `PATCH /V1/groups/{id}/status`**, con el que se cambiaba el estado de una
+  intervención de activo y se propagaba a las incidencias agrupadas. No lo consumía ningún
+  frontal de esta entrega, pero es contrato de API: quien lo llamase desde fuera debe dejar de
+  hacerlo.
 
 - **Retiradas las tablas huérfanas que quedaban y aplanado el historial de migraciones.** Ya no se
   crean `access_attempts` (con la relación `User::lastLogin` y los campos `ip`, `last_login_date` y

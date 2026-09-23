@@ -7,7 +7,6 @@ use App\Models\Dashboard;
 
 use App\Http\V1\Resources\DashboardResource;
 use App\Http\V1\Controllers\Controller;
-use App\Models\Entity;
 use App\Repositories\DashboardRepository;
 use App\Repositories\OrganizationRepository;
 use App\Repositories\ResourcePermissionRepository;
@@ -16,24 +15,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Http\V1\Resources\DefaultPaginationResource;
-use App\Http\V1\Resources\DeviceFullResource;
-use App\Models\Device;
-use App\Models\EntityGroup;
 use App\Models\User;
+use App\DataObjects\EntityQueryFilters;
 use App\Repositories\EntityRepository;
 use Illuminate\Support\Facades\Log;
 use App\Repositories\PreferenceRepository;
-use App\Models\Panel;
-use App\Models\Serie;
-use App\Repositories\PanelRepository;
-use App\Repositories\SerieRepository;
 use App\Repositories\AnnotationRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\Dashboards\DashboardContentService;
 
 class DashboardController extends Controller
 {
     // Dashboard apiResource
+    public function __construct(private readonly DashboardContentService $dashboardContent)
+    {
+    }
+
     public function index(Request $request)
     {
         $request->validate([
@@ -147,7 +145,7 @@ class DashboardController extends Controller
                         Auth::user()->id,
                         'entities.id',
                         'desc',
-                        types: $autoSelectDatamodels,
+                        new EntityQueryFilters(types: $autoSelectDatamodels),
                     );
                 } else {
                     $dashboard->entities = $template->entities ? $template->entities->pluck('entity') : [];
@@ -337,7 +335,7 @@ class DashboardController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $dashboard) {
-            $this->applyContentToDashboard($dashboard, $request->all(), []);
+            $this->dashboardContent->apply($dashboard, $request->all(), []);
         });
 
         $dashboard->refresh();
@@ -415,7 +413,7 @@ class DashboardController extends Controller
 
             // 2) Apply panels/series/layout, resolving "@key" references to the real ids.
             foreach ($pairs as [$dashboard, $spec]) {
-                $this->applyContentToDashboard($dashboard, $spec, $keyToId);
+                $this->dashboardContent->apply($dashboard, $spec, $keyToId);
                 $createdIds[] = $dashboard->id;
             }
         });
@@ -429,205 +427,6 @@ class DashboardController extends Controller
         return response()->json(['data' => $created], 201);
     }
 
-    /**
-     * Reconcile a custom dashboard's panels, series and layout from a plain content array
-     * (name/description/timezone/dateRange/hidden/layout/panels), resolving "@key" dashboard
-     * references in chart configs against $keyToId. Assumes it runs inside a DB transaction.
-     */
-    private function applyContentToDashboard(Dashboard $dashboard, array $data, array $keyToId = []): void
-    {
-        $panelsData = $data['panels'] ?? [];
-
-        $keptIds = [];
-        // Maps a client-provided (possibly temporary/string) panel id to the real id
-        // assigned on creation, so the grid layout can be rewired to the new panels.
-        $idMap = [];
-        // Real ids of panels created in this request — the only auto-placement candidates.
-        $createdIds = [];
-        // Ids embedded as group children: they render inside their parent group, so they
-        // must never be auto-placed as top-level grid items.
-        $childPanelIds = [];
-
-        foreach ($panelsData as $panelData) {
-            $panelData['dashboard_id'] = $dashboard->id;
-            $panelData['series'] = $panelData['series'] ?? [];
-            $panelData['annotations'] = $panelData['annotations'] ?? [];
-
-            // Resolve "@key" cross-dashboard references inside the chart config.
-            if (isset($panelData['chart'])) {
-                $panelData['chart'] = self::remapDashboardRefs($panelData['chart'], $keyToId);
-            }
-
-            foreach ($panelData['chart']['config']['panels'] ?? [] as $childPanel) {
-                if (isset($childPanel['id'])) {
-                    $childPanelIds[] = (string) $childPanel['id'];
-                }
-            }
-
-            $providedId = $panelData['id'] ?? null;
-
-            Validator::make($panelData, [
-                'id' => 'nullable',
-                'title' => 'nullable|string|max:255',
-                'chart' => 'required|array',
-                'chart.title' => 'required|string|max:255|min:3',
-                'chart.type' => 'required|string|max:255|min:3',
-                'series' => 'array',
-                'annotations' => 'array',
-                'relativeTime' => 'nullable|boolean',
-                'dateRange' => 'nullable|array',
-            ])->validate();
-
-            $isExisting = is_numeric($providedId) && $providedId > 0
-                && Panel::where('id', $providedId)->where('dashboard_id', $dashboard->id)->exists();
-
-            if ($isExisting) {
-                // Updating an existing panel: drop serie ids that don't belong to THIS panel,
-                // otherwise SerieRepository would update another panel's serie (resolved by
-                // global id, unscoped).
-                $ownSerieIds = Serie::where('panel_id', $providedId)->pluck('id')->map(fn ($sid) => (string) $sid)->all();
-                $panelData['series'] = array_map(function ($serie) use ($ownSerieIds) {
-                    if (isset($serie['id']) && !in_array((string) $serie['id'], $ownSerieIds, true))
-                        unset($serie['id']);
-
-                    return $serie;
-                }, $panelData['series']);
-            } else {
-                // Creating a new panel: drop ALL serie ids so its series are created fresh.
-                $panelData['series'] = array_map([self::class, 'stripSerieIds'], $panelData['series']);
-            }
-
-            $panelRequest = new Request();
-            $panelRequest->merge($panelData);
-
-            PanelRepository::validatePanel($panelRequest);
-
-            if ($isExisting) {
-                $panel = PanelRepository::update($panelRequest, $providedId);
-            } else {
-                $panel = PanelRepository::store($panelRequest);
-                $createdIds[] = (string) $panel->id;
-                if (!is_null($providedId) && $providedId !== '') {
-                    $idMap[(string) $providedId] = (string) $panel->id;
-                }
-            }
-
-            $keptIds[] = $panel->id;
-        }
-
-        // Delete panels no longer present in the payload (group children stay: they are
-        // top-level rows included in the payload, so they remain in $keptIds).
-        $dashboard->panels()->whereNotIn('id', $keptIds)->delete();
-
-        // --- Layout reconciliation: rewire created-panel ids, drop dangling items, and
-        // auto-place freshly created panels the layout does not position yet.
-        $layout = $data['layout'] ?? $dashboard->layout;
-        if (!is_array($layout)) {
-            $layout = [];
-        }
-
-        $keptStr = array_map('strval', $keptIds);
-        $childPanelIds = array_map(fn ($cid) => $idMap[$cid] ?? $cid, $childPanelIds);
-        $placeable = array_values(array_filter(
-            $createdIds,
-            fn ($pid) => !in_array($pid, $childPanelIds, true)
-        ));
-
-        foreach ($layout as $breakpoint => &$items) {
-            if (!is_array($items)) {
-                continue;
-            }
-            $items = array_map(function ($item) use ($idMap) {
-                if (isset($item['i']) && isset($idMap[(string) $item['i']])) {
-                    $item['i'] = $idMap[(string) $item['i']];
-                }
-                return $item;
-            }, $items);
-            $items = array_values(array_filter(
-                $items,
-                fn ($item) => isset($item['i']) && in_array((string) $item['i'], $keptStr, true)
-            ));
-        }
-        unset($items);
-
-        if (!isset($layout['lg']) || !is_array($layout['lg'])) {
-            $layout['lg'] = [];
-        }
-        foreach (['lg', 'md', 'sm', 'xs', 'xxs'] as $breakpoint) {
-            if (!isset($layout[$breakpoint]) || !is_array($layout[$breakpoint])) {
-                continue;
-            }
-            $items = $layout[$breakpoint];
-            $present = array_map(fn ($item) => (string) ($item['i'] ?? ''), $items);
-            foreach ($placeable as $pid) {
-                if (in_array($pid, $present, true)) {
-                    continue;
-                }
-                $maxY = 0;
-                foreach ($items as $item) {
-                    $bottom = ($item['y'] ?? 0) + ($item['h'] ?? 0);
-                    if ($bottom > $maxY) {
-                        $maxY = $bottom;
-                    }
-                }
-                $items[] = ['i' => $pid, 'x' => 0, 'y' => $maxY, 'w' => 12, 'h' => 10, 'static' => true];
-                $present[] = $pid;
-            }
-            $layout[$breakpoint] = $items;
-        }
-
-        $dashboard->update([
-            'name' => $data['name'] ?? $dashboard->name,
-            'description' => $data['description'] ?? $dashboard->description,
-            'timezone' => $data['timezone'] ?? $dashboard->timezone,
-            'layout' => $layout,
-            'date_range' => array_key_exists('dateRange', $data) && $data['dateRange'] !== null
-                ? json_encode($data['dateRange'])
-                : $dashboard->date_range,
-            'hidden' => array_key_exists('hidden', $data) ? (bool) $data['hidden'] : $dashboard->hidden,
-        ]);
-    }
-
-    /**
-     * Recursively replace "@key" string values with the real dashboard id from $keyToId.
-     * Used to resolve cross-dashboard references (entityDashboards, Link dashboardId, …)
-     * inside a chart config when creating a batch of dashboards at once.
-     */
-    private static function remapDashboardRefs($node, array $keyToId)
-    {
-        if (is_array($node)) {
-            $out = [];
-            foreach ($node as $k => $v) {
-                $out[$k] = self::remapDashboardRefs($v, $keyToId);
-            }
-
-            return $out;
-        }
-
-        if (is_string($node) && strlen($node) > 1 && $node[0] === '@') {
-            $key = substr($node, 1);
-            if (array_key_exists($key, $keyToId)) {
-                return $keyToId[$key];
-            }
-        }
-
-        return $node;
-    }
-
-    /**
-     * Remove serie ids (recursively for multidimensional dimensions) so the series are
-     * created fresh on a newly created panel rather than updating foreign series by id.
-     */
-    private static function stripSerieIds(array $serie): array
-    {
-        unset($serie['id']);
-
-        if (isset($serie['dimensions']) && is_array($serie['dimensions'])) {
-            $serie['dimensions'] = array_map([self::class, 'stripSerieIds'], $serie['dimensions']);
-        }
-
-        return $serie;
-    }
 
     public function destroy($id)
     {
@@ -643,198 +442,4 @@ class DashboardController extends Controller
         return response()->json(true, 200);
     }
 
-    public function setTemplateType(Request $request, $id)
-    {
-        $request->validate([
-            'template_type' => 'required|string|max:255|min:3',
-        ]);
-
-        $dashboard = Dashboard::select('id', 'type')->with('template')->findOrFail($id);
-
-        $this->authorize('update', $dashboard);
-
-        if ($dashboard->type != 'Template') {
-            return response()->json([
-                'message' => 'Dashboard is not a template',
-            ], 400);
-        }
-
-        if ($dashboard->template) {
-            return response()->json([
-                'message' => 'Dashboard already has a template',
-            ], 400);
-        } else {
-            $dashboard->template()->create([
-                'template_type' => $request->template_type,
-            ]);
-        }
-
-        return response()->json($dashboard, 200);
-    }
-
-    public function setTemplateConfig(Request $request, $id)
-    {
-        $dashboard = Dashboard::select('id', 'type')->with('template')->findOrFail($id);
-
-        $this->authorize('update', $dashboard);
-
-        if ($dashboard->type != 'Template') {
-            return response()->json([
-                'message' => 'Dashboard is not a template',
-            ], 400);
-        }
-
-        if (!$dashboard->template) {
-            return response()->json([
-                'message' => 'Dashboard does not have a template',
-            ], 400);
-        }
-
-        $dashboard->template()->update([
-            'config' => $request->config,
-            'template_type' => $dashboard->template->template_type,
-        ]);
-
-        return response()->json($dashboard, 200);
-    }
-
-    public function setTemplateEntities(Request $request, $id)
-    {
-        $request->validate([
-            'entities' => 'required|array',
-            'entities.*' => 'required|numeric',
-        ]);
-
-        $dashboard = Dashboard::select('id', 'type')->with('template')->findOrFail($id);
-
-        $this->authorize('update', $dashboard);
-
-        if ($dashboard->type != 'Template') {
-            return response()->json([
-                'message' => 'Dashboard is not a template',
-            ], 400);
-        }
-
-        if (!$dashboard->template) {
-            return response()->json([
-                'message' => 'Dashboard does not have a template',
-            ], 400);
-        }
-
-        $dashboard->template->entities()->delete();
-
-        foreach ($request->entities as $entity) {
-
-            $this->authorize('read', Entity::find($entity));
-            $dashboard->template->entities()->create([
-                'entity_id' => $entity,
-            ]);
-        }
-    }
-
-    public function setTemplateDevices(Request $request, $id)
-    {
-        $request->validate([
-            'devices' => 'required|array',
-            'devices.*' => 'required|numeric',
-        ]);
-
-        $dashboard = Dashboard::select('id', 'type')->with('template')->findOrFail($id);
-
-        $this->authorize('update', $dashboard);
-
-        if ($dashboard->type != 'Template') {
-            return response()->json([
-                'message' => 'Dashboard is not a template',
-            ], 400);
-        }
-
-        if (!$dashboard->template) {
-            return response()->json([
-                'message' => 'Dashboard does not have a template',
-            ], 400);
-        }
-
-        $dashboard->template->devices()->delete();
-
-        foreach ($request->devices as $device) {
-
-            $this->authorize('read', Device::find($device));
-            $dashboard->template->devices()->create([
-                'device_id' => $device,
-            ]);
-        }
-
-        $newDevices = $dashboard->template->devices()->with('device')->get();
-
-        $newDevices = $newDevices->pluck('device');
-
-        return DeviceFullResource::collection($newDevices);
-    }
-
-    public function setTemplateGroups(Request $request, $id)
-    {
-        $request->validate([
-            'groups' => 'required|array',
-            'groups.*' => 'required|numeric',
-        ]);
-
-        $dashboard = Dashboard::select('id', 'type')->with('template')->findOrFail($id);
-
-        $this->authorize('update', $dashboard);
-
-        if ($dashboard->type != 'Template') {
-            return response()->json([
-                'message' => 'Dashboard is not a template',
-            ], 400);
-        }
-
-        if (!$dashboard->template) {
-            return response()->json([
-                'message' => 'Dashboard does not have a template',
-            ], 400);
-        }
-
-        $dashboard->template->groups()->delete();
-
-        foreach ($request->groups as $group) {
-
-            $this->authorize('read', EntityGroup::find($group));
-            $dashboard->template->groups()->create([
-                'group_id' => $group,
-            ]);
-        }
-    }
-
-    public function setTemplateRegulation(Request $request, $id)
-    {
-        if ($request->input('regulation_id') < 0) {
-            $request->merge(['regulation_id' => null]);
-        }
-
-        $request->validate([
-            'regulation_id' => 'nullable|exists:regulations,id',
-        ]);
-
-        $dashboard = Dashboard::select('id', 'type')->with('template')->findOrFail($id);
-
-        $this->authorize('update', $dashboard);
-
-        if ($dashboard->type != 'Template') {
-            return response()->json([
-                'message' => 'Dashboard is not a template',
-            ], 400);
-        }
-
-        if (!$dashboard->template) {
-            return response()->json([
-                'message' => 'Dashboard does not have a template',
-            ], 400);
-        }
-
-        $dashboard->template->regulation_id = $request->regulation_id;
-        $dashboard->template->save();
-
-        return response()->json($dashboard, 200);
-    }
 }
