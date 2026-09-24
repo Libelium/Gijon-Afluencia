@@ -63,6 +63,15 @@ class PermissionsSyncSeeder extends Seeder
         $qc_permissions = AppPermission::qcAdminPermissions();
 
         $qc_role->syncPermissions($qc_permissions);
+
+        // Access levels of the organization users (OrganizationAccessService).
+        foreach ([
+            'org_viewer' => AppPermission::orgViewerPermissions(),
+            'org_editor' => AppPermission::orgEditorPermissions(),
+        ] as $name => $permissions) {
+            Role::firstOrCreate(['name' => $name, 'organization_id' => null])
+                ->syncPermissions($permissions);
+        }
     }
 
     private function syncResourcePermissions()

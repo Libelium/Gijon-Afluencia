@@ -270,7 +270,7 @@ components:
         # global.imageRegistry. Never hardcode a registry path here — it would
         # resolve to <registry>/<path>/web-back and the pull would fail.
         image: web-back
-        tag: "${TAG_WEB_BACK}"
+        # No tag: the chart gives it the one of webBack.image, so migrations always match the code.
         command: ["sh", "-c", "/var/www/html/migration.sh||true"]
     config:
       DB_DATABASE: platformdb

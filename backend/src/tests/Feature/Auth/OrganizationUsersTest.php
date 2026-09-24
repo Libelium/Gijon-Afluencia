@@ -118,6 +118,9 @@ class OrganizationUsersTest extends TestCase
         $this->assertSame(self::NEW_SUBJECT, $created->keycloak_client_id);
         $this->assertSame($this->organization->id, $created->organization_id);
         $this->assertSame($this->admin->id, $created->created_by);
+        // Without a level the account would see nothing of the organization: read is the default.
+        $this->assertSame('read', $created->access_level);
+        $this->assertSame('read', $response->json('user.accessLevel'));
 
         Http::assertSent(fn ($request) => str_contains($request->url(), '/execute-actions-email'));
     }

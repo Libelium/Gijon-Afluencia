@@ -3284,6 +3284,15 @@
          "email": {
           "type": "string",
           "format": "email"
+         },
+         "accessLevel": {
+          "type": "string",
+          "enum": [
+           "read",
+           "edit"
+          ],
+          "nullable": true,
+          "description": "Acceso a los datos de la organización. Por defecto, read (consulta)."
          }
         }
        }
@@ -3394,6 +3403,82 @@
      },
      "502": {
       "description": "Keycloak no ha aplicado el cambio"
+     }
+    }
+   }
+  },
+  "/V1/organizations/{id}/users/{userId}/access": {
+   "put": {
+    "tags": [
+     "Usuarios de la organización"
+    ],
+    "summary": "Cambiar el nivel de acceso de un usuario",
+    "description": "read (consulta) da lectura sobre las entidades, paneles y alarmas de la organización; edit (edición) añade crear y modificar paneles y alarmas; null lo retira y deja solo lo que el usuario ha creado. No se aplica a la administración de la organización.",
+    "operationId": "OrganizationUser_setAccess_put",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "description": "Organización",
+      "schema": {
+       "type": "integer"
+      }
+     },
+     {
+      "name": "userId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "accessLevel"
+        ],
+        "properties": {
+         "accessLevel": {
+          "type": "string",
+          "enum": [
+           "read",
+           "edit"
+          ],
+          "nullable": true
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OrganizationUser"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "No autenticado"
+     },
+     "403": {
+      "description": "Solo la administración de la organización"
+     },
+     "404": {
+      "description": "El usuario no pertenece a la organización"
+     },
+     "422": {
+      "description": "Nivel no válido o usuario administrador"
      }
     }
    }
@@ -5215,6 +5300,14 @@
      },
      "isOrganizationAdmin": {
       "type": "boolean"
+     },
+     "accessLevel": {
+      "type": "string",
+      "enum": [
+       "read",
+       "edit"
+      ],
+      "nullable": true
      },
      "roles": {
       "type": "array",

@@ -1,6 +1,9 @@
 import { http } from '@/api/http'
 
 /** Usuario de la organizacion tal y como lo devuelve `OrganizationUserController`. */
+/** Acceso a los datos de la organizacion. Null: solo lo que el usuario crea. */
+export type AccessLevel = 'read' | 'edit'
+
 export interface OrganizationUser {
   id: number
   name: string
@@ -8,6 +11,7 @@ export interface OrganizationUser {
   enabled: boolean
   status: 'active' | 'suspended' | 'blocked' | 'deleted'
   isOrganizationAdmin: boolean
+  accessLevel: AccessLevel | null
   roles: string[]
   mfa: boolean
   lastActivity: string | null
@@ -17,6 +21,7 @@ export interface OrganizationUser {
 export interface NewUser {
   name: string
   email: string
+  accessLevel: AccessLevel
 }
 
 const base = (orgId: number) => `/organizations/${orgId}/users`
@@ -44,6 +49,15 @@ export async function setUserEnabled(
   enabled: boolean,
 ): Promise<OrganizationUser> {
   const { data } = await http.put<OrganizationUser>(`${base(orgId)}/${userId}/enabled`, { enabled })
+  return data
+}
+
+export async function setUserAccess(
+  orgId: number,
+  userId: number,
+  accessLevel: AccessLevel | null,
+): Promise<OrganizationUser> {
+  const { data } = await http.put<OrganizationUser>(`${base(orgId)}/${userId}/access`, { accessLevel })
   return data
 }
 

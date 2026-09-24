@@ -109,8 +109,15 @@ spec:
       {{- if $component.initContainers }}
       initContainers:
       {{- range $initContainer := $component.initContainers }}
+        {{- /* An init container built from the component's own image (the migrations of
+               web-back) always runs the component's tag: pinned apart, a redeploy with a new
+               tag kept migrating with the old code and new migrations never ran. */}}
+        {{- $spec := $initContainer }}
+        {{- if and $component.image $component.image.tag (eq ($initContainer.image | toString) ($component.image.repository | toString)) }}
+        {{- $spec = mergeOverwrite (deepCopy $initContainer) (dict "tag" $component.image.tag) }}
+        {{- end }}
         - name: {{ $initContainer.name }}
-          image: {{ include "pid-gijon-core.rawImageRef" (list $initContainer $) }}
+          image: {{ include "pid-gijon-core.rawImageRef" (list $spec $) }}
           imagePullPolicy: {{ $initContainer.pullPolicy | default "IfNotPresent" }}
           {{- if $initContainer.restartPolicy }}
           restartPolicy: {{ $initContainer.restartPolicy }}

@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Preference;
 use App\Models\Preferencable;
 use App\Models\User;
+use App\Services\OrganizationAccessService;
 use App\Services\UserDeletion\UserDeletionService;
 use App\Traits\KeycloakHelper;
 use Illuminate\Http\Request;
@@ -32,7 +33,8 @@ class OrganizationUserController extends Controller
     use KeycloakHelper;
 
     public function __construct(
-        private readonly UserDeletionService $deletionService
+        private readonly UserDeletionService $deletionService,
+        private readonly OrganizationAccessService $accessService,
     ) {}
 
     public function index(int $id): Response
@@ -59,7 +61,10 @@ class OrganizationUserController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email:rfc|max:255',
+            // Without it the account would see nothing of the organization: read is the default.
+            'accessLevel' => 'nullable|in:' . implode(',', OrganizationAccessService::LEVELS),
         ]);
+        $level = $data['accessLevel'] ?? OrganizationAccessService::READ;
         $email = strtolower($data['email']);
 
         // Case-insensitive: older rows may keep the capitals they were created with.
@@ -86,6 +91,7 @@ class OrganizationUserController extends Controller
         // Same grants a self-registered user gets: its own record, also to the organization
         // administrator so that it can manage it from here.
         $user->giveResourcePermissionsTo(AppResourcePermission::defaultPermissions(), $user, true);
+        $this->accessService->apply($user, $level);
 
         try {
             (new UserLocaleSyncHelper())->syncUserLocale($user);
@@ -125,6 +131,24 @@ class OrganizationUserController extends Controller
         $user->save();
 
         return response($this->present($user->load('roles:id,name'), $organization, $this->mfaByUser([$user->id])), 200);
+    }
+
+    public function setAccess(int $id, int $userId, Request $request): Response
+    {
+        [$organization, $user] = $this->resolve($id, $userId);
+
+        $level = $request->validate([
+            'accessLevel' => 'present|nullable|in:' . implode(',', OrganizationAccessService::LEVELS),
+        ])['accessLevel'];
+
+        // The administrator already sees everything; a level would only add a role it does not need.
+        if ($user->id === $organization->admin) {
+            return response(['error' => 'The organization administrator has full access'], 422);
+        }
+
+        $this->accessService->apply($user, $level);
+
+        return response($this->present($user->fresh()->load('roles:id,name'), $organization, $this->mfaByUser([$user->id])), 200);
     }
 
     public function sendPasswordEmail(int $id, int $userId): Response
@@ -207,6 +231,7 @@ class OrganizationUserController extends Controller
             'enabled' => (bool) $user->enabled,
             'status' => $user->status?->value ?? UserStatus::Active->value,
             'isOrganizationAdmin' => $user->id === $organization->admin,
+            'accessLevel' => $user->access_level,
             'roles' => $user->roles->pluck('name')->values(),
             'mfa' => $mfa[$user->id] ?? false,
             'lastActivity' => $user->last_activity,

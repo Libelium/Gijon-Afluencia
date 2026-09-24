@@ -116,6 +116,7 @@ export const SECTIONS: HelpSection[] = [
     icon: 'mdi-account-group-outline',
     paragraphs: [
       'La gestión de usuarios de la organización permite dar de alta cuentas nuevas, activarlas o desactivarlas y enviar el correo para restablecer la contraseña. Los datos personales (nombre y correo) aparecen ocultos por defecto y solo se muestran cuando se pide expresamente.',
+      'Cada usuario tiene un nivel de acceso a los datos de la organización. Con «Consulta» ve todas las entidades, el mapa, los paneles y las alarmas; con «Edición» además puede crear y modificar paneles y alarmas; «Sin acceso» deja solo lo que el propio usuario haya creado. Los paneles y alarmas nuevos llegan solos a quien tenga nivel. Quien administra la organización lo ve y lo gestiona todo.',
     ],
     links: [{ label: 'Ir a Usuarios', to: '/usuarios' }],
   },
