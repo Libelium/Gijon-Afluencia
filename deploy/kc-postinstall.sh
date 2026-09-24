@@ -2,8 +2,15 @@
 #
 # Post-instalación de Keycloak, entre las fases `core` y `webback`.
 #
-# Automatiza el único paso manual del despliegue (docs/06-post-install.md §6.1.c):
-# rellena en el values del entorno los dos valores que el generador dejó como
+# Automatiza los pasos manuales del despliegue (docs/06-post-install.md §6.1.b y c).
+#
+# Primero da de alta en el realm `master` el cliente `change-password-client`, con el
+# que web-back obtiene su token de administración (asignar el rol del segundo factor,
+# sincronizar el idioma, cerrar sesiones, enviar el correo de cambio de contraseña).
+# Su definición es keycloak/change-password-client.json; la importación automática
+# de la imagen solo carga el realm `pid-gijon`, así que se da de alta aquí.
+#
+# Después rellena en el values del entorno los dos valores que el generador dejó como
 # REPLACE_AFTER_KEYCLOAK_SETUP, tomándolos del realm ya en marcha:
 #
 #   - KEYCLOAK_PUBLIC_KEY    : clave pública RS256 del realm (endpoint del realm).
@@ -31,14 +38,32 @@ ENV="${1:-}"
 NS="pid-gijon"
 VALUES="deploy/environments/${ENV}/pid-gijon-core.values.yaml"
 KCSECRETS="deploy/environments/${ENV}/keycloak-secrets.env"
+KCCLIENT="keycloak/change-password-client.json"
 
 [ -f "$VALUES" ]    || { echo "ERROR: no existe $VALUES (¿ejecutaste las fases config y core?)"; exit 1; }
 [ -f "$KCSECRETS" ] || { echo "ERROR: no existe $KCSECRETS"; exit 1; }
+[ -f "$KCCLIENT" ]  || { echo "ERROR: no existe $KCCLIENT (ejecuta el script desde la raíz del repositorio)"; exit 1; }
 
-echo "1/3  Esperando a que Keycloak esté disponible..."
+echo "1/4  Esperando a que Keycloak esté disponible..."
 kubectl -n "$NS" rollout status deploy/keycloak --timeout=180s
 
-echo "2/3  Obteniendo el secreto de laravel-backend y la clave pública del realm..."
+echo "2/4  Cliente change-password-client en el realm master..."
+# Todo corre dentro del pod y con sus propias variables de administración: las
+# credenciales no salen del contenedor. Las comillas simples son a propósito.
+kubectl -n "$NS" exec -i deploy/keycloak -- bash -c '
+  set -e
+  KC=/opt/keycloak/bin/kcadm.sh
+  $KC config credentials --server http://localhost:8080 --realm master \
+    --user "$KEYCLOAK_ADMIN" --password "$KEYCLOAK_ADMIN_PASSWORD" >/dev/null
+  if $KC get clients -r master -q clientId=change-password-client --fields id | grep -q "\"id\""; then
+    echo "     ya existe"
+  else
+    $KC create clients -r master -f -
+    echo "     creado"
+  fi
+' < "$KCCLIENT"
+
+echo "3/4  Obteniendo el secreto de laravel-backend y la clave pública del realm..."
 CLIENT_SECRET="$(grep -E '^KC_LARAVEL_BACKEND_SECRET=' "$KCSECRETS" | head -1 | cut -d= -f2-)"
 [ -n "$CLIENT_SECRET" ] || { echo "ERROR: KC_LARAVEL_BACKEND_SECRET no está en $KCSECRETS"; exit 1; }
 
@@ -53,7 +78,7 @@ kill "$PF" 2>/dev/null || true
 trap - EXIT
 [ -n "$PUBKEY" ] || { echo "ERROR: no se pudo obtener la clave pública del realm ${NS}"; exit 1; }
 
-echo "3/3  Escribiendo ambos valores en $VALUES ..."
+echo "4/4  Escribiendo ambos valores en $VALUES ..."
 python3 - "$VALUES" "$PUBKEY" "$CLIENT_SECRET" <<'PY'
 import sys, re, io
 path, pub, sec = sys.argv[1], sys.argv[2], sys.argv[3]

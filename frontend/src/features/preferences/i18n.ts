@@ -1,6 +1,6 @@
 export default {
   'preferences.title': 'Preferencias',
-  'preferences.subtitle': 'Idioma, zona horaria, formatos y apariencia de la aplicación.',
+  'preferences.subtitle': 'Idioma, zona horaria, formatos, apariencia y seguridad de la cuenta.',
 
   'preferences.save': 'Guardar cambios',
   'preferences.discard': 'Descartar',
@@ -21,6 +21,19 @@ export default {
 
   // El rotulo dice a que afecta el ajuste, no solo la nota de ayuda: llamarlo «Idioma» a secas
   // hacía esperar que cambiara la interfaz, que se sirve solo en español (ACC-005).
+  'preferences.section.security': 'Seguridad',
+  'preferences.section.security.help':
+    'Protege el acceso con un segundo factor. Se aplica al instante, sin pulsar «Guardar cambios».',
+  'preferences.field.activeMFA': 'Verificación en dos pasos por correo',
+  'preferences.field.activeMFA.hint':
+    'Al iniciar sesión, tras la contraseña, se pedirá un código de un solo uso enviado a {email}.',
+  'preferences.mfa.enabled':
+    'Verificación en dos pasos activada. Se pedirá el código a partir del próximo inicio de sesión.',
+  'preferences.mfa.disabled': 'Verificación en dos pasos desactivada.',
+  'preferences.mfa.failed': 'No se ha podido cambiar la verificación en dos pasos. Inténtalo de nuevo.',
+  'preferences.mfa.forced':
+    'Tu organización exige la verificación en dos pasos a todos sus usuarios y no permite desactivarla.',
+
   'preferences.field.language': 'Idioma de las notificaciones',
   'preferences.field.language.hint':
     'Idioma de los textos que genera el servidor, como los correos de aviso. La interfaz se muestra siempre en español.',

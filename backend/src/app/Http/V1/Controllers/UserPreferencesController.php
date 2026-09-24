@@ -92,6 +92,12 @@ class UserPreferencesController extends Controller
             if ($orgMfaValue === 'true') {
                 return response(['error' => 'MFA is enforced by your organization and cannot be modified'], 403);
             }
+
+            // Keycloak first: the role is what actually asks for the code at login, so a
+            // preference saved without it would show the second factor as active when it is not.
+            if (!(new MfaRoleSyncHelper())->syncUserMfaRole($user, $validation['value'] === 'true')) {
+                return response(['error' => 'The second factor could not be updated in Keycloak'], 502);
+            }
         }
 
         $preferencable = Preferencable::where('user_id', $id)
@@ -115,11 +121,6 @@ class UserPreferencesController extends Controller
 
         if (!$preferencable->save()) {
             return response('Error saving preference', 500);
-        }
-
-        if ($preferenceName === 'activeMFA') {
-            $mfaHelper = new MfaRoleSyncHelper();
-            $mfaHelper->syncUserMfaRole($user, $validation['value'] === 'true');
         }
 
         // Keep the user's Keycloak locale (email language) in sync with their preference.

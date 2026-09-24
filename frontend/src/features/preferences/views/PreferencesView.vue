@@ -8,6 +8,7 @@ import { savePreference } from '@/api/user'
 import { t } from '@/i18n'
 import { useSessionStore } from '@/stores/session'
 import { useUiStore, type ThemeName } from '@/stores/ui'
+import MfaCard from '../components/MfaCard.vue'
 import SettingsCard from '../components/SettingsCard.vue'
 import {
   DATETIME_FORMATS,
@@ -357,6 +358,8 @@ function report(total: number, failures: string[]) {
                 {{ fieldErrors.displayskinMode }}
               </p>
             </SettingsCard>
+
+            <MfaCard />
           </div>
         </VCol>
 

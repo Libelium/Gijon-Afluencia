@@ -65,9 +65,15 @@ class MfaRoleSyncHelper
         );
     }
 
+    /**
+     * The id is resolved rather than read: seeded users start with 'pending' in the column, and
+     * the role mapping of a non-existent id would fail without the user noticing.
+     */
     public function syncUserMfaRole(User $user, bool $mfaActive): bool
     {
-        if (empty($user->keycloak_client_id)) {
+        $keycloakUserId = $this->resolveKeycloakUserId($user);
+
+        if (!$keycloakUserId) {
             Log::warning('mfa.role.sync.user.skip', [
                 'user_id' => $user->id,
                 'reason' => 'No keycloak_client_id',
@@ -78,9 +84,9 @@ class MfaRoleSyncHelper
         $roleName = $this->getMfaRoleName();
 
         if ($mfaActive) {
-            return $this->assignRealmRoleToUser($user->keycloak_client_id, $roleName);
+            return $this->assignRealmRoleToUser($keycloakUserId, $roleName);
         }
 
-        return $this->removeRealmRoleFromUser($user->keycloak_client_id, $roleName);
+        return $this->removeRealmRoleFromUser($keycloakUserId, $roleName);
     }
 }
