@@ -1066,11 +1066,11 @@ components:
       - port: 80
         name: web-back
     # Runs database migrations before the main container starts. It inherits the
-    # component's config + secrets (envFrom). Keep its tag aligned with the main image.
+    # component's config + secrets (envFrom). Being the component's own image, the chart gives
+    # it the tag of webBack.image, so migrations always run the code being deployed.
     initContainers:
       - name: web-back-migrations
         image: web-back
-        tag: ""                 # TODO: pin (same tag as web-back)
         command: ["sh", "-c", "/var/www/html/migration.sh||true"]
     livenessProbe:
       httpGet:
