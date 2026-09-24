@@ -124,7 +124,13 @@ components:
       TS_DB_HOST: "${PG_HOST}"
       TS_DB_PORT: "${PG_PORT}"
       KEYCLOAK_URL: http://keycloak:8080
+      # Los consumidores leen MAIL_FROM (no MAIL_FROM_ADDRESS, que es el nombre de Laravel) y
+      # no envian nada sin MAIL_ENABLED=true.
+      MAIL_ENABLED: "${MAIL_ENABLED}"
       MAIL_HOST: "${MAIL_HOST}"
+      MAIL_PORT: "${MAIL_PORT}"
+      MAIL_ENCRYPTION: "${MAIL_ENCRYPTION}"
+      MAIL_FROM: "${MAIL_FROM}"
       MAIL_FROM_ADDRESS: "${MAIL_FROM}"
       RABBITMQ_HOST: "${RABBITMQ_HOST}"
       RABBITMQ_PORT: "${RABBITMQ_PORT}"
@@ -146,6 +152,9 @@ components:
       RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
       KEYCLOAK_USER: "${KEYCLOAK_ADMIN_USER}"
       KEYCLOAK_PASSWORD: "${KC_ADMIN_PASSWORD}"
+      # Autenticacion del SMTP para los avisos de alarma por correo.
+      MAIL_USERNAME: "${MAIL_USERNAME}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD}"
       AWS_S3_ACCESS_ID: "${S3_ACCESS_KEY}"
       AWS_S3_SECRET_KEY: "${S3_SECRET_KEY}"
       AWS_S3_IMAGES_ACCESS_ID: "${S3_ACCESS_KEY}"
@@ -177,7 +186,13 @@ components:
       TS_DB_HOST: "${PG_HOST}"
       TS_DB_PORT: "${PG_PORT}"
       KEYCLOAK_URL: http://keycloak:8080
+      # Los consumidores leen MAIL_FROM (no MAIL_FROM_ADDRESS, que es el nombre de Laravel) y
+      # no envian nada sin MAIL_ENABLED=true.
+      MAIL_ENABLED: "${MAIL_ENABLED}"
       MAIL_HOST: "${MAIL_HOST}"
+      MAIL_PORT: "${MAIL_PORT}"
+      MAIL_ENCRYPTION: "${MAIL_ENCRYPTION}"
+      MAIL_FROM: "${MAIL_FROM}"
       MAIL_FROM_ADDRESS: "${MAIL_FROM}"
       RABBITMQ_HOST: "${RABBITMQ_HOST}"
       RABBITMQ_PORT: "${RABBITMQ_PORT}"
@@ -199,6 +214,9 @@ components:
       RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
       KEYCLOAK_USER: "${KEYCLOAK_ADMIN_USER}"
       KEYCLOAK_PASSWORD: "${KC_ADMIN_PASSWORD}"
+      # Autenticacion del SMTP para los avisos de alarma por correo.
+      MAIL_USERNAME: "${MAIL_USERNAME}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD}"
       AWS_S3_ACCESS_ID: "${S3_ACCESS_KEY}"
       AWS_S3_SECRET_KEY: "${S3_SECRET_KEY}"
       AWS_S3_IMAGES_ACCESS_ID: "${S3_ACCESS_KEY}"
@@ -302,6 +320,8 @@ components:
       KC_MASTER_REALM: master
       KC_ADMIN_USER: "${KEYCLOAK_ADMIN_USER}"
       KC_ADMIN_PASSWORD: "${KC_ADMIN_PASSWORD}"
+      MAIL_USERNAME: "${MAIL_USERNAME}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD}"
       KC_IMPERSONATION_CLIENT_SECRET: "${KC_IMPERSONATION_CLIENT_SECRET}"
       KC_IMPERSONATION_USERNAME: "${KC_IMPERSONATION_USERNAME}"
       KC_IMPERSONATION_PASSWORD: "${KC_IMPERSONATION_PASSWORD}"
