@@ -3,12 +3,13 @@
 <#assign brandIndigo = (properties.brandIndigo!'')?starts_with('#')?then(properties.brandIndigo, '#150D5F')>
 
 <#-- Image the parallax moves, from KC_BRAND_LOGIN_IMAGE: URL, absolute path or file name in img/.
-     Order: organization (dynamicLogo.js) > KC_BRAND_LOGIN_IMAGE > the bundled logo. -->
+     Order: organization (dynamicLogo.js) > KC_BRAND_LOGIN_IMAGE > the bundled image, which is the
+     Gijón logo over the funding strip (EU NextGenerationEU, Government of Spain, PRTR, town hall). -->
 <#assign brandLoginImageRaw = (properties.brandLoginImage!'')?trim>
 <#-- Unsubstituted placeholder (no bootstrap) counts as unset. -->
 <#if brandLoginImageRaw?starts_with('__')><#assign brandLoginImageRaw = ''></#if>
 <#if !brandLoginImageRaw?has_content>
-    <#assign brandLoginImageUrl = url.resourcesPath + '/img/logo.png'>
+    <#assign brandLoginImageUrl = url.resourcesPath + '/img/login-gijon.png'>
 <#elseif brandLoginImageRaw?starts_with('http') || brandLoginImageRaw?starts_with('/')>
     <#assign brandLoginImageUrl = brandLoginImageRaw>
 <#else>

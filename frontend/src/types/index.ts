@@ -77,7 +77,7 @@ export interface CurrentUser {
   name?: string
   email?: string
   preferences: UserPreferences
-  organization?: { id: number; name: string }
+  organization?: { id: number; name: string; admin?: { id: number } }
 }
 
 export type Aggregation = 'mean' | 'max' | 'min' | 'sum' | 'count'

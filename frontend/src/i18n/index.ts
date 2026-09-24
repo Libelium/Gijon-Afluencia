@@ -6,6 +6,9 @@ import alarms from '@/features/alarms/i18n'
 import preferences from '@/features/preferences/i18n'
 import customization from '@/features/customization/i18n'
 import accessibility from '@/features/accessibility/i18n'
+import users from '@/features/users/i18n'
+import apiDocs from '@/features/api-docs/i18n'
+import help from '@/features/help/i18n'
 
 /**
  * Cada feature aporta su fragmento y el nucleo los fusiona, de modo que ningun modulo
@@ -20,6 +23,9 @@ const messages: Record<string, string> = {
   ...preferences,
   ...customization,
   ...accessibility,
+  ...users,
+  ...apiDocs,
+  ...help,
 }
 
 export function t(key: string, params?: Record<string, string | number>): string {

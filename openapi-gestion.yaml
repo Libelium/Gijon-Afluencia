@@ -41,6 +41,7 @@ tags:
 - name: Preferencias
 - name: Series temporales
 - name: Último dato
+- name: Usuarios de la organización
 paths:
   /V1/alarms:
     post:
@@ -2060,6 +2061,191 @@ paths:
           description: Sin permiso
         '422':
           description: Datos inválidos
+  /V1/organizations/{id}/users:
+    get:
+      tags:
+      - Usuarios de la organización
+      summary: Listar los usuarios de la organización
+      description: Usuarios no eliminados, con su estado, rol, verificación en dos pasos y última
+        actividad. Solo para la administración de la organización o de la plataforma.
+      operationId: OrganizationUser_index_get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Organización
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizationUser'
+        '401':
+          description: No autenticado
+        '403':
+          description: Solo la administración de la organización
+    post:
+      tags:
+      - Usuarios de la organización
+      summary: Crear un usuario
+      description: Da de alta la cuenta en Keycloak con una contraseña aleatoria y envía el correo
+        para que la persona elija la suya.
+      operationId: OrganizationUser_store_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Organización
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              - email
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                email:
+                  type: string
+                  format: email
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/OrganizationUser'
+                  invitationSent:
+                    type: boolean
+        '401':
+          description: No autenticado
+        '403':
+          description: Solo la administración de la organización
+        '409':
+          description: Ya existe un usuario con ese correo
+        '502':
+          description: Keycloak no ha aceptado el alta
+  /V1/organizations/{id}/users/{userId}/enabled:
+    put:
+      tags:
+      - Usuarios de la organización
+      summary: Activar o desactivar un usuario
+      description: Se aplica a la vez en Keycloak y en la plataforma. Nadie puede desactivarse a sí mismo.
+      operationId: OrganizationUser_setEnabled_put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Organización
+        schema:
+          type: integer
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - enabled
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationUser'
+        '401':
+          description: No autenticado
+        '403':
+          description: Solo la administración de la organización
+        '404':
+          description: El usuario no pertenece a la organización
+        '422':
+          description: Intento de desactivar la propia cuenta
+        '502':
+          description: Keycloak no ha aplicado el cambio
+  /V1/organizations/{id}/users/{userId}/password-email:
+    post:
+      tags:
+      - Usuarios de la organización
+      summary: Enviar el correo para fijar la contraseña
+      operationId: OrganizationUser_sendPasswordEmail_post
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Organización
+        schema:
+          type: integer
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Enviado
+        '401':
+          description: No autenticado
+        '403':
+          description: Solo la administración de la organización
+        '404':
+          description: El usuario no pertenece a la organización
+        '502':
+          description: No se ha podido enviar
+  /V1/organizations/{id}/users/{userId}:
+    delete:
+      tags:
+      - Usuarios de la organización
+      summary: Eliminar un usuario
+      description: Elimina sus recursos propios y la cuenta de Keycloak. No se puede eliminar la
+        propia cuenta ni la de la administración de la organización.
+      operationId: OrganizationUser_destroy_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Organización
+        schema:
+          type: integer
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Solo la administración de la organización
+        '404':
+          description: El usuario no pertenece a la organización
+        '422':
+          description: Intento de eliminar la propia cuenta o la de la administración
   /V1/organizations/{id}/preferences:
     get:
       tags:
@@ -3144,3 +3330,38 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT emitido por Keycloak (flujo de código con PKCE). Se obtiene y se renueva contra el proveedor de identidad.
+  schemas:
+    OrganizationUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        enabled:
+          type: boolean
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - blocked
+        isOrganizationAdmin:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: string
+        mfa:
+          type: boolean
+          description: Verificación en dos pasos por correo activa
+        lastActivity:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true

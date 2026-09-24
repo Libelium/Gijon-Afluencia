@@ -29,9 +29,19 @@ const sections = [
       { to: '/alarmas', icon: 'mdi-bell-outline', label: 'app.nav.alarms' },
     ],
   },
+  {
+    label: 'app.nav.section.resources',
+    items: [
+      { to: '/api', icon: 'mdi-api', label: 'app.nav.api' },
+      { to: '/ayuda', icon: 'mdi-help-circle-outline', label: 'app.nav.help' },
+    ],
+  },
 ]
 
 const rail = computed(() => !mobile.value && ui.rail)
+const isOrganizationAdmin = computed(
+  () => !!session.user && session.user.organization?.admin?.id === session.user.id,
+)
 const pageTitle = computed(() => (route.meta.title as string | undefined) ?? '')
 
 // En pantalla estrecha el menu es temporal y taparia el contenido: arranca cerrado
@@ -116,6 +126,14 @@ function skipToContent(event: Event) {
             to="/personalizacion"
             prepend-icon="mdi-palette-outline"
             :title="t('app.nav.customization')"
+            color="primary"
+          />
+          <!-- Solo para quien administra la organizacion: el servidor rechaza al resto. -->
+          <VListItem
+            v-if="isOrganizationAdmin"
+            to="/usuarios"
+            prepend-icon="mdi-account-group-outline"
+            :title="t('app.nav.users')"
             color="primary"
           />
         </VList>

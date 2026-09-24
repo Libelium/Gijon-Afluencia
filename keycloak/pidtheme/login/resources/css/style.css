@@ -105,6 +105,9 @@ body {
    -------------------------------------------------- */
 
 .kc-parallax-layer {
+    /* Decorative: it covers the whole page, and without this it swallows the clicks meant for
+       the buttons of the pages that have no floating card (the logout confirmation). */
+    pointer-events: none;
     position: absolute;
     top: 0;
     left: 0;
@@ -122,20 +125,33 @@ body {
     background-image: var(--kc-background-gradient);
 }
 
+/* Wide enough for a logo plus the funding strip, whose marks must stay legible and unaltered
+   (no transparency over the gradient). It shrinks with the window so it never reaches the card. */
 .login-logo {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
-    opacity: 0.8;
+    width: clamp(200px, calc(100vw - 1000px), 560px);
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 5;
+}
+
+.login-logo > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
 .centered-image {
     max-width: 100%;
     max-height: 100%;
+    object-fit: contain;
 }
 
 /* --------------------------------------------------

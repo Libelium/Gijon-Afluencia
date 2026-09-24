@@ -15,6 +15,7 @@ use App\Http\V1\Controllers\HelpController;
 use App\Http\V1\Controllers\InactivityAlarmConditionController;
 use App\Http\V1\Controllers\LogsController;
 use App\Http\V1\Controllers\OrganizationController;
+use App\Http\V1\Controllers\OrganizationUserController;
 use App\Http\V1\Controllers\PanelController;
 use App\Http\V1\Controllers\PermissionController;
 use App\Http\V1\Controllers\PhoneVerificationController;
@@ -126,6 +127,15 @@ Route::prefix("V1")->group(function () {
                 Route::get('/{preferenceName}', [OrganizationController::class, 'getPreference']);
                 Route::put('/{preferenceName}', [OrganizationController::class, 'updatePreference']);
                 Route::delete('/{preferenceName}', [OrganizationController::class, 'deletePreference']);
+            });
+
+            // Users of the organization, managed by its administrator.
+            Route::prefix('{id}/users')->group(function () {
+                Route::get('', [OrganizationUserController::class, 'index']);
+                Route::post('', [OrganizationUserController::class, 'store']);
+                Route::put('/{userId}/enabled', [OrganizationUserController::class, 'setEnabled']);
+                Route::post('/{userId}/password-email', [OrganizationUserController::class, 'sendPasswordEmail']);
+                Route::delete('/{userId}', [OrganizationUserController::class, 'destroy']);
             });
         });
 
