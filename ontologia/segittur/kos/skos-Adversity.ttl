@@ -1,0 +1,241 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-adversity: <https://ontologia.segittur.es/turismo/kos/adversity/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:AdversityType a skos:ConceptScheme ; 
+    dct:issued "2024-05-24"^^xsd:date ;
+    dct:modified "2025-07-22"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology. It is based on the practical guide for the response on future adversities for tourist destiations by SEGITTUR"@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR. Está basado en la guía práctica de respuesta ante futuros adversos para destinos de SEGITTUR."@es ;
+    rdfs:label "Adversity"@en ;
+    rdfs:label "Adversidad"@es ;
+    dct:title "Concept scheme grouping adversities"@en ;
+    dct:title "Esquema de conceptos agrupando adversidades"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-adversity:PublicHealthAlerts a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Public Health Alerts"@en ;
+  skos:prefLabel "Alertas de salud pública"@es .
+
+estur-adversity:Infectious a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Infectious"@en ;
+  skos:prefLabel "Infecciosa"@es .
+
+estur-adversity:Environmental a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Environmental"@en ;
+  skos:prefLabel "Ambiental"@es .
+
+estur-adversity:Food a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Food"@en ;
+  skos:prefLabel "Alimentaria"@es .
+
+estur-adversity:Toxic a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Toxic"@en ;
+  skos:prefLabel "Tóxica"@es .
+
+estur-adversity:Cyberattacks a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Cyberattacks"@en ;
+  skos:prefLabel "Ciberataques"@es .
+
+estur-adversity:Passwords a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Passwords"@en ;
+  skos:prefLabel "Contraseñas"@es .
+
+estur-adversity:SocialEngineering a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Social Engineering"@en ;
+  skos:prefLabel "Ingeniería social"@es .
+
+estur-adversity:Connections a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Connections"@en ;
+  skos:prefLabel "Conexiones"@es .
+
+estur-adversity:Malware a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Cyberattacks;
+  skos:prefLabel "Malware"@en ;
+  skos:prefLabel "Malware"@es .
+
+estur-adversity:ArmedConflicts a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:prefLabel "Armed Conflicts"@en ;
+  skos:prefLabel "Conflictos bélicos"@es .
+
+estur-adversity:National a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:ArmedConflicts;
+  skos:prefLabel "National"@en ;
+  skos:prefLabel "Nacional"@es .
+
+estur-adversity:International a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:ArmedConflicts;
+  skos:prefLabel "International"@en ;
+  skos:prefLabel "Internacional"@es .
+
+estur-adversity:Terrorism a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:prefLabel "Terrorism"@en ;
+  skos:prefLabel "Terrorismo"@es .
+
+estur-adversity:BiologicalOrChemical a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Terrorism;
+  skos:prefLabel "Biological or Chemical"@en ;
+  skos:prefLabel "Biológico"@es .
+
+estur-adversity:ExplosiveWeapon a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:Terrorism;
+  skos:prefLabel "Explosive Weapon"@en ;
+  skos:prefLabel "Armas o explosivos"@es .
+
+estur-adversity:GeologicalPhenomena a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:prefLabel "Geological Phenomena"@en ;
+  skos:prefLabel "Fenómeno geológico"@es .
+
+estur-adversity:Earthquakes a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:GeologicalPhenomena;
+  skos:prefLabel "Earthquakes"@en ;
+  skos:prefLabel "Movimiento Sísmico"@es .
+
+estur-adversity:Tsunamis a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:GeologicalPhenomena;
+  skos:prefLabel "Tsunamis"@en ;
+  skos:prefLabel "Tsunamis"@es .
+
+estur-adversity:Volcanoes a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:GeologicalPhenomena;
+  skos:prefLabel "Volcanoes"@en ;
+  skos:prefLabel "Erupción volcánica"@es .
+
+estur-adversity:Landslides a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:GeologicalPhenomena;
+  skos:prefLabel "Landslides"@en ;
+  skos:prefLabel "Desplazamiento de tierra"@es .
+
+estur-adversity:DigitalSystemsFailures a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:prefLabel "Digital Systems Failures"@en ;
+  skos:prefLabel "Fallos en sistemas digitales"@es .
+
+estur-adversity:DesignFailures a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:DigitalSystemsFailures;
+  skos:prefLabel "Design Failures"@en ;
+  skos:prefLabel "Fallo de diseño"@es .
+
+estur-adversity:ImplementationFailures a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:DigitalSystemsFailures;
+  skos:prefLabel "Implementation Failures"@en ;
+  skos:prefLabel "Fallo de implementación"@es .
+
+estur-adversity:ComponentDefects a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:DigitalSystemsFailures;
+  skos:prefLabel "Component Defects"@en ;
+  skos:prefLabel "Defectos de componentes"@es .
+
+estur-adversity:ExternalDisturbances a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:DigitalSystemsFailures;
+  skos:prefLabel "External Disturbances"@en ;
+  skos:prefLabel "Perturbaciones exteriores"@es .
+
+estur-adversity:AdverseWeatherConditions a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:prefLabel "Adverse Weather Conditions"@en ;
+  skos:prefLabel "Fenómenos meteorológicos adversos"@es .
+
+estur-adversity:Rainfall a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Rainfall"@en ;
+  skos:prefLabel "Lluvias"@es .
+
+estur-adversity:SnowFall a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Snowfall"@en ;
+  skos:prefLabel "Nevadas"@es .
+
+estur-adversity:Storms a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Storms"@en ;
+  skos:prefLabel "Tormentas"@es .
+
+estur-adversity:ExtremeTemperature a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Extreme Temperature"@en ;
+  skos:prefLabel "Temperaturas extremas"@es .
+
+estur-adversity:WindsAndWaves a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Winds and Waves"@en ;
+  skos:prefLabel "Vientos y oleajes"@es .
+
+estur-adversity:Avalanches a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Avalanches"@en ;
+  skos:prefLabel "Aludes"@es .
+
+estur-adversity:WeatherTsunamis a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Weather Tsunamis"@en ;
+  skos:prefLabel "Meteotsunami"@es .
+
+estur-adversity:ForestFires a skos:Concept;
+  skos:inScheme estur-kos:AdversityType;
+  skos:broader estur-adversity:AdverseWeatherConditions;
+  skos:prefLabel "Forest Fires"@en ;
+  skos:prefLabel "Incendios forestales"@es .

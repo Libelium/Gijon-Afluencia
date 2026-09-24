@@ -1,0 +1,139 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-touristtype: <https://ontologia.segittur.es/turismo/kos/touristype/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:TouristType a skos:ConceptScheme ; 
+    dct:issued "2025-08-18"^^xsd:date ;
+    dct:modified "2025-08-18"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Tourist type"@en ;
+    rdfs:label "Tipo de turista"@es ;
+    dct:title "Concept scheme grouping tourist types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de turistas"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-touristtype:ActiveOrAdventureTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Active or adventure tourism"@en ;
+  skos:prefLabel "Turismo activo o de aventura"@es .
+
+estur-touristtype:BlueTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Blue tourism"@en ;
+  skos:prefLabel "Turismo azul"@es .
+
+estur-touristtype:ShoppingTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Shopping tourism"@en ;
+  skos:prefLabel "Turismo de compras"@es .
+
+estur-touristtype:CruiseTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Cruise tourism"@en ;
+  skos:prefLabel "Turismo de cruceros"@es .
+
+estur-touristtype:CulturalAndHeritageTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Cultural and heritage tourism"@en ;
+  skos:prefLabel "Turismo cultural y patrimonial"@es .
+
+estur-touristtype:SportsTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Sports tourism"@en ;
+  skos:prefLabel "Turismo deportivo"@es .
+
+estur-touristtype:EquestrianTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Equestrian tourism"@en ;
+  skos:prefLabel "Turismo ecuestre"@es .
+
+estur-touristtype:EducationalTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Educational tourism"@en ;
+  skos:prefLabel "Turismo educativo"@es .
+
+estur-touristtype:EnotourismOrWineTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Enotourism or wine tourism"@en ;
+  skos:prefLabel "Enoturismo o turismo enológico"@es .
+
+estur-touristtype:PartyTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Party tourism"@en ;
+  skos:prefLabel "Turismo de fiesta"@es .
+
+estur-touristtype:GastronomicTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Gastronomic tourism"@en ;
+  skos:prefLabel "Turismo gastronómico"@es .
+
+estur-touristtype:LanguageTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Language tourism"@en ;
+  skos:prefLabel "Turismo idiomático"@es .
+
+estur-touristtype:PetTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Pet tourism"@en ;
+  skos:prefLabel "Turismo de mascotas"@es .
+
+estur-touristtype:NatureTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Nature tourism"@en ;
+  skos:prefLabel "Turismo de naturaleza"@es .
+
+estur-touristtype:BusinessOrMICETourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Business or MICE tourism"@en ;
+  skos:prefLabel "Turismo de negocio o MICE"@es .
+
+estur-touristtype:ReligiousTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Religious tourism"@en ;
+  skos:prefLabel "Turismo religioso"@es .
+
+estur-touristtype:RuralTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Rural tourism"@en ;
+  skos:prefLabel "Turismo rural"@es .
+
+estur-touristtype:HealthTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Health tourism"@en ;
+  skos:prefLabel "Turismo de salud"@es .
+
+estur-touristtype:SunAndBeachTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Sun and beach tourism"@en ;
+  skos:prefLabel "Turismo de sol y playa"@es .
+
+estur-touristtype:ThermalTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Thermal tourism"@en ;
+  skos:prefLabel "Turismo termal"@es .
+
+estur-touristtype:UrbanTourism a skos:Concept;
+  skos:inScheme estur-kos:TouristType;
+  skos:prefLabel "Urban tourism"@en ;
+  skos:prefLabel "Turismo urbano"@es .

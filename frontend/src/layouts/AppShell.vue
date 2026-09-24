@@ -33,6 +33,7 @@ const sections = [
     label: 'app.nav.section.resources',
     items: [
       { to: '/api', icon: 'mdi-api', label: 'app.nav.api' },
+      { to: '/ontologia', icon: 'mdi-graph-outline', label: 'app.nav.ontology' },
       { to: '/ayuda', icon: 'mdi-help-circle-outline', label: 'app.nav.help' },
     ],
   },

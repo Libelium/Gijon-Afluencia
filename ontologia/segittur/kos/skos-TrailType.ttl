@@ -1,0 +1,89 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-trailtype: <https://ontologia.segittur.es/turismo/kos/trailtype/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:TrailType a skos:ConceptScheme ; 
+    dct:issued "2024-07-23"^^xsd:date ;
+    dct:modified "2024-07-23"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Trail type"@en ;
+    rdfs:label "Tipo de camino"@es ;
+    dct:title "Concept scheme grouping trail types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de camino"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-trailtype:CircularTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Circular trail"@en ;
+  skos:prefLabel "Camino circular"@es .
+
+estur-trailtype:LinearTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Linear trail"@en ;
+  skos:prefLabel "Camino lineal"@es .
+
+estur-trailtype:BlueTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Blue trail"@en ;
+  skos:prefLabel "Camino azul"@es .
+
+estur-trailtype:CoastalTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Coastal trail"@en ;
+  skos:prefLabel "Camino costero"@es .
+
+estur-trailtype:CulturalTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Cultural trail"@en ;
+  skos:prefLabel "Camino cultural"@es .
+
+estur-trailtype:WaterwayTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Waterway trail"@en ;
+  skos:prefLabel "Camino fluvial"@es .
+
+estur-trailtype:ScenicTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Scenic trail"@en ;
+  skos:prefLabel "Camino panorámico"@es .
+
+estur-trailtype:ThematicTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Thematic trail"@en ;
+  skos:prefLabel "Camino temático"@es .
+
+estur-trailtype:UrbanTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Urban trail"@en ;
+  skos:prefLabel "Camino urbano"@es .
+
+estur-trailtype:RuralTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Rural trail"@en ;
+  skos:prefLabel "Camino rural"@es .
+
+estur-trailtype:MountainousTrail a skos:Concept;
+  skos:inScheme estur-kos:TrailType;
+  skos:prefLabel "Mountainous trail"@en ;
+  skos:prefLabel "Camino montañoso"@es .

@@ -1,0 +1,69 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-labeltype: <https://ontologia.segittur.es/turismo/kos/labeltype/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:LabelType a skos:ConceptScheme ; 
+    dct:issued "2025-07-16"^^xsd:date ;
+    dct:modified "2025-07-16"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Label type"@en ;
+    rdfs:label "Tipo de distintivo"@es ;
+    dct:title "Concept scheme grouping label types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de distintivos"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-labeltype:LGTBIFriendly a skos:Concept;
+  skos:inScheme estur-kos:LabelType;
+  skos:prefLabel "Friendly with the LGTBI+ community"@en ;
+  skos:prefLabel "Amigable con la comunidad LGTBI+"@es .
+
+estur-labeltype:PetFriendly a skos:Concept;
+  skos:inScheme estur-kos:LabelType;
+  skos:prefLabel "Pet friendly"@en ;
+  skos:prefLabel "Amigable con las mascotas"@es .
+
+estur-labeltype:TaxFree a skos:Concept;
+  skos:inScheme estur-kos:LabelType;
+  skos:note "This concept is only applicable to shops"@en;
+  skos:note "Este concepto es sólo aplicable a comercios"@es;
+  skos:prefLabel "Tax Free"@en ;
+  skos:prefLabel "Libre de impuestos"@es .
+
+estur-labeltype:KidsFriendly a skos:Concept;
+  skos:inScheme estur-kos:LabelType;
+  skos:prefLabel "Kids Friendly"@en ;
+  skos:prefLabel "Apto para niños"@es .
+
+estur-labeltype:AdultsOnly a skos:Concept;
+  skos:inScheme estur-kos:LabelType;
+  skos:prefLabel "Adults Only"@en ;
+  skos:prefLabel "Sólo para adultos"@es .
+
+estur-labeltype:EnvironmentallyFriendly a skos:Concept;
+  skos:inScheme estur-kos:LabelType;
+  skos:prefLabel "Environmentally Friendly"@en ;
+  skos:prefLabel "Respetuoso con el medio ambiente"@es .
+
+
+

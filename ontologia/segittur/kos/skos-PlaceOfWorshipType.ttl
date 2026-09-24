@@ -1,0 +1,125 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-placeofworshiptype: <https://ontologia.segittur.es/turismo/kos/placeofworshiptype/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:PlaceOfWorshipType a skos:ConceptScheme ; 
+    dct:issued "2024-10-29"^^xsd:date ;
+    dct:modified "2024-10-29"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Place of worship type"@en ;
+    rdfs:label "Tipo de lugar de culto"@es ;
+    dct:title "Concept scheme grouping place of worship types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de lugares de culto"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-placeofworshiptype:Basilical a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Basilical"@en ;
+  skos:prefLabel "Basílica"@es .
+
+estur-placeofworshiptype:BellTower a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Bell Tower"@en ;
+  skos:prefLabel "Campanario"@es .
+
+estur-placeofworshiptype:Cathedral a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Cathedral"@en ;
+  skos:prefLabel "Catedral"@es .
+
+estur-placeofworshiptype:Chapel a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Chapel"@en ;
+  skos:prefLabel "Capilla"@es .
+
+estur-placeofworshiptype:CharterHouse a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Charterhouse"@en ;
+  skos:prefLabel "Charterhouse"@es .
+
+estur-placeofworshiptype:Church a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Church"@en ;
+  skos:prefLabel "Iglesia"@es .
+
+estur-placeofworshiptype:Convent a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Convent"@en ;
+  skos:prefLabel "Convento"@es .
+
+estur-placeofworshiptype:Minaret a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Minaret"@en ;
+  skos:prefLabel "Minarete"@es .
+
+estur-placeofworshiptype:Monastery a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Monastery"@en ;
+  skos:prefLabel "Monasterio"@es .
+
+estur-placeofworshiptype:Mosque a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Mosque"@en ;
+  skos:prefLabel "Mezquita"@es .
+
+estur-placeofworshiptype:Sanctuary a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Sanctuary"@en ;
+  skos:prefLabel "Santuario"@es .
+
+estur-placeofworshiptype:Synagogue a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Synagogue"@en ;
+  skos:prefLabel "Sinagoga"@es .
+
+estur-placeofworshiptype:Temple a skos:Concept;
+  skos:inScheme estur-kos:PlaceOfWorshipType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Temple"@en ;
+  skos:prefLabel "Templo"@es .

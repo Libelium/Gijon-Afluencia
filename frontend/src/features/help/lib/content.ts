@@ -129,6 +129,16 @@ export const SECTIONS: HelpSection[] = [
     links: [{ label: 'Ver la API', to: '/api' }],
   },
   {
+    id: 'ontologia',
+    title: 'Ontología',
+    icon: 'mdi-graph-outline',
+    paragraphs: [
+      'Los elementos de la plataforma se describen con la ontología de referencia de turismo de SEGITTUR, la que usan las Plataformas Inteligentes de Destino. Cada punto de interés turístico (PIT) corresponde a una clase de la ontología —plaza, iglesia, ruta, recurso histórico— y su aforo a la propiedad «aforo» (capacity); Gijón es el destino turístico al que pertenecen.',
+      'La pantalla Ontología muestra esa correspondencia, permite recorrer todas las clases con sus propiedades y consultar los tesauros de valores. La ontología no modela sensores: las medidas siguen los Smart Data Models de FIWARE y se enlazan con cada PIT por su zona.',
+    ],
+    links: [{ label: 'Ver la ontología', to: '/ontologia' }],
+  },
+  {
     id: 'accesibilidad',
     title: 'Accesibilidad',
     icon: 'mdi-human',

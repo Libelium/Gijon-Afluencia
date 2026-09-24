@@ -1,0 +1,64 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-routeservice: <https://ontologia.segittur.es/turismo/kos/routeservice/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:RouteServiceType a skos:ConceptScheme ; 
+    dct:issued "2024-07-23"^^xsd:date ;
+    dct:modified "2024-07-23"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Route Service Type"@en ;
+    rdfs:label "Tipo de servicio asociado a una ruta"@es ;
+    dct:title "Concept scheme grouping route service types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de servicio asociado a una ruta"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-routeservice:DisabledParking a skos:Concept;
+  skos:inScheme estur-kos:RouteServiceType;
+  skos:prefLabel "Disabled Parking"@en ;
+  skos:prefLabel "Aparcamiento para discapacitados"@es .
+
+estur-routeservice:Signaling a skos:Concept;
+  skos:inScheme estur-kos:RouteServiceType;
+  skos:prefLabel "Signaling"@en ;
+  skos:prefLabel "Señalización"@es .
+
+estur-routeservice:PublicRestroom a skos:Concept;
+  skos:inScheme estur-kos:RouteServiceType;
+  skos:prefLabel "Public Restroom"@en ;
+  skos:prefLabel "Baño público"@es .
+
+estur-routeservice:Lighting a skos:Concept;
+  skos:inScheme estur-kos:RouteServiceType;
+  skos:prefLabel "Ligthing"@en ;
+  skos:prefLabel "Alumbrado"@es .
+
+estur-routeservice:AdaptedPublicRestrooms a skos:Concept;
+  skos:inScheme estur-kos:RouteServiceType;
+  skos:prefLabel "Adapted Public Restrooms"@en ;
+  skos:prefLabel "Baños públicos adaptados"@es .
+
+estur-routeservice:AccessibleSignage a skos:Concept;
+  skos:inScheme estur-kos:RouteServiceType;
+  skos:prefLabel "Accessible Signage"@en ;
+  skos:prefLabel "Señalética accesible"@es .

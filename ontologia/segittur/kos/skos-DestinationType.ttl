@@ -1,0 +1,83 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-destinationtype: <https://ontologia.segittur.es/turismo/kos/destinationtype/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:DestinationType a skos:ConceptScheme ; 
+    dct:issued "2024-10-29"^^xsd:date ;
+    dct:modified "2025-07-16"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Destination type"@en ;
+    rdfs:label "Tipo de destino"@es ;
+    dct:title "Concept scheme grouping destination types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de destinos"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-destinationtype:CoastalDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Coastal destination"@en ;
+  skos:prefLabel "Destino de costa"@es .
+
+estur-destinationtype:enotourismDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Enotourism destination"@en ;
+  skos:prefLabel "Destino enoturístico"@es .
+
+estur-destinationtype:InlandDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Inland destination"@en ;
+  skos:prefLabel "Destino de interior"@es .
+
+estur-destinationtype:IslandDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Island destination"@en ;
+  skos:prefLabel "Destino insular"@es .
+
+estur-destinationtype:MountainDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Mountain destination"@en ;
+  skos:prefLabel "Destino de montaña"@es .
+
+estur-destinationtype:RuralDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Rural destination"@en ;
+  skos:prefLabel "Destino rural"@es .
+
+estur-destinationtype:UrbanDestination a skos:Concept;
+  skos:inScheme estur-kos:DestinationType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Urban destination"@en ;
+  skos:prefLabel "Destino urbano"@es .

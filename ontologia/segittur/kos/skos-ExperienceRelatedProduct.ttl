@@ -1,0 +1,134 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-experiencerelatedproduct: <https://ontologia.segittur.es/turismo/kos/experiencerelatedproduct/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:ExperienceRelatedProductType a skos:ConceptScheme ; 
+    dct:issued "2025-08-18"^^xsd:date ;
+    dct:modified "2025-08-18"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Experience related product"@en ;
+    rdfs:label "Producto relacionado con una experiencia agriturística"@es ;
+    dct:title "Concept scheme grouping agritourism experience related products"@en ;
+    dct:title "Esquema de conceptos agrupando productos relacionados con experiencias agroturísticas"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-experiencerelatedproduct:Oil a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Oil"@en ;
+  skos:prefLabel "Aceite"@es .
+
+estur-experiencerelatedproduct:Almond a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Almond"@en ;
+  skos:prefLabel "Almendra"@es .
+
+estur-experiencerelatedproduct:Handicraft a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Handicraft"@en ;
+  skos:prefLabel "Artesanía"@es .
+
+estur-experiencerelatedproduct:Meat a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Meat"@en ;
+  skos:prefLabel "Cárnico"@es .
+
+estur-experiencerelatedproduct:Beer a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Beer"@en ;
+  skos:prefLabel "Cerveza"@es .
+
+estur-experiencerelatedproduct:Preserve a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Preserve"@en ;
+  skos:prefLabel "Conserva"@es .
+
+estur-experiencerelatedproduct:Sweet a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Sweet"@en ;
+  skos:prefLabel "Dulce"@es .
+
+estur-experiencerelatedproduct:Fruit a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Fruit"@en ;
+  skos:prefLabel "Fruta"@es .
+
+estur-experiencerelatedproduct:Nut a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Nut"@en ;
+  skos:prefLabel "Fruto seco"@es .
+
+estur-experiencerelatedproduct:Vegetable a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Vegetable"@en ;
+  skos:prefLabel "Hortaliza"@es .
+
+estur-experiencerelatedproduct:Ham a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Ham"@en ;
+  skos:prefLabel "Jamón"@es .
+
+estur-experiencerelatedproduct:Seafood a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Seafood"@en ;
+  skos:prefLabel "Marisco"@es .
+
+estur-experiencerelatedproduct:Honey a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Honey"@en ;
+  skos:prefLabel "Miel"@es .
+
+estur-experiencerelatedproduct:Bread a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Bread"@en ;
+  skos:prefLabel "Pan"@es .
+
+estur-experiencerelatedproduct:Fish a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Fish"@en ;
+  skos:prefLabel "Pescado"@es .
+
+estur-experiencerelatedproduct:Cheese a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Cheese"@en ;
+  skos:prefLabel "Queso"@es .
+
+estur-experiencerelatedproduct:Mushroom a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Mushroom"@en ;
+  skos:prefLabel "Seta"@es .
+
+estur-experiencerelatedproduct:Cider a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Cider"@en ;
+  skos:prefLabel "Sidra"@es .
+
+estur-experiencerelatedproduct:Truffle a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Truffle"@en ;
+  skos:prefLabel "Trufa"@es .
+
+estur-experiencerelatedproduct:Wine a skos:Concept;
+  skos:inScheme estur-kos:ExperienceRelatedProductType;
+  skos:prefLabel "Wine"@en ;
+  skos:prefLabel "Vino"@es .

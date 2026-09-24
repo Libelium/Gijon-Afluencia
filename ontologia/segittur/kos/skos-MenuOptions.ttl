@@ -1,0 +1,90 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-menuoptions: <https://ontologia.segittur.es/turismo/kos/menuoptions/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:MenuOptions a skos:ConceptScheme ; 
+    dct:issued "2024-10-29"^^xsd:date ;
+    dct:modified "2025-07-16"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Menu options"@en ;
+    rdfs:label "Opciones de la carta"@es ;
+    dct:title "Concept scheme grouping menu options"@en ;
+    dct:title "Esquema de conceptos agrupando opciones de la carta"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-menuoptions:Breakfast a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Breakfast"@en ;
+  skos:prefLabel "Desayuno"@es .
+
+estur-menuoptions:GlutenFreeOptions a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Gluten-free options"@en ;
+  skos:prefLabel "Opciones sin gluten"@es .
+
+estur-menuoptions:KidsMenu a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Kids menu"@en ;
+  skos:prefLabel "Menú infantil"@es .
+
+estur-menuoptions:LactoseFreeOptions a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Lactose-free options"@en ;
+  skos:prefLabel "Opciones sin lactosa"@es .
+
+estur-menuoptions:NutsFreeOptions a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Nuts-free options"@en ;
+  skos:prefLabel "Opciones sin frutos secos"@es .
+
+estur-menuoptions:VeganOptions a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Vegan options"@en ;
+  skos:prefLabel "Opciones veganas"@es .
+
+estur-menuoptions:VegetarianOptions a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Vegetarian options"@en ;
+  skos:prefLabel "Opciones vegetarianas"@es .
+
+estur-menuoptions:WineMenu a skos:Concept;
+  skos:inScheme estur-kos:MenuOptions;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Wine menu"@en ;
+  skos:prefLabel "Carta de vinos"@es .

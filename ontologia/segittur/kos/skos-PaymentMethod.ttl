@@ -1,0 +1,80 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-paymentmethod: <https://ontologia.segittur.es/turismo/kos/paymentmethod/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:PaymentMethod a skos:ConceptScheme ; 
+    dct:issued "2025-07-16"^^xsd:date ;
+    dct:modified "2025-07-16"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Payment method"@en ;
+    rdfs:label "Formas de pago"@es ;
+    dct:title "Concept scheme grouping payment methods"@en ;
+    dct:title "Esquema de conceptos agrupando formas de pago"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-paymentmethod:BankCard a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Bank Card"@en ;
+  skos:prefLabel "Tarjeta bancaria"@es .
+
+estur-paymentmethod:BankTransfer a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Bank Transfer"@en ;
+  skos:prefLabel "Transferencia bancaria"@es .
+
+estur-paymentmethod:Bizum a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Bizum"@en ;
+  skos:prefLabel "Bizum"@es .
+
+estur-paymentmethod:Cash a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Cash"@en ;
+  skos:prefLabel "Metálico"@es .
+
+estur-paymentmethod:CheckAndPromissoryNote a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Check and Promissory Note"@en ;
+  skos:prefLabel "Cheque"@es .
+
+estur-paymentmethod:Cryptocurrency a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Cryptocurrency"@en ;
+  skos:prefLabel "Criptomoneda"@es .
+
+estur-paymentmethod:DirectBill a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Direct Bill"@en ;
+  skos:prefLabel "Domiciliación bancaria"@es .
+
+estur-paymentmethod:NFC a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "NFC"@en ;
+  skos:prefLabel "NFC"@es .
+
+estur-paymentmethod:Paypal a skos:Concept;
+  skos:inScheme estur-kos:PaymentMethod;
+  skos:prefLabel "Paypal"@en ;
+  skos:prefLabel "Paypal"@es .
+

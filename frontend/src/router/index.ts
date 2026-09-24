@@ -13,6 +13,7 @@ import customizationRoutes from '@/features/customization/routes'
 import userRoutes from '@/features/users/routes'
 import apiDocsRoutes from '@/features/api-docs/routes'
 import helpRoutes from '@/features/help/routes'
+import ontologyRoutes from '@/features/ontology/routes'
 import accessibilityRoutes from '@/features/accessibility/routes'
 
 const routes: RouteRecordRaw[] = [
@@ -47,6 +48,7 @@ const routes: RouteRecordRaw[] = [
       ...userRoutes,
       ...apiDocsRoutes,
       ...helpRoutes,
+      ...ontologyRoutes,
       {
         path: '/sin-acceso',
         name: 'forbidden',

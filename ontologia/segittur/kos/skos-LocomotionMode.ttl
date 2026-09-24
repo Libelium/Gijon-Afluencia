@@ -1,0 +1,54 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-locomotionmode: <https://ontologia.segittur.es/turismo/kos/locomotionmode/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:LocomotionMode a skos:ConceptScheme ; 
+    dct:issued "2024-07-23"^^xsd:date ;
+    dct:modified "2025-08-18"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Locomotion mode"@en ;
+    rdfs:label "Modalidad de locomoción"@es ;
+    dct:title "Concept scheme grouping locomotion modes"@en ;
+    dct:title "Esquema de conceptos agrupando modalidades de locomoción"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-locomotionmode:OnFoot a skos:Concept;
+  skos:inScheme estur-kos:LocomotionMode;
+  skos:prefLabel "On foot"@en ;
+  skos:prefLabel "A pie"@es .
+
+estur-locomotionmode:ByBicycle a skos:Concept;
+  skos:inScheme estur-kos:LocomotionMode;
+  skos:prefLabel "By bicycle"@en ;
+  skos:prefLabel "En bicicleta"@es .
+
+estur-locomotionmode:OnHorseback a skos:Concept;
+  skos:inScheme estur-kos:LocomotionMode;
+  skos:prefLabel "On horseback"@en ;
+  skos:prefLabel "A caballo"@es .
+
+estur-locomotionmode:ByCar a skos:Concept;
+  skos:inScheme estur-kos:LocomotionMode;
+  skos:prefLabel "By car"@en ;
+  skos:prefLabel "En coche"@es .
