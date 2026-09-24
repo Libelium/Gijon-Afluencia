@@ -89,29 +89,4 @@ class UserController extends Controller
 
         return response()->json(['success' => true], 200);
     }
-
-    /**
-     * Keycloak user id. The local column starts as the seeder's 'pending' and goes stale if the
-     * user is recreated in the realm, so a value that is not a UUID is resolved by email and
-     * persisted.
-     */
-    private function resolveKeycloakUserId(?User $user): ?string
-    {
-        if (!$user) {
-            return null;
-        }
-
-        if ($this->isKeycloakUserId($user->keycloak_client_id)) {
-            return $user->keycloak_client_id;
-        }
-
-        $resolved = $this->findKeycloakUserIdByEmail($user->email);
-
-        if ($resolved) {
-            $user->keycloak_client_id = $resolved;
-            $user->save();
-        }
-
-        return $resolved;
-    }
 }
