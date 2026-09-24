@@ -29,7 +29,9 @@ export default createVuetify({
     VDataTableVirtual: { density: 'comfortable', hover: true, headerProps: { scope: 'col' } },
     VChip: { size: 'small', rounded: 'pill' },
     VToolbar: { color: 'transparent', density: 'comfortable' },
-    VAppBar: { flat: true, border: 'b' },
+    // Color propio: VAppBar hereda el `transparent` de VToolbar de arriba, y fija sobre el contenido
+    // dejaba verlo al desplazarse por debajo.
+    VAppBar: { flat: true, border: 'b', color: 'surface' },
     VNavigationDrawer: { border: 'e' },
     VList: { density: 'comfortable' },
     VListItem: { rounded: 'lg' },
