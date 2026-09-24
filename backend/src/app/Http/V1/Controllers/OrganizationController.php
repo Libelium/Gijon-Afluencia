@@ -112,7 +112,14 @@ class OrganizationController extends Controller
             "darkThemePrimaryColor",
             "lightThemeLightPrimaryColor",
             "themePrimaryColor",
+            "themeSecondaryColor",
+            "themeLightPrimaryColor",
             "darkThemeSecondaryColor",
+
+            // Footer with the funding logos. Public branding like the rest, and it is sanitised on
+            // save and again before rendering. Users that cannot read the organization fall back
+            // to this endpoint, so without it they got the app without its footer.
+            "themeCustomFooter",
         ];
 
         $preferences = $organization->preferences;
@@ -155,7 +162,14 @@ class OrganizationController extends Controller
             "darkThemePrimaryColor",
             "lightThemeLightPrimaryColor",
             "themePrimaryColor",
+            "themeSecondaryColor",
+            "themeLightPrimaryColor",
             "darkThemeSecondaryColor",
+
+            // Footer with the funding logos. Public branding like the rest, and it is sanitised on
+            // save and again before rendering. Users that cannot read the organization fall back
+            // to this endpoint, so without it they got the app without its footer.
+            "themeCustomFooter",
         ];
 
         if (!in_array($preferenceName, $allowedPreferences)) {

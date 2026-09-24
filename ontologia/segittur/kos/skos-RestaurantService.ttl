@@ -1,0 +1,251 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix estur-core: <https://ontologia.segittur.es/turismo/def/core#> .
+@prefix estur-kos: <https://ontologia.segittur.es/turismo/kos/> .
+
+@prefix estur-restaurantservice: <https://ontologia.segittur.es/turismo/kos/restaurantservice/> .
+
+#################################################################
+#
+#    Concept Scheme
+#
+#################################################################
+
+estur-kos:RestaurantServiceType a skos:ConceptScheme ; 
+    dct:issued "2024-05-24"^^xsd:date ;
+    dct:modified "2024-05-24"^^xsd:date ;
+    cc:license <https://creativecommons.org/licenses/by/4.0/> ;
+    rdfs:comment "This concept scheme belongs to the set of controlled SKOS-based thesauri used by the SEGITTUR tourism ontology."@en ;
+    rdfs:comment "Este esquema de conceptos pertenece al conjunto de tesauros SKOS usados por la ontología de turismo de SEGITTUR."@es ;
+    rdfs:label "Restaurant Service Type"@en ;
+    rdfs:label "Tipo de servicio de un restaurante"@es ;
+    dct:title "Concept scheme grouping restaurant service types"@en ;
+    dct:title "Esquema de conceptos agrupando tipos de servicio de un restaurante"@es .
+
+#################################################################
+#
+#    Concepts
+#
+#################################################################
+
+estur-restaurantservice:AccessForDisabled a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Access For Disabled"@en ;
+  skos:prefLabel "Acceso para personas de movilidad reducida"@es .
+
+estur-restaurantservice:BabySeat a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Baby Seat"@en ;
+  skos:prefLabel "Asientos para niños"@es .
+
+estur-restaurantservice:Babysitter a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Babysitter"@en ;
+  skos:prefLabel "Cuidado de niños"@es .
+
+estur-restaurantservice:Banquet a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Banquet"@en ;
+  skos:prefLabel "Banquete"@es .
+
+estur-restaurantservice:Bar a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Bar"@en ;
+  skos:prefLabel "Bar"@es .
+
+estur-restaurantservice:Buffet a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Buffet"@en ;
+  skos:prefLabel "Buffet"@es .
+
+estur-restaurantservice:Catering a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Catering"@en ;
+  skos:prefLabel "Catering"@es .
+
+estur-restaurantservice:ChildrenGames a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Children Games"@en ;
+  skos:prefLabel "Juegos para niños"@es .
+
+estur-restaurantservice:CloakRoom a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Cloak Room"@en ;
+  skos:prefLabel "Ropero"@es .
+
+estur-restaurantservice:Entertainment a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Entertainment"@en ;
+  skos:prefLabel "Entretenimiento"@es .
+
+estur-restaurantservice:Event a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Event"@en ;
+  skos:prefLabel "Evento"@es .
+
+estur-restaurantservice:HighChairs a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "High Chairs"@en ;
+  skos:prefLabel "Sillas altas"@es .
+
+estur-restaurantservice:HomeDelivery a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Home Delivery"@en ;
+  skos:prefLabel "Reparto a domicilio"@es .
+
+estur-restaurantservice:OutdoorTables a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Outdoor Tables"@en ;
+  skos:prefLabel "Mesas exteriores"@es .
+
+estur-restaurantservice:ParkingFacility a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Parking Facility"@en ;
+  skos:prefLabel "Parking"@es .
+
+estur-restaurantservice:PrivateChef a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Private Chef"@en ;
+  skos:prefLabel "Chef privado"@es .
+
+estur-restaurantservice:PrivateSalons a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Private Salons"@en ;
+  skos:prefLabel "Salones privados"@es .
+
+estur-restaurantservice:QrCodes a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "QR Codes"@en ;
+  skos:prefLabel "Códigos QR"@es .
+
+estur-restaurantservice:Reservation a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Reservation"@en ;
+  skos:prefLabel "Reserva"@es .
+
+estur-restaurantservice:SaleOfProducts a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Sale Of Products"@en ;
+  skos:prefLabel "Venta de productos"@es .
+
+estur-restaurantservice:SelfService a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Self Service"@en ;
+  skos:prefLabel "Autoservicio"@es .
+
+estur-restaurantservice:Sommelier a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Sommelier"@en ;
+  skos:prefLabel "Somelier"@es .
+
+estur-restaurantservice:SportBroadcasting a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Sport Broadcasting"@en ;
+  skos:prefLabel "Retransmisión de eventos deportivos"@es .
+
+estur-restaurantservice:TakeAway a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Take Away"@en ;
+  skos:prefLabel "Comida para llevar"@es .
+
+estur-restaurantservice:Terrace a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Terrace"@en ;
+  skos:prefLabel "Terraza"@es .
+
+estur-restaurantservice:Tv a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "TV"@en ;
+  skos:prefLabel "TV"@es .
+
+estur-restaurantservice:ValetParking a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Valet Parking"@en ;
+  skos:prefLabel "Valet Parking"@es .
+
+estur-restaurantservice:Venue a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Venue"@en ;
+  skos:prefLabel "Lugar"@es .
+
+estur-restaurantservice:Voucher a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Voucher"@en ;
+  skos:prefLabel "Bonos descuento"@es .
+
+estur-restaurantservice:Wifi a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Wifi"@en ;
+  skos:prefLabel "Wifi"@es .
+
+estur-restaurantservice:Workshop a skos:Concept;
+  skos:inScheme estur-kos:RestaurantServiceType;
+  skos:note "Value generated from the original SEGITTUR ontology"@en;
+  skos:note "Valor generado a partir de la ontología de SEGITTUR original"@es;
+  skos:prefLabel "Workshop"@en ;
+  skos:prefLabel "Taller"@es .

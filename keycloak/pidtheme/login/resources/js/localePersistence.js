@@ -9,7 +9,13 @@
 
   var target = saved || def;
 
-  if (target && current && target !== current) {
+  // Never reload a page inside the login flow (login-actions/*: code form, required actions,
+  // errors). Those pages answer a POST and carry a one-time session code: reloading them with
+  // kc_locale re-runs the step and Keycloak answers "page expired". There, after the password,
+  // the language is the account's own, which is also the right one to show.
+  var inFlow = window.location.pathname.indexOf('/login-actions/') !== -1;
+
+  if (!inFlow && target && current && target !== current) {
     try {
       var url = new URL(window.location.href);
       if (url.searchParams.get('kc_locale') !== target) {

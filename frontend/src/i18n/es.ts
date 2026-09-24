@@ -8,6 +8,7 @@ export default {
   'app.nav.users': 'Usuarios',
   'app.nav.api': 'API',
   'app.nav.help': 'Ayuda',
+  'app.nav.ontology': 'Ontología',
   'app.nav.section.resources': 'Recursos',
   'app.nav.section.data': 'Datos',
   'app.nav.section.analysis': 'Análisis',

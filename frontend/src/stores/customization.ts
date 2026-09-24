@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { ThemeInstance } from 'vuetify'
+import { ApiError } from '@/api/http'
 import {
   getPreferences,
   getPublicPreferences,
@@ -122,12 +123,23 @@ export const useCustomizationStore = defineStore('customization', () => {
     writeCache(values.value)
   }
 
-  /** Carga con sesion. Un fallo no es fatal: se sigue con lo cacheado o con la paleta por defecto. */
+  /**
+   * Carga con sesion. Un fallo no es fatal: se sigue con lo cacheado o con la paleta por defecto.
+   *
+   * Leer las preferencias de la organizacion exige permiso sobre ella, que un usuario normal no
+   * tiene. Los colores, logotipos y pie son publicos (los usa la pantalla de acceso), asi que ante
+   * un 403 se leen de ahi: sin esto quien no administra veia la paleta por defecto y sin pie.
+   */
   async function load(orgId: number): Promise<void> {
     organizationId.value = orgId
     loading.value = true
     try {
-      absorb(await getPreferences(orgId))
+      try {
+        absorb(await getPreferences(orgId))
+      } catch (e) {
+        if (!(e instanceof ApiError && e.kind === 'forbidden')) throw e
+        absorb(await getPublicPreferences(orgId))
+      }
     } finally {
       loading.value = false
     }

@@ -9,6 +9,7 @@ import accessibility from '@/features/accessibility/i18n'
 import users from '@/features/users/i18n'
 import apiDocs from '@/features/api-docs/i18n'
 import help from '@/features/help/i18n'
+import ontology from '@/features/ontology/i18n'
 
 /**
  * Cada feature aporta su fragmento y el nucleo los fusiona, de modo que ningun modulo
@@ -26,6 +27,7 @@ const messages: Record<string, string> = {
   ...users,
   ...apiDocs,
   ...help,
+  ...ontology,
 }
 
 export function t(key: string, params?: Record<string, string | number>): string {

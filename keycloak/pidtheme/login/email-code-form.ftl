@@ -22,7 +22,9 @@
                 <div >
                     <div >
                         <h2 >${msg("doLogIn")}</h2> 
-                        <p >${msg("emailOtpForm")}</p> 
+                        <#-- The extension passes the code length as otpLength; without it the text shows "{0}".
+                             It is also the field's label, so a screen reader announces it on focus. -->
+                        <label for="emailCode" style="display: block; margin-bottom: 12px;"><#assign codeLength = otpLength!6>${msg("emailOtpForm", codeLength?is_number?then(codeLength?c, codeLength))}</label>
                     </div>
                     <form id="kc-otp-login-form"  action="${url.loginAction}" method="post">
                         <div class="v-row">
@@ -33,11 +35,13 @@
                                         <input
                                             id="emailCode"
                                             name="emailCode"
-                                            autocomplete="off"
+                                            autocomplete="one-time-code"
+                                            inputmode="numeric"
                                             type="text"
                                             class="v-field__input form-control"
                                             autofocus
                                             aria-invalid="<#if messagesPerField.existsError('emailCode')>true</#if>"
+                                            <#if messagesPerField.existsError('emailCode')>aria-describedby="input-error-otp-code"</#if>
                                             style="height: auto; border-radius: 10px;">
                                     </div>
                                     <#if messagesPerField.existsError('emailCode')>

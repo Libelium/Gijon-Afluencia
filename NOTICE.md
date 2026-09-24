@@ -174,6 +174,13 @@ se muestra en el control de atribución cuando esa capa está activa. Se sustitu
 Data Models, publicados bajo Creative Commons Attribution 4.0 (CC BY 4.0) —
 <https://smartdatamodels.org>.
 
+**Ontología de turismo de SEGITTUR.** La correspondencia de los elementos de la plataforma y la
+pantalla Ontología usan la *Ontología de referencia de turismo de SEGITTUR* v1.2.0 y sus tesauros
+SKOS, © SEGITTUR, publicados bajo Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0) —
+<https://ontologia.segittur.es/turismo/def/core/>. Se redistribuyen sin cambios en
+`ontologia/segittur/`, y el JSON derivado que consume la interfaz
+(`frontend/src/features/ontology/data/segittur.json`) se distribuye bajo la misma licencia.
+
 ## 5. Marcas
 
 *Libelium* y *Smart Spot* son marcas de Libelium Comunicaciones Distribuidas, S.L. La licencia de
