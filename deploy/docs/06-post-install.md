@@ -55,7 +55,7 @@ Realm: **`pid-gijon`**. Clientes que usa la plataforma:
 | `pid-gijon-client` | público | Interfaz web / inicio de sesión interactivo. |
 | `laravel-backend` | confidencial | `web-back` (tiene secreto de cliente) y el token de administración de la batería de verificación. |
 | `queues-consumer-client` | público | `cb-consumer`, `generic-consumer`. |
-| `change-password-client` | confidencial | Flujo de cambio de contraseña por administración, usado por `web-back`. |
+| `change-password-client` | público, en el realm **`master`** | Token de administración de `web-back` (segundo factor, idioma, cierre de sesiones, correos de contraseña, gestión de usuarios). No viene en la importación del realm: lo da de alta `deploy/kc-postinstall.sh`. |
 
 Configura las **URIs de redirección válidas** de cada cliente con tus nombres de host públicos, por
 ejemplo `https://app.example.com/*`, `https://api.example.com/*`, `https://kc.example.com/*`.

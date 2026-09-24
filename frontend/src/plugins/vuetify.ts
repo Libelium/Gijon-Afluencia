@@ -1,5 +1,6 @@
 import { createVuetify } from 'vuetify'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import { es } from 'vuetify/locale'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 
@@ -7,6 +8,9 @@ import { dark, light } from './theme'
 
 export default createVuetify({
   icons: { defaultSet: 'mdi', aliases, sets: { mdi } },
+  // Textos propios de los componentes (paginacion, «sin datos», etiquetas accesibles) en el
+  // idioma de la interfaz; sin esto Vuetify los pinta en ingles.
+  locale: { locale: 'es', fallback: 'es', messages: { es } },
   theme: { defaultTheme: 'light', themes: { light, dark } },
   defaults: {
     // El aspecto propio se consigue aqui, por configuracion, sin hojas de estilo a medida.
