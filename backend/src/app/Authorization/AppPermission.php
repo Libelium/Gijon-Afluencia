@@ -238,6 +238,44 @@ enum AppPermission: string
         return $qcAdminPermissions;
     }
 
+    /**
+     * Organization user with read access (consulta): sees the entities, the map, the dashboards
+     * and the alarms of its organization, and reads its customization. It creates nothing.
+     */
+    public static function orgViewerPermissions(): array
+    {
+        $hidden = array_map(fn ($case) => $case->value, self::hiddenSuperAdminPermissions());
+
+        $dashboardReads = array_filter(
+            self::cases(),
+            fn ($case) => str_starts_with($case->value, 'dashboards.')
+                && str_ends_with($case->value, '.read')
+                && !in_array($case->value, $hidden, true)
+        );
+
+        return [
+            self::ORGANIZATIONS_READ,
+            self::DATA_SOURCES_READ,
+            self::ANALYTICS_READ,
+            self::DASHBOARDS_READ,
+            ...array_values($dashboardReads),
+            self::ALARMS_READ,
+        ];
+    }
+
+    /**
+     * Organization user with edit access (edicion): everything the viewer has, plus creating and
+     * changing dashboards and alarms.
+     */
+    public static function orgEditorPermissions(): array
+    {
+        return [
+            ...self::orgViewerPermissions(),
+            self::DASHBOARDS_UPDATE,
+            self::ALARMS_UPDATE,
+        ];
+    }
+
     public static function hiddenSuperAdminPermissions(): array
     {
         return [

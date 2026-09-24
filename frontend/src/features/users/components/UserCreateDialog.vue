@@ -2,7 +2,8 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { ApiError } from '@/api/http'
 import { t } from '@/i18n'
-import { createUser, type OrganizationUser } from '../api/users'
+import { createUser, type AccessLevel, type OrganizationUser } from '../api/users'
+import { ACCESS_LEVELS } from '../lib/access'
 
 /**
  * Alta de un usuario en la organizacion. La cuenta nace en Keycloak con una contrasena aleatoria
@@ -12,7 +13,11 @@ const props = defineProps<{ organizationId: number }>()
 const open = defineModel<boolean>({ required: true })
 const emit = defineEmits<{ created: [user: OrganizationUser, invitationSent: boolean] }>()
 
-const form = reactive({ name: '', email: '' })
+const form = reactive<{ name: string; email: string; accessLevel: AccessLevel }>({
+  name: '',
+  email: '',
+  accessLevel: 'read',
+})
 const saving = ref(false)
 const error = ref<string | null>(null)
 
@@ -28,6 +33,7 @@ watch(open, (isOpen) => {
   if (!isOpen) return
   form.name = ''
   form.email = ''
+  form.accessLevel = 'read'
   error.value = null
 })
 
@@ -39,6 +45,7 @@ async function submit() {
     const result = await createUser(props.organizationId, {
       name: form.name.trim(),
       email: form.email.trim(),
+      accessLevel: form.accessLevel,
     })
     emit('created', result.user, result.invitationSent)
     open.value = false
@@ -76,6 +83,22 @@ async function submit() {
             autocomplete="off"
             prepend-inner-icon="mdi-email-outline"
           />
+
+          <VRadioGroup
+            v-model="form.accessLevel"
+            :label="t('users.access.label')"
+            hide-details
+            class="mt-1"
+          >
+            <VRadio v-for="level in ACCESS_LEVELS" :key="level" :value="level">
+              <template #label>
+                <div>
+                  <div class="text-body-2 font-weight-medium">{{ t(`users.access.${level}`) }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ t(`users.access.${level}.help`) }}</div>
+                </div>
+              </template>
+            </VRadio>
+          </VRadioGroup>
 
           <VAlert v-if="error" type="error" variant="tonal" role="alert">{{ error }}</VAlert>
         </VCardText>

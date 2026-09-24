@@ -47,6 +47,7 @@ class User extends Authenticatable implements AuditableContract, Limitable
         'created_by',
         'blocked_by_admin',
         'status',
+        'access_level',
     ];
 
     protected $casts = [

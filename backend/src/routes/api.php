@@ -134,6 +134,7 @@ Route::prefix("V1")->group(function () {
                 Route::get('', [OrganizationUserController::class, 'index']);
                 Route::post('', [OrganizationUserController::class, 'store']);
                 Route::put('/{userId}/enabled', [OrganizationUserController::class, 'setEnabled']);
+                Route::put('/{userId}/access', [OrganizationUserController::class, 'setAccess']);
                 Route::post('/{userId}/password-email', [OrganizationUserController::class, 'sendPasswordEmail']);
                 Route::delete('/{userId}', [OrganizationUserController::class, 'destroy']);
             });

@@ -12,9 +12,12 @@ import {
   deleteUser,
   listUsers,
   sendPasswordEmail,
+  setUserAccess,
   setUserEnabled,
+  type AccessLevel,
   type OrganizationUser,
 } from '../api/users'
+import { ACCESS_LEVELS, accessKey } from '../lib/access'
 import { initialsOf, maskEmail, maskName } from '../lib/mask'
 
 const session = useSessionStore()
@@ -51,7 +54,7 @@ watch(masked, (value) => {
 
 const headers = computed(() => [
   { title: t('users.col.user'), key: 'name', sortable: true },
-  { title: t('users.col.role'), key: 'role', sortable: false },
+  { title: t('users.col.access'), key: 'access', sortable: false },
   { title: t('users.col.status'), key: 'enabled', sortable: true },
   { title: t('users.col.mfa'), key: 'mfa', sortable: true },
   { title: t('users.col.lastActivity'), key: 'lastActivity', sortable: true },
@@ -77,11 +80,16 @@ const stats = computed(() => ({
 const shownName = (u: OrganizationUser) => (masked.value ? maskName(u.name) : u.name)
 const shownEmail = (u: OrganizationUser) => (masked.value ? maskEmail(u.email) : u.email)
 
-function roleLabel(u: OrganizationUser): string {
-  if (u.isOrganizationAdmin) return t('users.role.orgAdmin')
-  if (u.roles.includes('super_admin')) return t('users.role.superAdmin')
-  if (u.roles.includes('qc_admin')) return t('users.role.qcAdmin')
-  return t('users.role.member')
+async function changeAccess(user: OrganizationUser, level: AccessLevel | null) {
+  const orgId = organizationId.value
+  if (!orgId || user.accessLevel === level) return
+  const updated = await run(
+    user,
+    () => setUserAccess(orgId, user.id, level),
+    t('users.access.done'),
+    t('users.actionFailed'),
+  )
+  if (updated) users.value = users.value.map((u) => (u.id === updated.id ? updated : u))
 }
 
 const isSelf = (u: OrganizationUser) => u.id === session.user?.id
@@ -279,8 +287,15 @@ async function confirmAction() {
             </div>
           </template>
 
-          <template #[`item.role`]="{ item }">
-            <span class="text-body-2">{{ roleLabel(item) }}</span>
+          <template #[`item.access`]="{ item }">
+            <span class="d-inline-flex align-center ga-1 text-body-2">
+              <VIcon
+                :icon="item.isOrganizationAdmin ? 'mdi-shield-crown-outline' : item.accessLevel === 'edit' ? 'mdi-pencil-outline' : item.accessLevel === 'read' ? 'mdi-eye-outline' : 'mdi-eye-off-outline'"
+                size="18"
+                aria-hidden="true"
+              />
+              {{ t(accessKey(item)) }}
+            </span>
           </template>
 
           <!-- Texto e icono, no solo color (WCAG 1.4.1). -->
@@ -325,6 +340,26 @@ async function confirmAction() {
                 />
               </template>
               <VList density="compact">
+                <template v-if="!item.isOrganizationAdmin">
+                  <VListSubheader>{{ t('users.access.label') }}</VListSubheader>
+                  <VListItem
+                    v-for="level in ACCESS_LEVELS"
+                    :key="level"
+                    :title="t(`users.access.${level}`)"
+                    :prepend-icon="item.accessLevel === level ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                    :aria-checked="item.accessLevel === level"
+                    role="menuitemradio"
+                    @click="changeAccess(item, level)"
+                  />
+                  <VListItem
+                    :title="t('users.access.none')"
+                    :prepend-icon="item.accessLevel === null ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                    :aria-checked="item.accessLevel === null"
+                    role="menuitemradio"
+                    @click="changeAccess(item, null)"
+                  />
+                  <VDivider class="my-1" />
+                </template>
                 <VListItem
                   prepend-icon="mdi-email-lock-outline"
                   :title="t('users.password.action')"

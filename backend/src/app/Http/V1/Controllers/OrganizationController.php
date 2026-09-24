@@ -19,6 +19,7 @@ use App\Models\FiwareScope;
 use App\Helpers\UserLocaleSyncHelper;
 use App\Helpers\ServiceProvisioningHelper;
 use App\Helpers\MfaRoleSyncHelper;
+use App\Services\OrganizationAccessService;
 use App\Services\UserDeletion\UserDeletionService;
 
 
@@ -412,6 +413,9 @@ class OrganizationController extends Controller
             $organizationAdmin->organization_id,
             $FiwareScope->tenant
         );
+
+        // Users with an organization access level see the entities of every tenant of it.
+        app(OrganizationAccessService::class)->shareWithOrganization($FiwareScope->tenant, $organizationAdmin);
 
         // The canonical scopes (mainScope/platformDataScope) are tracked as
         // single-valued organization preferences. Extra tenants (e.g. slug

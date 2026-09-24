@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use App\Repositories\ResourcePermissionRepository;
 use App\Models\User;
+use App\Services\OrganizationAccessService;
 trait HasResourcePermissions
 {
 
@@ -39,7 +40,15 @@ trait HasResourcePermissions
             }
         }
 
-        return ResourcePermissionRepository::giveUserResourcePermissionsTo($this, $permissions, $model);
+        $records = ResourcePermissionRepository::giveUserResourcePermissionsTo($this, $permissions, $model);
+
+        // A resource created for the organization (applyToOrgAdmin) also reaches the users with an
+        // organization access level; the service ignores the models that are not shared.
+        if ($applyToOrgAdmin) {
+            app(OrganizationAccessService::class)->shareWithOrganization($model, $this);
+        }
+
+        return $records;
     }
 
     public function revokeResourcePermissionTo(AppResourcePermission $permission, Model $model)
