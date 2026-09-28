@@ -10,6 +10,11 @@
 #   deploy/k3s-bootstrap.sh --domain pid.gijon.example
 #   deploy/k3s-bootstrap.sh --domain pid.gijon.example --skip-k3s
 #   deploy/k3s-bootstrap.sh --domain pid.gijon.example --dry-run
+#   deploy/k3s-bootstrap.sh --domain pid.gijon.example --trusted-proxies 10.0.3.7
+#
+# --trusted-proxies (comma-separated IPs/CIDRs): front proxies that terminate TLS
+# before this host. Traefik only honours their X-Forwarded-* headers, so Keycloak
+# and the backend see the original https scheme and client IP. Re-run to change it.
 #
 # Idempotent: re-running it converges rather than failing.
 #
@@ -18,7 +23,7 @@
 
 set -euo pipefail
 
-DOMAIN=""; SKIP_K3S=0; DRY=0
+DOMAIN=""; SKIP_K3S=0; DRY=0; TRUSTED_PROXIES=""
 GATEWAY_NS="gateway"
 GATEWAY_API_VERSION="v1.5.1"
 CERT_MANAGER_VERSION="v1.14.5"
@@ -35,7 +40,8 @@ while [[ $# -gt 0 ]]; do
     --domain)   DOMAIN="$2"; shift ;;
     --skip-k3s) SKIP_K3S=1 ;;
     --dry-run)  DRY=1 ;;
-    -h|--help)  sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --trusted-proxies) TRUSTED_PROXIES="$2"; shift ;;
+    -h|--help)  sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
   shift
@@ -127,7 +133,13 @@ service:
 YAML
 run helm repo add traefik https://traefik.github.io/charts
 run helm repo update
-run helm upgrade --install traefik traefik/traefik -n "$GATEWAY_NS" --create-namespace -f "$TRAEFIK_VALUES" --wait
+TRAEFIK_EXTRA=()
+if [[ -n "$TRUSTED_PROXIES" ]]; then
+  # Same list on both entrypoints: a front proxy may reach us on either.
+  TRAEFIK_EXTRA+=(--set "ports.web.forwardedHeaders.trustedIPs={$TRUSTED_PROXIES}")
+  TRAEFIK_EXTRA+=(--set "ports.websecure.forwardedHeaders.trustedIPs={$TRUSTED_PROXIES}")
+fi
+run helm upgrade --install traefik traefik/traefik -n "$GATEWAY_NS" --create-namespace -f "$TRAEFIK_VALUES" "${TRAEFIK_EXTRA[@]}" --wait
 rm -f "$TRAEFIK_VALUES"
 
 log "Creating the GatewayClass"
