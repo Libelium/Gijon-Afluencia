@@ -185,10 +185,11 @@ def test_the_uploaded_queue_message_carries_the_target_tenant():
     from crowd_predictions.helpers import uploader
 
     published = []
-    with _clean_env(QUEUES_CONSUMER_API_URL="http://queues", QUEUES_CONSUMER_USER_ID="7"), \
+    with _clean_env(QUEUES_CONSUMER_API_URL="http://queues", QUEUES_CONSUMER_USER_ID="7",
+                    QUEUES_CONSUMER_API_TOKEN="s3cret"), \
             patch.object(uploader, "get_storage"), \
             patch.object(uploader.requests, "post",
-                         side_effect=lambda url, json, timeout: published.append(json)
+                         side_effect=lambda url, json, headers, timeout: published.append(json)
                          or type("R", (), {"status_code": 200, "text": ""})()), \
             patch.object(uploader.Path, "exists", return_value=True):
         for tenant in ("demo_tenant", "libelium"):

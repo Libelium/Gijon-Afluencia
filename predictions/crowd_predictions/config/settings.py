@@ -287,6 +287,8 @@ class QueueSettings(EnvSettings):
     # tracks the job AND sends a user notification per published CSV, so a wrong id
     # floods a real person with cron noise (the inherited 1 was the admin).
     QUEUES_CONSUMER_USER_ID: Optional[int] = None
+    # Shared secret of /publish (X-Queues-Consumer-Token): without it the consumer answers 401.
+    QUEUES_CONSUMER_API_TOKEN: Optional[str] = None
 
 
 class AetherSettings(EnvSettings):
