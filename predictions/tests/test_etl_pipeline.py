@@ -97,6 +97,7 @@ def test_uploader_entity_type_extracted_from_urn_and_queue_called_correctly():
 
         with patch.dict(os.environ, {"QUEUES_CONSUMER_API_URL": "https://fake-queues.local",
                                       "QUEUES_CONSUMER_USER_ID": "7",
+                                      "QUEUES_CONSUMER_API_TOKEN": "s3cret",
                                       "FIWARE_TENANT": "libelium", "FIWARE_SCOPE": "tenant_a"}):
             with patch.object(uploader, "get_storage", return_value=fake_storage):
                 with patch("crowd_predictions.helpers.uploader.requests.post", return_value=fake_response) as mock_post:
@@ -107,6 +108,7 @@ def test_uploader_entity_type_extracted_from_urn_and_queue_called_correctly():
         mock_post.assert_called_once()
         call_url, call_kwargs = mock_post.call_args[0][0], mock_post.call_args[1]
         assert call_url == "https://fake-queues.local/publish"
+        assert call_kwargs["headers"] == {"X-Queues-Consumer-Token": "s3cret"}
         body = call_kwargs["json"]
         assert body["task"] == "platform.data.importation_job"
         assert body["params"]["urn"] == "urn:ngsi-ld:CrowdFlowZone:Z01"
@@ -131,6 +133,25 @@ def test_uploader_returns_false_without_queue_url(tmp_path):
         os.environ.pop("QUEUES_CONSUMER_API_URL", None)
         ok = uploader.upload_csv_via_s3_and_queue(str(csv), "urn:ngsi-ld:CrowdFlowZone:Z01")
     assert ok is False
+
+
+def test_uploader_without_token_uploads_nothing_and_publishes_nothing(tmp_path):
+    """The consumer answers 401 without the token: uploading first would leave an
+    orphan CSV in storage for every run."""
+    csv = tmp_path / "urn:ngsi-ld:CrowdFlowZone:Z01.csv"
+    csv.write_text("urn,type,timestamp\nurn:ngsi-ld:CrowdFlowZone:Z01,CrowdFlowZone,2026-01-01\n")
+    fake_storage = MagicMock()
+
+    with patch.dict(os.environ, {"QUEUES_CONSUMER_API_URL": "https://fake-queues.local",
+                                  "QUEUES_CONSUMER_USER_ID": "7", "FIWARE_TENANT": "t"}):
+        os.environ.pop("QUEUES_CONSUMER_API_TOKEN", None)
+        with patch.object(uploader, "get_storage", return_value=fake_storage), \
+                patch("crowd_predictions.helpers.uploader.requests.post") as mock_post:
+            ok = uploader.upload_csv_via_s3_and_queue(str(csv), "urn:ngsi-ld:CrowdFlowZone:Z01")
+
+    assert ok is False
+    fake_storage.upload_file.assert_not_called()
+    mock_post.assert_not_called()
 
 
 def test_the_three_mandatory_csv_columns_come_from_one_place():

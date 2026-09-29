@@ -67,6 +67,7 @@ Configuration (via the environment or in .env - see .env.example):
                                 groups, hence the two variables.
     --route batch:
         QUEUES_CONSUMER_API_URL queues-consumer endpoint (/publish).
+        QUEUES_CONSUMER_API_TOKEN shared secret of /publish.
         STORAGE_TYPE + AWS_S3_* / LOCAL_*   where the CSV is uploaded.
         FIWARE_TENANT / FIWARE_SCOPE        destination of the data (--tenant/--scope
                                             override them for a one-off run).
@@ -755,7 +756,8 @@ def _require_environment(args, cfg: dict, route: str, iota_url: str, apikey: str
         return
 
     required = (("IOTA_URL", iota_url), (cfg["apikey_env"], apikey)) if route == "iota" else \
-               (("QUEUES_CONSUMER_API_URL", os.environ.get("QUEUES_CONSUMER_API_URL")),)
+               (("QUEUES_CONSUMER_API_URL", os.environ.get("QUEUES_CONSUMER_API_URL")),
+                ("QUEUES_CONSUMER_API_TOKEN", os.environ.get("QUEUES_CONSUMER_API_TOKEN")))
     missing = [name for name, value in required if not value]
     if missing:
         print(f"ERROR: missing from the environment: {', '.join(missing)}.")
@@ -765,6 +767,7 @@ def _require_environment(args, cfg: dict, route: str, iota_url: str, apikey: str
             print(f'       export {cfg["apikey_env"]}="..."')
         else:
             print('       export QUEUES_CONSUMER_API_URL="https://<queues-consumer>"')
+            print('       export QUEUES_CONSUMER_API_TOKEN="..."')
         sys.exit(1)
 
 

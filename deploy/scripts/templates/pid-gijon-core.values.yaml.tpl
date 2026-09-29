@@ -239,6 +239,8 @@ components:
     secrets:
       RABBITMQ_USER: "${RABBITMQ_USER}"
       RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
+      # Carrot sirve /publish: sin el secreto responde 503 a todos (SEC-017).
+      QUEUES_CONSUMER_API_TOKEN: "${QUEUES_CONSUMER_API_TOKEN}"
 
   frontend:
     image:

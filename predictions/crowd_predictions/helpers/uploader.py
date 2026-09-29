@@ -65,6 +65,12 @@ def upload_csv_via_s3_and_queue(csv_file_path: str, entity_id: str,
                      "integrations service account) - not publishing")
         return False
 
+    # Checked before uploading: the consumer would reject the job with a 401 and leave
+    # an orphan CSV in storage.
+    if not queue.QUEUES_CONSUMER_API_TOKEN:
+        logger.error("QUEUES_CONSUMER_API_TOKEN is missing from the environment - not publishing")
+        return False
+
     try:
         storage = get_storage()
     except ValueError as e:
@@ -126,7 +132,9 @@ def upload_csv_via_s3_and_queue(csv_file_path: str, entity_id: str,
     message = {"task": "platform.data.importation_job", "params": params}
 
     try:
-        response = requests.post(f"{queues_api_url}/publish", json=message, timeout=30)
+        response = requests.post(f"{queues_api_url}/publish", json=message,
+                                 headers={"X-Queues-Consumer-Token": queue.QUEUES_CONSUMER_API_TOKEN},
+                                 timeout=30)
     except requests.exceptions.RequestException as e:
         logger.error(f"  Error publishing on the queue: {e}")
         return False
