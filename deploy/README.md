@@ -10,7 +10,7 @@ cualquier otra distribución se ejecutan los mismos charts a mano, siguiendo [`d
 
 | Ruta | Qué es |
 |------|--------|
-| [`charts/pid-gijon-core`](charts/pid-gijon-core) | El chart de la plataforma: un Deployment y un Service por componente. |
+| [`charts/pid-gijon-core`](charts/pid-gijon-core) | El chart de la plataforma: un Deployment y un Service por componente, y los CronJobs de `predictions`. |
 | `charts/{stackgres,mongodb,rabbitmq,minio}` | La capa de datos: PostgreSQL/TimescaleDB, MongoDB, RabbitMQ, almacenamiento de objetos. |
 | [`charts/apisix`](charts/apisix) | Pasarela API opcional delante de los endpoints FIWARE (hay que activarla). |
 | [`scripts/generate-env.sh`](scripts/generate-env.sh) | Generador de entornos: escribe un fichero de valores por chart, con las credenciales enlazadas de forma coherente. |
@@ -33,7 +33,7 @@ El script construye siete imágenes. Seis cubren ocho de los diez componentes de
 papeles de consumidor (`carrot`, `cb-consumer`, `generic-consumer`) son la misma imagen
 `queues-consumer` con un `WORKER_TYPE` distinto. Los otros dos componentes, Orion-LD y el IoT
 Agent, son imágenes públicas que el propio chart fija. La séptima imagen es `predictions`, que el
-chart no despliega todavía (ver más abajo).
+chart no despliega como servicio sino como tareas programadas (ver más abajo).
 
 ```bash
 deploy/build-images.sh registry.example.com/pid-gijon --push
@@ -133,26 +133,35 @@ instalas a mano, ponlos tú en `components.keycloak.secrets`.
 
 ### 3 bis. El módulo de predicción
 
-`build-images.sh` construye también la imagen `predictions`, pero **el chart no la despliega**: son
-dos tareas programadas que se lanzan aparte, contra la plataforma ya en marcha.
+El chart despliega la imagen `predictions` como CronJobs (`components.predictions.cronJobs`), sin
+Deployment ni Service, en la misma fase `core` que el resto. Los horarios van en UTC:
+
+| CronJob | Horario | Qué hace |
+|---------|---------|----------|
+| `predictions-ote` | `15 * * * *` | Compacta `ote/incoming` en `ote/raw` e ingesta la hora anterior del LIDAR (`run_ote.py`). |
+| `predictions-fusion` | `40 * * * *` | Fusiona Smart Spot y LIDAR y publica `CrowdFlowZone` (`main.py`); va después de la ingesta. |
+| `predictions-daily` | `0 3 * * *` | Meteorología, entrenamiento y predicción (`run_daily.py`). Solo diario: el arranque en caliente suma árboles en cada pasada. |
+
+Antes de que funcionen hacen falta tres cosas por entorno:
+
+- En `config.env`, `PREDICTIONS_TENANT`, `PREDICTIONS_USER_ID` (la cuenta de servicio de
+  integraciones), `PREDICTIONS_TIMEZONE` y `PREDICTIONS_HOLIDAYS_COUNTRY`. El tenant y el usuario
+  existen solo después de dar de alta la organización: rellénalos entonces, regenera y vuelve a
+  desplegar. Hasta entonces los trabajos fallan, y el generador lo avisa.
+- El registro de zonas en el bucket, `ote/zones/<tenant>/_/zones.json`. Es un dato del
+  despliegue, no del chart: sin él los ETL se niegan a arrancar.
+- Con `networkPolicy.egress.enabled`, salida a Open-Meteo en `networkPolicy.egress.externalCIDRs`
+  para la meteorología del ciclo diario.
+
+El resto (almacenamiento, secreto de `/publish`, URL internas de `aether-link` y `carrot`) lo
+enlaza el generador. Para lanzar un trabajo a mano, sin esperar al horario:
 
 ```bash
-# Entrenamiento + predicción, a diario
-kubectl create cronjob crowd-daily -n pid-gijon \
-  --image=<registro>/predictions --schedule="0 3 * * *" \
-  -- python scripts/run_daily.py
-
-# Compactación e ingesta del archivo LIDAR
-kubectl create cronjob crowd-ote -n pid-gijon \
-  --image=<registro>/predictions --schedule="15 * * * *" \
-  -- python scripts/run_ote.py
+kubectl -n pid-gijon create job --from=cronjob/predictions-daily predictions-daily-manual
 ```
 
-Ambas necesitan su propia configuración por entorno: la lee de variables que documenta
-[`predictions/.env.example`](../predictions/.env.example), y consumen el mismo almacenamiento de
-objetos donde `fiware-manager` archiva la trama LIDAR (`OTE_ARCHIVE_PREFIX`, por defecto
-`ote/incoming`). Los detalles del módulo están en su
-[`README.md`](../predictions/README.md).
+Las variables del módulo están en [`predictions/.env.example`](../predictions/.env.example), y los
+detalles, en su [`README.md`](../predictions/README.md).
 
 ### 4. Verificar
 

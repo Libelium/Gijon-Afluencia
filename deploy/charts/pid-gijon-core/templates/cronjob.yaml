@@ -1,0 +1,97 @@
+{{/*
+Trabajos periodicos de los componentes que declaran `cronJobs:` (predictions). Esos
+componentes no tienen Deployment: comparten con el resto la imagen, el ConfigMap, el
+Secret y la etiqueta `service` en la que se apoya la NetworkPolicy.
+*/}}
+{{- range $name, $component := .Values.components }}
+{{- if and $component.enabled $component.cronJobs }}
+{{- $kebab := include "pid-gijon-core.kebabcase" $name }}
+{{- range $jobName, $job := $component.cronJobs }}
+{{- if or (not (hasKey $job "enabled")) $job.enabled }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $kebab }}-{{ include "pid-gijon-core.kebabcase" $jobName }}
+  labels:
+    {{- include "pid-gijon-core.labels" $ | nindent 4 }}
+    service: pid-gijon-{{ $kebab }}
+    {{- if $.Values.global.environment }}
+    environment: {{ $.Values.global.environment }}
+    {{- end }}
+spec:
+  schedule: {{ required (printf "components.%s.cronJobs.%s necesita schedule" $name $jobName) $job.schedule | quote }}
+  # Explicita: sin ella el horario va en la zona del kube-controller-manager, que en k3s es la del host.
+  timeZone: {{ $job.timeZone | default "Etc/UTC" }}
+  concurrencyPolicy: {{ $job.concurrencyPolicy | default "Forbid" }}
+  {{- with $job.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  successfulJobsHistoryLimit: {{ ternary $job.successfulJobsHistoryLimit 1 (hasKey $job "successfulJobsHistoryLimit") }}
+  failedJobsHistoryLimit: {{ ternary $job.failedJobsHistoryLimit 3 (hasKey $job "failedJobsHistoryLimit") }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ ternary $job.backoffLimit 0 (hasKey $job "backoffLimit") }}
+      {{- with $job.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            service: pid-gijon-{{ $kebab }}
+            {{- if $.Values.global.environment }}
+            environment: {{ $.Values.global.environment }}
+            {{- end }}
+            {{- if $component.podLabels }}
+            {{- toYaml $component.podLabels | nindent 12 }}
+            {{- end }}
+          {{- if $component.podAnnotations }}
+          annotations:
+            {{- toYaml $component.podAnnotations | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- with (default $.Values.global.podSecurityContext $component.podSecurityContext) }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml $.Values.global.imagePullSecrets | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: {{ $kebab }}
+              image: {{ include "pid-gijon-core.imageRef" (list $component $) }}
+              imagePullPolicy: {{ $component.image.pullPolicy | default "IfNotPresent" }}
+              {{- with (default $.Values.global.containerSecurityContext $component.containerSecurityContext) }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              command:
+                {{- toYaml (required (printf "components.%s.cronJobs.%s necesita command" $name $jobName) $job.command) | nindent 16 }}
+              {{- with $job.args }}
+              args:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- if $component.env }}
+              env:
+                {{- toYaml $component.env | nindent 16 }}
+              {{- end }}
+              envFrom:
+                - configMapRef:
+                    name: {{ $kebab }}-config
+                {{- if and (eq $.Values.secretsStrategy.type "values") $component.secrets }}
+                - secretRef:
+                    name: {{ $kebab }}-secret
+                {{- else if and (eq $.Values.secretsStrategy.type "external") $.Values.secretsStrategy.externalSecrets (index $.Values.secretsStrategy.externalSecrets $name) }}
+                - secretRef:
+                    name: {{ index $.Values.secretsStrategy.externalSecrets $name }}
+                {{- end }}
+              {{- with ($job.resources | default $component.resources) }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          restartPolicy: Never
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

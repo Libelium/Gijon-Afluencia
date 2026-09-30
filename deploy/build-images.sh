@@ -45,7 +45,7 @@ SERVICES=(
   "web-back|backend|web-back|"
   "keycloak|keycloak|keycloak|"
   "frontend|frontend|frontend|"
-  # No lo despliega el chart todavia: son dos CronJobs que se programan aparte.
+  # Sin Deployment: el chart la despliega como CronJobs (components.predictions.cronJobs).
   "predictions|predictions|predictions|"
 )
 

@@ -336,6 +336,32 @@ components:
       AWS_S3_IMAGES_KEY: "${STORAGE_ACCESS_KEY}"
       AWS_S3_IMAGES_SECRET: "${STORAGE_SECRET_KEY}"
 
+  predictions:
+    image:
+      tag: "${TAG_PREDICTIONS}"
+    config:
+      STORAGE_TYPE: "${STORAGE_TYPE}"
+      AWS_S3_BUCKET: "${S3_BUCKET}"
+      AWS_S3_REGION: "${S3_REGION}"
+      LOCAL_ENDPOINT: "${MINIO_ENDPOINT}"
+      LOCAL_BUCKET: "${S3_BUCKET}"
+      LOCAL_SECURE: "false"
+      # Vacias las cuatro primeras, los CronJobs fallan hasta rellenarlas en config.env.
+      FIWARE_TENANT: "${PREDICTIONS_TENANT}"
+      QUEUES_CONSUMER_USER_ID: "${PREDICTIONS_USER_ID}"
+      CALENDAR_TIMEZONE: "${PREDICTIONS_TIMEZONE}"
+      HOLIDAYS_COUNTRY: "${PREDICTIONS_HOLIDAYS_COUNTRY}"
+      HOLIDAYS_SUBDIVISION: "${PREDICTIONS_HOLIDAYS_SUBDIVISION}"
+      WEATHER_LAT: "${PREDICTIONS_WEATHER_LAT}"
+      WEATHER_LON: "${PREDICTIONS_WEATHER_LON}"
+    secrets:
+      # Firma los POST /publish a carrot (SEC-017).
+      QUEUES_CONSUMER_API_TOKEN: "${QUEUES_CONSUMER_API_TOKEN}"
+      AWS_S3_ACCESS_ID: "${S3_ACCESS_KEY}"
+      AWS_S3_SECRET_KEY: "${S3_SECRET_KEY}"
+      LOCAL_ACCESS_ID: "${MINIO_ACCESS_KEY}"
+      LOCAL_SECRET_KEY: "${MINIO_SECRET_KEY}"
+
   keycloak:
     image:
       tag: "${TAG_KEYCLOAK}"

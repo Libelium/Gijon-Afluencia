@@ -31,6 +31,10 @@ dentro del clúster (`http://orion-ld:1026`, `http://web-back`…). Los diez com
 `carrot`, `cbConsumer` y `genericConsumer`. Véase
 [docs/01-overview.md](../../docs/01-overview.md).
 
+Un componente que declara `cronJobs` no tiene Deployment ni Service: recibe un CronJob
+`<componente>-<trabajo>` por entrada, con su misma imagen, ConfigMap y Secret. Es el caso de
+`predictions` (ingesta LIDAR, fusión, entrenamiento y predicción).
+
 ## Valores principales
 
 | Ruta | Por defecto | Para qué |
@@ -49,6 +53,7 @@ dentro del clúster (`http://orion-ld:1026`, `http://web-back`…). Los diez com
 | `components.<nombre>.config.RABBITMQ_CA_FILE_PATH` | `""` | Consumidores con `amqps`: ruta del PEM de la CA del broker dentro del contenedor. Vacía = almacén de confianza del sistema. |
 | `components.<nombre>.rabbitmqCaCert` | `""` | Contenido del PEM de esa CA. Con la ruta anterior, el chart emite el Secret `<nombre>-rabbitmq-ca` y lo monta ahí. |
 | `components.<nombre>.rabbitmqCaSecret` | `""` | Alternativa: nombre de un Secret que aportas tú con ese PEM. Con la ruta puesta hay que declarar uno de los dos o el chart falla al renderizar. |
+| `components.<nombre>.cronJobs.<trabajo>` | — | `schedule` (UTC) y `command`, más `enabled`, `timeZone`, `concurrencyPolicy` (`Forbid`), `backoffLimit` (`0`), `successfulJobsHistoryLimit` (`1`), `failedJobsHistoryLimit` (`3`), `startingDeadlineSeconds`, `activeDeadlineSeconds`, `args` y `resources`. |
 | `components.<nombre>.gatewayAPI` | desactivado | Configuración de `HTTPRoute`/`TCPRoute` por componente. |
 | `components.<nombre>.{hpa,pdb,serviceMonitor,resources,replicas,...}` | apagado / valores razonables | Ajustes estándar de la carga de trabajo. |
 | `KedaAutoscale` | sin definir | Autoescalado opcional por cola con KEDA. |
@@ -62,7 +67,8 @@ dentro del clúster (`http://orion-ld:1026`, `http://web-back`…). Los diez com
 
 | Fichero | Qué genera | Cuándo |
 |---------|------------|--------|
-| `deployment.yaml` | Un Deployment por componente, más el Secret de la CA de RabbitMQ | `enabled` |
+| `deployment.yaml` | Un Deployment por componente, más el Secret de la CA de RabbitMQ | `enabled` y sin `cronJobs` |
+| `cronjob.yaml` | Un CronJob por entrada de `cronJobs` | `enabled` y `cronJobs.<trabajo>.enabled` |
 | `service.yaml` | Service (y headless) | `enabled` y `service` definido |
 | `configmap.yaml` | ConfigMap a partir de `config` | `enabled` |
 | `secret.yaml` | Secret a partir de `secrets` | `secretsStrategy.type == values` |

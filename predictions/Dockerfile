@@ -34,8 +34,8 @@ RUN groupadd --gid 10001 app \
 USER 10001:10001
 
 
-# Default CMD: LIDAR+SmartSpot fusion. The two CronJobs override the command on
-# this SAME image with "python scripts/run_daily.py" (train + predict) and
-# "python scripts/run_ote.py" (compact + ingest the LIDAR archive) - see
-# deploy/README.md. train.py and predict.py stay runnable on their own.
+# Default CMD: LIDAR+SmartSpot fusion. The chart's CronJobs set the command on this
+# SAME image (run_ote.py, main.py, run_daily.py) - see
+# components.predictions.cronJobs in deploy/charts/pid-gijon-core/values.yaml.
+# train.py and predict.py stay runnable on their own.
 CMD ["python", "scripts/main.py"]
