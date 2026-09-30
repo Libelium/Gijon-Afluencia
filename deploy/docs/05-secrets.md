@@ -67,6 +67,7 @@ se obtienen durante [06-post-install.md](06-post-install.md).
 | `aetherLink` | `PLATFORM_TS_DB_USER`, `PLATFORM_TS_DB_PASS` |
 | `cbConsumer`, `genericConsumer` | `DB_USERNAME`/`DB_PASSWORD`, `TS_DB_USERNAME`/`TS_DB_PASSWORD`, `DB_REALTIME_USERNAME`/`DB_REALTIME_PASSWORD`, `RABBITMQ_USER`/`RABBITMQ_PASSWORD`, `KEYCLOAK_USER`/`KEYCLOAK_PASSWORD`, claves del almacenamiento de objetos |
 | `carrot` | `RABBITMQ_USER`, `RABBITMQ_PASSWORD` |
+| `predictions` | `QUEUES_CONSUMER_API_TOKEN` (el mismo secreto de `/publish` que tiene `carrot`), claves del almacenamiento de objetos |
 
 Las integraciones opcionales añaden sus propias claves solo cuando activas el `config`
 correspondiente (todas vienen comentadas): por ejemplo, los secretos de notificación de

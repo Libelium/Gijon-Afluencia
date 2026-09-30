@@ -1,5 +1,6 @@
 {{- range $name, $component := .Values.components }}
-{{- if $component.enabled }}
+{{- /* Los componentes con `cronJobs` son solo trabajos periodicos: cronjob.yaml. */}}
+{{- if and $component.enabled (not $component.cronJobs) }}
 {{- $caPath := "" }}
 {{- if $component.config }}
 {{- $caPath = index $component.config "RABBITMQ_CA_FILE_PATH" | default "" }}

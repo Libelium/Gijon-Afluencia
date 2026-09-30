@@ -29,9 +29,10 @@ crowd_predictions/     el paquete instalable — todo lo importable vive aquí
   daily_pipeline.py      entrenar + predecir en una pasada: lo que invoca el CronJob
   anomaly_detection/     la vertical de anomalías (núcleo, almacenamiento, pipeline)
 scripts/               puntos de entrada finos, los que invoca el contenedor
-  run_daily.py           <- CronJob principal: entrena y predice
-  run_ote.py             <- el otro CronJob: compacta e ingesta el archivo LIDAR
-  main.py  train.py  predict.py  post_measures.py  run_anomalies.py
+  run_daily.py           <- CronJob diario: entrena y predice
+  run_ote.py             <- CronJob horario: compacta e ingesta el archivo LIDAR
+  main.py                <- CronJob horario: la fusión, después de la ingesta
+  train.py  predict.py  post_measures.py  run_anomalies.py
   run_ingest.py  compact_ote_archive.py  update_weather.py
 tests/                 importa el paquete INSTALADO, igual que producción
 pyproject.toml         única fuente de dependencias y de la configuración de pytest
@@ -200,11 +201,12 @@ predicciones se refinan solas conforme se acerca la fecha.
 
 ### Despliegue
 
-La imagen se construye desde este directorio y los dos trabajos periódicos —`run_daily.py` y
-`run_ote.py`— se programan como CronJobs de Kubernetes. **El chart de [`../deploy`](../deploy) no
-los incluye todavía**: hoy este módulo se construye y se ejecuta aparte del núcleo de la plataforma,
-con la que se comunica sólo por sus interfaces públicas (la API de `aether-link` y las entidades del
-context broker).
+La imagen se construye desde este directorio y el chart de [`../deploy`](../deploy) la despliega
+como CronJobs (`components.predictions.cronJobs`), en UTC: `run_ote.py` a las `:15`, `main.py` a
+las `:40` —la fusión lee lo que acaba de publicar la ingesta— y `run_daily.py` a las 03:00. El módulo se comunica con el
+resto de la plataforma sólo por sus interfaces (la API de `aether-link` y el `/publish` de
+`carrot`) y por el almacenamiento de objetos. Horarios, variables por entorno y el requisito del
+`zones.json` en el [README de despliegue](../deploy/README.md#3-bis-el-módulo-de-predicción).
 
 No hay nada que montar en el contenedor: el histórico se lee en vivo de la plataforma, por zona
 (`CrowdFlowZone`), así que no hacen falta ni PVC ni contenedor de inicio, y las predicciones no se

@@ -96,6 +96,7 @@ secretsStrategy:
     genericConsumer: external-generic-consumer
     carrot: external-carrot
     webBack: external-web-back
+    predictions: external-predictions
 
 # -----------------------------------------------------------------------------
 # Segmentacion de red: una NetworkPolicy por componente con los saltos del flujo
@@ -156,6 +157,9 @@ networkPolicy:
 # (aetherLink -> aether-link). Components address each other over those stable
 # in-cluster names, so URLs in `config` such as http://orion-ld:1026 resolve
 # automatically. Set `enabled: false` to skip a component.
+#
+# A component that declares `cronJobs:` (predictions) gets one CronJob per entry
+# instead, and no Deployment or Service.
 # =============================================================================
 components:
 
@@ -191,6 +195,7 @@ components:
         - cbConsumer
         - genericConsumer
         - carrot
+        - predictions
       egressToComponents:
         - orionLd
         - iotAgentJson
@@ -948,6 +953,7 @@ components:
         - orionLd
         - webBack
         - aetherLink
+        - predictions
       egressToComponents:
         - aetherLink
       egressExternal: true
@@ -1350,6 +1356,71 @@ components:
     # KC_LARAVEL_BACKEND_SECRET and KC_REALM_MANAGEMENT_SECRET are REQUIRED: the realm
     # export ships placeholders for the laravel-backend and realm-management client
     # secrets, and the image's entrypoint refuses to start unless both are present.
+
+  # ---------------------------------------------------------------------------
+  # predictions — ingesta LIDAR, fusion y prediccion de afluencia. Sin Deployment:
+  # un CronJob por entrada de `cronJobs`, todos sobre la misma imagen.
+  # Requiere ote/zones/<FIWARE_TENANT>/_/zones.json en el bucket (dato del despliegue).
+  # ---------------------------------------------------------------------------
+  predictions:
+    enabled: true
+    image:
+      repository: predictions
+      tag: ""                   # TODO: pin the platform image tag
+      pullPolicy: IfNotPresent
+    # Segmentacion de red (networkPolicy.enabled). Nadie le entra. Egreso externo: el
+    # almacen de objetos y Open-Meteo (meteorologia del ciclo diario).
+    networkPolicy:
+      egressToComponents:
+        - aetherLink
+        - carrot
+      egressExternal: true
+    resources: {}
+    # Horarios en UTC. Por trabajo se pueden cambiar tambien timeZone, concurrencyPolicy
+    # (Forbid), backoffLimit (0), successfulJobsHistoryLimit (1), failedJobsHistoryLimit (3),
+    # startingDeadlineSeconds, args y resources.
+    # backoffLimit 0: la siguiente ejecucion recoge lo pendiente (la compactacion va por llegada).
+    # activeDeadlineSeconds: con Forbid, un trabajo colgado bloquearia todos los siguientes.
+    cronJobs:
+      ote:
+        schedule: "15 * * * *"
+        command: ["python", "scripts/run_ote.py"]
+        activeDeadlineSeconds: 3000
+      # Despues de la ingesta: fusiona Smart Spot con el CrowdFlowLidarZone que esta publica.
+      fusion:
+        schedule: "40 * * * *"
+        command: ["python", "scripts/main.py"]
+        activeDeadlineSeconds: 1200
+      # Diario y no horario: el arranque en caliente suma arboles en cada pasada.
+      daily:
+        schedule: "0 3 * * *"
+        command: ["python", "scripts/run_daily.py"]
+        activeDeadlineSeconds: 14400
+    config:
+      AETHER_LINK_URL: http://aether-link:8000
+      QUEUES_CONSUMER_API_URL: http://carrot:8001
+      STORAGE_TYPE: <CHANGE_ME>           # s3 | local (same options as cb-consumer)
+      # -- STORAGE_TYPE: s3
+      # AWS_S3_BUCKET: <CHANGE_ME>
+      # AWS_S3_REGION: <CHANGE_ME>
+      # -- STORAGE_TYPE: local (MinIO). host:port, sin esquema.
+      # LOCAL_ENDPOINT: <CHANGE_ME>       # e.g. minio.minio.svc.cluster.local:9000
+      # LOCAL_BUCKET: pid-gijon-storage
+      # LOCAL_SECURE: "false"
+      # Debe coincidir con OTE_ARCHIVE_PREFIX de fiwareManager.
+      OTE_INCOMING_PREFIX: ote/incoming
+      FIWARE_TENANT: <CHANGE_ME>
+      FIWARE_SCOPE: /
+      QUEUES_CONSUMER_USER_ID: <CHANGE_ME>  # user_id de la cuenta de servicio de integraciones
+      CALENDAR_TIMEZONE: <CHANGE_ME>      # IANA, e.g. Europe/Madrid
+      HOLIDAYS_COUNTRY: <CHANGE_ME>       # ISO, e.g. ES
+      # HOLIDAYS_SUBDIVISION: <CHANGE_ME> # e.g. AS
+      # WEATHER_LAT: <CHANGE_ME>          # sin las dos, la lluvia no entra en el modelo
+      # WEATHER_LON: <CHANGE_ME>
+    secrets: {}
+    #   QUEUES_CONSUMER_API_TOKEN: ""   # TODO: set (the same /publish secret carrot has)
+    #   STORAGE_TYPE s3:    AWS_S3_ACCESS_ID / AWS_S3_SECRET_KEY
+    #   STORAGE_TYPE local: LOCAL_ACCESS_ID / LOCAL_SECRET_KEY
 
 # =============================================================================
 # KEDA autoscaling (optional). Requires the KEDA operator in the cluster.

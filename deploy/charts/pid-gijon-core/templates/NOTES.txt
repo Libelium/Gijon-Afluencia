@@ -6,7 +6,7 @@ Namespace: {{ .Release.Namespace }}
 Deployed components:
 {{- range $name, $component := .Values.components }}
 {{- if $component.enabled }}
-  - {{ include "pid-gijon-core.kebabcase" $name }}
+  - {{ include "pid-gijon-core.kebabcase" $name }}{{ if $component.cronJobs }} (CronJobs){{ end }}
 {{- end }}
 {{- end }}
 
