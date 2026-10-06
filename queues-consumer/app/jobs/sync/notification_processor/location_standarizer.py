@@ -17,8 +17,8 @@ class LocationStandarizer(NotificationProcessor):
     standarizing them without needing to update it on FIWARE
     """
 
-    LATITUDE_ATTRS = ["latitudeLocation", "latitude", "r_eg25lat", "rw_dho_latitude"]
-    LONGITUDE_ATTRS = ["longitudeLocation", "longitude", "r_eg25lon", "rw_dho_longitude"]
+    LATITUDE_ATTRS = ["latitudeLocation", "latitude", "r_eg25lat", "rw_dho_latitude", "r_latitude"]
+    LONGITUDE_ATTRS = ["longitudeLocation", "longitude", "r_eg25lon", "rw_dho_longitude", "r_longitude"]
     LOCATION_ATTR = "location"
 
     def __get_lat_lon_loc(self, notification: EntityDataNotification):

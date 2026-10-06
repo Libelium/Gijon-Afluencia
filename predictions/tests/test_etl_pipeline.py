@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import tempfile
@@ -72,13 +73,16 @@ def test_transform_exports_one_csv_per_zone_with_crowdflowzone_shape():
         assert list(sample.columns) == [
             "urn", "type", "name", "timestamp", "occupancy",
             "confidence", "case", "smartspotSignal",
-            "smartspotDeltaPct", "latitude", "longitude",
+            "smartspotDeltaPct", "location",
             "lidarSerial", "smartspotSerial",
         ]
         assert sample["type"].iloc[0] == "CrowdFlowZone"
         assert sample["urn"].iloc[0].startswith("urn:ngsi-ld:CrowdFlowZone:")
-        assert -90 <= sample["latitude"].iloc[0] <= 90
-        assert -180 <= sample["longitude"].iloc[0] <= 180
+        location = json.loads(sample["location"].iloc[0])
+        assert location["type"] == "Point"
+        lon, lat = location["coordinates"]
+        assert -90 <= lat <= 90
+        assert -180 <= lon <= 180
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 

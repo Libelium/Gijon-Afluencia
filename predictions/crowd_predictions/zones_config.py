@@ -175,6 +175,7 @@ def _registry() -> dict:
         _CACHE[cache_key] = {
             "zones": zones,
             "smartspot_coordinates": _device_coordinates(payload, "smartspots"),
+            "lidar_coordinates": _device_coordinates(payload, "lidars"),
         }
         logger.info(f"Zones loaded for {cache_key[0]}{cache_key[1]}: {len(zones)} zone(s), "
                     f"{sum(len(z.lidar_ids) for z in zones.values())} LIDAR(s), "
@@ -244,3 +245,16 @@ def device_to_zone_map() -> dict:
 def smartspot_location(device_id: str):
     """(lat, lon) of a Smart Spot, or None if it declares no coordinates."""
     return _registry()["smartspot_coordinates"].get(device_id)
+
+
+def lidar_location(device_id: str):
+    """(lat, lon) of a LIDAR, or None if it declares no coordinates."""
+    return _registry()["lidar_coordinates"].get(device_id)
+
+
+def location_cell(lat_lon) -> str:
+    """The `location` CSV cell for a (lat, lon): GeoJSON as JSON text, which the importer
+    loads as a dict. The map only reads `location`, and the import path never derives it
+    from flat lat/lon columns."""
+    lat, lon = lat_lon
+    return json.dumps({"type": "Point", "coordinates": [lon, lat]})

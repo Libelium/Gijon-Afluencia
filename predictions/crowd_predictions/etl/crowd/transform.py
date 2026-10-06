@@ -25,7 +25,7 @@ import pandas as pd
 from crowd_predictions.config import settings
 from crowd_predictions.helpers.uploader import TIMESTAMP_COLUMN, TYPE_COLUMN, URN_COLUMN
 from crowd_predictions.lidar_estimation import estimate_zone_totals
-from crowd_predictions.zones_config import ZONES
+from crowd_predictions.zones_config import ZONES, location_cell
 
 # The entity type comes from CROWD_FLOW_ZONE_ENTITY_TYPE, read per call: per deployment.
 
@@ -87,11 +87,8 @@ class CrowdTransform:
                 "smartspotSignal": totals["smartspot_signal"],
                 "smartspotDeltaPct": totals["smartspot_delta_pct"],
             }
-            # Flat lat/lon, not a nested GeoProperty - the bulk import CSV
-            # (platform.data.importation_job) has no confirmed composite-column
-            # encoding for GeoProperty.
             if zone.location is not None:
-                row_data["latitude"], row_data["longitude"] = zone.location
+                row_data["location"] = location_cell(zone.location)
 
             row_data["lidarSerial"] = json.dumps(zone.lidar_ids)
             row_data["smartspotSerial"] = json.dumps(
