@@ -568,6 +568,27 @@ def test_load_writes_one_csv_per_entity_named_after_its_urn():
         shutil.rmtree(output_dir, ignore_errors=True)
 
 
+def test_load_publishes_the_location_declared_in_zones_json():
+    output_dir = tempfile.mkdtemp()
+    try:
+        _segments, _track_rows, zones = _metrics(
+            [("A", _event("p1", second)) for second in (0, 10)])
+        census = {"L1": _census([(0, 1)]), "unknown": _census([(0, 1)])}
+        loader = OteLoad(zones, device_metrics(census, WINDOW), WINDOW_START,
+                         output_dir=output_dir, observed_metrics={"L1": {"totalCount": 1}})
+
+        rows = {pd.read_csv(path)["urn"].iloc[0]: pd.read_csv(path)
+                for path in loader.export_csvs()}
+
+        zone_location = json.loads(rows["urn:ngsi-ld:CrowdFlowLidarZone:Z01"]["location"].iloc[0])
+        assert zone_location == {"type": "Point", "coordinates": [20.002, 10.002]}
+        for urn in ("urn:ngsi-ld:CrowdFlowLidarObserved:L1", "urn:ngsi-ld:CrowdFlowLidarDevice:L1"):
+            assert json.loads(rows[urn]["location"].iloc[0])["coordinates"] == [20.002, 10.002]
+        assert "location" not in rows["urn:ngsi-ld:CrowdFlowLidarDevice:unknown"].columns
+    finally:
+        shutil.rmtree(output_dir, ignore_errors=True)
+
+
 # --- The seam between the two steps ---------------------------------------------
 
 class _FakeByteStorage(StorageType):

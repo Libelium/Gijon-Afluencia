@@ -14,7 +14,7 @@ import pandas as pd
 
 from crowd_predictions.config import settings
 from crowd_predictions.helpers.uploader import TIMESTAMP_COLUMN, TYPE_COLUMN, URN_COLUMN, upload_csv_files
-from crowd_predictions.zones_config import ZONES
+from crowd_predictions.zones_config import ZONES, lidar_location, location_cell
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,8 @@ class OteLoad:
             zone = ZONES.get(zone_id)
             if zone is not None:
                 row["name"] = zone.name
+                if zone.location is not None:
+                    row["location"] = location_cell(zone.location)
             for key, value in attributes.items():
                 # Transits go as a JSON string in one cell: one attribute per pair would
                 # be hundreds of attributes with a few dozen sensors.
@@ -85,6 +87,7 @@ class OteLoad:
                 "serial": device_id,
                 **attributes,
             }
+            self._add_lidar_location(row, device_id)
             exported.append(self._write(output_path, row))
 
         for device_id, attributes in sorted(self.device_metrics.items()):
@@ -97,9 +100,17 @@ class OteLoad:
                 "serial": device_id,
                 **attributes,
             }
+            self._add_lidar_location(row, device_id)
             exported.append(self._write(output_path, row))
 
         return exported
+
+    @staticmethod
+    def _add_lidar_location(row: dict, device_id: str) -> None:
+        # A sensor missing from zones.json still publishes, just without a position.
+        lat_lon = lidar_location(device_id)
+        if lat_lon is not None:
+            row["location"] = location_cell(lat_lon)
 
     @staticmethod
     def _write(output_path: Path, row: dict) -> str:

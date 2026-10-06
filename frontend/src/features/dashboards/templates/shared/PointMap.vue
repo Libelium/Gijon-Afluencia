@@ -79,6 +79,12 @@ function onReady(instance: LeafletMap) {
 
 watch(() => props.points, fit, { deep: false })
 
+// Al pasar a una capa con menos niveles, Leaflet baja el zoom actual a su nuevo maximo.
+watch(
+  () => tiles.value.maxZoom,
+  (max) => map.value?.setMaxZoom(max),
+)
+
 /**
  * Leaflet cachea el tamaño de su contenedor: hay que avisarle cuando cambia (al plegar el
  * menu lateral, al redimensionar la ventana), igual que en MapView.vue.
@@ -148,13 +154,13 @@ const linksTable = computed(() =>
         :center="center"
         :zoom="zoom"
         :min-zoom="3"
-        :max-zoom="19"
+        :max-zoom="tiles.maxZoom"
         :scroll-wheel-zoom="false"
         role="group"
         :aria-label="t('templates.common.mapLabel')"
         @ready="onReady"
       >
-        <LTileLayer :url="tiles.url" :attribution="tiles.attribution" :options="{ maxZoom: 19, detectRetina: true }" />
+        <LTileLayer :url="tiles.url" :attribution="tiles.attribution" :options="{ maxZoom: tiles.maxZoom, detectRetina: true }" />
 
         <!-- Las lineas van antes que los circulos para que estos queden encima. -->
         <LPolyline

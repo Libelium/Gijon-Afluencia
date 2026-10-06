@@ -195,6 +195,12 @@ function clearFilters() {
 
 watch([search, datamodel], () => schedule(FILTER_DEBOUNCE_MS))
 
+// Al pasar a una capa con menos niveles, Leaflet baja el zoom actual a su nuevo maximo.
+watch(
+  () => tiles.value.maxZoom,
+  (max) => map.value?.setMaxZoom(max),
+)
+
 onBeforeUnmount(() => {
   if (moveTimer) clearTimeout(moveTimer)
   pending?.abort()
@@ -219,7 +225,7 @@ void loadDatamodels()
         :center="center"
         :zoom="zoom"
         :min-zoom="3"
-        :max-zoom="19"
+        :max-zoom="tiles.maxZoom"
         :use-global-leaflet="true"
         :options="{ keyboard: true }"
         role="group"
@@ -229,7 +235,7 @@ void loadDatamodels()
         <LTileLayer
           :url="tiles.url"
           :attribution="tiles.attribution"
-          :options="{ maxZoom: 19, detectRetina: true }"
+          :options="{ maxZoom: tiles.maxZoom, detectRetina: true }"
         />
 
         <EntityClusterGroup v-if="mapReady">

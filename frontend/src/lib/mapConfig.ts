@@ -16,6 +16,10 @@ const DEFAULT_TILES_DARK =
   'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
 const DEFAULT_ATTRIBUTION_DARK = 'Esri, HERE, Garmin, &copy; colaboradores de OpenStreetMap'
 
+const MAX_ZOOM = 19
+// Esri solo publica esa base hasta el nivel 16; por encima sirve la tesela "Map data not yet available".
+const DEFAULT_TILES_DARK_MAX_ZOOM = 16
+
 export const tilesUrl = (): string => env('VITE_MAP_TILES_URL', DEFAULT_TILES)
 
 export const tilesUrlDark = (): string => env('VITE_MAP_TILES_URL_DARK', DEFAULT_TILES_DARK)
@@ -26,11 +30,15 @@ export const tilesAttribution = (): string => env('VITE_MAP_TILES_ATTRIBUTION', 
 export const tilesAttributionDark = (): string =>
   env('VITE_MAP_TILES_ATTRIBUTION_DARK', DEFAULT_ATTRIBUTION_DARK)
 
-/** La URL y la atribucion que corresponden al tema en uso. */
-export function tilesForTheme(isDark: boolean): { url: string; attribution: string } {
-  return isDark
-    ? { url: tilesUrlDark(), attribution: tilesAttributionDark() }
-    : { url: tilesUrl(), attribution: tilesAttribution() }
+/** La URL, la atribucion y el zoom maximo que corresponden al tema en uso. */
+export function tilesForTheme(isDark: boolean): { url: string; attribution: string; maxZoom: number } {
+  if (!isDark) return { url: tilesUrl(), attribution: tilesAttribution(), maxZoom: MAX_ZOOM }
+  const url = tilesUrlDark()
+  return {
+    url,
+    attribution: tilesAttributionDark(),
+    maxZoom: url === DEFAULT_TILES_DARK ? DEFAULT_TILES_DARK_MAX_ZOOM : MAX_ZOOM,
+  }
 }
 
 export const defaultZoom = (): number => envNumber('VITE_MAP_DEFAULT_ZOOM', 13)
