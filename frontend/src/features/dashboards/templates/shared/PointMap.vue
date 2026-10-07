@@ -160,7 +160,8 @@ const linksTable = computed(() =>
         :aria-label="t('templates.common.mapLabel')"
         @ready="onReady"
       >
-        <LTileLayer :url="tiles.url" :attribution="tiles.attribution" :options="{ maxZoom: tiles.maxZoom, detectRetina: true }" />
+        <!-- La key recrea la capa al cambiar de tema: vue-leaflet solo aplica `options` al crearla. -->
+        <LTileLayer :key="tiles.url" :url="tiles.url" :attribution="tiles.attribution" :options="{ maxZoom: tiles.maxZoom, detectRetina: true }" />
 
         <!-- Las lineas van antes que los circulos para que estos queden encima. -->
         <LPolyline

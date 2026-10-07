@@ -232,7 +232,9 @@ void loadDatamodels()
         :aria-label="t('map.mapLabel')"
         @ready="onMapReady"
       >
+        <!-- La key recrea la capa al cambiar de tema: vue-leaflet solo aplica `options` al crearla. -->
         <LTileLayer
+          :key="tiles.url"
           :url="tiles.url"
           :attribution="tiles.attribution"
           :options="{ maxZoom: tiles.maxZoom, detectRetina: true }"
