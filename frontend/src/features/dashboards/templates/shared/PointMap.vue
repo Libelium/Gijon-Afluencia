@@ -8,7 +8,7 @@ import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { rowsTable } from '../../charts/a11y'
-import { defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
+import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { SURFACE } from '../../palette'
 
 export interface MapPoint {
@@ -79,12 +79,6 @@ function onReady(instance: LeafletMap) {
 
 watch(() => props.points, fit, { deep: false })
 
-// Al pasar a una capa con menos niveles, Leaflet baja el zoom actual a su nuevo maximo.
-watch(
-  () => tiles.value.maxZoom,
-  (max) => map.value?.setMaxZoom(max),
-)
-
 /**
  * Leaflet cachea el tamaño de su contenedor: hay que avisarle cuando cambia (al plegar el
  * menu lateral, al redimensionar la ventana), igual que en MapView.vue.
@@ -145,6 +139,7 @@ const linksTable = computed(() =>
     <div
       ref="canvas"
       class="point-map rounded-lg overflow-hidden"
+      :class="{ 'map-tiles--dark': tiles.darken }"
       :style="{ height: `${height}px` }"
     >
       <!-- `group` y no `img`: dentro del mapa hay controles que deben seguir siendo
@@ -154,14 +149,14 @@ const linksTable = computed(() =>
         :center="center"
         :zoom="zoom"
         :min-zoom="3"
-        :max-zoom="tiles.maxZoom"
+        :max-zoom="MAX_ZOOM"
         :scroll-wheel-zoom="false"
         role="group"
         :aria-label="t('templates.common.mapLabel')"
         @ready="onReady"
       >
         <!-- La key recrea la capa al cambiar de tema: vue-leaflet solo aplica `options` al crearla. -->
-        <LTileLayer :key="tiles.url" :url="tiles.url" :attribution="tiles.attribution" :options="{ maxZoom: tiles.maxZoom, detectRetina: true }" />
+        <LTileLayer :key="tiles.url" :url="tiles.url" :attribution="tiles.attribution" :options="tiles.options" />
 
         <!-- Las lineas van antes que los circulos para que estos queden encima. -->
         <LPolyline

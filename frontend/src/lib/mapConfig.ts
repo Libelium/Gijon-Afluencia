@@ -1,3 +1,4 @@
+import { Browser } from 'leaflet'
 import { env, envNumber } from './env'
 
 /**
@@ -8,36 +9,37 @@ import { env, envNumber } from './env'
 const DEFAULT_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const DEFAULT_ATTRIBUTION = '&copy; colaboradores de OpenStreetMap'
 
-/**
- * Base propia para el tema oscuro, no la clara invertida por CSS: invertir una base clara
- * invierte tambien sus etiquetas y su contraste queda por debajo del minimo exigido.
- */
-const DEFAULT_TILES_DARK =
-  'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
-const DEFAULT_ATTRIBUTION_DARK = 'Esri, HERE, Garmin, &copy; colaboradores de OpenStreetMap'
-
-const MAX_ZOOM = 19
-// Esri solo publica esa base hasta el nivel 16; por encima sirve la tesela "Map data not yet available".
-const DEFAULT_TILES_DARK_MAX_ZOOM = 16
+export const MAX_ZOOM = 19
 
 export const tilesUrl = (): string => env('VITE_MAP_TILES_URL', DEFAULT_TILES)
 
-export const tilesUrlDark = (): string => env('VITE_MAP_TILES_URL_DARK', DEFAULT_TILES_DARK)
+// Vacia por defecto: el tema oscuro reutiliza la base clara con el filtro `.map-tiles--dark` (app.scss).
+export const tilesUrlDark = (): string => env('VITE_MAP_TILES_URL_DARK')
 
 /** La atribucion es obligatoria por los terminos de uso del proveedor de teselas. */
 export const tilesAttribution = (): string => env('VITE_MAP_TILES_ATTRIBUTION', DEFAULT_ATTRIBUTION)
 
-export const tilesAttributionDark = (): string =>
-  env('VITE_MAP_TILES_ATTRIBUTION_DARK', DEFAULT_ATTRIBUTION_DARK)
+export const tilesAttributionDark = (): string => env('VITE_MAP_TILES_ATTRIBUTION_DARK')
 
-/** La URL, la atribucion y el zoom maximo que corresponden al tema en uso. */
-export function tilesForTheme(isDark: boolean): { url: string; attribution: string; maxZoom: number } {
-  if (!isDark) return { url: tilesUrl(), attribution: tilesAttribution(), maxZoom: MAX_ZOOM }
-  const url = tilesUrlDark()
+export interface TileLayerConfig {
+  url: string
+  attribution: string
+  /** La capa es la clara y hay que oscurecerla con la clase `map-tiles--dark`. */
+  darken: boolean
+  options: { maxZoom: number; maxNativeZoom: number; detectRetina: boolean }
+}
+
+/** La URL, la atribucion y las opciones de capa que corresponden al tema en uso. */
+export function tilesForTheme(isDark: boolean): TileLayerConfig {
+  const darkUrl = isDark ? tilesUrlDark() : ''
+  // En retina `detectRetina` resta 1 al maxZoom de la capa y suma 1 al nivel pedido, pero no corrige
+  // maxNativeZoom: sin compensarlo la capa se vaciaria en el zoom maximo y pediria niveles inexistentes.
+  const retina = Browser.retina ? 1 : 0
   return {
-    url,
-    attribution: tilesAttributionDark(),
-    maxZoom: url === DEFAULT_TILES_DARK ? DEFAULT_TILES_DARK_MAX_ZOOM : MAX_ZOOM,
+    url: darkUrl || tilesUrl(),
+    attribution: darkUrl ? tilesAttributionDark() : tilesAttribution(),
+    darken: isDark && !darkUrl,
+    options: { maxZoom: MAX_ZOOM + retina, maxNativeZoom: MAX_ZOOM - retina, detectRetina: true },
   }
 }
 

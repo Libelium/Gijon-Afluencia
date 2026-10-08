@@ -17,7 +17,7 @@ import MapControlPanel from '../components/MapControlPanel.vue'
 import { createEntityIcon } from '../lib/cluster'
 import { boundsOf, placeEntities, type PlacedEntity } from '../lib/geometry'
 import MapEntityTable from '../components/MapEntityTable.vue'
-import { defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
+import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 
 /** Tope de marcadores por vista: el mapa pide solo el area visible, nunca el inventario. */
 const MAX_MARKERS = 300
@@ -195,12 +195,6 @@ function clearFilters() {
 
 watch([search, datamodel], () => schedule(FILTER_DEBOUNCE_MS))
 
-// Al pasar a una capa con menos niveles, Leaflet baja el zoom actual a su nuevo maximo.
-watch(
-  () => tiles.value.maxZoom,
-  (max) => map.value?.setMaxZoom(max),
-)
-
 onBeforeUnmount(() => {
   if (moveTimer) clearTimeout(moveTimer)
   pending?.abort()
@@ -217,6 +211,7 @@ void loadDatamodels()
     <div
       ref="canvas"
       class="map-canvas flex-grow-1 position-relative overflow-hidden rounded-lg"
+      :class="{ 'map-tiles--dark': tiles.darken }"
     >
       <!-- `keyboard` es el valor por defecto de Leaflet, pero se declara aqui a proposito:
            es la unica forma de que se vea, al leer esta plantilla, que el lienzo se desplaza
@@ -225,7 +220,7 @@ void loadDatamodels()
         :center="center"
         :zoom="zoom"
         :min-zoom="3"
-        :max-zoom="tiles.maxZoom"
+        :max-zoom="MAX_ZOOM"
         :use-global-leaflet="true"
         :options="{ keyboard: true }"
         role="group"
@@ -237,7 +232,7 @@ void loadDatamodels()
           :key="tiles.url"
           :url="tiles.url"
           :attribution="tiles.attribution"
-          :options="{ maxZoom: tiles.maxZoom, detectRetina: true }"
+          :options="tiles.options"
         />
 
         <EntityClusterGroup v-if="mapReady">
