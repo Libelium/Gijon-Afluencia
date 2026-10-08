@@ -409,11 +409,11 @@ components:
       # Obligatoria por los términos de uso de OpenStreetMap: si cambias el
       # proveedor de teselas, cambia también este texto (ver NOTICE.md).
       MAP_TILES_ATTRIBUTION: "&copy; colaboradores de OpenStreetMap"
-      # Cartografía del tema oscuro. Es otra capa, no la clara invertida: invertir una base
-      # clara invierte también sus etiquetas y su contraste queda fuera de control. Cambia la
-      # atribución si cambias de proveedor (ver NOTICE.md).
-      MAP_TILES_URL_DARK: https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}
-      MAP_TILES_ATTRIBUTION_DARK: "Esri, HERE, Garmin, &copy; colaboradores de OpenStreetMap"
+      # Cartografía del tema oscuro. Vacía, el tema oscuro reutiliza la capa clara con un
+      # filtro medido para que todas sus etiquetas pasen de 4,5:1. Con una capa oscura propia,
+      # pon también su atribución (ver NOTICE.md).
+      MAP_TILES_URL_DARK: ""
+      MAP_TILES_ATTRIBUTION_DARK: ""
       MAP_DEFAULT_CENTER: 43.5322,-5.6611
       MAP_DEFAULT_ZOOM: "13"
       # Vía de contacto para cuestiones de accesibilidad. Es contenido OBLIGATORIO de la

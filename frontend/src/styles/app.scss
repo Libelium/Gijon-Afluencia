@@ -158,3 +158,11 @@
   background: rgba(var(--v-theme-on-surface), 0.32);
   background-clip: content-box;
 }
+
+// --- Mapa oscuro -------------------------------------------------------------
+// Base clara invertida y retocada, con la curva SVG de index.html. Parametros elegidos midiendo
+// las 78 clases de etiqueta de openstreetmap-carto sobre su halo: todas por encima de 4,5:1.
+.map-tiles--dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(1.08) contrast(1.07) saturate(0.6)
+    url(#map-tiles-dark-curve);
+}

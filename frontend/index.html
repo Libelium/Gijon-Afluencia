@@ -10,6 +10,20 @@
   <body>
     <div id="app"></div>
     <!--
+      Curva de tonos para `.map-tiles--dark` (app.scss): aclara los grises claros hasta casi blanco
+      sin tocar los oscuros, para que todas las etiquetas del mapa oscuro pasen de 4,5:1. CSS no
+      tiene un filtro equivalente; va aqui para que exista una sola vez en la pagina.
+    -->
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position: absolute">
+      <filter id="map-tiles-dark-curve" color-interpolation-filters="sRGB">
+        <feComponentTransfer>
+          <feFuncR type="table" tableValues="0 0.26 0.615 0.99 1" />
+          <feFuncG type="table" tableValues="0 0.26 0.615 0.99 1" />
+          <feFuncB type="table" tableValues="0 0.26 0.615 0.99 1" />
+        </feComponentTransfer>
+      </filter>
+    </svg>
+    <!--
       Script clasico y ANTES del modulo a proposito: el cliente OIDC y la instancia de axios
       se construyen al evaluarse su modulo, no dentro de una funcion, asi que la
       configuracion tiene que estar en window antes de que eso ocurra.
