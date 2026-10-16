@@ -3,6 +3,11 @@ import pandas as pd
 import dateutil.parser
 from config.logging import appLogging as logging
 
+# The Smart Spot sends the block as r_cfe_block. Provisioning applies no datamodel mapping, so
+# it reaches the broker and Timescale under that name instead of cfeBlock: request and accept both.
+CFE_BLOCK_MEASURES = ["cfeBlock", "r_cfe_block"]
+
+
 def crowd_row_processing_lambda(df, measures_renames = None):
     """
     Custom row processing function to handle specific transformations.
@@ -12,6 +17,10 @@ def crowd_row_processing_lambda(df, measures_renames = None):
     # Nothing to process
     if df.empty:
         return df
+
+    if "r_cfe_block" in df.columns:
+        raw_block = df.pop("r_cfe_block")
+        df["cfeBlock"] = df["cfeBlock"].combine_first(raw_block) if "cfeBlock" in df.columns else raw_block
 
     if "cfeBlock" not in df.columns:
         if "timeinstant" in df.columns:
