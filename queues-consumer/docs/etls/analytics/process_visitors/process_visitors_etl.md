@@ -157,7 +157,10 @@ existan.
 
 1.  **Construir la petición de series**: se construye una petición para la API de series temporales
     indicando las URN de dispositivo, el tenant, el scope y el rango de tiempo (`start_date`,
-    `end_date`). Las variables que se piden son `visitorId`, `detectionType`, `random` y `cfeBlock`.
+    `end_date`). Las variables que se piden son `visitorId`, `detectionType`, `random` y el bloque
+    de detecciones, tanto con su nombre de datamodel (`cfeBlock`) como con el que envía el Smart Spot
+    (`r_cfe_block`): sin la traducción del datamodel en el alta del dispositivo, es el segundo el que
+    llega a Timescale.
 2.  **Obtener las series**: se envía la petición a la API de series temporales (a través de Aether
     Link) y la respuesta se convierte en un DataFrame de pandas.
 3.  **Obtener los visitantes anteriores**: se consulta la base de datos para obtener la lista de

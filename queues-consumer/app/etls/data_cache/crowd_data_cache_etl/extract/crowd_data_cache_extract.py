@@ -1,4 +1,4 @@
-from helpers.crowd.crowd_utils import crowd_row_processing_lambda
+from helpers.crowd.crowd_utils import CFE_BLOCK_MEASURES, crowd_row_processing_lambda
 from config.logging import appLogging as logging
 import helpers.aether_link.aether_link_helper as aether_link_helper
 from sqlalchemy.orm import Session
@@ -52,7 +52,7 @@ class CrowdDataCacheExtract:
             "ssid",
             "signature",
             "period",
-            "cfeBlock",
+            *CFE_BLOCK_MEASURES,
         ]
 
     def __build_timeseries_request(self):

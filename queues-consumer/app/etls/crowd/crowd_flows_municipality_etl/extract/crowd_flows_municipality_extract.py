@@ -7,7 +7,7 @@ from schemas.crowd_flows_municipality_request_schema import (
 import db.realtime as realtime_db
 from db import deps
 from models.crud.crud_crowd_visitors import get_user_crowd_visitor
-from helpers.crowd.crowd_utils import crowd_row_processing_lambda, crowd_df_columns_rename
+from helpers.crowd.crowd_utils import CFE_BLOCK_MEASURES, crowd_row_processing_lambda, crowd_df_columns_rename
 
 
 class CrowdFlowsMunicipalityExtract:
@@ -52,7 +52,7 @@ class CrowdFlowsMunicipalityExtract:
         Function to get the variables from the timeseries API
         """
 
-        return ["visitorId", "detectionType", "random", "cfeBlock"]
+        return ["visitorId", "detectionType", "random", *CFE_BLOCK_MEASURES]
 
     def __build_timeseries_request(self):
         """
