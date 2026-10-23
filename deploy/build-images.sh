@@ -104,7 +104,7 @@ for entry in "${SERVICES[@]}"; do
   echo
   echo "=== $name  ($repo:$sha)"
   # shellcheck disable=SC2086
-  ( cd "$ROOT/$path" && docker build $NOCACHE $flags -t "$repo:latest" . )
+  ( cd "$ROOT/$path" && docker build --pull $NOCACHE $flags -t "$repo:latest" . )
 
   docker tag "$repo:latest" "$REGISTRY/$repo:$sha"
   docker tag "$repo:latest" "$REGISTRY/$repo:latest"

@@ -1,4 +1,4 @@
-FROM php:8.2-apache-bookworm
+FROM php:8.2.35-apache-bookworm
 # OFFICIAL IMAGE FROM https://hub.docker.com/_/php/
 
 # User and Groups ID for mapping directories
