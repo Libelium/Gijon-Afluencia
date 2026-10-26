@@ -15,6 +15,7 @@ DATA_PREFIX = "data"
 ALARMS_PREFIX = "alarms"
 CROWD_PREFIX = "crowd"
 DATA_CACHE_PREFIX = "data-cache"
+OUT_CONNECTOR_PREFIX = "out-connector"
 
 
 """
@@ -314,6 +315,25 @@ DATA_CACHE_QUEUES = [
 ]
 
 ALL_QUEUES += DATA_CACHE_QUEUES
+
+"""
+OUT CONNECTOR QUEUES
+"""
+OUT_CONNECTOR_QUEUE_NAME = f"{QUEUE_PREFIX}.{OUT_CONNECTOR_PREFIX}.generic"
+OUT_CONNECTOR_QUEUE = Queue(
+    name=OUT_CONNECTOR_QUEUE_NAME,
+    routing_key=OUT_CONNECTOR_QUEUE_NAME,
+    exchange=PLATFORM_EXCHANGE,
+    consumer_arguments={
+        "x-priority": settings.QUEUE_TASK_CONFIG.get_config_param(
+            OUT_CONNECTOR_QUEUE_NAME, "priority"
+        )
+    },
+)
+
+OUT_CONNECTOR_QUEUES = [OUT_CONNECTOR_QUEUE]
+
+ALL_QUEUES += OUT_CONNECTOR_QUEUES
 
 """
 TEST QUEUES

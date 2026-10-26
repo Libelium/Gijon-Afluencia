@@ -10,6 +10,7 @@ _ALL_TASK_MODULES = [
     "tasks.data",
     "tasks.crowd",
     "tasks.data_cache",
+    "tasks.out_connectors",
 ]
 
 

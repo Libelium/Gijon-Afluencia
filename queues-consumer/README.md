@@ -105,6 +105,7 @@ platform.sync.realtime                   platform.crowd.unique_visitors
 platform.sync.auto_subscription_sync     platform.crowd.unique_visitors_all_job
 platform.data.importation                platform.data-cache.crowd[_all]
 platform.alarms.entity_data_check        platform.alarms.check_inactivity
+platform.out-connector.generic
 ```
 
 La prioridad y el *timeout* de cada cola se ajustan por entorno con
@@ -161,6 +162,46 @@ como prefijo de cadena, y se rechazan las URL con credenciales. Además se recha
 resuelven a una dirección privada o de bucle local, no se siguen redirecciones (un 30x no relaya la
 petición a otro host) y la espera está acotada por `HTTP_PUSH_REQUEST_TIMEOUT`.
 
+## Conectores de salida
+
+Reenvían a un sistema externo los datos que llegan de las entidades. Hoy solo existe el conector
+**MQTT**, que publica en un broker. Se crean y se asocian a entidades o dispositivos desde la API de
+gestión (`connectors/out`).
+
+En la ingesta, el observer `check_connectors` de `EntitySync` busca los conectores activos de la
+entidad o de sus dispositivos y encola un trabajo por cada uno en `platform.out-connector.generic`.
+Todos los mensajes de un trabajo se envían por una sola conexión:
+
+- **Payload**:
+  - `normalized`: un mensaje por notificación, con valor, tipo, instante y unidades de cada
+    atributo.
+  - `key_value`: un mensaje por notificación, de la forma atributo → valor.
+  - `legacy`: el formato original. Envía un mensaje por atributo y su `payload_config`
+    (`[{key, value, active}]`) elige qué campos van y con qué nombre.
+
+  Los atributos van con su nombre en bruto (`r_cfo_countm`…), salvo que el conector tenga
+  activado `use_readable_names`.
+- **Topic**: se forma con las partes del `topicTemplate`. Las partes `variable` admiten `urn`,
+  `tenant` y `scope`; en `legacy`, también `measure`.
+
+**Formatos de foto periódica.** Hay tres formatos que no siguen a la ingesta:
+`occupancy_readings` (aforos por punto de interés), `flow_readings` (desplazamientos entre
+sensores, con el porcentaje de cada flujo sobre lo que salió de su origen) y `device_inventory`
+(inventario de dispositivos). Celery beat los envía cada `OUT_CONNECTOR_READINGS_INTERVAL` segundos
+(el inventario, cada `OUT_CONNECTOR_INVENTORY_INTERVAL`). Cada envío es **un único mensaje con todas
+las lecturas** de las entidades o dispositivos asociados al conector, leídas de la base de tiempo
+real. El topic de estos formatos solo puede ser fijo. El detalle de cada formato está en
+[`docs/out_connectors/mqtt.md`](docs/out_connectors/mqtt.md).
+
+El broker lo escribe quien configura el conector, así que, igual que el aviso HTTP de las alarmas,
+**solo se publica en los hosts de `MQTT_ALLOWED_DESTINATIONS`**, o en subdominios suyos. Con la lista
+vacía, que es el valor por omisión, no se envía nada. También se rechazan los hosts que resuelven a
+una dirección privada o de bucle local.
+
+Si un conector falla `NUM_MAX_RETRIES` veces seguidas y no ha tenido ningún envío correcto en
+`CONNECTOR_DEACTIVATION_WINDOW_SECONDS`, pasa a `inactive` y deja de recibir datos hasta que se
+reactive. Los errores quedan en la tabla de logs con `resource_type = out_connectors`.
+
 También se puede encolar trabajo por HTTP contra la API lateral:
 
 ```bash
@@ -207,6 +248,8 @@ Todas las variables están documentadas en [`.env.example`](.env.example). Las i
 | `TS_DB_*`, `TIMESERIES_TYPE` | TimescaleDB (`TIMESERIES_TYPE`: `timescale` o `none`) |
 | `AWS_S3_*` / `LOCAL_*`, `STORAGE_TYPE` | Almacén de objetos: S3 o endpoint compatible (MinIO) |
 | `AETHER_LINK_URL`, `IOTA_URL` | Servicios de la plataforma que consulta el worker |
+| `MQTT_ALLOWED_DESTINATIONS` | Brokers en los que puede publicar el conector MQTT (vacío: ninguno) |
+| `OUT_CONNECTOR_REQUEST_TIMEOUT`, `NUM_MAX_RETRIES`, `CONNECTOR_DEACTIVATION_WINDOW_SECONDS` | Espera por envío y desactivación de los conectores de salida |
 
 ## Observabilidad
 
@@ -227,6 +270,7 @@ En [`docs/`](docs) están descritos paso a paso los procesos menos evidentes:
 | [`docs/etls/analytics/`](docs/etls/analytics) | ETL de analítica: clasificación de visitantes, flujos, visitantes únicos |
 | [`docs/etls/data_cache/`](docs/etls/data_cache) | Volcado de resultados de analítica al almacén de objetos |
 | [`docs/dlq/`](docs/dlq) | Recuperación de la cola de mensajes fallidos |
+| [`docs/out_connectors/mqtt.md`](docs/out_connectors/mqtt.md) | Conector de salida MQTT: formatos, envío por notificación y foto periódica |
 
 ---
 

@@ -100,6 +100,38 @@ def get_entity_property_bulk(entity_ids: List[int], name: str, db: Session) -> L
         .all()
     )
 
+def get_entity_properties(entity_ids: List[int], names: List[str], db: Session) -> List[EntityProperty]:
+    return (
+        db.query(EntityProperty)
+        .filter(EntityProperty.entity_id.in_(entity_ids))
+        .filter(EntityProperty.name.in_(names))
+        .all()
+    )
+
+
+def get_entity_properties_by_urn(urns: List[str], name: str, db: Session) -> List[EntityProperty]:
+    return (
+        db.query(EntityProperty)
+        .filter(EntityProperty.urn.in_(urns))
+        .filter(EntityProperty.name == name)
+        .all()
+    )
+
+
+def get_entity_ids_with_property_value(name: str, values: List[str], db: Session) -> List[int]:
+    """
+    Ids of the entities whose property `name` currently holds one of `values`.
+    """
+    rows = (
+        db.query(EntityProperty.entity_id)
+        .filter(EntityProperty.name == name)
+        .filter(EntityProperty.value.in_(values))
+        .distinct()
+        .all()
+    )
+    return [row[0] for row in rows]
+
+
 def get_entity_property(entity_id: int, name: str, db: Session) -> EntityProperty:
     return (
         db.query(EntityProperty)

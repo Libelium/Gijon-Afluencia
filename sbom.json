@@ -7855,6 +7855,23 @@
     },
     {
       "type": "library",
+      "name": "paho-mqtt",
+      "version": "2.1.0",
+      "purl": "pkg:pypi/paho-mqtt@2.1.0",
+      "properties": [
+        {
+          "name": "pid-gijon:component",
+          "value": "queues-consumer"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "EPL-2.0 OR BSD-3-Clause"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "pandas",
       "version": "2.0.3",
       "purl": "pkg:pypi/pandas@2.0.3",

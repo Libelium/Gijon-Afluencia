@@ -227,7 +227,7 @@ class TestGetTaskModules:
     def test_all_task_modules_are_the_expected_ones(self):
         assert set(_ALL_TASK_MODULES) == {
             "tasks.sync", "tasks.alarms", "tasks.data", "tasks.crowd",
-            "tasks.data_cache",
+            "tasks.data_cache", "tasks.out_connectors",
         }
 
     def test_no_duplicate_modules_in_any_worker_type(self):

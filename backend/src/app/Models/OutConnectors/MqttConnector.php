@@ -22,6 +22,10 @@ class MqttConnector extends AuditableModel
         'payload_type',
         'payload_config',
     ];
+    protected $hidden = [
+        'password',
+    ];
+
     protected $casts = [
         'topicTemplate' => 'array',
         'payload_config' => 'array',

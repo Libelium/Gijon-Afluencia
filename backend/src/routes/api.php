@@ -26,7 +26,8 @@ use App\Http\V1\Controllers\TelegramController;
 use App\Http\V1\Controllers\TimeSeriesController;
 use App\Http\V1\Controllers\UserController;
 use App\Http\V1\Controllers\UserPreferencesController;
-
+use App\Http\V1\Controllers\OutConnectors\OutConnectorController;
+use App\Http\V1\Controllers\OutConnectors\MqttConnectorController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -250,5 +251,15 @@ Route::prefix("V1")->group(function () {
         //Groups
         Route::post('groups/paginate', [EntityGroupController::class, 'paginate']);
         Route::apiResource('groups', EntityGroupController::class, ['except' => ['index']]);
+
+        // OutConnector
+        Route::prefix('connectors')->group(function () {
+            Route::prefix('out')->group(function () {
+                Route::post('paginate', [OutConnectorController::class, 'paginate']);
+                Route::put('{id}/models', [OutConnectorController::class, 'linkModelsByConnectorId']);
+                Route::apiResource('mqtt', MqttConnectorController::class, ['only' => ['store', 'update']]);
+            });
+            Route::apiResource('out', OutConnectorController::class, ['only' => ['show', 'destroy']]);
+        });
     });
 });
