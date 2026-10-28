@@ -257,6 +257,7 @@ Route::prefix("V1")->group(function () {
             Route::prefix('out')->group(function () {
                 Route::post('paginate', [OutConnectorController::class, 'paginate']);
                 Route::put('{id}/models', [OutConnectorController::class, 'linkModelsByConnectorId']);
+                Route::patch('{id}/status', [OutConnectorController::class, 'updateStatus']);
                 Route::apiResource('mqtt', MqttConnectorController::class, ['only' => ['store', 'update']]);
             });
             Route::apiResource('out', OutConnectorController::class, ['only' => ['show', 'destroy']]);

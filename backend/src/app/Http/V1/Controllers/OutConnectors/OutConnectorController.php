@@ -49,6 +49,29 @@ class OutConnectorController extends Controller
         return (new DefaultPaginationResource($result))->response();
     }
 
+    /**
+     * Activates or deactivates the connector. Activating clears the failure count, so a
+     * connector the worker deactivated after repeated failures starts again from zero.
+     */
+    public function updateStatus(int $id, Request $request)
+    {
+        $outConnector = OutConnector::with('connectable')->findOrFail($id);
+
+        $this->authorize('update', $outConnector);
+
+        $request->validate([
+            'status' => 'required|string|in:active,inactive',
+        ]);
+
+        $values = ['status' => $request->input('status')];
+        if ($values['status'] === 'active') {
+            $values['retries'] = 0;
+        }
+        $outConnector->forceFill($values)->save();
+
+        return (new OutConnectorResource($outConnector))->response();
+    }
+
     public function destroy(int $id): Response
     {
         $outConnector = OutConnector::with('connectable')->findOrFail($id);

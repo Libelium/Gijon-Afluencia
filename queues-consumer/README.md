@@ -200,7 +200,7 @@ una dirección privada o de bucle local.
 
 Si un conector falla `NUM_MAX_RETRIES` veces seguidas y no ha tenido ningún envío correcto en
 `CONNECTOR_DEACTIVATION_WINDOW_SECONDS`, pasa a `inactive` y deja de recibir datos hasta que se
-reactive. Los errores quedan en la tabla de logs con `resource_type = out_connectors`.
+reactive. Los errores quedan en la tabla `log_lines` con `resource_type = out_connectors`.
 
 También se puede encolar trabajo por HTTP contra la API lateral:
 

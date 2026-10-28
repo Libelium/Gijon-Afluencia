@@ -21,6 +21,8 @@ class OutConnectorResource extends \App\Http\V1\Resources\DefaultPermissionsReso
             'status' => $this->status,
             'user_id' => $this->user_id,
             'last_connection' => $this->last_connection,
+            // Consecutive failures since the last successful send.
+            'retries' => (int) $this->retries,
             'use_readable_names' => (bool) $this->use_readable_names,
             'connector' => $this->connectorData(),
             'entities' => $this->whenLoaded('entities', fn () => $this->entities->map(

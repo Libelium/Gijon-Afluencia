@@ -19,6 +19,7 @@ class SimpleOutConnectorResource extends \App\Http\V1\Resources\DefaultPermissio
             'status' => $this->status,
             'user_id' => $this->user_id,
             'last_connection' => $this->last_connection,
+            'retries' => (int) $this->retries,
         ];
 
         return $data;

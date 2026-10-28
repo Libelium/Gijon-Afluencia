@@ -104,5 +104,5 @@ Se asocian al conector los **dispositivos**, o entidades (y entonces se toman su
   los que resuelven a una dirección privada o de bucle local. Con la lista vacía no se envía nada.
 - Tras `NUM_MAX_RETRIES` fallos seguidos, si no ha habido ningún envío correcto en
   `CONNECTOR_DEACTIVATION_WINDOW_SECONDS`, el conector pasa a `inactive`. Los errores quedan en la
-  tabla `logs` con `resource_type = 'out_connectors'`.
+  tabla `log_lines` con `resource_type = 'out_connectors'`.
 - La contraseña del broker no sale nunca por la API: esta solo devuelve `has_password`.

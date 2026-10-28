@@ -53,7 +53,10 @@ QUEUE_TASK_CONFIG_PLATFORM_OUT_CONNECTOR_GENERIC_TIMEOUT: "30"
 
 ## 4. Alta de los tres conectores
 
-Uno por topic. Con un token de un usuario que tenga `out_connectors.update`:
+Uno por topic. Desde la interfaz, en **Integraciones → Conectores → Nuevo conector**: ahí se
+configura el servidor, el formato, el topic y las entidades, y desde el detalle se activa, se
+desactiva y se ven los errores. Por API, con un token de un usuario que tenga
+`out_connectors.update`:
 
 | Conector | `payload_type` | Topic | Se asocian |
 |---|---|---|---|
@@ -99,7 +102,7 @@ curl -X PUT "$API/api/V1/connectors/out/<id>/models" \
 
 - [ ] Comprobar el resultado:
   - `out_connectors`: `last_connection` actualizado, `retries = 0`, `status = 'active'`.
-  - Si ha fallado: `SELECT * FROM logs WHERE resource_type = 'out_connectors' ORDER BY id DESC`.
+  - Si ha fallado: `SELECT * FROM log_lines WHERE resource_type = 'out_connectors' ORDER BY id DESC`.
 - [ ] Validar el JSON recibido con quien lo consume, sobre todo `total(%)`, las fechas y los ids.
 
 ## 6. Pendiente fuera del conector

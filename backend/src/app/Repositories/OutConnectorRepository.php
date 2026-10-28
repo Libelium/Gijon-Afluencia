@@ -65,6 +65,7 @@ class OutConnectorRepository
             'out_connectors.status',
             'out_connectors.user_id',
             'out_connectors.last_connection',
+            'out_connectors.retries',
             'out_connectors.created_at',
             'out_connectors.updated_at',
         );
