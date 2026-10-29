@@ -86,6 +86,39 @@ export function hostError(host: string): string | undefined {
   return undefined
 }
 
+const PEM_CERTIFICATE = /-----BEGIN CERTIFICATE-----/
+const PEM_PRIVATE_KEY = /-----BEGIN ([A-Z]+ )?PRIVATE KEY-----/
+
+export interface ClientCertificateErrors {
+  certificate?: string
+  key?: string
+}
+
+/**
+ * Certificado y clave del cliente van juntos. Al editar, la clave guardada no se devuelve:
+ * vacia con `hasStoredKey` significa conservarla, igual que decide el servidor.
+ */
+export function clientCertificateErrors(
+  certificate: string,
+  key: string,
+  hasStoredKey: boolean,
+  tls: boolean,
+): ClientCertificateErrors {
+  const cert = certificate.trim()
+  const pem = key.trim()
+  const errors: ClientCertificateErrors = {}
+
+  if (!cert && !pem) return errors
+  if (!tls) errors.certificate = t('connectors.form.clientCertNeedsTls')
+  else if (!cert) errors.certificate = t('connectors.form.clientCertMissing')
+  else if (!PEM_CERTIFICATE.test(cert)) errors.certificate = t('connectors.form.clientCertInvalid')
+
+  if (pem && !PEM_PRIVATE_KEY.test(pem)) errors.key = t('connectors.form.clientKeyInvalid')
+  else if (cert && !pem && !hasStoredKey) errors.key = t('connectors.form.clientKeyMissing')
+
+  return errors
+}
+
 export function portError(port: unknown): string | undefined {
   const value = Number(port)
   return Number.isInteger(value) && value >= 1 && value <= 65535

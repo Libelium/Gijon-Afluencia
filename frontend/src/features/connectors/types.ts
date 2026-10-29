@@ -38,6 +38,9 @@ export interface MqttSettings {
   clientId?: string | null
   ssl: boolean
   sslCert?: string | null
+  /** Certificado de cliente (PEM). Su clave privada nunca se devuelve. */
+  clientCert?: string | null
+  has_client_key?: boolean
   topicTemplate: TopicPart[]
   payload_type: PayloadType | string
   payload_config?: unknown
@@ -62,6 +65,9 @@ export interface MqttConnectorInput {
   clientId: string | null
   ssl: boolean
   sslCert: string | null
+  clientCert: string | null
+  /** Sin ella, al editar el servidor conserva la clave que ya tenia. */
+  clientKey?: string
   topicTemplate: TopicPart[]
   payload_type: PayloadType
   payload_config?: unknown

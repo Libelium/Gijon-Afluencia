@@ -53,6 +53,9 @@ class OutConnectorResource extends \App\Http\V1\Resources\DefaultPermissionsReso
             'clientId' => $connector->clientId,
             'ssl' => (bool) $connector->ssl,
             'sslCert' => $connector->sslCert,
+            // The certificate is public; its private key, like the password, never leaves.
+            'clientCert' => $connector->clientCert,
+            'has_client_key' => !empty($connector->clientKey),
             'topicTemplate' => $connector->topicTemplate,
             'payload_type' => $connector->payload_type,
             'payload_config' => $connector->payload_config,

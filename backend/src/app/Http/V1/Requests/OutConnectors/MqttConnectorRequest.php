@@ -3,6 +3,8 @@
 namespace App\Http\V1\Requests\OutConnectors;
 
 use App\Http\V1\Requests\FormRequest;
+use App\Models\OutConnectors\MqttConnector;
+use Illuminate\Validation\ValidationException;
 
 class MqttConnectorRequest extends FormRequest
 {
@@ -43,6 +45,9 @@ class MqttConnectorRequest extends FormRequest
             'clientId' => 'nullable|string|max:255',
             'ssl' => 'required|boolean',
             'sslCert' => 'nullable|string|max:65535',
+            // Client certificate and key (PEM), for brokers that authenticate by certificate.
+            'clientCert' => ['nullable', 'string', 'max:65535', 'regex:/-----BEGIN CERTIFICATE-----/'],
+            'clientKey' => ['nullable', 'string', 'max:65535', 'regex:/-----BEGIN ([A-Z]+ )?PRIVATE KEY-----/'],
             'topicTemplate' => 'required|array|min:1',
             'topicTemplate.*.type' => 'required|string',
             'topicTemplate.*.value' => 'required|string|max:255',
@@ -58,6 +63,13 @@ class MqttConnectorRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            if (($this->filled('clientCert') || $this->filled('clientKey')) && !$this->boolean('ssl')) {
+                $validator->errors()->add('clientCert', 'A client certificate needs the TLS connection');
+            }
+            if ($this->filled('clientKey') && !$this->filled('clientCert')) {
+                $validator->errors()->add('clientCert', 'The client key needs its certificate');
+            }
+
             $payloadType = $this->input('payload_type');
             // A snapshot carries many entities, so its topic can only be static.
             $allowed = match (true) {
@@ -97,5 +109,28 @@ class MqttConnectorRequest extends FormRequest
             // NOT NULL column; only legacy takes a configuration.
             'payload_config' => $this->input('payload_config') ?? [],
         ];
+    }
+
+    /**
+     * Client certificate and key to store. The API never returns the key, so on update an
+     * empty key keeps the current one; an empty certificate removes both.
+     *
+     * @throws ValidationException when there is a certificate and no key, new or stored.
+     */
+    public function clientCertificateData(?MqttConnector $current = null): array
+    {
+        $certificate = $this->filled('clientCert') ? trim($this->input('clientCert')) : null;
+        if ($certificate === null) {
+            return ['clientCert' => null, 'clientKey' => null];
+        }
+
+        $key = $this->filled('clientKey') ? trim($this->input('clientKey')) : $current?->clientKey;
+        if (!$key) {
+            throw ValidationException::withMessages([
+                'clientKey' => 'The client certificate needs its private key',
+            ]);
+        }
+
+        return ['clientCert' => $certificate, 'clientKey' => $key];
     }
 }

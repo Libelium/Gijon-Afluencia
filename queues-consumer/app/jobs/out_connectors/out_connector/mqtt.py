@@ -1,5 +1,7 @@
 import json
+import os
 import ssl
+import tempfile
 import threading
 import uuid
 from typing import List, Optional, Tuple
@@ -112,12 +114,13 @@ class MqttConnector(OutConnector):
             if reason_code.is_failure:
                 raise ConnectionError(f"MQTT connection refused: {reason_code}")
 
-            # Without waiting, disconnect() can drop the messages before they leave the socket.
+            # QoS 1: the broker acknowledges each message, so one it refuses (a topic its
+            # policy does not allow) is an error here instead of a silent loss.
             for topic, message in publishes:
-                info = client.publish(topic, message)
+                info = client.publish(topic, message, qos=1)
                 info.wait_for_publish(timeout)
                 if not info.is_published():
-                    raise TimeoutError(f"MQTT message to '{topic}' not sent in {timeout}s")
+                    raise TimeoutError(f"MQTT message to '{topic}' not acknowledged in {timeout}s")
         finally:
             client.disconnect()
             client.loop_stop()
@@ -135,9 +138,32 @@ class MqttConnector(OutConnector):
         if self.connector.ssl:
             # Without a CA of its own, the broker certificate is checked against the system ones.
             context = ssl.create_default_context(cadata=self.connector.sslCert or None)
+            if self.connector.clientCert:
+                self.__load_client_certificate(context)
             client.tls_set_context(context)
+        elif self.connector.clientCert:
+            raise ValueError("A client certificate needs the TLS connection")
 
         return client
+
+    def __load_client_certificate(self, context: ssl.SSLContext) -> None:
+        """
+        Mutual TLS: the broker authenticates the connector by its certificate.
+        """
+        if not self.connector.clientKey:
+            raise ValueError("The client certificate has no private key")
+
+        # ssl only loads them from files: a private folder, gone as soon as they are loaded.
+        with tempfile.TemporaryDirectory(prefix="mqtt-") as folder:
+            paths = []
+            for name, content in (("client.crt", self.connector.clientCert), ("client.key", self.connector.clientKey)):
+                path = os.path.join(folder, name)
+                fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(fd, "w") as handle:
+                    handle.write(content)
+                paths.append(path)
+
+            context.load_cert_chain(certfile=paths[0], keyfile=paths[1])
 
     def __build_topic(self, measure: Optional[str] = None) -> str:
         """

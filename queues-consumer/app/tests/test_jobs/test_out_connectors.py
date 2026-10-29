@@ -1,5 +1,6 @@
 """Pruebas del conector de salida MQTT: destino, topic, publicacion y salud del conector."""
 
+import os
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -48,6 +49,8 @@ def mqtt_model(**overrides):
         "clientId": "pid-test",
         "ssl": False,
         "sslCert": None,
+        "clientCert": None,
+        "clientKey": None,
         "topicTemplate": [
             {"type": "static", "value": "pid/"},
             {"type": "variable", "value": "tenant"},
@@ -129,7 +132,7 @@ class TestMqttConnector:
 
         client.connect.assert_called_once_with("broker.example.org", 8883)
         client.publish.assert_called_once_with(
-            "pid/pid_gijon/urn:ngsi-ld:Device:smsp001", '{"id": "x"}'
+            "pid/pid_gijon/urn:ngsi-ld:Device:smsp001", '{"id": "x"}', qos=1
         )
         client.publish.return_value.wait_for_publish.assert_called_once()
         client.disconnect.assert_called_once()
@@ -202,6 +205,49 @@ class TestMqttConnector:
         allow_brokers(mocker)
         fake_client(mocker)
         model = mqtt_model(topicTemplate=[{"type": "variable", "value": "measure"}])
+
+        with pytest.raises(ValueError):
+            mqtt_connector.MqttConnector(1, model, entity_data, MagicMock()).handle()
+
+    def test_client_certificate_is_loaded_from_private_temporary_files(self, mocker, entity_data):
+        allow_brokers(mocker)
+        client = fake_client(mocker)
+        context = mocker.patch.object(mqtt_connector.ssl, "create_default_context").return_value
+        seen = {}
+
+        def load_cert_chain(certfile, keyfile):
+            for name, path in (("cert", certfile), ("key", keyfile)):
+                seen[name] = (open(path).read(), oct(os.stat(path).st_mode & 0o777), path)
+
+        context.load_cert_chain.side_effect = load_cert_chain
+        model = mqtt_model(
+            ssl=True,
+            clientCert="-----BEGIN CERTIFICATE-----\nCERT\n-----END CERTIFICATE-----",
+            clientKey="-----BEGIN RSA PRIVATE KEY-----\nKEY\n-----END RSA PRIVATE KEY-----",
+        )
+
+        mqtt_connector.MqttConnector(1, model, entity_data, MagicMock()).handle()
+
+        assert seen["cert"][0] == model.clientCert and seen["key"][0] == model.clientKey
+        assert seen["cert"][1] == seen["key"][1] == "0o600"
+        # Ya cargados, los ficheros no se quedan en disco.
+        assert not os.path.exists(seen["cert"][2]) and not os.path.exists(seen["key"][2])
+        client.tls_set_context.assert_called_once_with(context)
+
+    def test_client_certificate_without_key_is_an_error(self, mocker, entity_data):
+        allow_brokers(mocker)
+        client = fake_client(mocker)
+        model = mqtt_model(ssl=True, clientCert="-----BEGIN CERTIFICATE-----", clientKey=None)
+
+        with pytest.raises(ValueError):
+            mqtt_connector.MqttConnector(1, model, entity_data, MagicMock()).handle()
+
+        client.connect.assert_not_called()
+
+    def test_client_certificate_without_tls_is_an_error(self, mocker, entity_data):
+        allow_brokers(mocker)
+        fake_client(mocker)
+        model = mqtt_model(ssl=False, clientCert="-----BEGIN CERTIFICATE-----", clientKey="k")
 
         with pytest.raises(ValueError):
             mqtt_connector.MqttConnector(1, model, entity_data, MagicMock()).handle()

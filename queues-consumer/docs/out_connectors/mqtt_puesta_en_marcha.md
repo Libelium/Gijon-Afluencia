@@ -6,15 +6,33 @@ probar contra el broker real. El funcionamiento del conector está en [`mqtt.md`
 
 ## 1. Datos del broker
 
-- [ ] Host y puerto.
-- [ ] TLS: ¿sí o no? Si el certificado no lo firma una CA pública, hace falta su CA en PEM (va en
-  `sslCert`).
-- [ ] Usuario y contraseña.
-- [ ] `clientId`: ¿lo imponen ellos? Si se deja vacío, se genera `pid-<aleatorio>` en cada envío.
-- [ ] ¿Exigen QoS 1 o `retain`? Ahora se publica con QoS 0 y sin `retain`.
-- [ ] ¿El host resuelve a una IP pública? Si resuelve a una IP privada (VPN, red interna), el
-  conector lo rechaza a propósito. En ese caso hay que decidir cómo permitirlo sin abrir la puerta
-  a cualquier host interno.
+El broker definitivo es **AWS IoT Core**: `aeromqtt.tao.es` es un alias de
+`acj93l436cnzs-ats.iot.eu-central-1.amazonaws.com`. AWS IoT no usa usuario y contraseña: identifica
+al conector por su certificado (TLS mutuo).
+
+| Dato | Valor | Dónde va en el conector |
+|---|---|---|
+| Servidor | `aeromqtt.tao.es` | Servidor (y en `MQTT_ALLOWED_DESTINATIONS`) |
+| Puerto | `8883` | Puerto |
+| TLS | Sí, validando el certificado | Conexión cifrada (siempre valida) |
+| CA del servidor | `AmazonRootCA1.pem` | Certificado de la CA |
+| Certificado de cliente | `6402_aero-people_libelium.cert.pem` | Certificado de cliente |
+| Clave de cliente | `6402_aero-people_libelium.private.key` | Clave privada del cliente |
+| Usuario y contraseña | — | Vacíos |
+
+Los ficheros se cargan desde el formulario. **Nunca en el repositorio**, ni en las skills.
+
+Pendiente de confirmar con quien gestiona el broker:
+
+- [ ] **`clientId`.** Las políticas de AWS IoT suelen admitir solo identificadores concretos (a
+  menudo el nombre de la «cosa», quizá `6402_aero-people_libelium`). El aleatorio que genera el
+  conector (`pid-…`) sería rechazado. Además, **AWS desconecta una sesión cuando llega otra con el
+  mismo identificador**, y los tres conectores envían a la vez cada 15 minutos: preguntar si la
+  política admite un prefijo (`6402_aero-people_libelium-*`) para dar a cada conector el suyo.
+- [ ] **Permisos de publicación** en `gijon/pid/aero-people/activos`, `…/aforos` y
+  `…/desplazamientos`. El conector publica con QoS 1, así que un topic no permitido aparece como
+  error en el conector en lugar de perderse.
+- [ ] El host resuelve a IP pública de AWS, así que pasa la protección contra destinos internos.
 
 ## 2. Supuestos que hay que confirmar
 
@@ -45,9 +63,10 @@ OUT_CONNECTOR_INVENTORY_INTERVAL: "86400"
 QUEUE_TASK_CONFIG_PLATFORM_OUT_CONNECTOR_GENERIC_TIMEOUT: "30"
 ```
 
-- [ ] Rellenar `MQTT_ALLOWED_DESTINATIONS`.
-- [ ] Ejecutar la migración del backend `2026_10_26_000000_change_ssl_cert_to_text_in_mqtt_connector_table`
-  (`sslCert` pasa a `text`).
+- [ ] Rellenar `MQTT_ALLOWED_DESTINATIONS` con `aeromqtt.tao.es`.
+- [ ] Migraciones del backend (se aplican solas al arrancar `web-back`):
+  `2026_10_26_000000_change_ssl_cert_to_text_in_mqtt_connector_table` (`sslCert` pasa a `text`) y
+  `2026_10_29_000000_add_client_certificate_to_mqtt_connector_table` (`clientCert` y `clientKey`).
 - [ ] Desplegar backend y queues-consumer (skill `desplegar-pre`). La imagen del queues-consumer
   necesita reconstruirse: añade `paho-mqtt`.
 

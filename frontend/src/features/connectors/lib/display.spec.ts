@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  clientCertificateErrors,
   connectorStatus,
   formatTopic,
   hostError,
@@ -67,6 +68,35 @@ describe('hostError / portError', () => {
     expect(portError(0)).toBeDefined()
     expect(portError(70000)).toBeDefined()
     expect(portError('abc')).toBeDefined()
+  })
+})
+
+describe('clientCertificateErrors', () => {
+  const CERT = '-----BEGIN CERTIFICATE-----\nAAA\n-----END CERTIFICATE-----'
+  const KEY = '-----BEGIN RSA PRIVATE KEY-----\nBBB\n-----END RSA PRIVATE KEY-----'
+
+  it('sin certificado ni clave no hay nada que validar', () => {
+    expect(clientCertificateErrors('', '', false, true)).toEqual({})
+  })
+
+  it('certificado y clave en PEM son validos', () => {
+    expect(clientCertificateErrors(CERT, KEY, false, true)).toEqual({})
+    expect(clientCertificateErrors(CERT, '-----BEGIN PRIVATE KEY-----', false, true)).toEqual({})
+  })
+
+  it('al editar, la clave vacia conserva la guardada', () => {
+    expect(clientCertificateErrors(CERT, '', true, true)).toEqual({})
+    expect(clientCertificateErrors(CERT, '', false, true).key).toBeDefined()
+  })
+
+  it('rechaza contenido que no es PEM y la clave sin certificado', () => {
+    expect(clientCertificateErrors('hola', KEY, false, true).certificate).toBeDefined()
+    expect(clientCertificateErrors(CERT, 'hola', false, true).key).toBeDefined()
+    expect(clientCertificateErrors('', KEY, false, true).certificate).toBeDefined()
+  })
+
+  it('necesita la conexion cifrada', () => {
+    expect(clientCertificateErrors(CERT, KEY, false, false).certificate).toBeDefined()
   })
 })
 

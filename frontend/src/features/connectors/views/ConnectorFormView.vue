@@ -6,6 +6,7 @@ import { t } from '@/i18n'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import ConnectorEntitiesPicker from '../components/ConnectorEntitiesPicker.vue'
+import PemField from '../components/PemField.vue'
 import {
   createConnector,
   getConnector,
@@ -14,6 +15,7 @@ import {
   updateConnector,
 } from '../api/connectors'
 import {
+  clientCertificateErrors,
   formatTopic,
   hostError,
   isPayloadType,
@@ -42,6 +44,9 @@ const host = ref('')
 const port = ref<number | string>(8883)
 const ssl = ref(true)
 const sslCert = ref('')
+const clientCert = ref('')
+const clientKey = ref('')
+const hasClientKey = ref(false)
 const username = ref('')
 const password = ref('')
 const hasPassword = ref(false)
@@ -84,9 +89,16 @@ const entitiesHint = computed(() =>
     : t('connectors.form.entitiesHint.default'),
 )
 
+const certificateErrors = computed(() =>
+  clientCertificateErrors(clientCert.value, clientKey.value, hasClientKey.value, ssl.value),
+)
+const certificateMessages = computed(() => (touched.value ? certificateErrors.value : {}))
+
 const valid = computed(
   () =>
     !!name.value.trim() &&
+    !certificateErrors.value.certificate &&
+    !certificateErrors.value.key &&
     !hostError(host.value) &&
     !portError(port.value) &&
     !topicError(topic.value, payloadType.value),
@@ -115,6 +127,8 @@ async function load() {
       port.value = settings.port ?? 8883
       ssl.value = !!settings.ssl
       sslCert.value = settings.sslCert ?? ''
+      clientCert.value = settings.clientCert ?? ''
+      hasClientKey.value = !!settings.has_client_key
       username.value = settings.username ?? ''
       hasPassword.value = !!settings.has_password
       clientId.value = settings.clientId ?? ''
@@ -144,6 +158,9 @@ function payload(): MqttConnectorInput {
     clientId: clientId.value.trim() || null,
     ssl: ssl.value,
     sslCert: ssl.value && sslCert.value.trim() ? sslCert.value.trim() : null,
+    // Sin certificado el servidor borra los dos; la clave vacia conserva la guardada.
+    clientCert: ssl.value && clientCert.value.trim() ? clientCert.value.trim() : null,
+    ...(ssl.value && clientKey.value.trim() ? { clientKey: clientKey.value.trim() } : {}),
     topicTemplate: parseTopic(topic.value.trim()),
     payload_type: payloadType.value,
     // El servidor solo admite payload_config con el formato original.
@@ -256,17 +273,34 @@ async function submit() {
               <VSwitch v-model="ssl" color="primary" inset hide-details :label="t('connectors.form.ssl')" />
             </VCol>
             <VCol v-if="ssl" cols="12">
-              <VTextarea
+              <PemField
                 v-model="sslCert"
                 :label="t('connectors.form.sslCert')"
                 :hint="t('connectors.form.sslCertHint')"
-                persistent-hint
-                rows="3"
-                auto-grow
-                spellcheck="false"
-                class="font-monospace"
               />
             </VCol>
+            <template v-if="ssl">
+              <VCol cols="12">
+                <h3 class="text-subtitle-2 mb-1">{{ t('connectors.form.clientAuth') }}</h3>
+                <p class="text-body-2 text-medium-emphasis mb-0">{{ t('connectors.form.clientAuthHint') }}</p>
+              </VCol>
+              <VCol cols="12" md="6">
+                <PemField
+                  v-model="clientCert"
+                  :label="t('connectors.form.clientCert')"
+                  :error-messages="certificateMessages.certificate"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <PemField
+                  v-model="clientKey"
+                  :label="t('connectors.form.clientKey')"
+                  :hint="hasClientKey ? t('connectors.form.clientKeyKeep') : t('connectors.form.clientKeyHint')"
+                  :error-messages="certificateMessages.key"
+                  accept=".key,.pem"
+                />
+              </VCol>
+            </template>
             <VCol cols="12" sm="6">
               <VTextField
                 v-model="username"

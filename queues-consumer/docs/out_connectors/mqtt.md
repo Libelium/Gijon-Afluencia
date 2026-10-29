@@ -106,3 +106,9 @@ Se asocian al conector los **dispositivos**, o entidades (y entonces se toman su
   `CONNECTOR_DEACTIVATION_WINDOW_SECONDS`, el conector pasa a `inactive`. Los errores quedan en la
   tabla `log_lines` con `resource_type = 'out_connectors'`.
 - La contraseña del broker no sale nunca por la API: esta solo devuelve `has_password`.
+- **Certificado de cliente (TLS mutuo).** Para brokers que identifican al conector por certificado,
+  como AWS IoT, se guardan el certificado y su clave privada (PEM). La clave, como la contraseña,
+  nunca sale por la API (`has_client_key`) y al editar se conserva si se deja vacía. Al conectar se
+  escriben en una carpeta temporal privada (permisos `600`) solo el tiempo de cargarlos en TLS.
+- Se publica con **QoS 1**: el broker confirma cada mensaje, y uno que rechaza (por ejemplo, un
+  topic que su política no permite) cuenta como fallo del conector.

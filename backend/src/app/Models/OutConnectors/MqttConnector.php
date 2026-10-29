@@ -17,6 +17,8 @@ class MqttConnector extends AuditableModel
         'password',
         'clientId',
         'sslCert',
+        'clientCert',
+        'clientKey',
         'ssl',
         'topicTemplate',
         'payload_type',
@@ -24,6 +26,7 @@ class MqttConnector extends AuditableModel
     ];
     protected $hidden = [
         'password',
+        'clientKey',
     ];
 
     protected $casts = [

@@ -243,6 +243,17 @@ watch(connectorId, () => void load(), { immediate: true })
               }}
             </dd>
 
+            <dt class="text-medium-emphasis">{{ t('connectors.settings.clientCert') }}</dt>
+            <dd>
+              {{
+                !settings.clientCert
+                  ? t('connectors.settings.clientCertUnset')
+                  : settings.has_client_key
+                    ? t('connectors.settings.clientCertSet')
+                    : t('connectors.settings.clientCertNoKey')
+              }}
+            </dd>
+
             <dt class="text-medium-emphasis">{{ t('connectors.settings.clientId') }}</dt>
             <dd>{{ settings.clientId || t('connectors.settings.clientIdAuto') }}</dd>
 

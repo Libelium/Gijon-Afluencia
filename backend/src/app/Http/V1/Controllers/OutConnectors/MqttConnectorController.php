@@ -19,9 +19,11 @@ class MqttConnectorController extends Controller
     {
         $this->authorize('create', OutConnector::class);
 
-        $outConnector = DB::transaction(function () use ($request) {
+        $certificate = $request->clientCertificateData();
+
+        $outConnector = DB::transaction(function () use ($request, $certificate) {
             $mqttConnector = MqttConnector::create(
-                $request->connectorData() + ['password' => $request->input('password')]
+                $request->connectorData() + $certificate + ['password' => $request->input('password')]
             );
 
             $outConnector = new OutConnector([
@@ -58,8 +60,10 @@ class MqttConnectorController extends Controller
             abort(404);
         }
 
-        DB::transaction(function () use ($request, $outConnector, $mqttConnector) {
-            $data = $request->connectorData();
+        $certificate = $request->clientCertificateData($mqttConnector);
+
+        DB::transaction(function () use ($request, $outConnector, $mqttConnector, $certificate) {
+            $data = $request->connectorData() + $certificate;
             // The API never returns the password, so an empty one means "keep the current".
             if ($request->filled('password')) {
                 $data['password'] = $request->input('password');

@@ -290,6 +290,8 @@ def snapshot_model(**overrides):
         "clientId": "pid-test",
         "ssl": False,
         "sslCert": None,
+        "clientCert": None,
+        "clientKey": None,
         "topicTemplate": [{"type": "static", "value": "plataforma/aforos"}],
         "payload_type": "occupancy_readings",
         "payload_config": [],
@@ -326,7 +328,7 @@ class TestSnapshotPublishing:
         sent = mqtt_connector.MqttConnector(1, snapshot_model(), None, MagicMock()).handle()
 
         assert sent is True
-        client.publish.assert_called_once_with("plataforma/aforos", json.dumps(payload))
+        client.publish.assert_called_once_with("plataforma/aforos", json.dumps(payload), qos=1)
 
     def test_empty_snapshot_does_not_connect(self, mocker, client):
         self.snapshot(mocker, None)

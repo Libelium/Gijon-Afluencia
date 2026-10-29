@@ -20,6 +20,8 @@ class MqttConnector(Base):
     password = Column(String)
     clientId = Column(String)
     sslCert = Column(Text)
+    clientCert = Column(Text)
+    clientKey = Column(Text)
     ssl = Column(Boolean)
     topicTemplate = Column(JSONB)
     payload_config = Column(JSONB)
