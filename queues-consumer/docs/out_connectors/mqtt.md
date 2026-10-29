@@ -24,7 +24,9 @@ números.
 
 ### `occupancy_readings`: aforos
 
-Se asocian al conector las **zonas** (`CrowdFlowZone`). Se envía su último `occupancy`.
+Se asocian al conector las **zonas** (`CrowdFlowZone`). Se envía su último `occupancy`. Solo
+cuentan las zonas: otra entidad asociada con un atributo `occupancy` (una observación de Smart Spot,
+por ejemplo) no se envía.
 
 ```json
 {"lecturas": [{"dpa": {
@@ -110,5 +112,6 @@ Se asocian al conector los **dispositivos**, o entidades (y entonces se toman su
   como AWS IoT, se guardan el certificado y su clave privada (PEM). La clave, como la contraseña,
   nunca sale por la API (`has_client_key`) y al editar se conserva si se deja vacía. Al conectar se
   escriben en una carpeta temporal privada (permisos `600`) solo el tiempo de cargarlos en TLS.
-- Se publica con **QoS 1**: el broker confirma cada mensaje, y uno que rechaza (por ejemplo, un
-  topic que su política no permite) cuenta como fallo del conector.
+- Se publica con **MQTT 5 y QoS 1**: el broker confirma cada mensaje, y uno que rechaza (por
+  ejemplo, un topic que su política no permite) cuenta como fallo del conector, con el motivo que da
+  el broker (`Not authorized`…) en el registro de errores.

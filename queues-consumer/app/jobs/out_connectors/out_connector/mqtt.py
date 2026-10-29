@@ -96,12 +96,19 @@ class MqttConnector(OutConnector):
 
         connected = threading.Event()
         connack = {}
+        # paho calls on_publish before marking the message as published, so once
+        # wait_for_publish returns its PUBACK reason is already here.
+        pubacks = {}
 
         def on_connect(_client, _userdata, _flags, reason_code, _properties):
             connack["reason_code"] = reason_code
             connected.set()
 
+        def on_publish(_client, _userdata, mid, reason_code, _properties):
+            pubacks[mid] = reason_code
+
         client.on_connect = on_connect
+        client.on_publish = on_publish
 
         try:
             client.connect(self.connector.ipAddress, self.connector.port)
@@ -121,14 +128,20 @@ class MqttConnector(OutConnector):
                 info.wait_for_publish(timeout)
                 if not info.is_published():
                     raise TimeoutError(f"MQTT message to '{topic}' not acknowledged in {timeout}s")
+                reason = pubacks.get(info.mid)
+                if reason is not None and reason.is_failure:
+                    raise ConnectionError(f"MQTT broker refused the message to '{topic}': {reason}")
         finally:
             client.disconnect()
             client.loop_stop()
 
     def __create_client(self) -> mqtt.Client:
+        # MQTT 5: the broker says why it refuses a connection or a message (e.g. "Not
+        # authorized"); with 3.1.1 a refused publish just never gets its acknowledgement.
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             client_id=self.connector.clientId or f"pid-{uuid.uuid4().hex[:12]}",
+            protocol=mqtt.MQTTv5,
         )
         client.connect_timeout = settings.OUT_CONNECTOR_REQUEST_TIMEOUT
 

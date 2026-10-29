@@ -252,12 +252,31 @@ class TestMqttConnector:
         with pytest.raises(ValueError):
             mqtt_connector.MqttConnector(1, model, entity_data, MagicMock()).handle()
 
+    def test_refused_message_reports_the_broker_reason(self, mocker, entity_data):
+        allow_brokers(mocker)
+        client = fake_client(mocker)
+        info = MagicMock(mid=7)
+        info.is_published.return_value = True
+
+        def publish(topic, message, qos):
+            # Como paho: primero el callback con el motivo del PUBACK, luego publicado.
+            client.on_publish(client, None, 7, ReasonCode(PacketTypes.PUBACK, identifier=0x87), None)
+            return info
+
+        client.publish.side_effect = publish
+
+        with pytest.raises(ConnectionError, match="Not authorized"):
+            mqtt_connector.MqttConnector(1, mqtt_model(), entity_data, MagicMock()).handle()
+
+        client.disconnect.assert_called_once()
+
     def test_client_uses_the_paho_v2_callback_api(self, entity_data):
         client = mqtt_connector.MqttConnector(
             1, mqtt_model(), entity_data, MagicMock()
         )._MqttConnector__create_client()
 
         assert isinstance(client, mqtt.Client)
+        assert client.protocol == mqtt.MQTTv5
         assert client.connect_timeout == mqtt_connector.settings.OUT_CONNECTOR_REQUEST_TIMEOUT
 
 

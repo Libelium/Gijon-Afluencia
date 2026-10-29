@@ -1,8 +1,13 @@
-from typing import Optional
+from typing import List, Optional
+
+from models.entity_model import Entity
 
 from .snapshot_base import SnapshotPayloadBuilder
 
 OCCUPANCY_PROPERTY = "occupancy"
+# Other datamodels also carry an occupancy attribute (a Smart Spot CrowdFlowObserved, for
+# one), but only zones are points of interest.
+ZONE_ENTITY_TYPE = "CrowdFlowZone"
 
 
 class OccupancyReadingsPayloadBuilder(SnapshotPayloadBuilder):
@@ -13,7 +18,7 @@ class OccupancyReadingsPayloadBuilder(SnapshotPayloadBuilder):
     """
 
     def build_payload(self) -> Optional[dict]:
-        entity_ids = self.linked_entity_ids()
+        entity_ids = self.linked_zone_ids()
         properties = self.properties_by_entity(entity_ids, [OCCUPANCY_PROPERTY, "name"])
 
         readings = []
@@ -37,3 +42,16 @@ class OccupancyReadingsPayloadBuilder(SnapshotPayloadBuilder):
             )
 
         return {"lecturas": readings} if readings else None
+
+    def linked_zone_ids(self) -> List[int]:
+        entity_ids = self.linked_entity_ids()
+        if not entity_ids:
+            return []
+
+        rows = (
+            self.iris_db.query(Entity.id)
+            .filter(Entity.id.in_(entity_ids))
+            .filter(Entity.datamodel == ZONE_ENTITY_TYPE)
+            .all()
+        )
+        return [row[0] for row in rows]

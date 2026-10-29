@@ -59,6 +59,15 @@ def realtime(mocker, rows):
     )
 
 
+def zones_db(zone_ids):
+    """Base de datos principal simulada: solo esas entidades son CrowdFlowZone."""
+    db = MagicMock()
+    db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+        (i,) for i in zone_ids
+    ]
+    return db
+
+
 def linked(mocker, entities=(), devices=()):
     mocker.patch.object(
         crud_out_connectors,
@@ -114,7 +123,7 @@ class TestOccupancyReadings:
             ],
         )
 
-        payload = OccupancyReadingsPayloadBuilder(1, MagicMock(), MagicMock()).build_payload()
+        payload = OccupancyReadingsPayloadBuilder(1, zones_db([1, 2, 3]), MagicMock()).build_payload()
 
         assert payload == {
             "lecturas": [
@@ -142,6 +151,36 @@ class TestOccupancyReadings:
         realtime(mocker, [])
 
         assert OccupancyReadingsPayloadBuilder(1, MagicMock(), MagicMock()).build_payload() is None
+
+    def test_only_zones_are_points_of_interest(self, mocker):
+        # La 9 es una observacion de Smart Spot asociada al conector: tambien tiene occupancy.
+        linked(mocker, entities=[1, 9])
+        realtime(
+            mocker,
+            [
+                prop(1, "urn:ngsi-ld:CrowdFlowZone:playa", "occupancy", 120),
+                prop(9, "urn:ngsi-ld:CrowdFlowObserved:PRUEBA-DATO-001", "occupancy", 0.9),
+            ],
+        )
+
+        payload = OccupancyReadingsPayloadBuilder(1, zones_db([1]), MagicMock()).build_payload()
+
+        assert [r["dpa"]["idPuntoInteres"] for r in payload["lecturas"]] == ["playa"]
+
+    def test_zone_query_filters_by_datamodel(self, mocker):
+        from sqlalchemy.dialects import postgresql
+        from sqlalchemy.orm import Query, Session
+
+        linked(mocker, entities=[1, 9])
+        captured = []
+        mocker.patch.object(Query, "all", lambda query: captured.append(query) or [])
+
+        OccupancyReadingsPayloadBuilder(1, Session(), MagicMock()).linked_zone_ids()
+
+        sql = str(captured[0].statement.compile(
+            dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
+        ))
+        assert "entities.datamodel = 'CrowdFlowZone'" in sql
 
 
 # ---------------------------------------------------------------------------
