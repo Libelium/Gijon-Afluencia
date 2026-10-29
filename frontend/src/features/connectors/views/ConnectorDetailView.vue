@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ApiError, errorMessage } from '@/api/http'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import { formatDateTime, parseApiDateTime, relativeFromNow, urnTail } from '@/lib/format'
 import { useSessionStore } from '@/stores/session'
+import ConfirmDialog from '@/features/dashboards/components/ConfirmDialog.vue'
 import ConnectorErrorsCard from '../components/ConnectorErrorsCard.vue'
 import ConnectorStatusChip from '../components/ConnectorStatusChip.vue'
-import { getConnector, listConnectorErrors, setConnectorStatus } from '../api/connectors'
+import {
+  deleteConnector,
+  getConnector,
+  listConnectorErrors,
+  setConnectorStatus,
+} from '../api/connectors'
 import { connectorStatus, formatTopic, isSnapshot, payloadTypeLabel } from '../lib/display'
 import type { ConnectorDetail } from '../types'
 import type { LogLine } from '@/types'
 
 const route = useRoute()
+const router = useRouter()
 const session = useSessionStore()
 
 const connector = ref<ConnectorDetail | null>(null)
@@ -23,6 +30,9 @@ const pending = ref(true)
 const error = ref<string | null>(null)
 const toggling = ref(false)
 const toggleError = ref<string | null>(null)
+const confirmingDelete = ref(false)
+const deleting = ref(false)
+const deleteError = ref<string | null>(null)
 const errorsCard = ref<InstanceType<typeof ConnectorErrorsCard> | null>(null)
 
 const connectorId = computed(() => {
@@ -101,6 +111,22 @@ async function toggle(value: boolean | null) {
   }
 }
 
+async function confirmDelete() {
+  if (!connector.value || deleting.value) return
+  deleting.value = true
+  deleteError.value = null
+  try {
+    await deleteConnector(connector.value.id)
+    confirmingDelete.value = false
+    await router.push('/conectores')
+  } catch (e) {
+    confirmingDelete.value = false
+    deleteError.value = `${t('connectors.detail.deleteError')}: ${errorMessage(e)}`
+  } finally {
+    deleting.value = false
+  }
+}
+
 watch(connectorId, () => void load(), { immediate: true })
 </script>
 
@@ -123,6 +149,16 @@ watch(connectorId, () => void load(), { immediate: true })
       </VBtn>
 
       <VBtn
+        v-if="connector"
+        color="error"
+        variant="tonal"
+        prepend-icon="mdi-delete-outline"
+        @click="confirmingDelete = true"
+      >
+        {{ t('connectors.detail.delete') }}
+      </VBtn>
+
+      <VBtn
         icon="mdi-refresh"
         variant="tonal"
         :loading="pending"
@@ -132,6 +168,18 @@ watch(connectorId, () => void load(), { immediate: true })
       />
     </template>
   </PageHeader>
+
+  <VAlert v-if="deleteError" type="error" :text="deleteError" role="alert" class="mb-6" />
+
+  <ConfirmDialog
+    v-model="confirmingDelete"
+    :title="t('connectors.detail.deleteTitle')"
+    :text="t('connectors.detail.deleteText', { name: title })"
+    :confirm-text="t('connectors.detail.deleteConfirm')"
+    color="error"
+    :loading="deleting"
+    @confirm="confirmDelete"
+  />
 
   <StateBlock
     :loading="pending"

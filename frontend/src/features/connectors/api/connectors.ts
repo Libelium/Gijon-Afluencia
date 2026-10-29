@@ -40,6 +40,11 @@ export async function linkEntities(id: number, entityIds: number[]): Promise<voi
   await http.put(`/connectors/out/${id}/models`, { entities: entityIds })
 }
 
+/** Borra el conector con su configuracion y credenciales; deja de enviar en el acto. */
+export async function deleteConnector(id: number): Promise<void> {
+  await http.delete(`/connectors/out/${id}`)
+}
+
 /** Activar pone a cero los fallos acumulados: el conector vuelve a empezar. */
 export async function setConnectorStatus(
   id: number,
