@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Tuple
 
 from models.entity_model import Entity
 
@@ -17,7 +17,7 @@ class OccupancyReadingsPayloadBuilder(SnapshotPayloadBuilder):
     {"lecturas": [{"dpa": {"fechaLectura", "idPuntoInteres", "descripcionPuntoInteres", "total"}}]}
     """
 
-    def build_payload(self) -> Optional[dict]:
+    def build_items(self) -> List[Tuple[str, dict]]:
         entity_ids = self.linked_zone_ids()
         properties = self.properties_by_entity(entity_ids, [OCCUPANCY_PROPERTY, "name"])
 
@@ -31,17 +31,20 @@ class OccupancyReadingsPayloadBuilder(SnapshotPayloadBuilder):
             name = props.get("name")
             point_id = self.urn_id(occupancy.urn)
             readings.append(
-                {
-                    "dpa": {
-                        "fechaLectura": self.iso_utc(occupancy.timestamp),
-                        "idPuntoInteres": point_id,
-                        "descripcionPuntoInteres": name.value if name and name.value else point_id,
-                        "total": self.number(occupancy.value),
-                    }
-                }
+                (
+                    point_id,
+                    {
+                        "dpa": {
+                            "fechaLectura": self.iso_utc(occupancy.timestamp),
+                            "idPuntoInteres": point_id,
+                            "descripcionPuntoInteres": name.value if name and name.value else point_id,
+                            "total": self.number(occupancy.value),
+                        }
+                    },
+                )
             )
 
-        return {"lecturas": readings} if readings else None
+        return readings
 
     def linked_zone_ids(self) -> List[int]:
         entity_ids = self.linked_entity_ids()

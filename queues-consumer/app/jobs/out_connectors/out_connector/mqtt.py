@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import ssl
 import tempfile
 import threading
@@ -21,6 +22,18 @@ from models.out_connector_mqtt_model import (
     SNAPSHOT_PAYLOAD_TYPES,
 )
 from schemas.entity_data_notification import EntityDataNotification
+
+
+# Topic variable of the snapshots that sends one message per item.
+ID_VARIABLE = "id"
+
+
+def topic_level(value: str) -> str:
+    """
+    A value as a single topic level: "/" would open more levels, and "#" and "+" are
+    subscription wildcards a publish topic cannot carry.
+    """
+    return re.sub(r"[/#+]", "_", str(value))
 
 
 class MqttConnector(OutConnector):
@@ -81,14 +94,28 @@ class MqttConnector(OutConnector):
         return [(self.__build_topic(), json.dumps(payload, default=str))]
 
     def __snapshot_publishes(self) -> List[Tuple[str, str]]:
-        payload = get_snapshot_builder(
+        builder = get_snapshot_builder(
             self.connector, self.out_connector_id, self.iris_db, self.realtime_db
-        ).build_payload()
+        )
 
+        # With {id} in the topic, one message per item, each to its own subtopic.
+        if self.__topic_uses(ID_VARIABLE):
+            return [
+                (self.__build_topic(item_id=item_id), json.dumps(payload, default=str))
+                for item_id, payload in builder.build_payloads_by_id().items()
+            ]
+
+        payload = builder.build_payload()
         if payload is None:
             return []
 
         return [(self.__build_topic(), json.dumps(payload, default=str))]
+
+    def __topic_uses(self, variable: str) -> bool:
+        return any(
+            part.get("type") == "variable" and part.get("value") == variable
+            for part in self.connector.topicTemplate or []
+        )
 
     def __publish(self, publishes: List[Tuple[str, str]]) -> None:
         timeout = settings.OUT_CONNECTOR_REQUEST_TIMEOUT
@@ -140,7 +167,7 @@ class MqttConnector(OutConnector):
         # authorized"); with 3.1.1 a refused publish just never gets its acknowledgement.
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            client_id=self.connector.clientId or f"pid-{uuid.uuid4().hex[:12]}",
+            client_id=self.connector.clientId or self.__generate_client_id(),
             protocol=mqtt.MQTTv5,
         )
         client.connect_timeout = settings.OUT_CONNECTOR_REQUEST_TIMEOUT
@@ -158,6 +185,14 @@ class MqttConnector(OutConnector):
             raise ValueError("A client certificate needs the TLS connection")
 
         return client
+
+    def __generate_client_id(self) -> str:
+        """
+        A different id on every connection: a broker drops a session when another arrives
+        with the same id, and one connector can be sending twice at a time (a periodic and a
+        manual send, or parallel notifications). The connector id keeps it traceable.
+        """
+        return f"{settings.OUT_CONNECTOR_CLIENT_ID_PREFIX}-c{self.out_connector_id}-{uuid.uuid4().hex[:8]}"
 
     def __load_client_certificate(self, context: ssl.SSLContext) -> None:
         """
@@ -178,19 +213,21 @@ class MqttConnector(OutConnector):
 
             context.load_cert_chain(certfile=paths[0], keyfile=paths[1])
 
-    def __build_topic(self, measure: Optional[str] = None) -> str:
+    def __build_topic(self, measure: Optional[str] = None, item_id: Optional[str] = None) -> str:
         """
         Joins the parts of the topic template, replacing the variables with the entity data.
-        The measure variable only exists in legacy, where each attribute has its own message.
+        The measure variable only exists in legacy, where each attribute has its own message;
+        id, in the snapshots sent one message per item.
         """
-        # A snapshot carries many entities: its topic can only be static.
         variables = {}
+        if item_id is not None:
+            variables[ID_VARIABLE] = topic_level(item_id)
         if self.entity_data is not None:
-            variables = {
-                "urn": self.entity_data.urn,
-                "tenant": self.entity_data.tenant,
-                "scope": self.entity_data.scope,
-            }
+            variables.update(
+                urn=self.entity_data.urn,
+                tenant=self.entity_data.tenant,
+                scope=self.entity_data.scope,
+            )
         if measure is not None:
             variables["measure"] = measure
 

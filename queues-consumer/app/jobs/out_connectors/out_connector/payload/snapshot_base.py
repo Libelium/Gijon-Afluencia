@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -12,9 +12,13 @@ from models.entity_model import Entity
 
 class SnapshotPayloadBuilder(ABC):
     """
-    Builds one message with the current state of the models linked to an out connector,
-    read from the realtime database. Returns None when there is nothing to send.
+    Builds the current state of the models linked to an out connector, read from the
+    realtime database: either one message with every item, or one message per item id
+    (the {id} topic variable). Returns None / {} when there is nothing to send.
     """
+
+    # Key of the list that holds the items in every message.
+    ITEMS_KEY = "lecturas"
 
     def __init__(self, out_connector_id: int, iris_db: Session, realtime_db: Session):
         self.out_connector_id = out_connector_id
@@ -22,8 +26,24 @@ class SnapshotPayloadBuilder(ABC):
         self.realtime_db = realtime_db
 
     @abstractmethod
+    def build_items(self) -> List[Tuple[str, dict]]:
+        """
+        (id, item) pairs, in sending order. The id is the one the message itself uses
+        for the item: the point of interest, the origin sensor, the device serial.
+        """
+
     def build_payload(self) -> Optional[dict]:
-        pass
+        items = self.build_items()
+        return {self.ITEMS_KEY: [item for _, item in items]} if items else None
+
+    def build_payloads_by_id(self) -> Dict[str, dict]:
+        """
+        One message per id, each with only that id's items, keeping their order.
+        """
+        grouped: Dict[str, list] = {}
+        for item_id, item in self.build_items():
+            grouped.setdefault(item_id, []).append(item)
+        return {item_id: {self.ITEMS_KEY: items} for item_id, items in grouped.items()}
 
     def linked_entity_ids(self) -> List[int]:
         return crud_out_connectors.get_linked_model_ids(

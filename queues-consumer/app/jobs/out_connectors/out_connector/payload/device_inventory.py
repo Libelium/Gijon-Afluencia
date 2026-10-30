@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional, Tuple
 
 from models.device_entity_model import DeviceEntity
 from models.device_model import Device
@@ -19,10 +19,15 @@ class DeviceInventoryPayloadBuilder(SnapshotPayloadBuilder):
                   "groupings": []}]}
     """
 
-    def build_payload(self) -> Optional[dict]:
+    ITEMS_KEY = "devices"
+
+    def build_items(self) -> List[Tuple[str, dict]]:
+        """
+        Keyed by the device serial, or by its id when it has none.
+        """
         device_ids = set(self.linked_device_ids()) | self.__devices_of_linked_entities()
         if not device_ids:
-            return None
+            return []
 
         rows = (
             self.iris_db.query(Device, DeviceType)
@@ -38,23 +43,26 @@ class DeviceInventoryPayloadBuilder(SnapshotPayloadBuilder):
         for device, device_type in rows:
             entity = main_entities.get(device.id)
             devices.append(
-                {
-                    "general": {
-                        "nombreSensor": sensor_names.get(entity.urn, self.urn_id(entity.urn)) if entity else None,
-                        "idSensor": entity.urn if entity else None,
-                        "coordenadas": self.__coordinates(entity),
-                        "nombre": device.name,
-                        "modelo": device_type.name if device_type else None,
-                        "familia": device_type.category if device_type else None,
-                        "descripcion": device.description,
-                        "numeroSerie": device.serial,
+                (
+                    device.serial or str(device.id),
+                    {
+                        "general": {
+                            "nombreSensor": sensor_names.get(entity.urn, self.urn_id(entity.urn)) if entity else None,
+                            "idSensor": entity.urn if entity else None,
+                            "coordenadas": self.__coordinates(entity),
+                            "nombre": device.name,
+                            "modelo": device_type.name if device_type else None,
+                            "familia": device_type.category if device_type else None,
+                            "descripcion": device.description,
+                            "numeroSerie": device.serial,
+                        },
+                        # PENDING: what a grouping is (group and value) is not defined yet.
+                        "groupings": [],
                     },
-                    # PENDING: what a grouping is (group and value) is not defined yet.
-                    "groupings": [],
-                }
+                )
             )
 
-        return {"devices": devices} if devices else None
+        return devices
 
     def __devices_of_linked_entities(self) -> set:
         entity_ids = self.linked_entity_ids()

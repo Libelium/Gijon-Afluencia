@@ -13,6 +13,8 @@ class MqttConnectorRequest extends FormRequest
     public const SNAPSHOT_PAYLOAD_TYPES = ['occupancy_readings', 'flow_readings', 'device_inventory'];
     public const PAYLOAD_TYPES = ['legacy', 'normalized', 'key_value', ...self::SNAPSHOT_PAYLOAD_TYPES];
     public const TOPIC_VARIABLES = ['urn', 'tenant', 'scope'];
+    // A snapshot carries many items: {id} sends one message per item, each to its own subtopic.
+    public const SNAPSHOT_TOPIC_VARIABLES = ['id'];
     // legacy sends one message per attribute, so its topic can also carry the measure.
     public const LEGACY_TOPIC_VARIABLES = ['urn', 'tenant', 'scope', 'measure'];
     public const LEGACY_PAYLOAD_KEYS = ['timestamp', 'value', 'urn', 'tenant', 'scope', 'measure', 'unit'];
@@ -71,10 +73,9 @@ class MqttConnectorRequest extends FormRequest
             }
 
             $payloadType = $this->input('payload_type');
-            // A snapshot carries many entities, so its topic can only be static.
             $allowed = match (true) {
                 $payloadType === 'legacy' => self::LEGACY_TOPIC_VARIABLES,
-                in_array($payloadType, self::SNAPSHOT_PAYLOAD_TYPES, true) => [],
+                in_array($payloadType, self::SNAPSHOT_PAYLOAD_TYPES, true) => self::SNAPSHOT_TOPIC_VARIABLES,
                 default => self::TOPIC_VARIABLES,
             };
 
@@ -83,9 +84,7 @@ class MqttConnectorRequest extends FormRequest
                     && !in_array($part['value'] ?? null, $allowed, true)) {
                     $validator->errors()->add(
                         "topicTemplate.$i.value",
-                        $allowed
-                            ? 'Allowed variables: ' . implode(', ', $allowed)
-                            : 'This payload type only takes a static topic'
+                        'Allowed variables: ' . implode(', ', $allowed)
                     );
                 }
             }

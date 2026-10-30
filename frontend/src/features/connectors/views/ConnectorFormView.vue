@@ -77,10 +77,10 @@ const topicMessage = computed(() =>
 )
 
 const topicHint = computed(() => {
+  // En los formatos periodicos {id} cambia cuantos mensajes se envian: se explica que hace.
+  if (isSnapshot(payloadType.value)) return t(`connectors.form.topicHintId.${payloadType.value}`)
   const variables = topicVariables(payloadType.value)
-  return variables.length
-    ? t('connectors.form.topicHint', { variables: variables.map((v) => `{${v}}`).join(', ') })
-    : t('connectors.form.topicHintStatic')
+  return t('connectors.form.topicHint', { variables: variables.map((v) => `{${v}}`).join(', ') })
 })
 
 const entitiesHint = computed(() =>

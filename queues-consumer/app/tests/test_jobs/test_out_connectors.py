@@ -279,6 +279,15 @@ class TestMqttConnector:
         assert client.protocol == mqtt.MQTTv5
         assert client.connect_timeout == mqtt_connector.settings.OUT_CONNECTOR_REQUEST_TIMEOUT
 
+    def test_generated_client_id_is_unique_and_traceable(self, entity_data):
+        connector = mqtt_connector.MqttConnector(7, mqtt_model(clientId=None), entity_data, MagicMock())
+
+        first = connector._MqttConnector__create_client()._client_id.decode()
+        second = connector._MqttConnector__create_client()._client_id.decode()
+
+        assert first.startswith("pid-gijon-c7-") and second.startswith("pid-gijon-c7-")
+        assert first != second
+
 
 # ---------------------------------------------------------------------------
 # Factorias

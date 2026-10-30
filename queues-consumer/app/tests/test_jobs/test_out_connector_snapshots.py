@@ -244,6 +244,21 @@ class TestFlowReadings:
             },
         ]
 
+    def test_by_id_groups_the_flows_of_each_origin(self, mocker):
+        rows = flow(10, self.A, self.B, 30) + flow(11, self.A, self.C, 10) + flow(12, self.C, self.B, 5)
+        mocker.patch.object(
+            FlowReadingsPayloadBuilder,
+            "_FlowReadingsPayloadBuilder__linked_sensor_urns",
+            return_value=[self.A, self.C],
+        )
+        realtime(mocker, rows)
+
+        by_id = FlowReadingsPayloadBuilder(1, MagicMock(), MagicMock()).build_payloads_by_id()
+
+        assert list(by_id) == ["smsp001", "smsp003"]
+        assert [r["dpa"]["idDestino"] for r in by_id["smsp001"]["lecturas"]] == ["smsp002", "smsp003"]
+        assert [r["dpa"]["idDestino"] for r in by_id["smsp003"]["lecturas"]] == ["smsp002"]
+
     def test_only_the_last_window_is_sent(self, mocker):
         rows = flow(10, self.A, self.B, 30) + flow(
             11, self.A, self.C, 10, start="2026-10-26T09:00:00+00:00"
@@ -376,6 +391,30 @@ class TestSnapshotPublishing:
 
         assert sent is False
         client.connect.assert_not_called()
+
+    def test_id_sends_one_message_per_item_to_its_subtopic(self, mocker, client):
+        builder = mocker.patch.object(mqtt_connector, "get_snapshot_builder").return_value
+        builder.build_payloads_by_id.return_value = {
+            "P01": {"lecturas": [{"dpa": {"total": 1}}]},
+            "a/b#c": {"lecturas": [{"dpa": {"total": 2}}]},
+        }
+        model = snapshot_model(
+            topicTemplate=[
+                {"type": "static", "value": "gijon/pid/aero-people/aforos/"},
+                {"type": "variable", "value": "id"},
+            ]
+        )
+
+        mqtt_connector.MqttConnector(1, model, None, MagicMock()).handle()
+
+        client.connect.assert_called_once()
+        assert [c.args[0] for c in client.publish.call_args_list] == [
+            "gijon/pid/aero-people/aforos/P01",
+            # Un identificador nunca abre niveles ni lleva comodines.
+            "gijon/pid/aero-people/aforos/a_b_c",
+        ]
+        assert json.loads(client.publish.call_args_list[0].args[1]) == {"lecturas": [{"dpa": {"total": 1}}]}
+        builder.build_payload.assert_not_called()
 
     def test_snapshot_topic_cannot_take_variables(self, mocker, client):
         self.snapshot(mocker, {"lecturas": []})

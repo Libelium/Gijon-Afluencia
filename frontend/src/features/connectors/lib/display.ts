@@ -32,10 +32,11 @@ export function payloadTypeOptions(): Array<{ value: PayloadType; title: string;
 
 /**
  * Variables de topic que el servidor sabe sustituir con cada formato. Mismo criterio que la
- * validacion del backend: una foto lleva muchas entidades, asi que su topic solo puede ser fijo.
+ * validacion del backend: una foto lleva muchas entidades, y con {id} se envia un mensaje por
+ * cada una (zona, sensor de origen o dispositivo) a su propio subtopic.
  */
 export function topicVariables(type?: string): string[] {
-  if (isSnapshot(type)) return []
+  if (isSnapshot(type)) return ['id']
   if (type === 'legacy') return ['urn', 'tenant', 'scope', 'measure']
   return ['urn', 'tenant', 'scope']
 }
@@ -73,9 +74,7 @@ export function topicError(text: string, type?: string): string | undefined {
   const unknown = used.find((part) => !allowed.includes(part.value))
   if (!unknown) return undefined
 
-  return allowed.length
-    ? t('connectors.form.topicVariables', { variables: allowed.map((v) => `{${v}}`).join(', ') })
-    : t('connectors.form.topicStatic')
+  return t('connectors.form.topicVariables', { variables: allowed.map((v) => `{${v}}`).join(', ') })
 }
 
 /** Solo host o IP: ni esquema, ni ruta, ni credenciales, igual que valida el servidor. */

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Optional
+from typing import List, Tuple
 
 import models.crud.crud_entity_properties as crud_entity_properties
 from models.entity_model import Entity
@@ -18,14 +18,18 @@ class FlowReadingsPayloadBuilder(SnapshotPayloadBuilder):
                            "descripcionDestino", "total(%)"}}]}
     """
 
-    def build_payload(self) -> Optional[dict]:
+    def build_items(self) -> List[Tuple[str, dict]]:
+        """
+        Keyed by origin sensor: with the {id} variable, each origin gets one message with
+        all its flows.
+        """
         sensor_urns = self.__linked_sensor_urns()
         if not sensor_urns:
-            return None
+            return []
 
         flows = self.__flows_touching(sensor_urns)
         if not flows:
-            return None
+            return []
 
         # The ETL updates every flow entity with each run: older windows are flows that
         # did not happen in the last one.
@@ -46,22 +50,26 @@ class FlowReadingsPayloadBuilder(SnapshotPayloadBuilder):
         readings = []
         for flow in sorted(flows, key=lambda f: (f["origin"], f["destination"])):
             total = totals.get(flow["origin"]) or 0
+            origin_id = self.urn_id(flow["origin"])
             readings.append(
-                {
-                    "dpa": {
-                        "fechaLectura": self.iso_utc(window),
-                        "idOrigen": self.urn_id(flow["origin"]),
-                        "descripcionOrigen": names.get(flow["origin"], self.urn_id(flow["origin"])),
-                        "idDestino": self.urn_id(flow["destination"]),
-                        "descripcionDestino": names.get(
-                            flow["destination"], self.urn_id(flow["destination"])
-                        ),
-                        "total(%)": round(flow["count"] * 100 / total, 2) if total else 0,
-                    }
-                }
+                (
+                    origin_id,
+                    {
+                        "dpa": {
+                            "fechaLectura": self.iso_utc(window),
+                            "idOrigen": origin_id,
+                            "descripcionOrigen": names.get(flow["origin"], origin_id),
+                            "idDestino": self.urn_id(flow["destination"]),
+                            "descripcionDestino": names.get(
+                                flow["destination"], self.urn_id(flow["destination"])
+                            ),
+                            "total(%)": round(flow["count"] * 100 / total, 2) if total else 0,
+                        }
+                    },
+                )
             )
 
-        return {"lecturas": readings}
+        return readings
 
     def __linked_sensor_urns(self) -> list:
         entity_ids = self.linked_entity_ids()

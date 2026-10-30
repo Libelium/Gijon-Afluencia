@@ -12,12 +12,26 @@ Los conectores se crean, se editan y se asocian desde la API de gestión, bajo `
 | Quién lo dispara | El observer `check_connectors` de `EntitySync` | Celery beat: `platform.out-connector.snapshot_all` |
 | De dónde lee | La propia notificación | La base de tiempo real: el último valor de cada atributo |
 | Mensajes | Uno por notificación (`legacy`: uno por atributo) | Uno por envío, con todas las lecturas |
-| Topic | Fijo, o con variables `urn`, `tenant`, `scope` (`legacy`: también `measure`) | Solo fijo |
+| Topic | Fijo, o con variables `urn`, `tenant`, `scope` (`legacy`: también `measure`) | Fijo, o con `{id}` para un mensaje por elemento |
 
 Todos los trabajos van a la cola `platform.out-connector.generic`. Si una foto no tiene nada que
 enviar, no se publica ningún mensaje y la salud del conector no cambia.
 
 ## Formatos de foto periódica
+
+Con un topic fijo se envía **un mensaje con todos los elementos**. Si el topic lleva la variable
+`{id}` (por ejemplo, `gijon/pid/aero-people/aforos/{id}`), se envía **un mensaje por elemento**, cada
+uno a su subtopic y con solo sus lecturas. El `{id}` es el mismo identificador que va dentro del
+mensaje:
+
+| Formato | Un mensaje por… | `{id}` |
+|---|---|---|
+| `occupancy_readings` | zona | `idPuntoInteres` (último tramo del URN de la zona) |
+| `flow_readings` | sensor de origen, con todos sus flujos | `idOrigen` |
+| `device_inventory` | dispositivo | `numeroSerie` (o el id interno si no tiene) |
+
+En el topic, `/`, `#` y `+` se sustituyen por `_`: un identificador no puede abrir niveles ni ser un
+comodín.
 
 En todos, las fechas van en ISO 8601 en UTC (`2026-10-26T10:00:00Z`). Los números se envían como
 números.
@@ -108,6 +122,12 @@ Se asocian al conector los **dispositivos**, o entidades (y entonces se toman su
   `CONNECTOR_DEACTIVATION_WINDOW_SECONDS`, el conector pasa a `inactive`. Los errores quedan en la
   tabla `log_lines` con `resource_type = 'out_connectors'`.
 - La contraseña del broker no sale nunca por la API: esta solo devuelve `has_password`.
+- **Identificador de cliente.** Si el conector no tiene uno propio, se genera uno distinto en cada
+  conexión: `<OUT_CONNECTOR_CLIENT_ID_PREFIX>-c<id del conector>-<8 caracteres>` (por defecto
+  `pid-gijon-c1-7f3a9b2c`). Es único, porque un broker desconecta una sesión cuando llega otra con
+  el mismo identificador y un conector puede estar enviando dos veces a la vez; y lleva el id del
+  conector para poder seguirlo en los registros del broker. Un identificador fijo solo conviene si el
+  servidor lo exige.
 - **Certificado de cliente (TLS mutuo).** Para brokers que identifican al conector por certificado,
   como AWS IoT, se guardan el certificado y su clave privada (PEM). La clave, como la contraseña,
   nunca sale por la API (`has_client_key`) y al editar se conserva si se deja vacía. Al conectar se

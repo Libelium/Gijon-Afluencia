@@ -35,10 +35,15 @@ describe('parseTopic / formatTopic', () => {
 })
 
 describe('topicError', () => {
-  it('los formatos de foto periodica solo admiten topic fijo', () => {
-    expect(topicVariables('occupancy_readings')).toEqual([])
+  it('los formatos de foto periodica solo admiten {id}', () => {
+    expect(topicVariables('occupancy_readings')).toEqual(['id'])
     expect(topicError('gijon/pid/aforos', 'occupancy_readings')).toBeUndefined()
+    expect(topicError('gijon/pid/aforos/{id}', 'occupancy_readings')).toBeUndefined()
     expect(topicError('gijon/{tenant}', 'flow_readings')).toBeDefined()
+  })
+
+  it('{id} no existe en los formatos por notificacion', () => {
+    expect(topicError('pid/{id}', 'key_value')).toBeDefined()
   })
 
   it('measure solo existe en el formato original', () => {
