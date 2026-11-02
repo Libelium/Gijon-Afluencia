@@ -9,7 +9,7 @@ import { t } from '@/i18n'
 import { formatNumber, relativeFromNow, urnTail } from '@/lib/format'
 import { clickableRowProps } from '@/lib/a11y'
 import { useSessionStore } from '@/stores/session'
-import { dataScopeLabel, listDataScopes, type DataScope } from '@/api/scopes'
+import { dataScopeLabel, hasNamedScope, listDataScopes, type DataScope } from '@/api/scopes'
 import type { Entity } from '@/types'
 import { getLastDataTimes, listDatamodels, listEntities } from '../api/entities'
 import { datamodelIcon } from '../lib/datamodel'
@@ -63,14 +63,17 @@ function subIdentifier(item: Entity): string | null {
 
 // Ninguna columna es ordenable a proposito: el servidor descarta el parametro `orderBy` y
 // ordena siempre por identificador interno, asi que una cabecera pulsable prometeria algo
-// que no se cumple.
-const headers = [
+// que no se cumple. La de ambito solo sale si alguna fila esta fuera del raiz: si no, seria
+// una columna de «/».
+const headers = computed(() => [
   { title: t('entities.table.name'), key: 'name', sortable: false, maxWidth: 360 },
   { title: t('entities.table.datamodel'), key: 'datamodel', sortable: false },
   { title: t('entities.table.tenant'), key: 'tenant', sortable: false },
-  { title: t('entities.table.scope'), key: 'scope', sortable: false },
+  ...(hasNamedScope(rows.value)
+    ? [{ title: t('entities.table.scope'), key: 'scope', sortable: false }]
+    : []),
   { title: t('entities.table.lastData'), key: 'time_last_data', sortable: false },
-]
+])
 
 const pageText = `{0}-{1} ${t('common.of')} {2}`
 

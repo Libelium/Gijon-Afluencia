@@ -60,10 +60,23 @@ export async function listDataScopes(): Promise<DataScope[]> {
     .sort((a, b) => a.tenant.localeCompare(b.tenant, 'es') || a.scope.localeCompare(b.scope, 'es'))
 }
 
+const ROOT_SCOPE = '/'
+
 /**
  * Rotulo de un ambito de datos. El ambito raiz es «/», que por si solo no dice nada, asi que el
  * espacio de datos va siempre delante y el ambito solo se anade cuando aporta informacion.
  */
 export function dataScopeLabel(item: DataScope): string {
-  return item.scope === '/' ? item.tenant : `${item.tenant} · ${item.scope}`
+  return item.scope === ROOT_SCOPE ? item.tenant : `${item.tenant} · ${item.scope}`
+}
+
+/**
+ * Si alguna fila esta en un ambito con nombre. Si todas estan en el raiz, o no traen ambito, una
+ * columna de ambito repetiria «/» en cada fila sin distinguir ninguna.
+ */
+export function hasNamedScope(rows: { scope?: string | null }[]): boolean {
+  return rows.some((row) => {
+    const scope = row.scope?.trim()
+    return !!scope && scope !== ROOT_SCOPE
+  })
 }

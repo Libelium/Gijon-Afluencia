@@ -34,6 +34,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   como porcentaje. El mapa de zona sigue además el tema oscuro, como el resto de mapas.
 - **Cambiar de zona sin conexión ya no deja los datos de la anterior**, y una respuesta que llega
   tarde no pisa la de la zona elegida después.
+- **El listado de entidades ya no muestra una columna de «Ámbito» que siempre dice «/».** Cuando
+  todas las entidades de la página están en el ámbito raíz, la columna no distingue ninguna y
+  parecía vacía, así que deja de mostrarse. Vuelve a salir en cuanto una entidad de la página está
+  en un ámbito con nombre. El ámbito sigue visible en la ficha de cada entidad.
 
 ## [2.0.0] — 2026-09-04
 

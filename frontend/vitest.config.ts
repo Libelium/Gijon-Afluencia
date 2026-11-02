@@ -100,6 +100,12 @@ export default defineConfig({
           branches: 75,
           statements: 35,
         },
+        'src/features/entities/views/EntitiesListView.vue': {
+          lines: 80,
+          functions: 30,
+          branches: 55,
+          statements: 80,
+        },
       },
     },
   },
