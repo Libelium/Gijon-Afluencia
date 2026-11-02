@@ -8,7 +8,7 @@ import { t } from '@/i18n'
 import { formatDateTime, formatNumber, relativeFromNow } from '@/lib/format'
 import type { Dashboard, Entity, Measure } from '@/types'
 import { BarChart, toMillis, type ChartPoint } from '../../charts'
-import { autoAggregation, type DateRange } from '../../lib/range'
+import { FORECAST_HORIZON_HOURS, autoAggregation, extendRange, type DateRange } from '../../lib/range'
 import PredictionBandChart from './charts/PredictionBandChart.vue'
 import AttributesCard from './components/AttributesCard.vue'
 import ChartCard from './components/ChartCard.vue'
@@ -17,7 +17,6 @@ import LidarNotice from './components/LidarNotice.vue'
 import {
   alignSeries,
   describeZone,
-  extendRange,
   fetchZoneSeries,
   findPredictionTwin,
   meanByHour,
@@ -54,10 +53,6 @@ const {
   reload,
 } = useZone(props)
 
-/** Horas que se piden por delante del rango: es el horizonte que publica la tuberia de
- * prevision, y sin ampliar la ventana la parte prevista no llegaria nunca. */
-const HORIZON_HOURS = 24
-
 const twin = ref<Entity | null>(null)
 const twinMeasures = ref<Measure[]>([])
 const twinLoading = ref(false)
@@ -91,7 +86,7 @@ async function loadTwin() {
 
 watch(zone, () => void loadTwin(), { immediate: true })
 
-const chartRange = computed<DateRange>(() => extendRange(range.value, HORIZON_HOURS))
+const chartRange = computed<DateRange>(() => extendRange(range.value, FORECAST_HORIZON_HOURS))
 
 /** Medida y prevision comparten intervalo a la fuerza: con el automatico de cada ventana
  * caerian en rejillas distintas y la banda no cuadraria con la linea medida. */

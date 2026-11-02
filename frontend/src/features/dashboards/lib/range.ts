@@ -41,6 +41,19 @@ export function resolveRange(input: RangeInput, timeZone?: string): DateRange {
   return { start: toUtcIso(end.minus({ hours: preset.hours })), end: toUtcIso(end) }
 }
 
+/**
+ * Horas por delante de «ahora» que publica el componente de prevision
+ * (`PREDICTION_HORIZON_HOURS` en predictions). Si se cambia alli hay que cambiarlo aqui: es
+ * hasta donde piden las graficas, y sin ampliar la ventana la parte prevista no se veria.
+ */
+export const FORECAST_HORIZON_HOURS = 24
+
+/** Amplia la ventana hacia el futuro, para pedir la parte prevista. */
+export function extendRange(range: DateRange, hours: number): DateRange {
+  const end = toUtcIso(DateTime.fromISO(range.end, { zone: 'utc' }).plus({ hours }))
+  return { start: range.start, end: end || range.end }
+}
+
 export function rangeHours(range: DateRange): number {
   const start = DateTime.fromISO(range.start)
   const end = DateTime.fromISO(range.end)

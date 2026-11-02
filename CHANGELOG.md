@@ -6,6 +6,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 [semántico](https://semver.org/lang/es/). Cada componente lleva además su propia versión en su
 manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es la del conjunto.
 
+## [Sin publicar]
+
+### Corregido
+
+- **Las gráficas de una previsión muestran las horas futuras.** El histórico de una medida en la
+  ficha de entidad y las gráficas de los cuadros de mando cortaban la ventana en «ahora», así que
+  de una previsión solo se veían las horas ya pasadas. Para las entidades de previsión la ventana
+  llega ahora hasta el horizonte que publica el componente de predicción (24 h), las gráficas de
+  líneas marcan «Ahora» y el «Último» del histórico es el valor de la hora en curso. Los
+  indicadores de último valor siguen mostrando la previsión de la hora en curso.
+
 ## [2.0.0] — 2026-09-04
 
 Se añade el motor de evaluación de alarmas, que la API publicaba sin que nadie lo ejecutase. Por lo

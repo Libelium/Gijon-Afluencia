@@ -488,9 +488,3 @@ export function presetHint(preset: RangePresetId): string | undefined {
   const found = RANGE_PRESETS.find((p) => p.id === preset)
   return found ? t(found.labelKey) : undefined
 }
-
-/** Amplia la ventana hacia el futuro, para pedir la parte prevista. */
-export function extendRange(range: DateRange, hours: number): DateRange {
-  const end = DateTime.fromISO(range.end, { zone: 'utc' }).plus({ hours })
-  return { start: range.start, end: end.toISO({ suppressMilliseconds: true }) ?? range.end }
-}

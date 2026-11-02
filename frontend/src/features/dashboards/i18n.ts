@@ -179,6 +179,7 @@ const messages = {
   'dashboards.chart.stackedArea': 'Gráfica de áreas apiladas',
   'dashboards.chart.value': 'Valor',
   'dashboards.chart.share': 'Reparto',
+  'dashboards.chart.now': 'Ahora',
 } as const
 
 export default { ...messages, ...templates }
