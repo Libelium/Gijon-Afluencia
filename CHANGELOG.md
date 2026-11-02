@@ -16,6 +16,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   llega ahora hasta el horizonte que publica el componente de predicción (24 h), las gráficas de
   líneas marcan «Ahora» y el «Último» del histórico es el valor de la hora en curso. Los
   indicadores de último valor siguen mostrando la previsión de la hora en curso.
+- **Los paneles de tránsitos muestran los recorridos entre sensores.** Ninguna combinación de
+  entidades que ofrecía la interfaz daba datos: con los conteos de los sensores se componían pares
+  con un nombre que la plataforma no publica; con sus eventos, los pares se pedían en el espacio de
+  datos del sensor y no en el de los tránsitos; y con las entidades de tránsitos de cada sensor la
+  plantilla las descartaba todas. Ahora cualquier entidad de un sensor lo representa como extremo,
+  cada par se pide en el espacio donde se publica (el de la entidad de tránsitos de su origen) y el
+  volumen se suma al agregar, en lugar de promediarse. La ayuda explica qué entidades asignar.
 
 ## [2.0.0] — 2026-09-04
 

@@ -52,6 +52,39 @@ export interface PairSet {
 
 const FLOW_EVENT = datamodelOf('flowEvent')
 
+/** Sufijos con los que un mismo sensor publica sus entidades: observaciones, eventos, ficha y salud. */
+const SENSOR_SUFFIX = /_(CFO|CFE|DEV|DHO)$/
+
+/** Sufijo con el que la plataforma nombra a cada extremo en el URN de un par. */
+const ENDPOINT_SUFFIX = '_CFE'
+
+/**
+ * Identificador de un extremo de recorrido. La plataforma nombra los extremos por la entidad de
+ * eventos del sensor (`<serie>_CFE`), pero el panel puede tener asignada cualquier otra del mismo
+ * sensor: todas se reducen al mismo extremo, o los pares compuestos no existirian.
+ */
+export function nodeIdOf(urn: string): string {
+  return urnTail(urn).replace(SENSOR_SUFFIX, ENDPOINT_SUFFIX)
+}
+
+/**
+ * Un par publicado: modelo de transitos con origen y destino en los dos ultimos segmentos. La
+ * entidad de transitos de un solo sensor (cuatro segmentos) es un agregado de ese punto, no un par.
+ */
+function isPairEvent(point: Point): boolean {
+  return point.entity.datamodel === FLOW_EVENT && point.entity.urn.split(':').length >= 5
+}
+
+/**
+ * URN de la entidad de transitos de cada sensor del panel. La plataforma la publica en el mismo
+ * espacio de datos que los pares con origen en ese sensor, y a diferencia de ellos si se puede
+ * buscar: de ahi sale el tenant y el scope con los que pedir cada par.
+ */
+export function flowEntityUrns(points: Point[]): string[] {
+  const ids = new Set(points.filter((point) => !isPairEvent(point)).map((p) => nodeIdOf(p.entity.urn)))
+  return [...ids].map((id) => `urn:ngsi-ld:${FLOW_EVENT}:${id}`)
+}
+
 function routeLabel(origin: string, target: string): string {
   return t('templates.transits.routeLabel', { origin, target })
 }
@@ -71,25 +104,25 @@ interface Source {
 }
 
 function uniqueById(points: Point[]): Source[] {
-  const seen = new Set<string>()
-  const out: Source[] = []
+  const byId = new Map<string, Source>()
   for (const point of points) {
-    const id = urnTail(point.entity.urn)
-    // Dos puntos con la misma cola de URN serian el mismo extremo del par: se queda el primero.
-    if (seen.has(id)) continue
-    seen.add(id)
-    out.push({ id, point })
+    const id = nodeIdOf(point.entity.urn)
+    const current = byId.get(id)
+    // Varias entidades del mismo sensor son un solo extremo: se queda la que trae ubicacion,
+    // que es la que se puede dibujar. El Map conserva el orden de la primera aparicion.
+    if (!current || (current.point.lat === null && point.lat !== null)) byId.set(id, { id, point })
   }
-  return out
+  return [...byId.values()]
 }
 
 /**
  * Combina los puntos del panel en todos los recorridos dirigidos posibles. El URN de cada par se
  * arma como lo hace la plataforma —el modelo de transitos seguido de las colas de los URN de
  * origen y destino—, que es lo que permite pedir su serie aunque el par no sea una entidad
- * asignada al cuadro. Al no serlo tampoco tiene tenant ni scope propios: se usan los del origen.
+ * asignada al cuadro. Al no serlo tampoco tiene tenant ni scope propios: se usan los de la entidad
+ * de transitos de su origen (`pairRefs`) y, si no se conocen, los del propio punto de origen.
  */
-function derivedPairs(places: Point[]): PairSet {
+function derivedPairs(places: Point[], pairRefs: Map<string, EntityRef>): PairSet {
   const unique = uniqueById(places)
   const kept =
     unique.length <= MAX_DERIVED_POINTS
@@ -109,7 +142,7 @@ function derivedPairs(places: Point[]): PairSet {
       pairs.push({
         key: `${origin.id}>${target.id}`,
         urn: `${prefix}:${origin.id}:${target.id}`,
-        ref: ordered[i].point.ref,
+        ref: pairRefs.get(origin.id) ?? ordered[i].point.ref,
         origin,
         target,
         label: routeLabel(origin.label, target.label),
@@ -177,16 +210,24 @@ function explicitPairs(events: Point[], places: Map<string, Point>): PairSet {
 }
 
 /**
- * Resuelve los recorridos de un panel. Si entre las entidades asignadas hay alguna del modelo de
- * transitos manda ese modo: el sensor sabe que recorridos existen de verdad, y combinar los
- * puntos por encima de eso inventaria pares que nadie publica.
+ * Resuelve los recorridos de un panel. Si entre las entidades asignadas hay algun par publicado
+ * manda ese modo: el sensor sabe que recorridos existen de verdad, y combinar los puntos por
+ * encima de eso inventaria pares que nadie publica.
+ *
+ * `pairRefs` lleva, por extremo, el tenant y el scope de su entidad de transitos (ver
+ * `flowEntityUrns`). Las que ya esten asignadas al panel se usan directamente.
  */
-export function buildPairs(points: Point[]): PairSet {
-  const events = points.filter((point) => point.entity.datamodel === FLOW_EVENT)
-  const places = points.filter((point) => point.entity.datamodel !== FLOW_EVENT)
+export function buildPairs(points: Point[], pairRefs?: Map<string, EntityRef>): PairSet {
+  const events = points.filter(isPairEvent)
+  const places = points.filter((point) => !isPairEvent(point))
 
   const byId = new Map<string, Point>()
   for (const source of uniqueById(places)) byId.set(source.id, source.point)
 
-  return events.length > 0 ? explicitPairs(events, byId) : derivedPairs(places)
+  const refs = new Map(pairRefs)
+  for (const place of places) {
+    if (place.entity.datamodel === FLOW_EVENT) refs.set(nodeIdOf(place.entity.urn), place.ref)
+  }
+
+  return events.length > 0 ? explicitPairs(events, byId) : derivedPairs(places, refs)
 }

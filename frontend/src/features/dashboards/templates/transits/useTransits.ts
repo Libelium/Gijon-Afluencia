@@ -1,15 +1,25 @@
 import { computed, ref, watch, type ComputedRef, type Ref, type WritableComputedRef } from 'vue'
 import { errorMessage } from '@/api/http'
+import { listEntities } from '@/features/entities/api/entities'
 import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
+import type { EntityRef } from '@/types'
 import type { ChartPoint } from '../../charts'
-import type { DateRange } from '../../lib/range'
+import { autoAggregation, type DateRange } from '../../lib/range'
 import { byDate, kpisOf, sumSeries } from '../shared/aggregate'
 import { isCumulative } from '../shared/discovery'
-import { fetchSeries, type SeriesRequest } from '../shared/series'
-import type { MeasureOption, TemplateDashboard } from '../shared/types'
+import { fetchSeries, type FetchSeriesOptions, type SeriesRequest } from '../shared/series'
+import type { MeasureOption, Point, TemplateDashboard } from '../shared/types'
 import { useTemplateData, type UseTemplateData } from '../shared/useTemplateData'
-import { buildPairs, type FlowNode, type FlowPair, type PairMode, type PairSet } from './pairs'
+import {
+  buildPairs,
+  flowEntityUrns,
+  nodeIdOf,
+  type FlowNode,
+  type FlowPair,
+  type PairMode,
+  type PairSet,
+} from './pairs'
 
 /**
  * Medida con la que el modelo de transitos publica el volumen de un recorrido. Hace falta tenerla
@@ -18,6 +28,20 @@ import { buildPairs, type FlowNode, type FlowPair, type PairMode, type PairSet }
  * la serie de un par. En modo explicito el par es una entidad de verdad y la medida se descubre.
  */
 const PAIR_MEASURE = 'count'
+
+/**
+ * Opciones de lectura de las series de los pares. El volumen de un recorrido se publica por
+ * intervalo horario, asi que al agregar se suma: con la media, los totales de los rangos largos
+ * saldrian divididos por las horas de cada dia. El resto de medidas siguen la regla general.
+ */
+export function pairSeriesOptions(
+  measureId: string,
+  cumulative: boolean,
+  range: DateRange,
+): FetchSeriesOptions | undefined {
+  if (cumulative || measureId !== PAIR_MEASURE) return undefined
+  return { aggregation: autoAggregation(range, 'sum') }
+}
 
 /** Un recorrido con su serie ya leida. `total` a null es «sin dato», nunca cero. */
 export interface Route {
@@ -79,8 +103,35 @@ export function useTransits(dashboard: TemplateDashboard): UseTransits {
   /** Distingue «aun no se ha pedido nada» de «se ha pedido y no hay ni un par con datos». */
   const loaded = ref(false)
   const measureOverride = ref<string | null>(null)
+  /** Tenant y scope de los pares por extremo; null mientras se buscan. */
+  const pairRefs = ref<Map<string, EntityRef> | null>(null)
+  let refsRequest = 0
+  let loadRequest = 0
 
-  const pairSet = computed<PairSet>(() => buildPairs(data.points.value))
+  /**
+   * Los pares viven en el espacio de datos donde la plataforma publica los tránsitos, que no es el
+   * de los sensores, y el servidor no los lista. Se busca la entidad de tránsitos de cada sensor,
+   * que comparte espacio con sus pares y si se lista.
+   */
+  async function resolvePairRefs(points: Point[]): Promise<void> {
+    const request = ++refsRequest
+    pairRefs.value = null
+    const urns = flowEntityUrns(points)
+    let found = new Map<string, EntityRef>()
+    if (urns.length) {
+      try {
+        const { rows } = await listEntities({ page: 1, paginationSize: urns.length, urn: urns.join(',') })
+        found = new Map(rows.map((e) => [nodeIdOf(e.urn), { urn: e.urn, tenant: e.tenant, scope: e.scope }]))
+      } catch {
+        // Sin la busqueda se piden los pares con el espacio de datos de cada sensor, como antes.
+      }
+    }
+    if (request === refsRequest) pairRefs.value = found
+  }
+
+  watch(() => data.points.value, (points) => void resolvePairRefs(points), { immediate: true })
+
+  const pairSet = computed<PairSet>(() => buildPairs(data.points.value, pairRefs.value ?? undefined))
   const mode = computed<PairMode>(() => pairSet.value.mode)
 
   const modeLabel = computed(() =>
@@ -111,6 +162,8 @@ export function useTransits(dashboard: TemplateDashboard): UseTransits {
 
   const loadContext = computed<LoadContext | null>(() => {
     if (data.loading.value || data.error.value) return null
+    // Sin saber aun donde viven los pares, pedirlos daria series vacias que luego se quedarian.
+    if (mode.value === 'derived' && pairRefs.value === null) return null
     const measureId = measure.value
     if (!measureId) return null
     const pairs = pairSet.value.pairs
@@ -120,6 +173,8 @@ export function useTransits(dashboard: TemplateDashboard): UseTransits {
 
   async function load(ctx: LoadContext | null): Promise<void> {
     if (!ctx) return
+    // Una carga que acaba despues de otra mas reciente no debe pisar su resultado.
+    const request = ++loadRequest
     busy.value = true
     seriesError.value = null
     try {
@@ -132,7 +187,9 @@ export function useTransits(dashboard: TemplateDashboard): UseTransits {
         cumulative: ctx.cumulative,
       }))
 
-      const series = await fetchSeries(requests, ctx.range)
+      const options = pairSeriesOptions(ctx.measureId, ctx.cumulative, ctx.range)
+      const series = await fetchSeries(requests, ctx.range, options)
+      if (request !== loadRequest) return
 
       routes.value = ctx.pairs.map((pair) => {
         const points = series.get(pair.key) ?? []
@@ -140,10 +197,11 @@ export function useTransits(dashboard: TemplateDashboard): UseTransits {
       })
       loaded.value = true
     } catch (e) {
+      if (request !== loadRequest) return
       seriesError.value = errorMessage(e)
       routes.value = []
     } finally {
-      busy.value = false
+      if (request === loadRequest) busy.value = false
     }
   }
 

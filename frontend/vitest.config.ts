@@ -74,6 +74,12 @@ export default defineConfig({
           branches: 80,
           statements: 95,
         },
+        'src/features/dashboards/templates/transits/pairs.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
       },
     },
   },
