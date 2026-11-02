@@ -171,3 +171,25 @@ function isInternal(raw: RawMeasure): boolean {
 function epoch(value?: string | null): number {
   return parseApiDateTime(value)?.toMillis() ?? 0
 }
+
+/** Cambia el nombre de la entidad: se guarda en el broker como su propiedad `name`. */
+export async function renameEntity(id: number | string, name: string): Promise<void> {
+  await http.patch(`/entities/${id}/properties`, { name })
+}
+
+/**
+ * Si el usuario puede modificar la entidad. El listado filtra por el permiso de modificacion con
+ * `onlyCanUpdate`, asi que basta preguntar si esta entidad sigue saliendo. El filtro de URN es un
+ * LIKE: se escapan sus comodines para que `P13_pred` no case tambien con `P13Xpred`.
+ */
+export async function canUpdateEntity(ref: EntityRef): Promise<boolean> {
+  const { data } = await http.post<Paginated<Entity>>('/entities/paginate', {
+    page: 1,
+    paginationSize: 1,
+    urn: ref.urn.replace(/[\\%_]/g, '\\$&'),
+    tenant: ref.tenant,
+    scope: ref.scope,
+    onlyCanUpdate: true,
+  })
+  return (data?.count ?? 0) > 0
+}

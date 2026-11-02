@@ -111,6 +111,18 @@ export default defineConfig({
         'src/features/map/lib/viewport.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Solo `mergePlaced` tiene pruebas: es un suelo para que no baje, no una meta.
         'src/features/map/lib/geometry.ts': { lines: 20, functions: 14, branches: 95, statements: 20 },
+        'src/features/entities/components/EntityRenameDialog.vue': {
+          lines: 95,
+          functions: 60,
+          branches: 80,
+          statements: 95,
+        },
+        'src/features/entities/views/EntityDetailView.vue': {
+          lines: 95,
+          functions: 60,
+          branches: 75,
+          statements: 95,
+        },
       },
     },
   },

@@ -8,6 +8,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
+  botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
+  `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
+  admitía el cambio; faltaba la pantalla.
+
 ### Corregido
 
 - **Las gráficas de una previsión muestran las horas futuras.** El histórico de una medida en la
