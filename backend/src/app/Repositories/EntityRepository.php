@@ -93,6 +93,11 @@ class EntityRepository
             // Se agrega el groupBy para evitar duplicados
             ->groupBy('entities.id');
 
+        // Sin desempate, las filas con el mismo valor pueden cambiar de pagina entre peticiones.
+        if ($orderColumn !== self::DEFAULT_ENTITY_ORDER_COLUMN) {
+            $query->orderBy(self::DEFAULT_ENTITY_ORDER_COLUMN, $orderDirection);
+        }
+
         foreach (self::$hiddenUrns as $hiddenUrn) {
             $query->where('entities.urn', 'not like', $hiddenUrn);
         }

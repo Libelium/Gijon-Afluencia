@@ -34,6 +34,10 @@ export async function listEntities(q: PageQuery): Promise<Paginated<Entity>> {
   if (q.groups?.length) body.groups = q.groups.join(',')
   if (q.urn) body.urn = q.urn
   if (q.bounds) body.bounds = q.bounds
+  if (q.orderBy) {
+    body.orderBy = q.orderBy
+    body.orderDirection = q.orderDirection ?? 'asc'
+  }
   // Un ambito sin espacio de datos es ambiguo y el servidor lo rechaza con un 400.
   if (q.tenant) {
     body.tenant = q.tenant

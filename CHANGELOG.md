@@ -38,6 +38,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   todas las entidades de la página están en el ámbito raíz, la columna no distingue ninguna y
   parecía vacía, así que deja de mostrarse. Vuelve a salir en cuanto una entidad de la página está
   en un ámbito con nombre. El ámbito sigue visible en la ficha de cada entidad.
+- **El listado de entidades se puede ordenar por modelo de datos, espacio de datos y ámbito.** Las
+  cabeceras no eran pulsables porque el servidor ignoraba la columna pedida y siempre ordenaba por
+  identificador interno. Además leía el sentido como un sí o no, así que «asc» ordenaba al revés.
+  Ahora respeta la columna, si es una de las permitidas, y el sentido, y desempata por identificador
+  para que las páginas no repitan ni pierdan filas. El nombre y el último dato siguen sin ordenarse:
+  el nombre se guarda en la base de datos de tiempo real y el último dato sale de otra consulta.
 
 ## [2.0.0] — 2026-09-04
 

@@ -16,6 +16,12 @@ import { datamodelIcon } from '../lib/datamodel'
 
 const SEARCH_DEBOUNCE = 400
 
+/** Lo que emite la tabla al pulsar una cabecera: Vuetify no exporta el tipo. */
+interface SortItem {
+  key: string
+  order?: boolean | 'asc' | 'desc'
+}
+
 const router = useRouter()
 const session = useSessionStore()
 
@@ -25,6 +31,7 @@ const types = ref<string[]>([])
 const dataScope = ref<DataScope | null>(null)
 const page = ref(1)
 const perPage = ref(25)
+const sortBy = ref<SortItem[]>([])
 
 const datamodels = ref<string[]>([])
 const dataScopes = ref<DataScope[]>([])
@@ -40,6 +47,8 @@ const { rows, total, loading: pending, error, load } = usePaginatedList<Entity>(
       // Los dos van juntos o no van: el servidor rechaza un ambito sin espacio de datos.
       tenant: dataScope.value?.tenant,
       scope: dataScope.value?.scope,
+      orderBy: sortBy.value[0]?.key,
+      orderDirection: sortBy.value[0]?.order === 'desc' ? 'desc' : 'asc',
     }),
   { onLoaded: (items, isCurrent) => void loadLastData(items, isCurrent) },
 )
@@ -61,16 +70,15 @@ function subIdentifier(item: Entity): string | null {
   return item.name && tail !== item.name ? tail : null
 }
 
-// Ninguna columna es ordenable a proposito: el servidor descarta el parametro `orderBy` y
-// ordena siempre por identificador interno, asi que una cabecera pulsable prometeria algo
-// que no se cumple. La de ambito solo sale si alguna fila esta fuera del raiz: si no, seria
-// una columna de «/».
+// Solo se ordena por lo que el servidor puede ordenar: sus columnas. El nombre vive en otra base
+// de datos y el ultimo dato sale de otra consulta, asi que esas cabeceras no son pulsables. La de
+// ambito solo sale si alguna fila esta fuera del raiz: si no, seria una columna de «/».
 const headers = computed(() => [
   { title: t('entities.table.name'), key: 'name', sortable: false, maxWidth: 360 },
-  { title: t('entities.table.datamodel'), key: 'datamodel', sortable: false },
-  { title: t('entities.table.tenant'), key: 'tenant', sortable: false },
+  { title: t('entities.table.datamodel'), key: 'datamodel', sortable: true },
+  { title: t('entities.table.tenant'), key: 'tenant', sortable: true },
   ...(hasNamedScope(rows.value)
-    ? [{ title: t('entities.table.scope'), key: 'scope', sortable: false }]
+    ? [{ title: t('entities.table.scope'), key: 'scope', sortable: true }]
     : []),
   { title: t('entities.table.lastData'), key: 'time_last_data', sortable: false },
 ])
@@ -136,11 +144,11 @@ watch(search, (value) => applySearch(value))
 
 const scopeId = computed(() => dataScope.value?.id ?? null)
 
-watch([searchTerm, types, scopeId], () => {
+watch([searchTerm, types, scopeId, sortBy], () => {
   page.value = 1
 })
 
-watch([page, perPage, searchTerm, types, scopeId], () => void load())
+watch([page, perPage, searchTerm, types, scopeId, sortBy], () => void load())
 
 onMounted(() => {
   void load()
@@ -238,12 +246,13 @@ onMounted(() => {
           :prev-page-label="t('entities.table.previousPage')"
           :next-page-label="t('entities.table.nextPage')"
           :last-page-label="t('entities.table.lastPage')"
-          :sort-by="[]"
+          :sort-by="sortBy"
           :row-props="rowProps"
           item-value="id"
           mobile-breakpoint="sm"
           @update:page="page = $event"
           @update:items-per-page="perPage = $event"
+          @update:sort-by="sortBy = $event"
           @click:row="openEntity"
         >
           <template #[`item.name`]="{ item }">

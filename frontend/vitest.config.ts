@@ -106,6 +106,8 @@ export default defineConfig({
           branches: 55,
           statements: 80,
         },
+        // Solo `listEntities` tiene pruebas: es un suelo para que no baje, no una meta.
+        'src/features/entities/api/entities.ts': { lines: 20, functions: 8, branches: 25, statements: 20 },
       },
     },
   },
