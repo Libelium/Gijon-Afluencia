@@ -80,6 +80,26 @@ export default defineConfig({
           branches: 80,
           statements: 90,
         },
+        'src/features/dashboards/templates/lidar/roles.ts': {
+          lines: 100,
+          functions: 60,
+          branches: 95,
+          statements: 100,
+        },
+        'src/features/dashboards/templates/lidar/useZone.ts': {
+          lines: 95,
+          functions: 100,
+          branches: 75,
+          statements: 95,
+        },
+        // Suelo de lo ya cubierto (perfil de zona y seleccion de zonas); las lecturas de series
+        // por HTTP siguen sin pruebas y suben el umbral cuando las tengan.
+        'src/features/dashboards/templates/lidar/data.ts': {
+          lines: 35,
+          functions: 35,
+          branches: 75,
+          statements: 35,
+        },
       },
     },
   },

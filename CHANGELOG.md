@@ -23,6 +23,17 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   plantilla las descartaba todas. Ahora cualquier entidad de un sensor lo representa como extremo,
   cada par se pide en el espacio donde se publica (el de la entidad de tránsitos de su origen) y el
   volumen se suma al agregar, en lugar de promediarse. La ayuda explica qué entidades asignar.
+- **Las plantillas de zona reconocen las zonas y su ocupación.** Filtraban por la analítica del
+  sensor de barrido mientras el selector ofrecía la zona fusionada, así que un panel con esas
+  zonas caía al modo de respaldo con su aviso; y el número de personas de la zona se leía como un
+  porcentaje (45 personas salían como «45 %»). Ahora se usa la zona fusionada, después la
+  analítica del sensor y nunca una previsión; la ocupación de la zona es su número de personas y
+  la del sensor de barrido su ocupación simultánea.
+- **El mapa de calor de zonas colorea todas las zonas.** Solo leía las doce primeras y el resto
+  salía en gris. Sin aforo publicado, el color compara cada zona con la más llena y no se rotula
+  como porcentaje. El mapa de zona sigue además el tema oscuro, como el resto de mapas.
+- **Cambiar de zona sin conexión ya no deja los datos de la anterior**, y una respuesta que llega
+  tarde no pisa la de la zona elegida después.
 
 ## [2.0.0] — 2026-09-04
 

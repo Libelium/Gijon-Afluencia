@@ -4,8 +4,8 @@ import { LCircleMarker, LMap, LPolygon, LTileLayer, LTooltip } from '@vue-leafle
 import 'leaflet/dist/leaflet.css'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
-import { env, envNumber } from '@/lib/env'
 import { formatMeasure } from '@/lib/format'
+import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { useChartTheme } from '../../../charts'
 import { MUTED, occupancyColor } from '../../../palette'
 
@@ -14,8 +14,10 @@ export interface ZoneMarker {
   name: string
   /** Ocupacion actual en personas, o null. */
   value: number | null
-  /** Proporcion 0..n, o null si no hay aforo. */
+  /** Proporcion 0..n que da el color, o null si no hay con que compararla. */
   ratio: number | null
+  /** El ratio compara con la zona mas llena y no con un aforo: no se rotula como porcentaje. */
+  relative?: boolean
   latLng: [number, number]
   polygon: [number, number][] | null
   selected: boolean
@@ -36,8 +38,8 @@ const MARKER_RADIUS_SELECTED = 14
 
 const listId = useId()
 
-const tiles = env('VITE_MAP_TILES_URL')
-const attribution = env('VITE_MAP_TILES_ATTRIBUTION')
+// Las mismas teselas, filtro oscuro y limites que el resto de mapas de la aplicacion.
+const tiles = computed(() => tilesForTheme(isDark.value))
 
 function colorOf(marker: ZoneMarker): string {
   if (marker.ratio === null) return isDark.value ? MUTED.dark : MUTED.light
@@ -45,11 +47,7 @@ function colorOf(marker: ZoneMarker): string {
 }
 
 const center = computed<[number, number]>(() => {
-  if (!props.markers.length) {
-    const raw = env('VITE_MAP_DEFAULT_CENTER')
-    const [lat, lon] = raw.split(',').map(Number)
-    return Number.isFinite(lat) && Number.isFinite(lon) ? [lat, lon] : [0, 0]
-  }
+  if (!props.markers.length) return defaultCenter()
   const sum = props.markers.reduce(
     (acc, m) => [acc[0] + m.latLng[0], acc[1] + m.latLng[1]] as [number, number],
     [0, 0] as [number, number],
@@ -57,13 +55,11 @@ const center = computed<[number, number]>(() => {
   return [sum[0] / props.markers.length, sum[1] / props.markers.length]
 })
 
-const zoom = computed(() =>
-  props.markers.length ? (props.markers.length > 1 ? 14 : 16) : envNumber('VITE_MAP_DEFAULT_ZOOM', 13),
-)
+const zoom = computed(() => (props.markers.length ? (props.markers.length > 1 ? 14 : 16) : defaultZoom()))
 
 function markerLabel(marker: ZoneMarker): string {
   const count = formatMeasure(marker.value, t('dashboards.lidar.people'))
-  if (marker.ratio === null) return count
+  if (marker.ratio === null || marker.relative) return count
   return `${count} · ${formatMeasure(marker.ratio * 100, '%')}`
 }
 </script>
@@ -74,7 +70,11 @@ function markerLabel(marker: ZoneMarker): string {
          tambien el bloque de estado con su boton «Reintentar», y `role` sobre el conjunto
          convertiria ese boton en parte de una imagen. `group` —y no `img`— porque dentro hay
          controles que deben seguir siendo alcanzables: el zoom y el enlace de atribucion. -->
-    <div class="rounded-lg overflow-hidden" :style="{ height: `${height}px` }">
+    <div
+      class="rounded-lg overflow-hidden"
+      :class="{ 'map-tiles--dark': tiles.darken }"
+      :style="{ height: `${height}px` }"
+    >
       <StateBlock
         :loading="loading"
         :error="error"
@@ -88,12 +88,14 @@ function markerLabel(marker: ZoneMarker): string {
         <LMap
           :zoom="zoom"
           :center="center"
+          :max-zoom="MAX_ZOOM"
           :scroll-wheel-zoom="false"
           :style="{ height: `${height}px` }"
           role="group"
           :aria-label="t('dashboards.lidar.heatmap.mapLabel')"
         >
-          <LTileLayer :url="tiles" :attribution="attribution" />
+          <!-- La key recrea la capa al cambiar de tema: vue-leaflet solo aplica `options` al crearla. -->
+          <LTileLayer :key="tiles.url" :url="tiles.url" :attribution="tiles.attribution" :options="tiles.options" />
           <template v-for="marker in markers" :key="marker.id">
             <LPolygon
               v-if="marker.polygon"

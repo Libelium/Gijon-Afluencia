@@ -106,17 +106,26 @@ watch(
   { immediate: true },
 )
 
-/** Como mucho las 12 primeras, para no encadenar peticiones sin fin. */
+/** Zonas que se piden a la vez: llegan todas, sin lanzar decenas de peticiones juntas. */
+const LIVE_BATCH = 6
+let liveRequest = 0
+
 async function loadLive() {
-  const targets = zones.value.slice(0, 12)
-  const results = await Promise.allSettled(targets.map((z) => getEntityMeasures(refOf(z))))
+  const request = ++liveRequest
+  const targets = zones.value
   const next: Record<number, { value: number | null; ratio: number | null }> = {}
-  results.forEach((res, index) => {
-    if (res.status === 'fulfilled') {
-      const p = describeZone(res.value)
-      next[targets[index].id] = { value: p.current, ratio: p.ratio }
-    }
-  })
+  for (let i = 0; i < targets.length; i += LIVE_BATCH) {
+    const batch = targets.slice(i, i + LIVE_BATCH)
+    const results = await Promise.allSettled(batch.map((z) => getEntityMeasures(refOf(z))))
+    // Una recarga posterior ya esta pidiendo lo suyo: este resultado llega tarde.
+    if (request !== liveRequest) return
+    results.forEach((res, index) => {
+      if (res.status === 'fulfilled') {
+        const p = describeZone(res.value)
+        next[batch[index].id] = { value: p.current, ratio: p.ratio }
+      }
+    })
+  }
   liveByZone.value = next
 }
 
@@ -130,6 +139,9 @@ const percentColor = computed(() => levelColor(ratio.value))
 
 const rangeHint = computed(() => presetHint(preset.value))
 
+/** Ocupacion de la zona mas llena ahora mismo. Es la referencia del color cuando no hay aforo. */
+const liveMax = computed(() => Math.max(0, ...Object.values(liveByZone.value).map((live) => live.value ?? 0)))
+
 const markers = computed<ZoneMarker[]>(() =>
   zones.value.flatMap((z) => {
     const latLng = geolocationLatLng(z.geolocation)
@@ -139,18 +151,19 @@ const markers = computed<ZoneMarker[]>(() =>
         ? z.geolocation.coordinates[0].map(([lon, lat]) => [lat, lon] as [number, number])
         : null
     const live = liveByZone.value[z.id]
-    return [
-      {
-        id: z.id,
-        name: z.name,
-        value: live?.value ?? null,
-        ratio: live?.ratio ?? null,
-        latLng,
-        polygon,
-        selected: z.id === zoneId.value,
-      },
-    ]
+    const value = live?.value ?? null
+    const capacityRatio = live?.ratio ?? null
+    // Sin aforo publicado se colorea frente a la zona mas llena, y no se rotula como porcentaje.
+    const relative = capacityRatio === null
+    const ratio = relative ? (value !== null && liveMax.value > 0 ? value / liveMax.value : null) : capacityRatio
+    return [{ id: z.id, name: z.name, value, ratio, relative, latLng, polygon, selected: z.id === zoneId.value }]
   }),
+)
+
+const mapHint = computed(() =>
+  markers.value.some((m) => m.relative && m.ratio !== null)
+    ? t('dashboards.lidar.heatmap.mapHintRelative')
+    : t('dashboards.lidar.heatmap.mapHint'),
 )
 
 const matrixWindowNotice = computed(() => rangeHours(range.value) < 168)
@@ -246,7 +259,7 @@ const profileBuckets = computed(() => meanByHour(matrix.value, timeZone.value))
               <VIcon icon="mdi-map-marker-radius-outline" size="18" class="text-medium-emphasis" />
               <div class="min-w-0">
                 <div class="text-subtitle-2 font-weight-medium">{{ t('dashboards.lidar.heatmap.map') }}</div>
-                <div class="text-caption text-medium-emphasis">{{ t('dashboards.lidar.heatmap.mapHint') }}</div>
+                <div class="text-caption text-medium-emphasis">{{ mapHint }}</div>
               </div>
             </div>
             <VDivider />
