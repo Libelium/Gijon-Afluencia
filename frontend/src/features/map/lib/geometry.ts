@@ -100,3 +100,21 @@ export function placeEntities(entities: Entity[]): { placed: PlacedEntity[]; wit
 
   return { placed, withoutLocation }
 }
+
+/**
+ * Suma a los marcadores ya pintados los de una carga nueva. Los que salen del area visible se
+ * quedan, y los que no se han movido conservan sus coordenadas de antes: quitar un marcador del
+ * grupo, o darle coordenadas nuevas aunque valgan lo mismo, pliega el abanico abierto y cierra el
+ * globo que se estaba mirando.
+ */
+export function mergePlaced(previous: PlacedEntity[], next: PlacedEntity[]): PlacedEntity[] {
+  const fresh = new Map(next.map((item) => [item.entity.id, item]))
+  const kept = previous.map((item) => {
+    const update = fresh.get(item.entity.id)
+    if (!update) return item
+    fresh.delete(item.entity.id)
+    const [lat, lon] = item.latLng
+    return update.latLng[0] === lat && update.latLng[1] === lon ? { ...update, latLng: item.latLng } : update
+  })
+  return [...kept, ...fresh.values()]
+}

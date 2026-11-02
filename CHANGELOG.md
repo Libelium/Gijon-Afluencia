@@ -44,6 +44,15 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   Ahora respeta la columna, si es una de las permitidas, y el sentido, y desempata por identificador
   para que las páginas no repitan ni pierdan filas. El nombre y el último dato siguen sin ordenarse:
   el nombre se guarda en la base de datos de tiempo real y el último dato sale de otra consulta.
+- **El mapa se acerca a la entidad que se elige.** Las entidades de un mismo punto (una zona y sus
+  gemelas, un sensor y sus entidades) se despliegan en abanico al pulsar su grupo, pero sin
+  acercar el mapa, y elegir una tampoco lo acercaba. Ahora, al pulsar una entidad desde lejos, el
+  mapa se centra en ella a nivel de calle y su globo sigue abierto. Además, el abanico ya no se
+  pliega solo, cerrando el globo, cada vez que el mapa recarga las entidades del área visible.
+- **Buscar una entidad lleva el mapa hasta ella.** Si el buscador o el filtro de modelo de datos no
+  encuentran nada en el área visible, el mapa va directamente a donde están los resultados, sin
+  tener que pulsar «Ver dónde hay datos». Mover el mapa a mano a una zona vacía sigue sin
+  recolocarlo.
 
 ## [2.0.0] — 2026-09-04
 

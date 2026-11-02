@@ -108,6 +108,9 @@ export default defineConfig({
         },
         // Solo `listEntities` tiene pruebas: es un suelo para que no baje, no una meta.
         'src/features/entities/api/entities.ts': { lines: 20, functions: 8, branches: 25, statements: 20 },
+        'src/features/map/lib/viewport.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Solo `mergePlaced` tiene pruebas: es un suelo para que no baje, no una meta.
+        'src/features/map/lib/geometry.ts': { lines: 20, functions: 14, branches: 95, statements: 20 },
       },
     },
   },
