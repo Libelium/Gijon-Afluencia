@@ -400,7 +400,7 @@ class TestSnapshotPublishing:
         }
         model = snapshot_model(
             topicTemplate=[
-                {"type": "static", "value": "gijon/pid/aero-people/aforos/"},
+                {"type": "static", "value": "plataforma/aforos/"},
                 {"type": "variable", "value": "id"},
             ]
         )
@@ -409,9 +409,9 @@ class TestSnapshotPublishing:
 
         client.connect.assert_called_once()
         assert [c.args[0] for c in client.publish.call_args_list] == [
-            "gijon/pid/aero-people/aforos/P01",
+            "plataforma/aforos/P01",
             # Un identificador nunca abre niveles ni lleva comodines.
-            "gijon/pid/aero-people/aforos/a_b_c",
+            "plataforma/aforos/a_b_c",
         ]
         assert json.loads(client.publish.call_args_list[0].args[1]) == {"lecturas": [{"dpa": {"total": 1}}]}
         builder.build_payload.assert_not_called()

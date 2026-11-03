@@ -20,7 +20,7 @@ enviar, no se publica ningún mensaje y la salud del conector no cambia.
 ## Formatos de foto periódica
 
 Con un topic fijo se envía **un mensaje con todos los elementos**. Si el topic lleva la variable
-`{id}` (por ejemplo, `gijon/pid/aero-people/aforos/{id}`), se envía **un mensaje por elemento**, cada
+`{id}` (por ejemplo, `plataforma/aforos/{id}`), se envía **un mensaje por elemento**, cada
 uno a su subtopic y con solo sus lecturas. El `{id}` es el mismo identificador que va dentro del
 mensaje:
 
