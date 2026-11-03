@@ -26,3 +26,31 @@ export function shouldLocate({ count, first, byFilter, filtered }: LoadOutcome):
   if (count > 0) return false
   return (first && !filtered) || (byFilter && filtered)
 }
+
+/**
+ * Lo que tarda como mucho el reagrupamiento animado de los marcadores. Pasado este tiempo sin que
+ * avise de que ha terminado, se da por hecho.
+ */
+export const REGROUP_FALLBACK_MS = 600
+
+/** Lo que se usa de un objeto de Leaflet que emite eventos. */
+interface Evented {
+  once(type: string, fn: () => void): unknown
+  off(type: string, fn: () => void): unknown
+}
+
+/**
+ * Llama a `done` una sola vez: con el primer `type` que emita `target` o, si no llega, pasados `ms`.
+ * Hace falta porque markercluster solo anima el reagrupamiento cuando la zona de destino se solapa
+ * con la que habia: al saltar lejos reagrupa sin animar y nunca emite `animationend`.
+ */
+export function onceOrAfter(target: Evented, type: string, ms: number, done: () => void): void {
+  // Lo que llegue primero anula lo otro: el evento cancela el plazo y el plazo deja de escucharlo.
+  const run = () => {
+    clearTimeout(timer)
+    target.off(type, run)
+    done()
+  }
+  const timer = setTimeout(run, ms)
+  target.once(type, run)
+}

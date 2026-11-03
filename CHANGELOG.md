@@ -10,6 +10,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **El buscador del mapa sugiere las entidades que coinciden.** Al escribir dos letras o más se
+  despliega una lista con las primeras entidades con ubicación que coinciden en todo el mapa, no
+  solo en el área visible, con su modelo de datos para distinguir las que se llaman igual. Al
+  elegir una, el mapa va hasta ella, se acerca y abre su globo. El texto sigue filtrando el mapa
+  como hasta ahora.
 - **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
   botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya

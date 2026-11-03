@@ -15,8 +15,9 @@ import EntityClusterGroup from '../components/EntityClusterGroup.vue'
 import EntityPopupCard from '../components/EntityPopupCard.vue'
 import MapControlPanel from '../components/MapControlPanel.vue'
 import { createEntityIcon } from '../lib/cluster'
-import { boundsOf, mergePlaced, placeEntities, type PlacedEntity } from '../lib/geometry'
-import { focusZoom, shouldLocate } from '../lib/viewport'
+import { boundsOf, mergePlaced, placeEntities, type LatLng, type PlacedEntity } from '../lib/geometry'
+import { SUGGEST_FETCH_SIZE, canSuggest, suggestionsFrom } from '../lib/suggestions'
+import { REGROUP_FALLBACK_MS, focusZoom, onceOrAfter, shouldLocate } from '../lib/viewport'
 import MapEntityTable from '../components/MapEntityTable.vue'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 
@@ -53,6 +54,8 @@ const datamodels = ref<string[]>([])
 const datamodelsLoading = ref(false)
 const locating = ref(false)
 const locateFailed = ref(false)
+const suggestions = shallowRef<PlacedEntity[]>([])
+const suggestionsLoading = ref(false)
 
 const dark = computed(() => theme.global.current.value.dark)
 const tiles = computed(() => tilesForTheme(dark.value))
@@ -69,6 +72,11 @@ let pending: AbortController | undefined
 // Cuando puede recolocarse la vista lo decide `shouldLocate`.
 let firstLoadDone = false
 let filterChanged = false
+let suggestTimer: ReturnType<typeof setTimeout> | undefined
+let suggestPending: AbortController | undefined
+// Marcador de Leaflet de cada entidad pintada, para abrir su globo al elegirla en el buscador.
+const markerById = new Map<number, Marker>()
+const markerWaiters = new Map<number, (marker: Marker | null) => void>()
 
 function visibleBounds(): Bounds | null {
   const instance = map.value
@@ -196,16 +204,14 @@ async function loadDatamodels() {
 }
 
 /**
- * Al pulsar un marcador el mapa se acerca a la entidad. Las de un mismo punto (una zona y sus
- * gemelas) siguen agrupadas a cualquier zoom y al reagruparse se cierra el globo, asi que cuando
- * termina el reagrupamiento posterior al zoom se despliega su grupo y se reabre el globo.
+ * Centra el mapa en una entidad y abre su globo. Las de un mismo punto (una zona y sus gemelas)
+ * siguen agrupadas a cualquier zoom y al reagruparse se cierra el globo, asi que cuando termina el
+ * reagrupamiento posterior al zoom se despliega su grupo y se reabre el globo.
  */
-function focusEntity(event: LeafletMouseEvent, item: PlacedEntity) {
+function revealMarker(marker: Marker, latLng: LatLng, zoom: number) {
   const instance = map.value
   const group = clusters.value?.leafletObject
-  const zoom = instance ? focusZoom(instance.getZoom()) : null
-  if (!instance || !group || zoom === null) return
-  const marker = event.target as Marker
+  if (!instance || !group) return
   const reveal = () => {
     const parent = group.getVisibleParent(marker)
     if (!parent || parent === marker) {
@@ -215,10 +221,94 @@ function focusEntity(event: LeafletMouseEvent, item: PlacedEntity) {
     group.once('spiderfied', () => marker.openPopup())
     ;(parent as MarkerCluster).spiderfy()
   }
-  // El repliegue del abanico tambien emite `animationend`: solo vale el que llega tras el zoom.
-  instance.once('zoomend', () => group.once('animationend', reveal))
+  if (zoom !== instance.getZoom()) {
+    // El repliegue del abanico tambien emite `animationend`: solo vale el que llega tras el zoom.
+    instance.once('zoomend', () => onceOrAfter(group, 'animationend', REGROUP_FALLBACK_MS, reveal))
+  } else {
+    // Sin cambio de zoom no hay reagrupamiento que esperar, solo el desplazamiento.
+    instance.once('moveend', reveal)
+  }
   // Desplegada en abanico, la posicion del marcador es la de su pata, no la de la entidad.
-  instance.setView(item.latLng, zoom)
+  instance.setView(latLng, zoom)
+}
+
+/** Al pulsar un marcador desde lejos el mapa se acerca a la entidad. De cerca, Leaflet abre el globo. */
+function focusEntity(event: LeafletMouseEvent, item: PlacedEntity) {
+  const instance = map.value
+  const zoom = instance ? focusZoom(instance.getZoom()) : null
+  if (zoom === null) return
+  revealMarker(event.target as Marker, item.latLng, zoom)
+}
+
+function registerMarker(id: number, marker: Marker) {
+  markerById.set(id, marker)
+  markerWaiters.get(id)?.(marker)
+  markerWaiters.delete(id)
+}
+
+/** El marcador de una entidad, esperando a que se cree si acaba de sumarse a los pintados. */
+function markerFor(id: number): Promise<Marker | null> {
+  const known = markerById.get(id)
+  if (known && clusters.value?.leafletObject.hasLayer(known)) return Promise.resolve(known)
+  return new Promise((resolve) => {
+    markerWaiters.set(id, resolve)
+    setTimeout(() => {
+      if (markerWaiters.get(id) !== resolve) return
+      markerWaiters.delete(id)
+      resolve(null)
+    }, REGROUP_FALLBACK_MS)
+  })
+}
+
+/**
+ * Lleva el mapa a la entidad elegida en el buscador. Puede estar lejos del area cargada, asi que se
+ * suma antes a los marcadores para tener su globo. Si su marcador no llega, el mapa va igualmente.
+ */
+async function goToEntity(item: PlacedEntity) {
+  const instance = map.value
+  if (!instance) return
+  markers.value = mergePlaced(markers.value, [item])
+  const marker = await markerFor(item.entity.id)
+  const zoom = focusZoom(instance.getZoom()) ?? instance.getZoom()
+  if (marker) revealMarker(marker, item.latLng, zoom)
+  else instance.setView(item.latLng, zoom)
+}
+
+/**
+ * Sugerencias del buscador: entidades con ubicacion que coinciden con el texto en todo el mapa,
+ * no solo en el area visible. Si fallan, el buscador sigue filtrando el mapa como siempre.
+ */
+async function loadSuggestions() {
+  suggestPending?.abort()
+  const text = search.value.trim()
+  if (!canSuggest(text)) {
+    suggestions.value = []
+    suggestionsLoading.value = false
+    return
+  }
+  const current = new AbortController()
+  suggestPending = current
+  try {
+    const rows = await sampleEntities({
+      search: text,
+      types: datamodel.value || undefined,
+      paginationSize: SUGGEST_FETCH_SIZE,
+      signal: current.signal,
+    })
+    suggestions.value = suggestionsFrom(rows)
+  } catch {
+    if (current.signal.aborted) return
+    suggestions.value = []
+  } finally {
+    if (suggestPending === current) suggestionsLoading.value = false
+  }
+}
+
+function scheduleSuggestions() {
+  if (suggestTimer) clearTimeout(suggestTimer)
+  // Se marca ya como pendiente para que el desplegable no diga «sin resultados» mientras se escribe.
+  suggestionsLoading.value = canSuggest(search.value)
+  suggestTimer = setTimeout(() => void loadSuggestions(), FILTER_DEBOUNCE_MS)
 }
 
 function openEntity(entity: Entity) {
@@ -233,11 +323,14 @@ function clearFilters() {
 watch([search, datamodel], () => {
   filterChanged = true
   schedule(FILTER_DEBOUNCE_MS)
+  scheduleSuggestions()
 })
 
 onBeforeUnmount(() => {
   if (moveTimer) clearTimeout(moveTimer)
+  if (suggestTimer) clearTimeout(suggestTimer)
   pending?.abort()
+  suggestPending?.abort()
   map.value?.off('moveend', onMoveEnd)
 })
 
@@ -283,6 +376,7 @@ void loadDatamodels()
             :icon="markerIcon"
             :options="{ title: item.entity.name || item.entity.urn, riseOnHover: true }"
             @click="focusEntity($event, item)"
+            @ready="(marker: Marker) => registerMarker(item.entity.id, marker)"
           >
             <LPopup :options="{ minWidth: 236, maxWidth: 296, autoPanPadding: [24, 24] }">
               <EntityPopupCard
@@ -304,6 +398,9 @@ void loadDatamodels()
           :without-location="withoutLocation"
           :datamodels="datamodels"
           :datamodels-loading="datamodelsLoading"
+          :suggestions="suggestions"
+          :suggestions-loading="suggestionsLoading"
+          @pick="goToEntity"
         />
       </div>
 
