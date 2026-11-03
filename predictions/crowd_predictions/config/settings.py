@@ -396,33 +396,6 @@ def _month_day(text: str, chunk: str) -> tuple:
     return month, day
 
 
-class EventSettings(EnvSettings):
-    """
-    Weight per event type for the `event_magnitude` feature. Configurable because the
-    event types themselves are per deployment: adding one used to mean editing code
-    and shipping an image. JSON object, e.g. EVENT_MAGNITUDES={"large_event": 2}.
-    Merged over the built-in weights, so an empty value keeps today's behaviour.
-    """
-
-    EVENT_MAGNITUDES: str = ""
-
-    def magnitudes(self) -> dict:
-        """Invalid JSON is ignored with an error rather than taking training down:
-        the fallback is the built-in table, which is always usable."""
-        if not self.EVENT_MAGNITUDES:
-            return {}
-        try:
-            parsed = json.loads(self.EVENT_MAGNITUDES)
-        except json.JSONDecodeError as e:
-            logger.error(f"EVENT_MAGNITUDES is not valid JSON, ignoring it entirely: {e}")
-            return {}
-        if not isinstance(parsed, dict):
-            logger.error(f"EVENT_MAGNITUDES must be a JSON object keyed by event type, "
-                         f"got {type(parsed).__name__} - ignoring it entirely.")
-            return {}
-        return {str(k): int(v) for k, v in parsed.items() if str(v).lstrip("-").isdigit()}
-
-
 class TrainingSettings(EnvSettings):
     """train.py, including the warm start knobs."""
 
@@ -690,10 +663,6 @@ def aether() -> AetherSettings:
 
 def calendar() -> CalendarSettings:
     return CalendarSettings()
-
-
-def events() -> EventSettings:
-    return EventSettings()
 
 
 def training() -> TrainingSettings:

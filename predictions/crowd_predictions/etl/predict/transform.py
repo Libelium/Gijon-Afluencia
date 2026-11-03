@@ -16,6 +16,7 @@ sensor-history path. Renaming PREDICTION_ENTITY_TYPE later means renaming the
 entities already created.
 """
 
+import json
 import logging
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
@@ -28,7 +29,9 @@ from crowd_predictions.crowd_xgboost_model import prepare_features
 from crowd_predictions.helpers.aether_history import PREDICTION_ENTITY_SUFFIX
 from crowd_predictions.helpers.uploader import TIMESTAMP_COLUMN, TYPE_COLUMN, URN_COLUMN
 from crowd_predictions.prediction_features import predict_recursive
-from crowd_predictions.training_data import feature_columns_from_train_columns
+from crowd_predictions import events_registry
+from crowd_predictions.training_data import (feature_columns_from_train_columns, local_calendar_timestamps,
+                                            registered_events)
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +111,24 @@ def _default_start_ts(history_bins: list, bin_minutes: int):
         return _hour_aligned_now()
     latest = max(b["timestamp"] for b in history_bins) + timedelta(minutes=bin_minutes)
     return min(latest, _hour_aligned_now() + timedelta(minutes=bin_minutes))
+
+def _registered_events_cell(zone_id: str, zone_df: pd.DataFrame, events: list, timezone_name: str) -> str:
+    """The zone's registered events over the local days of its horizon, as the JSON
+    text published in `registeredEvents` (camelCase, like every other attribute)."""
+    days = local_calendar_timestamps(pd.to_datetime(zone_df["timestamp"]), timezone_name).dt.date
+    touching = events_registry.events_in_window(zone_id, days.min(), days.max(), events)
+    return json.dumps([
+        {
+            "date": e["date"].isoformat(),
+            "endDate": e["end_date"].isoformat(),
+            "type": e["event_type"],
+            "startHour": e["start_hour"],
+            "endHour": e["end_hour"],
+            "notes": e["notes"],
+        }
+        for e in touching
+    ], ensure_ascii=False)
+
 
 def prediction_band(predicted: float, horizon_step: int, spread: dict):
     """(lower, upper) around a predicted value, or (None, None) if the model carries
@@ -191,12 +212,20 @@ class PredictTransform:
         """
         ONE file (ONE entity) PER ZONE, with one row per hour of horizon; stable
         id with the `_pred` suffix, updated on every run instead of recreated.
+
+        The first row also carries `registeredEvents`: the zone's registered events
+        touching the horizon, as JSON text, for the panel's scenario simulator to draw
+        on top of this normal prediction. Always written, "[]" when there are none -
+        an empty cell is skipped by the importer and would leave the previous run's
+        list on the entity.
         """
         output_path = Path(self.output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
 
         entity_type = settings.prediction().PREDICTION_ENTITY_TYPE
         generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        events = registered_events()
+        timezone_name = settings.calendar().timezone()
         exported = []
 
         for zone_id, zone_df in feature_df.groupby("zone_id"):
@@ -224,6 +253,9 @@ class PredictTransform:
                     row_data["predictedOccupancyLower"] = lower
                     row_data["predictedOccupancyUpper"] = upper
                 rows.append(row_data)
+
+            if rows:
+                rows[0]["registeredEvents"] = _registered_events_cell(zone_id, zone_df, events, timezone_name)
 
             filepath = output_path / f"{entity_id}.csv"
             pd.DataFrame(rows).to_csv(filepath, index=False)

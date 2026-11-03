@@ -27,6 +27,18 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
   admitía el cambio; faltaba la pantalla.
 
+### Cambiado
+
+- **El modelo de afluencia no aprende de los días con evento registrado.** Un mercado navideño o
+  unas fiestas no son lo normal: sus días se quitan como filas de entrenamiento y, antes de
+  calcular retardos y medias móviles, su ocupación se cambia por la mediana de la misma franja en
+  las cuatro semanas anteriores sin evento, al entrenar y al predecir. Así la semana del mercado
+  tampoco infla la previsión de la semana siguiente. Los eventos dejan de ser una característica
+  del modelo (`event_magnitude`, y con ella `EVENT_MAGNITUDES`), lo que fuerza un reentrenamiento
+  completo. El registro admite eventos de varios días (`end_date`) y sus horas (`start_hour`,
+  `end_hour`), y cada entidad de previsión publica `registeredEvents` con los eventos de su zona en
+  el horizonte.
+
 ### Corregido
 
 - **Las plantillas de aforo usan la entidad de eventos de cada sensor.** Las cuatro
