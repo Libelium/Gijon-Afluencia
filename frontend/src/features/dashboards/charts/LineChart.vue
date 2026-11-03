@@ -4,7 +4,13 @@ import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart as LineSeries } from 'echarts/charts'
-import { AriaComponent, GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import {
+  AriaComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  TooltipComponent,
+} from 'echarts/components'
 // Los tipos salen del paquete raiz, no de 'echarts/charts': son declaraciones distintas
 // y mezclarlas hace incompatible el objeto de opciones. La importacion es solo de tipos.
 import type {
@@ -15,6 +21,7 @@ import type {
 import { formatMeasure } from '@/lib/format'
 import { t } from '@/i18n'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
+import { MUTED } from '../palette'
 import { useChartTheme } from './useChartTheme'
 import {
   asItems,
@@ -37,7 +44,16 @@ import type { ChartSeries } from './types'
 
 // `AriaComponent` es lo que hace que ECharts ponga `role="img"` y un nombre accesible en el
 // contenedor del lienzo. Sin el, el `<canvas>` no tiene nombre (WCAG 1.1.1, ACC-002).
-use([CanvasRenderer, LineSeries, GridComponent, TooltipComponent, LegendComponent, AriaComponent])
+// `MarkLineComponent` dibuja la linea de «Ahora» cuando la serie llega al futuro (previsiones).
+use([
+  CanvasRenderer,
+  LineSeries,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  AriaComponent,
+  MarkLineComponent,
+])
 
 const props = withDefaults(
   defineProps<{
@@ -51,7 +67,7 @@ const props = withDefaults(
   { area: false, height: 280 },
 )
 
-const { themeName, compact, timeZone } = useChartTheme()
+const { themeName, isDark, compact, timeZone } = useChartTheme()
 
 const showLegend = computed(() => props.series.length > 1)
 
@@ -64,6 +80,17 @@ const option = computed<EChartsOption>(() => {
   const format = timeFormatOf(props.series, compact.value)
   const step = stepOf(props.series)
   const zone = timeZone.value
+  const now = Date.now()
+  const reachesFuture = props.series.some((serie) => serie.points.some((point) => toMillis(point.t) > now))
+  const muted = isDark.value ? MUTED.dark : MUTED.light
+  // Solo en la primera serie: una linea por serie se dibujaria varias veces en el mismo sitio.
+  const nowLine: LineSeriesOption['markLine'] = {
+    silent: true,
+    symbol: 'none',
+    label: { formatter: t('dashboards.chart.now'), position: 'insideEndTop', color: muted, fontSize: 11 },
+    lineStyle: { color: muted, type: 'dashed', width: 1 },
+    data: [{ xAxis: now }],
+  }
 
   const data: LineSeriesOption[] = props.series.map((serie, index) => ({
     name: serie.name,
@@ -78,6 +105,7 @@ const option = computed<EChartsOption>(() => {
     areaStyle: props.area ? { opacity: 0.12 } : undefined,
     emphasis: { focus: 'series' },
     data: serie.points.map((point) => [toMillis(point.t), point.v]),
+    markLine: reachesFuture && index === 0 ? nowLine : undefined,
   }))
 
   return {

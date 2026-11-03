@@ -15,6 +15,9 @@ export interface PageQuery {
   groups?: number[]
   urn?: string
   bounds?: Bounds
+  /** Columna por la que ordena el servidor. Sin ella, del mas reciente al mas antiguo. */
+  orderBy?: string
+  orderDirection?: 'asc' | 'desc'
 }
 
 export interface Bounds {

@@ -2,8 +2,16 @@ import { http } from '@/api/http'
 import { urnTail } from '@/lib/format'
 import type { Panel, PanelSeries } from '@/types'
 import { resolveChartKind, type ChartData, type ChartKind } from '../charts'
-import { resolveAggregation, resolveRange, type AggregationOption, type RangeInput } from '../lib/range'
+import {
+  FORECAST_HORIZON_HOURS,
+  extendRange,
+  resolveAggregation,
+  resolveRange,
+  type AggregationOption,
+  type RangeInput,
+} from '../lib/range'
 import { numericValue, type RawTimeSeriesResponse, type RawValue } from '../lib/timeseries'
+import { isPredictionEntity } from '../templates/contract'
 
 /**
  * Consulta de datos de un panel al servicio de series temporales. Traduce las series del panel a
@@ -88,15 +96,21 @@ export async function fetchPanelData(
   const lastValueOnly = LAST_VALUE_KINDS.includes(resolveChartKind(panel))
 
   const body: TimeSeriesRequest[] = items.map((item) => {
+    // Una prevision llega hasta horas futuras. Los graficos de ultimo valor se quedan en «ahora»:
+    // con el orden descendente, lo que muestran es la prevision de la hora en curso.
+    const window =
+      !lastValueOnly && isPredictionEntity(item.serie.entity)
+        ? extendRange(resolved, FORECAST_HORIZON_HOURS)
+        : resolved
     const aggregation = lastValueOnly
       ? null
-      : resolveAggregation(resolved, item.serie.grouping_function, item.serie.grouping_interval)
+      : resolveAggregation(window, item.serie.grouping_function, item.serie.grouping_interval)
     return {
       device_ids: [item.urn],
       measure_ids: [item.measure],
       options: {
-        start_date: resolved.start,
-        end_date: resolved.end,
+        start_date: window.start,
+        end_date: window.end,
         // El limite se aplica sobre el orden pedido, de modo que descendente conserva lo ultimo.
         order: 'desc',
         limit: lastValueOnly ? 1 : MAX_POINTS,

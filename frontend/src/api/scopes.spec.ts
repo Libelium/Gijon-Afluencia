@@ -90,3 +90,25 @@ describe('dataScopeLabel', () => {
     expect(dataScopeLabel({ id: '1', tenant: 'gijon', scope: '/norte' })).toBe('gijon · /norte')
   })
 })
+
+describe('hasNamedScope', () => {
+  it('con todas las filas en el raiz no hay nada que distinguir', async () => {
+    const { hasNamedScope } = await import('./scopes')
+    expect(hasNamedScope([{ scope: '/' }, { scope: ' / ' }])).toBe(false)
+  })
+
+  it('una fila sin ambito cuenta como raiz, no como ambito con nombre', async () => {
+    const { hasNamedScope } = await import('./scopes')
+    expect(hasNamedScope([{ scope: '/' }, { scope: '' }, { scope: null }, {}])).toBe(false)
+  })
+
+  it('basta una fila en un ambito con nombre', async () => {
+    const { hasNamedScope } = await import('./scopes')
+    expect(hasNamedScope([{ scope: '/' }, { scope: '/norte' }])).toBe(true)
+  })
+
+  it('una pagina vacia no tiene ambitos con nombre', async () => {
+    const { hasNamedScope } = await import('./scopes')
+    expect(hasNamedScope([])).toBe(false)
+  })
+})

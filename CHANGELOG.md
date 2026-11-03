@@ -6,6 +6,61 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 [semántico](https://semver.org/lang/es/). Cada componente lleva además su propia versión en su
 manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es la del conjunto.
 
+## [Sin publicar]
+
+### Añadido
+
+- **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
+  botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
+  `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
+  admitía el cambio; faltaba la pantalla.
+
+### Corregido
+
+- **Las gráficas de una previsión muestran las horas futuras.** El histórico de una medida en la
+  ficha de entidad y las gráficas de los cuadros de mando cortaban la ventana en «ahora», así que
+  de una previsión solo se veían las horas ya pasadas. Para las entidades de previsión la ventana
+  llega ahora hasta el horizonte que publica el componente de predicción (24 h), las gráficas de
+  líneas marcan «Ahora» y el «Último» del histórico es el valor de la hora en curso. Los
+  indicadores de último valor siguen mostrando la previsión de la hora en curso.
+- **Los paneles de tránsitos muestran los recorridos entre sensores.** Ninguna combinación de
+  entidades que ofrecía la interfaz daba datos: con los conteos de los sensores se componían pares
+  con un nombre que la plataforma no publica; con sus eventos, los pares se pedían en el espacio de
+  datos del sensor y no en el de los tránsitos; y con las entidades de tránsitos de cada sensor la
+  plantilla las descartaba todas. Ahora cualquier entidad de un sensor lo representa como extremo,
+  cada par se pide en el espacio donde se publica (el de la entidad de tránsitos de su origen) y el
+  volumen se suma al agregar, en lugar de promediarse. La ayuda explica qué entidades asignar.
+- **Las plantillas de zona reconocen las zonas y su ocupación.** Filtraban por la analítica del
+  sensor de barrido mientras el selector ofrecía la zona fusionada, así que un panel con esas
+  zonas caía al modo de respaldo con su aviso; y el número de personas de la zona se leía como un
+  porcentaje (45 personas salían como «45 %»). Ahora se usa la zona fusionada, después la
+  analítica del sensor y nunca una previsión; la ocupación de la zona es su número de personas y
+  la del sensor de barrido su ocupación simultánea.
+- **El mapa de calor de zonas colorea todas las zonas.** Solo leía las doce primeras y el resto
+  salía en gris. Sin aforo publicado, el color compara cada zona con la más llena y no se rotula
+  como porcentaje. El mapa de zona sigue además el tema oscuro, como el resto de mapas.
+- **Cambiar de zona sin conexión ya no deja los datos de la anterior**, y una respuesta que llega
+  tarde no pisa la de la zona elegida después.
+- **El listado de entidades ya no muestra una columna de «Ámbito» que siempre dice «/».** Cuando
+  todas las entidades de la página están en el ámbito raíz, la columna no distingue ninguna y
+  parecía vacía, así que deja de mostrarse. Vuelve a salir en cuanto una entidad de la página está
+  en un ámbito con nombre. El ámbito sigue visible en la ficha de cada entidad.
+- **El listado de entidades se puede ordenar por modelo de datos, espacio de datos y ámbito.** Las
+  cabeceras no eran pulsables porque el servidor ignoraba la columna pedida y siempre ordenaba por
+  identificador interno. Además leía el sentido como un sí o no, así que «asc» ordenaba al revés.
+  Ahora respeta la columna, si es una de las permitidas, y el sentido, y desempata por identificador
+  para que las páginas no repitan ni pierdan filas. El nombre y el último dato siguen sin ordenarse:
+  el nombre se guarda en la base de datos de tiempo real y el último dato sale de otra consulta.
+- **El mapa se acerca a la entidad que se elige.** Las entidades de un mismo punto (una zona y sus
+  gemelas, un sensor y sus entidades) se despliegan en abanico al pulsar su grupo, pero sin
+  acercar el mapa, y elegir una tampoco lo acercaba. Ahora, al pulsar una entidad desde lejos, el
+  mapa se centra en ella a nivel de calle y su globo sigue abierto. Además, el abanico ya no se
+  pliega solo, cerrando el globo, cada vez que el mapa recarga las entidades del área visible.
+- **Buscar una entidad lleva el mapa hasta ella.** Si el buscador o el filtro de modelo de datos no
+  encuentran nada en el área visible, el mapa va directamente a donde están los resultados, sin
+  tener que pulsar «Ver dónde hay datos». Mover el mapa a mano a una zona vacía sigue sin
+  recolocarlo.
+
 ## [2.0.0] — 2026-09-04
 
 Se añade el motor de evaluación de alarmas, que la API publicaba sin que nadie lo ejecutase. Por lo

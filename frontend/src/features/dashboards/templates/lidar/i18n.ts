@@ -51,6 +51,8 @@ export default {
   // --- mapa de calor ---
   'dashboards.lidar.heatmap.map': 'Zonas monitorizadas',
   'dashboards.lidar.heatmap.mapHint': 'El color indica el nivel de ocupación actual de cada zona',
+  'dashboards.lidar.heatmap.mapHintRelative':
+    'Sin aforo publicado: el color compara la ocupación actual de cada zona con la de la más llena',
   'dashboards.lidar.heatmap.mapLabel': 'Mapa con las zonas monitorizadas',
   'dashboards.lidar.heatmap.noGeo': 'Ninguna zona asignada tiene ubicación',
   'dashboards.lidar.heatmap.noGeoHint': 'Las zonas sin coordenadas no se pueden situar en el mapa.',

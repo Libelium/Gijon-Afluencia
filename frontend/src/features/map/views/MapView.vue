@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { LMap, LMarker, LPopup, LTileLayer } from '@vue-leaflet/vue-leaflet'
-import type { Map as LeafletMap } from 'leaflet'
+import type { LeafletMouseEvent, Map as LeafletMap, Marker, MarkerCluster, MarkerClusterGroup } from 'leaflet'
 import { errorMessage } from '@/api/http'
 import { useDebouncedResize } from '@/composables/useDebouncedResize'
 import { t } from '@/i18n'
@@ -15,7 +15,8 @@ import EntityClusterGroup from '../components/EntityClusterGroup.vue'
 import EntityPopupCard from '../components/EntityPopupCard.vue'
 import MapControlPanel from '../components/MapControlPanel.vue'
 import { createEntityIcon } from '../lib/cluster'
-import { boundsOf, placeEntities, type PlacedEntity } from '../lib/geometry'
+import { boundsOf, mergePlaced, placeEntities, type PlacedEntity } from '../lib/geometry'
+import { focusZoom, shouldLocate } from '../lib/viewport'
 import MapEntityTable from '../components/MapEntityTable.vue'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 
@@ -37,8 +38,11 @@ const markerIcon = createEntityIcon()
 
 const canvas = ref<HTMLElement | null>(null)
 const map = shallowRef<LeafletMap | null>(null)
+const clusters = shallowRef<{ leafletObject: MarkerClusterGroup } | null>(null)
 const mapReady = ref(false)
 const placed = shallowRef<PlacedEntity[]>([])
+// Lo que hay en el grupo de marcadores: lo visible mas lo que se fue viendo con los mismos filtros.
+const markers = shallowRef<PlacedEntity[]>([])
 const withoutLocation = ref(0)
 const total = ref(0)
 const loading = ref(false)
@@ -62,9 +66,9 @@ const stateInteractive = computed(() => Boolean(error.value) || empty.value)
 
 let moveTimer: ReturnType<typeof setTimeout> | undefined
 let pending: AbortController | undefined
-// Solo la PRIMERA carga puede recolocar la vista. Si mas adelante el usuario arrastra el mapa a
-// una zona vacia lo ha hecho a proposito, y moverle el encuadre por debajo seria peor que el vacio.
+// Cuando puede recolocarse la vista lo decide `shouldLocate`.
 let firstLoadDone = false
+let filterChanged = false
 
 function visibleBounds(): Bounds | null {
   const instance = map.value
@@ -97,18 +101,25 @@ async function load() {
     })
     const result = placeEntities(page.rows)
     placed.value = result.placed
+    markers.value = filterChanged ? result.placed : mergePlaced(markers.value, result.placed)
     withoutLocation.value = result.withoutLocation
     total.value = page.count
 
-    const wasFirst = !firstLoadDone
+    const outcome = {
+      count: page.count,
+      first: !firstLoadDone,
+      byFilter: filterChanged,
+      filtered: filtered.value,
+    }
     firstLoadDone = true
-    // El centro configurado en el despliegue no es donde estan los datos: se busca donde si.
-    if (wasFirst && page.count === 0 && !filtered.value) void locateData()
+    filterChanged = false
+    if (shouldLocate(outcome)) void locateData()
   } catch (e) {
     // Una peticion cancelada es una vista anterior quedandose atras, no un fallo que mostrar.
     if (current.signal.aborted) return
     error.value = errorMessage(e)
     placed.value = []
+    markers.value = []
     withoutLocation.value = 0
     total.value = 0
   } finally {
@@ -184,6 +195,32 @@ async function loadDatamodels() {
   }
 }
 
+/**
+ * Al pulsar un marcador el mapa se acerca a la entidad. Las de un mismo punto (una zona y sus
+ * gemelas) siguen agrupadas a cualquier zoom y al reagruparse se cierra el globo, asi que cuando
+ * termina el reagrupamiento posterior al zoom se despliega su grupo y se reabre el globo.
+ */
+function focusEntity(event: LeafletMouseEvent, item: PlacedEntity) {
+  const instance = map.value
+  const group = clusters.value?.leafletObject
+  const zoom = instance ? focusZoom(instance.getZoom()) : null
+  if (!instance || !group || zoom === null) return
+  const marker = event.target as Marker
+  const reveal = () => {
+    const parent = group.getVisibleParent(marker)
+    if (!parent || parent === marker) {
+      marker.openPopup()
+      return
+    }
+    group.once('spiderfied', () => marker.openPopup())
+    ;(parent as MarkerCluster).spiderfy()
+  }
+  // El repliegue del abanico tambien emite `animationend`: solo vale el que llega tras el zoom.
+  instance.once('zoomend', () => group.once('animationend', reveal))
+  // Desplegada en abanico, la posicion del marcador es la de su pata, no la de la entidad.
+  instance.setView(item.latLng, zoom)
+}
+
 function openEntity(entity: Entity) {
   void router.push(`/entidades/${entity.id}`)
 }
@@ -193,7 +230,10 @@ function clearFilters() {
   datamodel.value = null
 }
 
-watch([search, datamodel], () => schedule(FILTER_DEBOUNCE_MS))
+watch([search, datamodel], () => {
+  filterChanged = true
+  schedule(FILTER_DEBOUNCE_MS)
+})
 
 onBeforeUnmount(() => {
   if (moveTimer) clearTimeout(moveTimer)
@@ -235,13 +275,14 @@ void loadDatamodels()
           :options="tiles.options"
         />
 
-        <EntityClusterGroup v-if="mapReady">
+        <EntityClusterGroup v-if="mapReady" ref="clusters">
           <LMarker
-            v-for="item in placed"
+            v-for="item in markers"
             :key="item.entity.id"
             :lat-lng="item.latLng"
             :icon="markerIcon"
             :options="{ title: item.entity.name || item.entity.urn, riseOnHover: true }"
+            @click="focusEntity($event, item)"
           >
             <LPopup :options="{ minWidth: 236, maxWidth: 296, autoPanPadding: [24, 24] }">
               <EntityPopupCard

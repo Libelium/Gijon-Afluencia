@@ -53,9 +53,16 @@ class OrderFieldValidator
 
     /**
      * Resolves the sort direction. Only asc and desc exist; anything else becomes asc.
+     *
+     * Some clients still send the legacy boolean flag (true = desc). A string is read by its
+     * value, never by truthiness: any non-empty string is truthy, so "asc" would sort desc.
      */
-    public static function resolveDirection(?string $requested): string
+    public static function resolveDirection(mixed $requested): string
     {
+        if (is_bool($requested) || is_int($requested)) {
+            return $requested ? 'desc' : 'asc';
+        }
+
         return strtolower(trim((string) $requested)) === 'desc' ? 'desc' : 'asc';
     }
 }

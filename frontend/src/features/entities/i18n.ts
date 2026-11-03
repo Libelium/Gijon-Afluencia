@@ -47,6 +47,14 @@ export default {
   'entities.detail.noScope': 'Esta entidad no tiene ámbito de datos asignado, por lo que no se pueden consultar sus medidas.',
   'entities.detail.notFound': 'No se ha encontrado la entidad solicitada',
 
+  'entities.rename.action': 'Renombrar',
+  'entities.rename.title': 'Renombrar la entidad',
+  'entities.rename.name': 'Nombre',
+  'entities.rename.nameRequired': 'Escribe un nombre',
+  'entities.rename.hint': 'Es el nombre que se muestra en toda la plataforma. El identificador no cambia.',
+  'entities.rename.forbidden': 'No tienes permiso para cambiar el nombre de esta entidad.',
+  'entities.rename.saved': 'Nombre guardado',
+
   'entities.measures.title': 'Medidas actuales',
   'entities.measures.name': 'Medida',
   'entities.measures.value': 'Valor',
