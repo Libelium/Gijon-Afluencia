@@ -190,7 +190,7 @@ export default {
   'alarms.form.unitDays': 'Días',
 
   'alarms.form.scopeNotice':
-    'Este formulario crea la alarma y sus condiciones. Los avisos, las restricciones horarias y las alarmas sobre un grupo de entidades siguen configurándose desde la API.',
+    'Este formulario crea la alarma, sus condiciones y los avisos por correo. El resto de avisos (Telegram, SMS…), las restricciones horarias y las alarmas sobre un grupo de entidades siguen configurándose desde la API.',
   'alarms.form.scopeNoticeEdit':
     'Al guardar se actualizan la alarma, sus condiciones y los avisos por correo. El resto de avisos (Telegram, SMS…) y las restricciones horarias siguen configurándose desde la API.',
   'alarms.form.submit': 'Crear alarma',

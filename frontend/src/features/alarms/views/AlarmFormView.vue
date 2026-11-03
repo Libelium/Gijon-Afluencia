@@ -190,6 +190,12 @@ async function submit() {
     }
 
     const id = await createAlarm(payload)
+    // Los avisos necesitan el id de la alarma, asi que se crean despues del alta (todos nuevos).
+    if (id) {
+      for (const aviso of emailAvisos.value) {
+        await createEmailAction(id, toNewEmailAction(aviso))
+      }
+    }
     await router.push(id ? `/alarmas/${id}` : '/alarmas')
   } catch (e) {
     error.value = errorMessage(e)
@@ -302,8 +308,8 @@ onMounted(() => {
       </VCardText>
     </VCard>
 
-    <!-- Los avisos por correo solo se pueden gestionar sobre una alarma que ya existe. -->
-    <VCard v-if="isEdit">
+    <!-- En el alta se quedan en borrador y se crean justo despues de guardar la alarma. -->
+    <VCard>
       <VCardText class="pa-4 pa-sm-6">
         <AlarmEmailActions v-if="!avisosUnavailable" v-model="emailAvisos" />
         <VAlert v-else type="warning" variant="tonal" density="comfortable">
