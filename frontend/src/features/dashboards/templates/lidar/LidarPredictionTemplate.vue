@@ -12,6 +12,7 @@ import { FORECAST_HORIZON_HOURS, autoAggregation, extendRange, type DateRange } 
 import PredictionBandChart from './charts/PredictionBandChart.vue'
 import AttributesCard from './components/AttributesCard.vue'
 import ChartCard from './components/ChartCard.vue'
+import EventScenarioCard from './components/EventScenarioCard.vue'
 import LidarControlBar from './components/LidarControlBar.vue'
 import LidarNotice from './components/LidarNotice.vue'
 import {
@@ -393,6 +394,17 @@ async function reloadPrediction() {
               {{ hasBand ? t('dashboards.lidar.prediction.band') : t('dashboards.lidar.prediction.noBand') }}
             </div>
           </ChartCard>
+        </VCol>
+      </VRow>
+
+      <VRow v-if="twin && twinProfile?.roles.predicted" class="mb-2">
+        <VCol cols="12">
+          <EventScenarioCard
+            :twin="twin"
+            :predicted-id="twinProfile.roles.predicted.id"
+            :capacity="profile?.capacity ?? null"
+            :time-zone="timeZone"
+          />
         </VCol>
       </VRow>
 

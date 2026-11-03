@@ -118,6 +118,18 @@ export default defineConfig({
         'src/features/dashboards/templates/shared/discovery.ts': { lines: 70, functions: 35, branches: 60, statements: 70 },
         'src/features/dashboards/api/catalog.ts': { lines: 25, functions: 50, branches: 100, statements: 25 },
         'src/features/dashboards/templates/registry.ts': { lines: 95, functions: 50, branches: 100, statements: 95 },
+        'src/features/dashboards/templates/lidar/eventSimulation.ts': {
+          lines: 100,
+          functions: 100,
+          branches: 95,
+          statements: 100,
+        },
+        'src/features/dashboards/templates/lidar/components/EventScenarioCard.vue': {
+          lines: 95,
+          functions: 60,
+          branches: 80,
+          statements: 95,
+        },
         'src/features/entities/components/EntityRenameDialog.vue': {
           lines: 95,
           functions: 60,

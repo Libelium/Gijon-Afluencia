@@ -15,6 +15,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   solo en el área visible, con su modelo de datos para distinguir las que se llaman igual. Al
   elegir una, el mapa va hasta ella, se acerca y abre su globo. El texto sigue filtrando el mapa
   como hasta ahora.
+- **Simulador de escenarios con eventos en la plantilla de predicción de zona.** Debajo de la
+  ocupación prevista se pueden añadir eventos (tipo, hora de inicio, duración, meteorología e
+  intensidad) y ver la previsión con y sin ellos, el máximo resultante, las personas de más y las
+  horas por encima del aforo. El modelo es aditivo y por horas: cada tipo de evento suma en su hora
+  punta una parte del aforo de la zona, por la intensidad y por el efecto del tiempo, y la hora
+  anterior y la posterior cuentan a medias. Las cifras son supuestos para comparar escenarios y
+  solo se simula dentro del horizonte de la previsión.
 - **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
   botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
