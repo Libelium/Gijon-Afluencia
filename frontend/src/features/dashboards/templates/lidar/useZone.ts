@@ -58,8 +58,25 @@ export function useZone(props: UseZoneProps): UseZone {
     if (!loaded.some((e) => e.id === zoneId.value)) zoneId.value = loaded[0]?.id ?? null
   }
 
+  let measuresRequest = 0
+
+  /** Al cambiar rapido de zona, la respuesta de la anterior no debe pisar la de la elegida. */
   async function loadMeasures() {
-    measures.value = zone.value ? await getEntityMeasures(refOf(zone.value)) : []
+    const request = ++measuresRequest
+    const target = zone.value
+    const list = target ? await getEntityMeasures(refOf(target)) : []
+    if (request === measuresRequest) measures.value = list
+  }
+
+  /** Cambio de zona desde el selector: si falla, se dice y no quedan los datos de la anterior. */
+  async function switchZone() {
+    error.value = null
+    try {
+      await loadMeasures()
+    } catch (e) {
+      error.value = errorMessage(e)
+      measures.value = []
+    }
   }
 
   async function reload() {
@@ -78,7 +95,10 @@ export function useZone(props: UseZoneProps): UseZone {
 
   watch(
     () => zoneId.value,
-    () => void loadMeasures(),
+    () => {
+      // Durante la recarga es `reload` quien pide las medidas: aqui se pedirian dos veces.
+      if (!loading.value) void switchZone()
+    },
   )
   watch(
     () => props.reloadKey,

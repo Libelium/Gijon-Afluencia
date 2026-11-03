@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
+import VChart from 'vue-echarts'
+import type { EChartsOption, LineSeriesOption } from 'echarts'
 import vuetify from '@/plugins/vuetify'
 import BarChart from './BarChart.vue'
 import DataTableChart from './DataTableChart.vue'
@@ -95,6 +97,26 @@ describe.each(CHARTS)('%s', (_name, component) => {
     const wrapper = mount(component, { props: { series: [] }, ...options })
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.find('table').exists()).toBe(false)
+  })
+})
+
+describe('LineChart con previsiones', () => {
+  const HOUR = 3_600_000
+  const at = (offset: number) => new Date(Date.now() + offset).toISOString()
+  const lineOf = (series: ChartSeries[]) => {
+    const wrapper = mount(LineChart, { props: { series }, ...options })
+    const option = wrapper.findComponent(VChart).props('option') as EChartsOption
+    return (option.series as LineSeriesOption[])[0]
+  }
+
+  it('marca «Ahora» cuando la serie llega al futuro, y ECharts la dibuja sin quejarse', () => {
+    const line = lineOf([{ name: 'Prevision', points: [{ t: at(-HOUR), v: 90 }, { t: at(HOUR), v: 120 }] }])
+    expect(line.markLine?.data).toHaveLength(1)
+    expect(echartsMessages).toEqual([])
+  })
+
+  it('sin puntos futuros no hay linea de «Ahora»', () => {
+    expect(lineOf(SERIES).markLine).toBeUndefined()
   })
 })
 

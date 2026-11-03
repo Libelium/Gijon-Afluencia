@@ -61,6 +61,17 @@ export function datamodelsOf(keys: DatamodelKey[]): string[] {
 /** Sufijo de la entidad gemela que publica la prevision de una zona. */
 export const PREDICTION_URN_SUFFIX = '_pred'
 
+/**
+ * Si la entidad es una prevision de zona, cuya serie llega hasta horas futuras. Se mira el
+ * modelo de datos y, si no viene, el tipo que lleva el URN (`urn:ngsi-ld:<Tipo>:<id>`): la
+ * ficha de entidad solo conoce el URN.
+ */
+export function isPredictionEntity(entity?: { urn?: string; datamodel?: string } | null): boolean {
+  if (!entity) return false
+  const model = datamodelOf('zonePrediction')
+  return entity.datamodel === model || entity.urn?.split(':')[2] === model
+}
+
 /** Identificador que espera el servidor para una plantilla soportada. */
 export function typeIdOf(key: TemplateKey): string {
   return decode(ENCODED[key])

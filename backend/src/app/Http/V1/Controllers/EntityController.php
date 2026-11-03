@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Authorization\AppResourcePermission;
 use App\Helpers\Entities\RealtimeEntityResourcesHelper;
+use App\Services\OrderFieldValidator;
 
 class EntityController extends Controller
 {
@@ -394,9 +395,9 @@ class EntityController extends Controller
     {
         $paginationSize = $request->input('paginationSize', '10');
         $page = $request->input('page', 1);
+        // The repository checks the column against its whitelist and falls back to the id.
         $orderColumn = $request->input('orderBy', 'entities.id');
-        $orderColumn = "entities.id";
-        $orderDirection = $request->input('orderDirection', true) == true ? 'desc' : 'asc';
+        $orderDirection = OrderFieldValidator::resolveDirection($request->input('orderDirection', 'desc'));
         $searchText = $request->input('search', '');
         $tenant = $request->input('tenant', null);
         $scope = $request->input('scope', null);

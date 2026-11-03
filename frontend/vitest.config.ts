@@ -61,6 +61,68 @@ export default defineConfig({
         'src/lib/a11y.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
         'src/plugins/theme.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
         'src/api/scopes.ts': { lines: 95, functions: 100, branches: 90, statements: 95 },
+        'src/features/dashboards/lib/range.ts': { lines: 100, functions: 100, branches: 90, statements: 100 },
+        'src/features/dashboards/templates/contract.ts': {
+          lines: 100,
+          functions: 100,
+          branches: 100,
+          statements: 100,
+        },
+        'src/features/dashboards/api/panelData.ts': {
+          lines: 95,
+          functions: 100,
+          branches: 80,
+          statements: 95,
+        },
+        'src/features/dashboards/templates/transits/pairs.ts': {
+          lines: 90,
+          functions: 90,
+          branches: 80,
+          statements: 90,
+        },
+        'src/features/dashboards/templates/lidar/roles.ts': {
+          lines: 100,
+          functions: 60,
+          branches: 95,
+          statements: 100,
+        },
+        'src/features/dashboards/templates/lidar/useZone.ts': {
+          lines: 95,
+          functions: 100,
+          branches: 75,
+          statements: 95,
+        },
+        // Suelo de lo ya cubierto (perfil de zona y seleccion de zonas); las lecturas de series
+        // por HTTP siguen sin pruebas y suben el umbral cuando las tengan.
+        'src/features/dashboards/templates/lidar/data.ts': {
+          lines: 35,
+          functions: 35,
+          branches: 75,
+          statements: 35,
+        },
+        'src/features/entities/views/EntitiesListView.vue': {
+          lines: 80,
+          functions: 30,
+          branches: 55,
+          statements: 80,
+        },
+        // Solo `listEntities` tiene pruebas: es un suelo para que no baje, no una meta.
+        'src/features/entities/api/entities.ts': { lines: 20, functions: 8, branches: 25, statements: 20 },
+        'src/features/map/lib/viewport.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Solo `mergePlaced` tiene pruebas: es un suelo para que no baje, no una meta.
+        'src/features/map/lib/geometry.ts': { lines: 20, functions: 14, branches: 95, statements: 20 },
+        'src/features/entities/components/EntityRenameDialog.vue': {
+          lines: 95,
+          functions: 60,
+          branches: 80,
+          statements: 95,
+        },
+        'src/features/entities/views/EntityDetailView.vue': {
+          lines: 95,
+          functions: 60,
+          branches: 75,
+          statements: 95,
+        },
       },
     },
   },

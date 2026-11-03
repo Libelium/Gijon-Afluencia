@@ -9,8 +9,9 @@ import { t } from '@/i18n'
 import { formatDateTime, formatNumber, relativeFromNow, urnTail } from '@/lib/format'
 import { useSessionStore } from '@/stores/session'
 import type { Entity, EntityRef, Measure } from '@/types'
-import { getEntity, getEntityMeasures, latestTimestamp } from '../api/entities'
+import { canUpdateEntity, getEntity, getEntityMeasures, latestTimestamp } from '../api/entities'
 import EntityIdentityCard from '../components/EntityIdentityCard.vue'
+import EntityRenameDialog from '../components/EntityRenameDialog.vue'
 import EntityLocationCard from '../components/EntityLocationCard.vue'
 import EntityMeasuresPanel from '../components/EntityMeasuresPanel.vue'
 import { datamodelIcon } from '../lib/datamodel'
@@ -27,6 +28,10 @@ const measures = ref<Measure[]>([])
 const measuresPending = ref(false)
 const measuresError = ref<string | null>(null)
 const readAt = ref<string | null>(null)
+
+const canRename = ref(false)
+const renaming = ref(false)
+const snack = ref({ open: false, text: '' })
 
 const entityId = computed(() => String(route.params.id ?? ''))
 
@@ -74,6 +79,7 @@ async function load() {
   measures.value = []
   measuresError.value = null
   readAt.value = null
+  canRename.value = false
   try {
     entity.value = await getEntity(entityId.value)
   } catch (e) {
@@ -82,7 +88,25 @@ async function load() {
   } finally {
     pending.value = false
   }
-  if (entityRef.value) void loadMeasures()
+  if (entityRef.value) {
+    void loadMeasures()
+    void loadCanRename(entityRef.value)
+  }
+}
+
+/** El boton solo se ofrece a quien puede usarlo. Si la consulta falla, no se ofrece. */
+async function loadCanRename(target: EntityRef) {
+  try {
+    const allowed = await canUpdateEntity(target)
+    if (entityRef.value?.urn === target.urn) canRename.value = allowed
+  } catch {
+    canRename.value = false
+  }
+}
+
+function onRenamed(name: string) {
+  if (entity.value) entity.value = { ...entity.value, name }
+  snack.value = { open: true, text: t('entities.rename.saved') }
 }
 
 async function loadMeasures() {
@@ -110,7 +134,13 @@ watch(entityId, () => void load(), { immediate: true })
     :subtitle="entity?.datamodel"
     :icon="headerIcon"
     back-to="/entidades"
-  />
+  >
+    <template v-if="canRename" #actions>
+      <VBtn variant="tonal" color="primary" prepend-icon="mdi-pencil-outline" @click="renaming = true">
+        {{ t('entities.rename.action') }}
+      </VBtn>
+    </template>
+  </PageHeader>
 
   <StateBlock
     :loading="pending"
@@ -169,4 +199,13 @@ watch(entityId, () => void load(), { immediate: true })
       />
     </div>
   </StateBlock>
+
+  <EntityRenameDialog v-if="entity" v-model="renaming" :entity="entity" @saved="onRenamed" />
+
+  <VSnackbar v-model="snack.open" color="success" location="bottom">
+    {{ snack.text }}
+    <template #actions>
+      <VBtn variant="text" @click="snack.open = false">{{ t('common.close') }}</VBtn>
+    </template>
+  </VSnackbar>
 </template>

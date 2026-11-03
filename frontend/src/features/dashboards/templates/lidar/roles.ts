@@ -47,9 +47,14 @@ export const ROLE_CANDIDATES: Record<RoleKey, readonly string[]> = {
     'occupancycount',
     'peoplecountlonginterval',
     'peoplecountshortinterval',
+    // La zona fusionada publica las personas presentes como `occupancy`. Va detras de los nombres
+    // explicitos porque hay zonas que traen `peopleCountInZone` y usan `occupancy` como proporcion.
+    'occupancy',
+    // Ocupacion simultanea del sensor de barrido; su `totalCount` es afluencia acumulada en la hora.
+    'totalconcurrentmax',
     'count',
   ],
-  ratio: ['occupancyratio', 'occupancylevel', 'occupancypercentage', 'occupancypercent', 'loadfactor', 'occupancy'],
+  ratio: ['occupancyratio', 'occupancylevel', 'occupancypercentage', 'occupancypercent', 'loadfactor'],
   capacity: [
     'maxcapacity',
     'maximumcapacity',
@@ -92,6 +97,12 @@ export const ROLE_CANDIDATES: Record<RoleKey, readonly string[]> = {
 
 const rank = (a: string, b: string): number => a.length - b.length || a.localeCompare(b, 'es')
 
+/**
+ * Candidatos que solo valen por coincidencia exacta. Por contencion, 'occupancy' cogeria
+ * `predictedOccupancy` u `occupancyRatio`, y 'count' cualquier conteo acumulado (`adultCount`).
+ */
+const EXACT_ONLY = new Set(['occupancy', 'count'])
+
 export function matchRole(ids: string[], role: RoleKey): string | null {
   const wanted = ROLE_CANDIDATES[role]
 
@@ -103,7 +114,7 @@ export function matchRole(ids: string[], role: RoleKey): string | null {
   // Contencion solo con candidatos de 5 caracteres o mas: 'min' casaria con 'minimum'
   // y 'case' con 'lowercase'.
   for (const candidate of wanted) {
-    if (candidate.length < 5) continue
+    if (candidate.length < 5 || EXACT_ONLY.has(candidate)) continue
     const hits = ids.filter((id) => normalizeId(id).includes(candidate)).sort(rank)
     if (hits.length) return hits[0]
   }

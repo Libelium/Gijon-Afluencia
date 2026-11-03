@@ -69,8 +69,11 @@ export const SECTIONS: HelpSection[] = [
       { term: 'Aforo Clasificación', text: 'Reparto de personas por categoría detectada, con evolución y totales.' },
       { term: 'Clasificación Avanzada', text: 'Clasificación con comparativa entre puntos, franjas horarias y acumulados.' },
       { term: 'Aforo Mapa de Calor', text: 'Intensidad de ocupación por hora y día de la semana, y mapa de densidad sobre los puntos de interés turístico.' },
-      { term: 'Aforo Tránsitos', text: 'Desplazamientos de personas entre puntos de medida, con origen, destino y volumen.' },
-      { term: 'Tránsitos avanzado', text: 'Tránsitos con matriz origen-destino, rutas principales y evolución.' },
+      {
+        term: 'Aforo Tránsitos',
+        text: 'Personas que un sensor de conteo WiFi/BLE detecta y que después aparecen en otro, con origen, destino y volumen por hora. Asigna al menos dos sensores: su entidad de tránsitos (la que termina en _CFE en el espacio de datos de la plataforma) o la de sus conteos (la que termina en _CFO), que además los sitúa en el mapa. Las zonas LIDAR y las zonas de aforo no sirven para esta plantilla.',
+      },
+      { term: 'Tránsitos avanzado', text: 'Lo mismo, con matriz origen-destino, rutas principales y evolución. Se asignan las mismas entidades.' },
       { term: 'Zona LIDAR Analítica', text: 'Indicadores de la zona LIDAR: ocupación, aforo, permanencia y series históricas.' },
       { term: 'Zona LIDAR Mapa de calor', text: 'Densidad de ocupación en vivo sobre la zona monitorizada.' },
       { term: 'Zona LIDAR Predicción', text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo.' },
@@ -184,6 +187,11 @@ export const FAQ: FaqEntry[] = [
     question: 'Una gráfica sale vacía',
     answer:
       'Significa que no hay datos en el rango de fechas elegido. Amplía el rango con el selector de la gráfica o comprueba en la ficha de la entidad cuándo llegó su último dato.',
+  },
+  {
+    question: 'El panel de tránsitos sale vacío',
+    answer:
+      'La plataforma calcula los tránsitos cada hora y solo cuenta a quien dos sensores detectan dentro de la misma hora, así que con pocos visitantes o con sensores alejados puede no haber datos. Comprueba que el panel tiene al menos dos sensores de conteo WiFi/BLE (sus entidades terminadas en _CFE o _CFO; no las zonas LIDAR) y amplía el rango a 7 o 30 días.',
   },
   {
     question: '¿Por qué las horas no coinciden con las de mi reloj?',

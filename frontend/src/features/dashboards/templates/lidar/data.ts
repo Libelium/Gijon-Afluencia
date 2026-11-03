@@ -7,33 +7,24 @@ import type { Aggregation, Entity, EntityRef, Measure } from '@/types'
 import type { ChartPoint } from '../../charts'
 import { autoAggregation, RANGE_PRESETS, type DateRange, type RangePresetId } from '../../lib/range'
 import type { RawTimeSeriesResponse as RawEnvelope } from '../../lib/timeseries'
+import { PREDICTION_URN_SUFFIX, datamodelOf, isPredictionEntity } from '../contract'
 import { HIDDEN_IDS, matchRole, normalizeId, type RoleKey } from './roles'
 
-/**
- * Nombres de modelo de datos en base64, por el mismo motivo que en `contract.ts`: contienen
- * la marca de un producto comercial ajeno y este repositorio es publico. El valor que viaja
- * por la red es el original.
- */
-const MODELS = {
-  zone: 'Q3Jvd2RGbG93TGlkYXJab25l',
-  prediction: 'Q3Jvd2RGbG93UHJlZGljdGlvbg==',
-} as const
-
-const PRED_SUFFIX = '_pred'
+const PRED_SUFFIX = PREDICTION_URN_SUFFIX
 const MAX_POINTS = 2000
 /** Tope de puntos para una consulta forzada a hora, reutilizado por las vistas. */
 export const MATRIX_POINTS = 2400
 
-function decode(value: string): string {
-  return atob(value)
-}
-
+/**
+ * Modelo de la zona que consumen las plantillas: la fusionada, la que se ofrece al configurar el
+ * panel y la que predice el modelo. Los nombres salen de `contract.ts`, que es la unica tabla.
+ */
 export function zoneModel(): string {
-  return decode(MODELS.zone)
+  return datamodelOf('zone')
 }
 
 export function predictionModel(): string {
-  return decode(MODELS.prediction)
+  return datamodelOf('zonePrediction')
 }
 
 // --- utilidades de valor y fecha -------------------------------------------------------
@@ -193,10 +184,18 @@ export async function fetchTemplateEntities(dashboardId: number): Promise<Entity
   return entities.sort((a, b) => a.name.localeCompare(b.name, 'es'))
 }
 
+/**
+ * Zonas del panel. Manda la zona fusionada; si el panel solo tiene la analitica del sensor de
+ * barrido, se usa esa; y si no hay ninguna de las dos, todo lo asignado, con aviso. Las gemelas
+ * de prevision nunca son zonas: elegida como tal, una buscaria su propia gemela.
+ */
 export function zoneEntities(entities: Entity[]): { zones: Entity[]; usedFallback: boolean } {
-  const zones = entities.filter((e) => e.datamodel === zoneModel())
-  if (zones.length > 0) return { zones, usedFallback: false }
-  return { zones: entities, usedFallback: entities.length > 0 }
+  const candidates = entities.filter((e) => !isPredictionEntity(e))
+  for (const model of [zoneModel(), datamodelOf('zoneScan')]) {
+    const zones = candidates.filter((e) => e.datamodel === model)
+    if (zones.length > 0) return { zones, usedFallback: false }
+  }
+  return { zones: candidates, usedFallback: candidates.length > 0 }
 }
 
 // --- series temporales ---------------------------------------------------------------
@@ -487,10 +486,4 @@ export function levelColor(ratio: number | null): string {
 export function presetHint(preset: RangePresetId): string | undefined {
   const found = RANGE_PRESETS.find((p) => p.id === preset)
   return found ? t(found.labelKey) : undefined
-}
-
-/** Amplia la ventana hacia el futuro, para pedir la parte prevista. */
-export function extendRange(range: DateRange, hours: number): DateRange {
-  const end = DateTime.fromISO(range.end, { zone: 'utc' }).plus({ hours })
-  return { start: range.start, end: end.toISO({ suppressMilliseconds: true }) ?? range.end }
 }

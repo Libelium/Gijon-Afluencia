@@ -2,16 +2,19 @@
 import { computed, ref, useId, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
-import { LineChart, type ChartPoint, type ChartSeries } from '@/features/dashboards/charts'
+import { LineChart, toMillis, type ChartPoint, type ChartSeries } from '@/features/dashboards/charts'
 import {
   DEFAULT_RANGE,
+  FORECAST_HORIZON_HOURS,
   RANGE_PRESETS,
+  extendRange,
   intervalHours,
   resolveRange,
   type AggregationOption,
   type DateRange,
   type RangePresetId,
 } from '@/features/dashboards/lib/range'
+import { isPredictionEntity } from '@/features/dashboards/templates/contract'
 import { t } from '@/i18n'
 import { formatDateTime, formatMeasure } from '@/lib/format'
 import type { EntityRef, Measure } from '@/types'
@@ -88,7 +91,10 @@ const countCaption = computed(() => {
 })
 
 const lastCaption = computed(() => {
-  const last = drawn.value[drawn.value.length - 1]
+  // En una prevision los ultimos puntos son horas futuras: el ultimo dato es el de «ahora».
+  const now = Date.now()
+  const past = drawn.value.filter((point) => toMillis(point.t) <= now)
+  const last = past[past.length - 1] ?? drawn.value[drawn.value.length - 1]
   if (!last) return ''
   return t('entities.history.last', {
     value: formatMeasure(last.v, props.measure?.units),
@@ -101,7 +107,9 @@ async function load() {
   const measure = props.measure
   if (!entity || !measure) return
 
-  const range = resolveRange(preset.value, props.timeZone)
+  const past = resolveRange(preset.value, props.timeZone)
+  // Una prevision publica horas por delante de «ahora»: cortando ahi solo se verian las pasadas.
+  const range = isPredictionEntity(entity) ? extendRange(past, FORECAST_HORIZON_HOURS) : past
   loading.value = true
   error.value = null
   queried.value = range
