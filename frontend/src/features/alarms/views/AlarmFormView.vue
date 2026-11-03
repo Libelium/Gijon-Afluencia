@@ -5,8 +5,12 @@ import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
 import PageHeader from '@/components/PageHeader.vue'
 import AlarmConditionCard from '../components/AlarmConditionCard.vue'
+import AlarmEmailActions from '../components/AlarmEmailActions.vue'
 import {
   createAlarm,
+  createEmailAction,
+  deleteAction,
+  getActions,
   getAlarm,
   getConditions,
   getInactivityConditions,
@@ -16,13 +20,16 @@ import {
 } from '../api/alarms'
 import {
   conditionComplete,
+  fromEmailAction,
   fromInactivityCondition,
   fromThresholdCondition,
   newConditionDraft,
   toBulkInactivityCondition,
   toBulkThresholdCondition,
   toInactivityCondition,
+  toNewEmailAction,
   toThresholdCondition,
+  type EmailAvisoDraft,
 } from '../lib/draft'
 import type { AlarmFunction, AlarmType, NewAlarm, UpdateAlarm } from '../types'
 
@@ -49,6 +56,12 @@ const error = ref<string | null>(null)
 // La carga previa solo ocurre al editar; en el alta el formulario arranca listo.
 const loading = ref(false)
 const loadError = ref<string | null>(null)
+
+// Avisos por correo: solo al editar (su alta exige que la alarma ya exista).
+const emailAvisos = ref<EmailAvisoDraft[]>([])
+const loadedAvisoIds = ref<number[]>([])
+// Si no se pueden leer los avisos, no se gestionan: borrarlos a ciegas al guardar seria peor.
+const avisosUnavailable = ref(false)
 
 const typeItems = computed(() => [
   { value: 'basic' as const, title: t('alarms.type.basic'), subtitle: t('alarms.form.typeBasicHint') },
@@ -89,6 +102,7 @@ function removeCondition(key: number) {
 async function loadForEdit(id: number) {
   loading.value = true
   loadError.value = null
+  avisosUnavailable.value = false
   try {
     const alarm = await getAlarm(id)
     name.value = alarm.name ?? ''
@@ -103,6 +117,18 @@ async function loadForEdit(id: number) {
     } else {
       const list = await getConditions(id)
       conditions.value = list.length ? list.map(fromThresholdCondition) : [newConditionDraft()]
+    }
+
+    // Los avisos son secundarios: si fallan, se desactiva su gestion y se sigue editando.
+    try {
+      const actions = await getActions(id)
+      const emails = actions.filter((a) => (a.actionable_type ?? '').toLowerCase() === 'email')
+      emailAvisos.value = emails.map(fromEmailAction)
+      loadedAvisoIds.value = emailAvisos.value
+        .map((aviso) => aviso.actionId)
+        .filter((actionId): actionId is number => actionId != null)
+    } catch {
+      avisosUnavailable.value = true
     }
   } catch (e) {
     loadError.value = errorMessage(e)
@@ -134,6 +160,18 @@ async function submit() {
         await saveInactivityConditions(id, conditions.value.map(toBulkInactivityCondition))
       } else {
         await saveConditions(id, conditions.value.map(toBulkThresholdCondition))
+      }
+      // Avisos por correo: alta de los nuevos y baja de los quitados, sin tocar otros canales.
+      if (!avisosUnavailable.value) {
+        const keptIds = new Set(
+          emailAvisos.value.map((aviso) => aviso.actionId).filter((actionId) => actionId != null),
+        )
+        for (const actionId of loadedAvisoIds.value) {
+          if (!keptIds.has(actionId)) await deleteAction(id, actionId)
+        }
+        for (const aviso of emailAvisos.value) {
+          if (aviso.actionId == null) await createEmailAction(id, toNewEmailAction(aviso))
+        }
       }
       await router.push(`/alarmas/${id}`)
       return
@@ -261,6 +299,16 @@ onMounted(() => {
         >
           {{ t('alarms.form.addCondition') }}
         </VBtn>
+      </VCardText>
+    </VCard>
+
+    <!-- Los avisos por correo solo se pueden gestionar sobre una alarma que ya existe. -->
+    <VCard v-if="isEdit">
+      <VCardText class="pa-4 pa-sm-6">
+        <AlarmEmailActions v-if="!avisosUnavailable" v-model="emailAvisos" />
+        <VAlert v-else type="warning" variant="tonal" density="comfortable">
+          {{ t('alarms.avisos.unavailable') }}
+        </VAlert>
       </VCardText>
     </VCard>
 

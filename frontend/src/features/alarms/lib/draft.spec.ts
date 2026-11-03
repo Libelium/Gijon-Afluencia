@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
+  avisoComplete,
+  fromEmailAction,
   fromInactivityCondition,
   fromThresholdCondition,
+  isEmail,
+  newEmailAvisoDraft,
   toBulkInactivityCondition,
   toBulkThresholdCondition,
+  toNewEmailAction,
 } from './draft'
-import type { InactivityCondition, ThresholdCondition } from '../types'
+import type { AlarmAction, InactivityCondition, ThresholdCondition } from '../types'
 
 const entity = {
   id: 7,
@@ -140,3 +145,57 @@ describe('toBulkInactivityCondition', () => {
 function inactivity(timeoutS: number): InactivityCondition {
   return { entity, measure: { id: 'm', name: 'M' }, timeoutS }
 }
+
+describe('isEmail', () => {
+  it('acepta correos con formato razonable y rechaza el resto', () => {
+    expect(isEmail('a@b.com')).toBe(true)
+    expect(isEmail('  nombre.apellido@dominio.es ')).toBe(true)
+    expect(isEmail('sinarroba.com')).toBe(false)
+    expect(isEmail('a@b')).toBe(false)
+    expect(isEmail('')).toBe(false)
+  })
+})
+
+describe('avisoComplete', () => {
+  it('exige destinatarios validos, asunto y cuerpo', () => {
+    const base = { ...newEmailAvisoDraft(), to: ['a@b.com'], subject: 'Hola', body: 'Texto' }
+    expect(avisoComplete(base)).toBe(true)
+    expect(avisoComplete({ ...base, to: [] })).toBe(false)
+    expect(avisoComplete({ ...base, to: ['roto'] })).toBe(false)
+    expect(avisoComplete({ ...base, subject: '  ' })).toBe(false)
+    expect(avisoComplete({ ...base, body: '' })).toBe(false)
+  })
+})
+
+describe('fromEmailAction / toNewEmailAction', () => {
+  it('reconstruye el aviso guardado y lo convierte al alta', () => {
+    const action: AlarmAction = {
+      type: 'down',
+      action_id: 5,
+      actionable_id: 9,
+      actionable_type: 'email',
+      actionable_content: { to: ['a@b.com', 'c@d.com'], subject: 'Aviso', body: 'Cuerpo' },
+    }
+
+    const draft = fromEmailAction(action)
+    expect(draft.actionId).toBe(5)
+    expect(draft.to).toEqual(['a@b.com', 'c@d.com'])
+    expect(draft.subject).toBe('Aviso')
+    expect(draft.body).toBe('Cuerpo')
+    expect(draft.trigger).toBe('down')
+
+    expect(toNewEmailAction(draft)).toEqual({
+      to: ['a@b.com', 'c@d.com'],
+      subject: 'Aviso',
+      body: 'Cuerpo',
+      trigger: 'down',
+    })
+  })
+
+  it('un contenido ausente no rompe: queda vacio y el disparo por defecto es up', () => {
+    const draft = fromEmailAction({ action_id: 1, actionable_type: 'email' })
+    expect(draft.to).toEqual([])
+    expect(draft.subject).toBe('')
+    expect(draft.trigger).toBe('up')
+  })
+})

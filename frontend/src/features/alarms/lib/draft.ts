@@ -2,13 +2,17 @@ import type { EntityOption } from '@/features/dashboards/api/catalog'
 import type { Measure } from '@/types'
 import { DEFAULT_OPERATOR, DEFAULT_TIMEOUT_UNIT, TIMEOUT_UNITS, operatorArity } from './operators'
 import type {
+  AlarmAction,
+  AlarmTrigger,
   AlarmType,
   BulkInactivityCondition,
   BulkThresholdCondition,
   ConditionOperator,
   ConditionPeriod,
+  EmailActionContent,
   InactivityCondition,
   MeasureRef,
+  NewEmailAction,
   NewInactivityCondition,
   NewThresholdCondition,
   ThresholdCondition,
@@ -178,4 +182,55 @@ export function toBulkInactivityCondition(draft: ConditionDraft): BulkInactivity
   }
   if (draft.id != null) condition.id = draft.id
   return condition
+}
+
+/**
+ * Un aviso por correo mientras se edita en el formulario. `actionId` solo lo tienen los que ya
+ * existen: sirve para saber, al guardar, cuales hay que borrar y cuales crear.
+ */
+export interface EmailAvisoDraft {
+  key: number
+  actionId?: number
+  to: string[]
+  subject: string
+  body: string
+  trigger: AlarmTrigger
+}
+
+let nextAvisoKey = 0
+
+export function newEmailAvisoDraft(): EmailAvisoDraft {
+  return { key: ++nextAvisoKey, to: [], subject: '', body: '', trigger: 'up' }
+}
+
+/** Validacion minima de un correo: suficiente para evitar erratas, sin pelearse con el RFC. */
+export function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+/** Un aviso esta listo para enviarse cuando tiene destinatarios validos, asunto y cuerpo. */
+export function avisoComplete(draft: EmailAvisoDraft): boolean {
+  return (
+    draft.to.length > 0 &&
+    draft.to.every((address) => isEmail(address)) &&
+    !!draft.subject.trim() &&
+    !!draft.body.trim()
+  )
+}
+
+/** Reconstruye el borrador de un aviso por correo ya guardado, para listarlo y poder quitarlo. */
+export function fromEmailAction(action: AlarmAction): EmailAvisoDraft {
+  const content = (action.actionable_content ?? {}) as Partial<EmailActionContent>
+  return {
+    ...newEmailAvisoDraft(),
+    actionId: action.action_id,
+    to: Array.isArray(content.to) ? content.to.filter((item): item is string => typeof item === 'string') : [],
+    subject: typeof content.subject === 'string' ? content.subject : '',
+    body: typeof content.body === 'string' ? content.body : '',
+    trigger: action.type === 'down' ? 'down' : 'up',
+  }
+}
+
+export function toNewEmailAction(draft: EmailAvisoDraft): NewEmailAction {
+  return { to: draft.to, subject: draft.subject, body: draft.body, trigger: draft.trigger }
 }

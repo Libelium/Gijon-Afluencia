@@ -13,6 +13,7 @@ import type {
   EventLevel,
   InactivityCondition,
   NewAlarm,
+  NewEmailAction,
   StatusSeries,
   ThresholdCondition,
   UpdateAlarm,
@@ -103,6 +104,32 @@ export async function getInactivityConditions(id: number): Promise<InactivityCon
 export async function getActions(id: number): Promise<AlarmAction[]> {
   const { data } = await http.get<{ actions?: AlarmAction[] }>(`/alarms/${id}/actions`)
   return Array.isArray(data?.actions) ? data.actions : []
+}
+
+/**
+ * Crea un aviso por correo para la alarma. Se usa el alta por accion (no el bulk) a proposito:
+ * el bulk borra todos los avisos de la alarma, y aqui no se deben tocar los de otros canales
+ * (telegram, SMS, http) que solo se configuran por la API.
+ */
+export async function createEmailAction(alarmId: number, aviso: NewEmailAction): Promise<void> {
+  await http.post('/alarms/actions', {
+    alarm_ids: [alarmId],
+    actions: [
+      {
+        type: 'email',
+        to: aviso.to,
+        subject: aviso.subject,
+        body: aviso.body,
+        alarm_trigger: aviso.trigger,
+        ...(aviso.name ? { name: aviso.name } : {}),
+      },
+    ],
+  })
+}
+
+/** Borra un aviso concreto por su id de accion, sin afectar a los demas. */
+export async function deleteAction(alarmId: number, actionId: number): Promise<void> {
+  await http.delete(`/alarms/${alarmId}/actions/${actionId}`)
 }
 
 export async function listAlarmEvents(

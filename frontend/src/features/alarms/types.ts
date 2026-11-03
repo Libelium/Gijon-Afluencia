@@ -155,3 +155,22 @@ export interface BulkInactivityCondition {
   measure: string | null
   timeoutS: number
 }
+
+/** Cuando dispara un aviso: al activarse la alarma (`up`) o al volver a reposo (`down`). */
+export type AlarmTrigger = 'up' | 'down'
+
+/** Contenido de un aviso por correo tal como lo devuelve el backend (`actionable_content`). */
+export interface EmailActionContent {
+  to: string[]
+  subject: string
+  body: string
+}
+
+/** Alta de un aviso por correo (POST /alarms/actions). Los destinatarios viajan como lista. */
+export interface NewEmailAction {
+  to: string[]
+  subject: string
+  body: string
+  trigger: AlarmTrigger
+  name?: string
+}
