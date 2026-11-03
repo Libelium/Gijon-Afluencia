@@ -13,6 +13,7 @@ import PredictionBandChart from './charts/PredictionBandChart.vue'
 import AttributesCard from './components/AttributesCard.vue'
 import ChartCard from './components/ChartCard.vue'
 import EventScenarioCard from './components/EventScenarioCard.vue'
+import { registeredScenarioEvents } from './eventSimulation'
 import LidarControlBar from './components/LidarControlBar.vue'
 import LidarNotice from './components/LidarNotice.vue'
 import {
@@ -243,13 +244,25 @@ function signed(value: number | null): string {
 
 const rangeHint = computed(() => presetHint(preset.value))
 
+/** Atributo de la gemela con los eventos registrados de la zona, en JSON. */
+const REGISTERED_EVENTS_ID = 'registeredEvents'
+
+/** Los eventos registrados que publica la prediccion: el simulador los suma a la prevision normal. */
+const registeredEvents = computed(() =>
+  registeredScenarioEvents(
+    twinMeasures.value.find((m) => m.id === REGISTERED_EVENTS_ID)?.value,
+    timeZone.value,
+  ),
+)
+
 /** Atributos de la gemela. La fiabilidad puede llegar como numero y entonces no esta entre los
- * atributos de texto: se anade a mano para que salga con su distintivo. */
+ * atributos de texto: se anade a mano para que salga con su distintivo. Los eventos registrados
+ * no: son un JSON para el simulador, que ya los ensena. */
 const twinAttributes = computed<Measure[]>(() => {
   const p = twinProfile.value
   if (!p) return []
   const confidence = p.roles.confidence
-  const rows = [...p.text]
+  const rows = p.text.filter((m) => m.id !== REGISTERED_EVENTS_ID)
   if (confidence && !rows.some((m) => m.id === confidence.id)) rows.unshift(confidence)
   return rows
 })
@@ -404,6 +417,7 @@ async function reloadPrediction() {
             :predicted-id="twinProfile.roles.predicted.id"
             :capacity="profile?.capacity ?? null"
             :time-zone="timeZone"
+            :registered="registeredEvents"
           />
         </VCol>
       </VRow>

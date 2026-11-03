@@ -81,7 +81,7 @@ export const SECTIONS: HelpSection[] = [
       { term: 'Zona LIDAR Mapa de calor', text: 'Densidad de ocupación en vivo sobre la zona monitorizada.' },
       {
         term: 'Zona LIDAR Predicción',
-        text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo. Incluye un simulador de escenarios: se añaden uno o varios eventos (tipo, hora, duración, meteorología e intensidad) y se ve cómo cambiaría la ocupación prevista de la zona y si superaría su aforo. Sus cifras son orientativas, para comparar escenarios, y solo llegan hasta donde llega la previsión.',
+        text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo. Incluye un simulador de escenarios: se añaden uno o varios eventos (tipo, hora, duración, meteorología e intensidad) y se ve cómo cambiaría la ocupación prevista de la zona y si superaría su aforo. Sus cifras son orientativas, para comparar escenarios, y solo llegan hasta donde llega la previsión. Los eventos del registro de eventos de la plataforma salen ya como «Registrado» y se suman siempre: la previsión es la de un día normal, porque el modelo no aprende de los días con evento.',
       },
     ],
     links: [{ label: 'Ir a Paneles', to: '/paneles' }],

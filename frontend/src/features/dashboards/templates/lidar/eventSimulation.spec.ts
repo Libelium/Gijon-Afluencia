@@ -7,6 +7,7 @@ import {
   eventStartHours,
   eventWeight,
   referenceOf,
+  registeredScenarioEvents,
   simulate,
   summariseScenario,
   type ScenarioEvent,
@@ -132,5 +133,51 @@ describe('summariseScenario', () => {
       extraAtPeak: null,
       hoursOverCapacity: 0,
     })
+  })
+})
+
+describe('registeredScenarioEvents', () => {
+  const tz = 'Europe/Madrid'
+  const raw = (list: unknown[]) => JSON.stringify(list)
+
+  it('un mercado de varios días es un evento por día, a sus horas locales', () => {
+    const events = registeredScenarioEvents(
+      raw([{ date: '2026-12-14', endDate: '2026-12-15', type: 'market', startHour: 10, endHour: 21, notes: 'Navidad' }]),
+      tz,
+    )
+    expect(events.map((e) => [e.start, e.hours, e.kind, e.registered])).toEqual([
+      ['2026-12-14T09:00:00.000Z', 11, 'market', true], // 10:00 en Madrid, UTC+1 en diciembre
+      ['2026-12-15T09:00:00.000Z', 11, 'market', true],
+    ])
+    expect(events[0].notes).toBe('Navidad')
+    expect(new Set(events.map((e) => e.id)).size).toBe(2)
+    expect(events.every((e) => e.id < 0)).toBe(true) // no chocan con los que añade quien simula
+  })
+
+  it('sin horas dibuja un día de mercado y un tipo desconocido se toma por mercado', () => {
+    const [event] = registeredScenarioEvents(raw([{ date: '2026-12-14', type: 'feria_del_libro' }]), tz)
+    expect(event.kind).toBe('market')
+    expect(event.start).toBe('2026-12-14T09:00:00.000Z')
+    expect(event.hours).toBe(11)
+  })
+
+  it('un tipo del catálogo se conserva', () => {
+    const [event] = registeredScenarioEvents(raw([{ date: '2026-12-14', type: 'concert', startHour: 20, endHour: 23 }]), tz)
+    expect(event.kind).toBe('concert')
+    expect(event.hours).toBe(3)
+  })
+
+  it('lo que no se entiende no rompe nada: no hay eventos', () => {
+    expect(registeredScenarioEvents('no es JSON', tz)).toEqual([])
+    expect(registeredScenarioEvents('{"date":"2026-12-14"}', tz)).toEqual([])
+    expect(registeredScenarioEvents(undefined, tz)).toEqual([])
+    expect(registeredScenarioEvents(raw([{ date: 'ayer' }, { date: '2026-12-14', endDate: '2026-12-01' }]), tz)).toEqual([])
+    expect(registeredScenarioEvents(raw([{ date: '2026-12-14', startHour: 21, endHour: 10 }]), tz)).toEqual([])
+  })
+
+  it('suma como cualquier otro evento', () => {
+    const [event] = registeredScenarioEvents(raw([{ date: '2026-11-03', type: 'market', startHour: 18, endHour: 20 }]), 'UTC')
+    const simulated = simulate(times, [20, 30, 40, 50, 50, 40, 30, null], [event], 100)
+    expect(simulated[2]).toBe(Math.round(40 + 100 * share('market')))
   })
 })

@@ -10,6 +10,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **El simulador de eventos muestra los eventos registrados.** Los que la previsión de la zona
+  publica en `registeredEvents` salen como «Registrado», sin poder quitarse, y se suman a la
+  previsión normal junto a los que se simulen; «Limpiar» solo quita los simulados. Un evento de
+  varios días es uno por día, a sus horas (de 10:00 a 21:00 si el registro no las dice), y su tipo
+  vale si es uno del simulador; si no, se toma por un mercado.
 - **El buscador del mapa sugiere las entidades que coinciden.** Al escribir dos letras o más se
   despliega una lista con las primeras entidades con ubicación que coinciden en todo el mapa, no
   solo en el área visible, con su modelo de datos para distinguir las que se llaman igual. Al

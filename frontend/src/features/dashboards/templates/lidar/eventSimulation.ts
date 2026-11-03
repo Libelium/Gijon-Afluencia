@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import { toMillis } from '../../charts/chartOptions'
 
 /**
@@ -59,8 +60,69 @@ export interface ScenarioEvent {
   intensity: number
   /** Comienzo de la primera hora del evento, ISO 8601. */
   start: string
-  /** Horas que dura, de 1 a MAX_EVENT_HOURS. */
+  /** Horas que dura: de 1 a MAX_EVENT_HOURS los que se simulan, sin tope los registrados. */
   hours: number
+  /** Viene del registro de eventos de la plataforma, no lo ha añadido quien simula. */
+  registered?: boolean
+  /** Lo que el registro dice del evento, para mostrarlo. */
+  notes?: string
+}
+
+/** Horas que se dibujan de un evento registrado que no dice las suyas: un dia de mercado. */
+export const REGISTERED_DEFAULT_HOURS = { start: 10, end: 21 } as const
+
+/** Un evento tal y como lo publica la entidad de prevision en `registeredEvents`. */
+interface RegisteredEvent {
+  date: string
+  endDate?: string
+  type?: string
+  startHour?: number | null
+  endHour?: number | null
+  notes?: string
+}
+
+const isKind = (value: unknown): value is EventKind => EVENT_CATALOG.some((spec) => spec.kind === value)
+
+const isHour = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 24
+
+/**
+ * Los eventos registrados de la zona, uno por dia, listos para sumarse a la prevision. Llegan
+ * como el texto JSON del atributo `registeredEvents`: el modelo predice el dia normal y el evento
+ * se dibuja encima. El tipo vale si es uno del catalogo y si no se toma por un mercado; las fechas
+ * son dias locales de `timeZone`. Un texto que no se entiende no rompe el panel: no hay eventos.
+ */
+export function registeredScenarioEvents(raw: unknown, timeZone: string): ScenarioEvent[] {
+  let list: unknown
+  try {
+    list = typeof raw === 'string' ? JSON.parse(raw) : raw
+  } catch {
+    return []
+  }
+  if (!Array.isArray(list)) return []
+
+  const events: ScenarioEvent[] = []
+  for (const item of list as RegisteredEvent[]) {
+    const first = DateTime.fromISO(String(item?.date ?? ''), { zone: timeZone })
+    const last = item?.endDate ? DateTime.fromISO(item.endDate, { zone: timeZone }) : first
+    if (!first.isValid || !last.isValid || last < first) continue
+    const startHour = isHour(item.startHour) ? item.startHour : REGISTERED_DEFAULT_HOURS.start
+    const endHour = isHour(item.endHour) ? item.endHour : REGISTERED_DEFAULT_HOURS.end
+    if (endHour <= startHour) continue
+    for (let day = first; day <= last; day = day.plus({ days: 1 })) {
+      events.push({
+        id: -(events.length + 1),
+        kind: isKind(item.type) ? item.type : 'market',
+        weather: 'clear',
+        intensity: DEFAULT_INTENSITY,
+        start: day.set({ hour: startHour, minute: 0, second: 0, millisecond: 0 }).toUTC().toISO()!,
+        hours: endHour - startHour,
+        registered: true,
+        notes: item.notes || undefined,
+      })
+    }
+  }
+  return events
 }
 
 /** Peso del evento en la hora que empieza en `hourMs`: 1 mientras dura, a medias justo antes y despues. */

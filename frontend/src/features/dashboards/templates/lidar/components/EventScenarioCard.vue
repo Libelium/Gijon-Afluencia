@@ -34,6 +34,8 @@ const props = defineProps<{
   /** Aforo de la zona en personas, o null si no lo publica. */
   capacity: number | null
   timeZone?: string
+  /** Eventos registrados de la zona: siempre se suman y no se pueden quitar. */
+  registered?: ScenarioEvent[]
 }>()
 
 const HOUR_MS = 3_600_000
@@ -126,10 +128,12 @@ function clear() {
   events.value = []
 }
 
+// Los registrados van delante: son lo que ya se sabe que va a pasar, lo simulado se suma encima.
+const allEvents = computed(() => [...(props.registered ?? []), ...events.value])
 const hasForecast = computed(() => startHours.value.length > 0)
 const reference = computed(() => referenceOf(props.capacity, base.value))
 const simulated = computed(() =>
-  reference.value === null ? base.value : simulate(times.value, base.value, events.value, reference.value),
+  reference.value === null ? base.value : simulate(times.value, base.value, allEvents.value, reference.value),
 )
 const summary = computed(() => summariseScenario(times.value, base.value, simulated.value, props.capacity))
 
@@ -141,7 +145,7 @@ const series = computed<ChartSeries[]>(() => {
       points: times.value.map((iso, i) => ({ t: iso, v: base.value[i] })),
     },
   ]
-  if (events.value.length) {
+  if (allEvents.value.length) {
     list.push({
       name: t('dashboards.lidar.scenario.withEvents'),
       units: people,
@@ -160,9 +164,11 @@ const series = computed<ChartSeries[]>(() => {
 })
 
 const rows = computed(() =>
-  events.value.map((event) => ({
+  allEvents.value.map((event) => ({
     event,
-    label: kindLabel(event.kind),
+    label: event.registered
+      ? t('dashboards.lidar.scenario.registeredLabel', { kind: kindLabel(event.kind) })
+      : kindLabel(event.kind),
     when: `${formatDateTime(event.start, props.timeZone)} · ${hoursLabel(event.hours)}`,
     weather: `${weatherLabel(event.weather)} · ${event.intensity.toFixed(1).replace('.', ',')}x`,
     extra: reference.value === null ? null : Math.round(eventPeak(event, reference.value)),
@@ -247,19 +253,25 @@ const overHint = computed(() =>
         </VBtn>
       </div>
 
-      <div v-if="events.length" class="d-flex flex-wrap ga-2">
+      <div v-if="allEvents.length" class="d-flex flex-wrap ga-2">
         <VChip
           v-for="row in rows"
           :key="row.event.id"
-          closable
+          :closable="!row.event.registered"
+          :color="row.event.registered ? 'secondary' : undefined"
+          :prepend-icon="row.event.registered ? 'mdi-calendar-check' : undefined"
+          :title="row.event.notes"
           :close-label="t('dashboards.lidar.scenario.remove', { name: row.label })"
           @click:close="remove(row.event.id)"
         >
           {{ row.label }} · {{ row.when }}
         </VChip>
       </div>
+      <div v-if="registered?.length" class="text-caption text-medium-emphasis">
+        {{ t('dashboards.lidar.scenario.registeredHint') }}
+      </div>
 
-      <div v-if="events.length" class="d-flex flex-wrap ga-4">
+      <div v-if="allEvents.length" class="d-flex flex-wrap ga-4">
         <StatTile
           style="flex: 1 1 200px"
           :label="t('dashboards.lidar.scenario.tilePeak')"
@@ -291,7 +303,7 @@ const overHint = computed(() =>
 
       <LineChart :series="series" :units="people" :height="300" :title="t('dashboards.lidar.scenario.chart')" />
 
-      <VTable v-if="events.length" density="compact">
+      <VTable v-if="allEvents.length" density="compact">
         <thead>
           <tr>
             <th>{{ t('dashboards.lidar.scenario.table.event') }}</th>

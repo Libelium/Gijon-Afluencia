@@ -111,6 +111,9 @@ export default {
   'dashboards.lidar.scenario.add': 'Añadir evento',
   'dashboards.lidar.scenario.clear': 'Limpiar',
   'dashboards.lidar.scenario.remove': 'Quitar el evento {name}',
+  'dashboards.lidar.scenario.registeredLabel': 'Registrado: {kind}',
+  'dashboards.lidar.scenario.registeredHint':
+    'Los eventos registrados vienen del registro de eventos de la plataforma. La previsión es la de un día normal, porque el modelo no aprende de los días con evento, y aquí se suman encima.',
   'dashboards.lidar.scenario.noForecast': 'No hay previsión para las próximas horas',
   'dashboards.lidar.scenario.noForecastHint': 'El simulador suma los eventos a la previsión de la zona, así que necesita que la entidad de predicción tenga valores futuros.',
   'dashboards.lidar.scenario.noEvents': 'Añade un evento para ver cómo cambiaría la ocupación prevista.',

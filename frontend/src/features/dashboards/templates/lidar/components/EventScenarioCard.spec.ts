@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import vuetify from '@/plugins/vuetify'
 import type { Entity } from '@/types'
-import { EVENT_CATALOG } from '../eventSimulation'
+import { EVENT_CATALOG, type ScenarioEvent } from '../eventSimulation'
 
 const fetchZoneSeries = vi.hoisted(() => vi.fn())
 
@@ -26,9 +26,9 @@ function forecast(values: (number | null)[]) {
   return values.map((v, i) => ({ t: new Date(first + i * HOUR_MS).toISOString(), v }))
 }
 
-function mountCard(capacity: number | null = 100) {
+function mountCard(capacity: number | null = 100, registered: ScenarioEvent[] = []) {
   return mount(EventScenarioCard, {
-    props: { twin, predictedId: 'predictedPeopleCount', capacity },
+    props: { twin, predictedId: 'predictedPeopleCount', capacity, registered },
     global: { plugins: [vuetify], stubs: { LineChart: true } },
     attachTo: document.body,
   })
@@ -127,5 +127,43 @@ describe('EventScenarioCard', () => {
     await flushPromises()
     expect(fetchZoneSeries).toHaveBeenCalledTimes(2)
     expect(button(wrapper, 'Añadir evento')).toBeDefined()
+  })
+})
+
+describe('EventScenarioCard, eventos registrados', () => {
+  const registeredAt = (hour: number): ScenarioEvent => ({
+    id: -1,
+    kind: 'market',
+    weather: 'clear',
+    intensity: 1,
+    start: new Date(Math.floor(Date.now() / HOUR_MS) * HOUR_MS + hour * HOUR_MS).toISOString(),
+    hours: 2,
+    registered: true,
+    notes: 'Mercado de prueba',
+  })
+  const marketShare = EVENT_CATALOG.find((s) => s.kind === 'market')!.peakShare
+
+  it('se suman desde el principio, se marcan como registrados y no se pueden quitar', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: forecast([40, 50, 60, 50]) })
+    const wrapper = mountCard(100, [registeredAt(0)])
+    await flushPromises()
+
+    const chip = wrapper.find('.v-chip')
+    expect(chip.text()).toContain('Registrado: Mercado o feria')
+    expect(chip.find('.v-chip__close').exists()).toBe(false)
+    expect(wrapper.text()).toContain('el modelo no aprende de los días con evento')
+    const series = wrapper.findComponent({ name: 'LineChart' }).props('series')
+    expect(series[1].points[0].v).toBe(Math.round(40 + 100 * marketShare))
+  })
+
+  it('«Limpiar» quita lo simulado y deja lo registrado', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: forecast([40, 50, 60]) })
+    const wrapper = mountCard(100, [registeredAt(0)])
+    await flushPromises()
+    await button(wrapper, 'Añadir evento').trigger('click')
+    expect(wrapper.findAll('.v-chip')).toHaveLength(2)
+    await button(wrapper, 'Limpiar').trigger('click')
+    expect(wrapper.findAll('.v-chip')).toHaveLength(1)
+    expect(wrapper.find('.v-chip').text()).toContain('Registrado')
   })
 })
