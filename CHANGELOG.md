@@ -22,6 +22,16 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Las plantillas de aforo usan la entidad de eventos de cada sensor.** Las cuatro
+  (monitorización, clasificación, clasificación avanzada y mapa de calor) solo ofrecían los conteos
+  en bruto de los sensores (`…_CFO`); ahora ofrecen primero la entidad de eventos de la ETL
+  (`…_CFE`), que cuenta a cada visitante una vez por intervalo, y dejan las previsiones al final
+  del selector. Cada fila del selector dice además su espacio de datos, para distinguir dos
+  entidades con el mismo nombre. Con esa entidad el aforo son las personas distintas del intervalo
+  (`uniqueVisitors`) y no sus tránsitos (`count`), la clasificación reparte en turistas, residentes
+  y visitantes de corta estancia, y el mapa la sitúa en la ubicación de su sensor, que esa entidad
+  no publica. Los periodos de agregación (diario, quincenal, mensual) ya no se toman por
+  categorías.
 - **Las gráficas de una previsión muestran las horas futuras.** El histórico de una medida en la
   ficha de entidad y las gráficas de los cuadros de mando cortaban la ventana en «ahora», así que
   de una previsión solo se veían las horas ya pasadas. Para las entidades de previsión la ventana

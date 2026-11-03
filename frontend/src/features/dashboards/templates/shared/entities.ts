@@ -3,6 +3,7 @@ import { urnTail } from '@/lib/format'
 import { getEntity } from '@/features/entities/api/entities'
 import { geoJsonLatLon } from '@/features/entities/lib/location'
 import type { Entity } from '@/types'
+import { datamodelOf } from '../contract'
 import type { Point, TemplateDashboard } from './types'
 
 /** Tope de puntos por cuadro: mas alla de esto ni el mapa ni la leyenda se leen. */
@@ -10,6 +11,9 @@ export const MAX_POINTS_PER_DASHBOARD = 40
 
 /** Resoluciones de id numerico a entidad completa que se intentan por carga, como maximo. */
 const MAX_ID_RESOLUTIONS = 20
+
+/** Entidades de eventos en bruto que se piden para situar las de la ETL: una por sensor, de sobra. */
+const MAX_RAW_EVENT_ENTITIES = 200
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -77,6 +81,40 @@ export async function readEntityList(raw: unknown): Promise<Entity[]> {
   for (const entity of usable) byUrn.set(entity.urn, entity)
 
   return [...byUrn.values()]
+}
+
+/**
+ * Las entidades de eventos de la ETL (`…_CFE`) no publican ubicacion, pero la de eventos en bruto
+ * del mismo sensor, cuyo URN acaba igual, si. A las que llegan sin ubicacion se les pone la de esa,
+ * para que el sensor salga en el mapa. Es una ayuda: si la consulta falla o el sensor no tiene esa
+ * entidad, se quedan como estaban.
+ */
+export async function locateEventEntities(entities: Entity[]): Promise<Entity[]> {
+  const etl = datamodelOf('flowEvent')
+  const raw = datamodelOf('rawEvent')
+  const unlocated = (entity: Entity) => entity.datamodel === etl && !entity.geolocation
+  if (!entities.some(unlocated)) return entities
+
+  let located: Map<string, Entity['geolocation']>
+  try {
+    const { data } = await http.post<{ rows?: Entity[] }>('/entities/paginate', {
+      page: 1,
+      paginationSize: MAX_RAW_EVENT_ENTITIES,
+      types: raw,
+    })
+    located = new Map(
+      (data?.rows ?? [])
+        .filter((row) => row?.datamodel === raw && !!row.urn && !!row.geolocation)
+        .map((row) => [urnTail(row.urn), row.geolocation]),
+    )
+  } catch {
+    return entities
+  }
+
+  return entities.map((entity) => {
+    const geolocation = unlocated(entity) ? located.get(urnTail(entity.urn)) : undefined
+    return geolocation ? { ...entity, geolocation } : entity
+  })
 }
 
 export function toPoint(entity: Entity): Point {

@@ -65,7 +65,10 @@ export const SECTIONS: HelpSection[] = [
       'Los paneles agrupan gráficas sobre los datos de los sensores. Cada gráfica tiene su selector de rango de fechas y una tabla con los mismos datos para quien no pueda o no quiera leer la gráfica. Las plantillas disponibles son:',
     ],
     items: [
-      { term: 'Aforo Monitorización', text: 'Ocupación por punto de medida, con mapa, evolución temporal y reparto por franjas.' },
+      {
+        term: 'Aforo Monitorización',
+        text: 'Ocupación por punto de medida, con mapa, evolución temporal y reparto por franjas. A esta plantilla, a las de clasificación y al mapa de calor se les asigna la entidad de eventos de cada sensor de conteo WiFi/BLE, la que termina en _CFE en el espacio de datos de la plataforma: su aforo son las personas distintas detectadas en cada intervalo, repartidas en turistas, residentes y visitantes de corta estancia. El selector la ofrece la primera, y el mapa la sitúa en la ubicación de su sensor.',
+      },
       { term: 'Aforo Clasificación', text: 'Reparto de personas por categoría detectada, con evolución y totales.' },
       { term: 'Clasificación Avanzada', text: 'Clasificación con comparativa entre puntos, franjas horarias y acumulados.' },
       { term: 'Aforo Mapa de Calor', text: 'Intensidad de ocupación por hora y día de la semana, y mapa de densidad sobre los puntos de interés turístico.' },
