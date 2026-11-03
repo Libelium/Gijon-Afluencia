@@ -7,12 +7,15 @@ import type {
   AlarmAction,
   AlarmDetail,
   AlarmRow,
+  BulkInactivityCondition,
+  BulkThresholdCondition,
   DateRange,
   EventLevel,
   InactivityCondition,
   NewAlarm,
   StatusSeries,
   ThresholdCondition,
+  UpdateAlarm,
 } from '../types'
 
 /** Medida bajo la que el backend publica el estado historico de una alarma (0 / 1). */
@@ -56,6 +59,35 @@ export async function getAlarm(id: number): Promise<AlarmDetail> {
 export async function createAlarm(alarm: NewAlarm): Promise<number> {
   const { data } = await http.post<{ id?: number }>('/alarms', alarm)
   return Number(data?.id) || 0
+}
+
+/**
+ * Borra la alarma. El servidor elimina en cascada sus condiciones, avisos y permisos, asi que
+ * no queda nada suelto que limpiar desde aqui.
+ */
+export async function deleteAlarm(id: number): Promise<void> {
+  await http.delete(`/alarms/${id}`)
+}
+
+/** Actualiza los campos de la alarma. Las condiciones se guardan aparte (bulk), como en el backend. */
+export async function updateAlarm(id: number, alarm: UpdateAlarm): Promise<void> {
+  await http.put(`/alarms/${id}`, alarm)
+}
+
+/**
+ * Sincroniza las condiciones de umbral: crea, actualiza y borra para dejar exactamente las que
+ * se envian. Por eso se manda siempre el conjunto completo, no solo las que cambian.
+ */
+export async function saveConditions(id: number, conditions: BulkThresholdCondition[]): Promise<void> {
+  await http.post(`/alarms/${id}/conditions/bulkUpdateCreate`, { conditions })
+}
+
+/** Igual que `saveConditions`, para las condiciones de inactividad. */
+export async function saveInactivityConditions(
+  id: number,
+  conditions: BulkInactivityCondition[],
+): Promise<void> {
+  await http.post(`/alarms/${id}/inactivityConditions/bulkUpdateCreate`, { conditions })
 }
 
 export async function getConditions(id: number): Promise<ThresholdCondition[]> {

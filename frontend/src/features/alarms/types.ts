@@ -123,3 +123,35 @@ export interface NewAlarm {
   disabled: boolean
   conditions: Array<NewThresholdCondition | NewInactivityCondition>
 }
+
+/**
+ * Campos de la alarma que admite PUT /alarms/{id}. No se manda `up`: es el estado de disparo,
+ * no configuracion, y reenviarlo reiniciaria una alarma que ahora mismo esta disparada.
+ */
+export interface UpdateAlarm {
+  name: string
+  type: AlarmType
+  function: AlarmFunction
+  disabled: boolean
+}
+
+/**
+ * Condiciones tal y como las espera bulkUpdateCreate: forma anidada, distinta a la del alta.
+ * Con `id` actualiza la condicion; sin `id` la crea; las que no se envian, el servidor las borra.
+ */
+export interface BulkThresholdCondition {
+  id?: number
+  entity: { id: number }
+  measure: { id: string }
+  condition: ConditionOperator
+  threshold: number[]
+  // El formulario no edita la restriccion horaria: se conserva la que ya tuviera la condicion.
+  period: ConditionPeriod[] | null
+}
+
+export interface BulkInactivityCondition {
+  id?: number
+  entity: { id: number }
+  measure: string | null
+  timeoutS: number
+}

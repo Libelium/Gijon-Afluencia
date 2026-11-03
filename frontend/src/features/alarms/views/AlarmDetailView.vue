@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ApiError, errorMessage } from '@/api/http'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
@@ -11,11 +11,12 @@ import AlarmStateChip from '../components/AlarmStateChip.vue'
 import AlarmStatusCard from '../components/AlarmStatusCard.vue'
 import AlarmSummaryCard from '../components/AlarmSummaryCard.vue'
 import AlarmTypeChip from '../components/AlarmTypeChip.vue'
-import { getActions, getAlarm, getConditions, getInactivityConditions } from '../api/alarms'
+import { deleteAlarm, getActions, getAlarm, getConditions, getInactivityConditions } from '../api/alarms'
 import { actionChannels, type ActionChannel } from '../lib/display'
 import type { AlarmDetail, InactivityCondition, ThresholdCondition } from '../types'
 
 const route = useRoute()
+const router = useRouter()
 
 const alarm = ref<AlarmDetail | null>(null)
 const conditions = ref<ThresholdCondition[]>([])
@@ -26,6 +27,10 @@ const error = ref<string | null>(null)
 const channels = ref<ActionChannel[]>([])
 /** Los avisos se consultan aparte: si esa llamada falla, se dice en su tarjeta y nada mas. */
 const channelsUnavailable = ref(false)
+
+const confirmingDelete = ref(false)
+const deleting = ref(false)
+const deleteError = ref<string | null>(null)
 
 /** El id llega por la ruta y puede ser cualquier cosa: sin un numero no hay alarma que pedir. */
 const alarmId = computed(() => {
@@ -94,6 +99,21 @@ async function load() {
   if (alarm.value) void loadActions(id)
 }
 
+async function confirmDelete() {
+  const id = alarmId.value
+  if (id === null) return
+  deleting.value = true
+  deleteError.value = null
+  try {
+    await deleteAlarm(id)
+    await router.push('/alarmas')
+  } catch (e) {
+    deleteError.value = errorMessage(e)
+  } finally {
+    deleting.value = false
+  }
+}
+
 watch(alarmId, () => void load(), { immediate: true })
 </script>
 
@@ -118,8 +138,46 @@ watch(alarmId, () => void load(), { immediate: true })
         :title="t('common.refresh')"
         @click="load()"
       />
+
+      <VBtn
+        v-if="alarm"
+        :to="`/alarmas/${alarm.id}/editar`"
+        icon="mdi-pencil-outline"
+        variant="tonal"
+        :aria-label="t('alarms.detail.edit')"
+        :title="t('alarms.detail.edit')"
+      />
+
+      <VBtn
+        v-if="alarm"
+        icon="mdi-delete-outline"
+        variant="tonal"
+        color="error"
+        :aria-label="t('alarms.detail.delete')"
+        :title="t('alarms.detail.delete')"
+        @click="confirmingDelete = true"
+      />
     </template>
   </PageHeader>
+
+  <VDialog v-model="confirmingDelete" max-width="480" persistent>
+    <VCard>
+      <VCardTitle>{{ t('alarms.delete.title') }}</VCardTitle>
+      <VCardText>
+        {{ t('alarms.delete.text', { name: alarm?.name?.trim() || t('alarms.detail.title') }) }}
+        <VAlert v-if="deleteError" type="error" :text="deleteError" role="alert" class="mt-4" />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" :disabled="deleting" @click="confirmingDelete = false">
+          {{ t('common.cancel') }}
+        </VBtn>
+        <VBtn color="error" variant="flat" :loading="deleting" @click="confirmDelete">
+          {{ t('alarms.delete.confirm') }}
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
 
   <StateBlock
     :loading="pending"

@@ -1,11 +1,17 @@
 import type { EntityOption } from '@/features/dashboards/api/catalog'
 import type { Measure } from '@/types'
-import { DEFAULT_OPERATOR, DEFAULT_TIMEOUT_UNIT, operatorArity } from './operators'
+import { DEFAULT_OPERATOR, DEFAULT_TIMEOUT_UNIT, TIMEOUT_UNITS, operatorArity } from './operators'
 import type {
   AlarmType,
+  BulkInactivityCondition,
+  BulkThresholdCondition,
   ConditionOperator,
+  ConditionPeriod,
+  InactivityCondition,
+  MeasureRef,
   NewInactivityCondition,
   NewThresholdCondition,
+  ThresholdCondition,
 } from '../types'
 
 /**
@@ -16,6 +22,8 @@ import type {
 export interface ConditionDraft {
   /** Identidad estable de la fila: sin ella, borrar una condicion reordena las demas. */
   key: number
+  /** Id de la condicion ya guardada cuando se edita; ausente en una condicion nueva. */
+  id?: number
   entity: EntityOption | null
   measure: Measure | null
   operator: ConditionOperator
@@ -23,6 +31,8 @@ export interface ConditionDraft {
   to: string
   timeout: string
   timeoutUnit: number
+  /** Restriccion horaria que el formulario no edita: se conserva tal cual al guardar. */
+  period?: ConditionPeriod[] | null
 }
 
 let nextKey = 0
@@ -88,5 +98,84 @@ export function toInactivityCondition(draft: ConditionDraft): NewInactivityCondi
   // La medida es opcional en inactividad: sin ella se vigila que la entidad envie cualquier dato.
   if (draft.measure) condition.measure = draft.measure.id
 
+  return condition
+}
+
+function toEntityOption(entity: ThresholdCondition['entity']): EntityOption | null {
+  if (!entity || entity.id == null) return null
+  return {
+    id: entity.id,
+    name: entity.name ?? entity.urn ?? String(entity.id),
+    urn: entity.urn ?? '',
+    tenant: entity.tenant ?? '',
+    scope: entity.scope ?? '',
+    datamodel: entity.datamodel ?? '',
+  }
+}
+
+/** La medida guardada llega solo con id y nombre; la tarjeta la completa (unidades) al cargar. */
+function toMeasure(measure: MeasureRef | null | undefined): Measure | null {
+  if (!measure || !measure.id) return null
+  return { id: measure.id, name: measure.name ?? measure.id }
+}
+
+/** Expresa un plazo en segundos como cantidad + unidad, eligiendo la mayor unidad exacta. */
+function splitTimeout(seconds: number): { timeout: string; unit: number } {
+  const units = TIMEOUT_UNITS.map((u) => u.value).sort((a, b) => b - a)
+  for (const unit of units) {
+    if (seconds > 0 && seconds % unit === 0) return { timeout: String(seconds / unit), unit }
+  }
+  return { timeout: seconds ? String(seconds / DEFAULT_TIMEOUT_UNIT) : '', unit: DEFAULT_TIMEOUT_UNIT }
+}
+
+/** Reconstruye el borrador de una condicion de umbral ya guardada, para poder editarla. */
+export function fromThresholdCondition(condition: ThresholdCondition): ConditionDraft {
+  const threshold = Array.isArray(condition.threshold) ? condition.threshold : []
+  return {
+    ...newConditionDraft(),
+    id: condition.id,
+    entity: toEntityOption(condition.entity),
+    measure: toMeasure(condition.measure),
+    operator: (condition.condition as ConditionOperator) || DEFAULT_OPERATOR,
+    from: threshold[0] != null ? String(threshold[0]) : '',
+    to: threshold[1] != null ? String(threshold[1]) : '',
+    period: condition.period ?? null,
+  }
+}
+
+/** Reconstruye el borrador de una condicion de inactividad ya guardada. */
+export function fromInactivityCondition(condition: InactivityCondition): ConditionDraft {
+  const { timeout, unit } = splitTimeout(condition.timeoutS ?? 0)
+  return {
+    ...newConditionDraft(),
+    id: condition.id,
+    entity: toEntityOption(condition.entity),
+    measure: toMeasure(condition.measure),
+    timeout,
+    timeoutUnit: unit,
+  }
+}
+
+export function toBulkThresholdCondition(draft: ConditionDraft): BulkThresholdCondition {
+  const base = toThresholdCondition(draft)
+  const condition: BulkThresholdCondition = {
+    entity: { id: base.entityId },
+    measure: { id: base.measure },
+    condition: base.condition,
+    threshold: base.threshold,
+    period: draft.period ?? null,
+  }
+  if (draft.id != null) condition.id = draft.id
+  return condition
+}
+
+export function toBulkInactivityCondition(draft: ConditionDraft): BulkInactivityCondition {
+  const base = toInactivityCondition(draft)
+  const condition: BulkInactivityCondition = {
+    entity: { id: base.entityId },
+    measure: base.measure ?? null,
+    timeoutS: base.timeoutS,
+  }
+  if (draft.id != null) condition.id = draft.id
   return condition
 }

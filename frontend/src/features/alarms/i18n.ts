@@ -33,6 +33,14 @@ export default {
 
   'alarms.detail.title': 'Alarma',
   'alarms.detail.notFound': 'La alarma solicitada no existe',
+  'alarms.detail.edit': 'Editar',
+  'alarms.detail.delete': 'Borrar',
+
+  'alarms.delete.title': '¿Borrar esta alarma?',
+  'alarms.delete.text':
+    'Se eliminará «{name}» con sus condiciones y avisos. Esta acción no se puede deshacer.',
+  'alarms.delete.confirm': 'Borrar alarma',
+  'alarms.delete.error': 'No se ha podido borrar la alarma',
 
   'alarms.kpi.state': 'Estado actual',
   'alarms.kpi.conditions': 'Condiciones',
@@ -183,5 +191,15 @@ export default {
 
   'alarms.form.scopeNotice':
     'Este formulario crea la alarma y sus condiciones. Los avisos, las restricciones horarias y las alarmas sobre un grupo de entidades siguen configurándose desde la API.',
+  'alarms.form.scopeNoticeEdit':
+    'Al guardar se actualizan la alarma y sus condiciones. Los avisos y las restricciones horarias se conservan y siguen configurándose desde la API.',
   'alarms.form.submit': 'Crear alarma',
+
+  'alarms.form.editTitle': 'Editar alarma',
+  'alarms.form.editSubtitle': 'Cambia qué se vigila y cuándo debe avisar',
+  'alarms.form.save': 'Guardar cambios',
+  'alarms.form.typeLocked':
+    'El tipo no se puede cambiar al editar; crea una alarma nueva si necesitas otro tipo',
+  'alarms.form.loadError': 'No se ha podido cargar la alarma',
+  'alarms.form.retry': 'Reintentar',
 } as const
