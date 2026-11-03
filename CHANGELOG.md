@@ -10,6 +10,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
+  una alarma solo se podía crear y consultar en pantalla; cambiarla, eliminarla o darle avisos
+  requería la API. La ficha incorpora «Editar» y «Borrar» (con confirmación), el formulario permite
+  modificar nombre, estado y condiciones, y tanto al crear como al editar se pueden añadir y quitar
+  avisos por correo (destinatarios, asunto, mensaje y si avisan al dispararse o al resolverse). Los
+  avisos de otros canales (Telegram, SMS…) y las restricciones horarias se conservan y se siguen
+  configurando desde la API. El servidor ya lo admitía; faltaba la pantalla.
 - **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
   botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
