@@ -13,6 +13,8 @@ use App\Models\FiwareScope;
 use App\Models\FiwareTenant;
 use App\Models\Realtime\EntityProperty;
 use App\Services\OrderFieldValidator;
+use App\Services\RealtimeEntityOrder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 class EntityRepository
@@ -39,6 +41,14 @@ class EntityRepository
 
     /** Default order for entity listings when the requested column is not allowed. */
     private const DEFAULT_ENTITY_ORDER_COLUMN = 'entities.id';
+
+    /**
+     * Orders whose key lives in the realtime database, not in `entities`: the entity's name and
+     * the time of its latest reading (the "Último dato" of the listing).
+     */
+    private const REALTIME_ORDER_COLUMNS = ['name', 'last_data'];
+
+    private const REALTIME_KEY_CHUNK = 10000;
 
     /**
      * Aliases a healthcheck listing may be ordered by. They are the aggregates built in the
@@ -172,9 +182,84 @@ class EntityRepository
         string $orderDirection,
         EntityQueryFilters $filters = new EntityQueryFilters(),
     ) {
+        $realtimeOrder = self::realtimeOrderColumn($orderColumn);
+        if ($realtimeOrder) {
+            return self::paginateByRealtimeOrder($userId, $paginationSize, $page, $realtimeOrder, $orderDirection, $filters);
+        }
+
         $query = self::getEntitiesQuery($userId, $orderColumn, $orderDirection, $filters);
 
         return $query->paginate($paginationSize, ['entities.*'], 'page', $page);
+    }
+
+    private static function realtimeOrderColumn(string $requested): ?string
+    {
+        $bare = trim($requested);
+        $bare = str_contains($bare, '.') ? substr(strrchr($bare, '.'), 1) : $bare;
+
+        return in_array($bare, self::REALTIME_ORDER_COLUMNS, true) ? $bare : null;
+    }
+
+    /**
+     * The name and the latest reading live in the realtime database, another database, so the
+     * listing query cannot ORDER BY them. The ids that pass the filters and the permissions are
+     * read first, ordered by their key there (RealtimeEntityOrder), and the page is that slice of
+     * the order. An entity without a name is ordered by the end of its URN, which is what the
+     * listing shows for it.
+     */
+    private static function paginateByRealtimeOrder(
+        int $userId,
+        int $paginationSize,
+        int $page,
+        string $column,
+        string $orderDirection,
+        EntityQueryFilters $filters,
+    ): LengthAwarePaginator {
+        $direction = OrderFieldValidator::resolveDirection($orderDirection);
+        $query = self::getEntitiesQuery($userId, self::DEFAULT_ENTITY_ORDER_COLUMN, 'asc', $filters);
+
+        $entities = (clone $query)->setEagerLoads([])->get(['entities.id', 'entities.urn']);
+        $ids = $entities->pluck('id')->all();
+
+        $keys = self::realtimeOrderKeys($column, $ids);
+        $rows = $entities->map(fn ($entity) => [
+            'id' => $entity->id,
+            'key' => $keys[$entity->id] ?? ($column === 'name' ? substr(strrchr($entity->urn, ':') ?: ":{$entity->urn}", 1) : null),
+        ])->all();
+        $ordered = RealtimeEntityOrder::sort($rows, $direction, $column === 'name');
+
+        $pageIds = array_slice($ordered, ($page - 1) * $paginationSize, $paginationSize);
+        $position = array_flip($pageIds);
+        $items = $pageIds
+            ? $query->whereIn('entities.id', $pageIds)->get(['entities.*'])
+                ->sortBy(fn ($entity) => $position[$entity->id])->values()
+            : collect();
+
+        return new LengthAwarePaginator($items, count($ordered), $paginationSize, $page);
+    }
+
+    /**
+     * The order key of each entity, by id: its name, or the time of its latest reading (the
+     * newest property, as the listing shows it). Read in chunks, because PostgreSQL takes at
+     * most 65535 bound parameters per statement.
+     *
+     * @param int[] $ids
+     * @return array<int, string>
+     */
+    private static function realtimeOrderKeys(string $column, array $ids): array
+    {
+        $keys = [];
+        foreach (array_chunk($ids, self::REALTIME_KEY_CHUNK) as $chunk) {
+            $query = EntityProperty::whereIn('entity_id', $chunk);
+            $keys += $column === 'name'
+                ? $query->where('name', 'name')->pluck('value', 'entity_id')->all()
+                : $query->groupBy('entity_id')
+                    ->selectRaw('entity_id, max(timestamp) as last_data')
+                    ->pluck('last_data', 'entity_id')
+                    ->all();
+        }
+
+        return $keys;
     }
 
     public static function list(

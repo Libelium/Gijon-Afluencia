@@ -10,6 +10,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **El listado de entidades se ordena también por nombre y por último dato.** Las dos cabeceras se
+  pulsan como las demás. El nombre se ordena como texto, sin distinguir mayúsculas ni acentos, y
+  una entidad sin nombre propio va por el final de su identificador, que es lo que se ve; el último
+  dato va por la medida más reciente de cada entidad. Las que no tienen ese dato van al final en
+  los dos sentidos. El orden se calcula en el servidor sobre todas las entidades visibles, no solo
+  sobre la página.
 - **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
   una alarma solo se podía crear y consultar en pantalla; cambiarla, eliminarla o darle avisos
   requería la API. La ficha incorpora «Editar» y «Borrar» (con confirmación), el formulario permite

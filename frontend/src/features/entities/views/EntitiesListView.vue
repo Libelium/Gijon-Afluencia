@@ -70,17 +70,18 @@ function subIdentifier(item: Entity): string | null {
   return item.name && tail !== item.name ? tail : null
 }
 
-// Solo se ordena por lo que el servidor puede ordenar: sus columnas. El nombre vive en otra base
-// de datos y el ultimo dato sale de otra consulta, asi que esas cabeceras no son pulsables. La de
-// ambito solo sale si alguna fila esta fuera del raiz: si no, seria una columna de «/».
+// Todas las cabeceras ordenan en el servidor. El nombre y el ultimo dato viven en la base de datos
+// de tiempo real y el servidor los ordena aparte (`name` y `last_data`); sin nombre propio, la
+// entidad se ordena por el final de su URN, que es lo que se ve. La de ambito solo sale si alguna
+// fila esta fuera del raiz: si no, seria una columna de «/».
 const headers = computed(() => [
-  { title: t('entities.table.name'), key: 'name', sortable: false, maxWidth: 360 },
+  { title: t('entities.table.name'), key: 'name', sortable: true, maxWidth: 360 },
   { title: t('entities.table.datamodel'), key: 'datamodel', sortable: true },
   { title: t('entities.table.tenant'), key: 'tenant', sortable: true },
   ...(hasNamedScope(rows.value)
     ? [{ title: t('entities.table.scope'), key: 'scope', sortable: true }]
     : []),
-  { title: t('entities.table.lastData'), key: 'time_last_data', sortable: false },
+  { title: t('entities.table.lastData'), key: 'last_data', sortable: true },
 ])
 
 const pageText = `{0}-{1} ${t('common.of')} {2}`
@@ -295,7 +296,7 @@ onMounted(() => {
             </span>
           </template>
 
-          <template #[`item.time_last_data`]="{ item }">
+          <template #[`item.last_data`]="{ item }">
             <span class="text-body-2 text-medium-emphasis">
               {{ relativeFromNow(lastData[item.id], session.timeZone) }}
             </span>
