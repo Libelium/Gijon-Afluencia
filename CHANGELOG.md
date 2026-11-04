@@ -33,6 +33,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   dato va por la medida más reciente de cada entidad. Las que no tienen ese dato van al final en
   los dos sentidos. El orden se calcula en el servidor sobre todas las entidades visibles, no solo
   sobre la página.
+- **Las plantillas de tránsitos enseñan cuánto se tarda en cada recorrido y quién lo hace.** Un
+  panel nuevo da la duración media y la máxima, en minutos, de los diez recorridos principales; la
+  media pesa cada hora por sus tránsitos. La plantilla avanzada reparte además esos recorridos entre
+  turistas, residentes y visitas de corta estancia. Los dos datos ya los publicaba la plataforma en
+  cada par y ningún panel los leía.
 - **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
   una alarma solo se podía crear y consultar en pantalla; cambiarla, eliminarla o darle avisos
   requería la API. La ficha incorpora «Editar» y «Borrar» (con confirmación), el formulario permite

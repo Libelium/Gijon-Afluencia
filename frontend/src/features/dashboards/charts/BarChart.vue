@@ -42,6 +42,8 @@ const props = withDefaults(
     height?: number | string
     /** Rotulo de la grafica. Da nombre al lienzo y encabeza la tabla equivalente. */
     title?: string
+    /** Rotulo de la primera columna de la tabla equivalente cuando las categorias no son fechas. */
+    categoryTitle?: string
   }>(),
   { stacked: false, height: 280 },
 )
@@ -120,7 +122,7 @@ const option = computed<EChartsOption>(() => {
 const style = computed(() => chartStyle(props.height))
 
 const table = computed(() =>
-  seriesTable(props.series, { timeZone: timeZone.value, units: props.units }),
+  seriesTable(props.series, { timeZone: timeZone.value, units: props.units, stampLabelText: props.categoryTitle }),
 )
 </script>
 

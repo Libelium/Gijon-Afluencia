@@ -74,6 +74,10 @@ export default defineConfig({
           branches: 80,
           statements: 95,
         },
+        'src/features/dashboards/templates/transits/routeDetails.ts': { lines: 100, functions: 100, branches: 95, statements: 100 },
+        'src/features/dashboards/templates/transits/RouteDetailsPanels.vue': { lines: 95, functions: 90, branches: 90, statements: 95 },
+        // Solo la agregacion por serie tiene pruebas: es un suelo para que no baje, no una meta.
+        'src/features/dashboards/templates/shared/series.ts': { lines: 85, functions: 80, branches: 70, statements: 85 },
         'src/features/dashboards/templates/transits/pairs.ts': {
           lines: 90,
           functions: 90,
