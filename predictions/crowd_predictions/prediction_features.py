@@ -65,15 +65,17 @@ def build_prediction_feature_table(history_bins: list, zone_ids: list, start_ts,
                                      history_bins=history_bins)
     combined = history_bins + future_bins
 
-    df = add_calendar_features(combined)
-    df = add_lag_features(df)
-    df = add_rolling_features(df)
-
     # By the IDENTITY of the generated slots, not by `timestamp >= start_ts`: that
     # comparison also selects the history rows dated at start_ts or later (which
     # happens whenever the ingestion is as fresh as the clock), and it would predict
-    # over an hour that already has a real measurement.
+    # over an hour that already has a real measurement. Lags and rolling stats are
+    # computed for these rows only: the history rows are only looked up.
     slots = {(b["zone_id"], b["timestamp"]) for b in future_bins}
+
+    df = add_calendar_features(combined)
+    df = add_lag_features(df, only=slots)
+    df = add_rolling_features(df, only=slots)
+
     future_mask = [(row.zone_id, row.timestamp) in slots
                    for row in df.itertuples(index=False)]
     future_df = df[future_mask].reset_index(drop=True)

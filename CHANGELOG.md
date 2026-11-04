@@ -59,6 +59,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **Prever es unas seis veces más rápido.** En cada hora de la predicción recursiva se calculaban
+  los retardos y las medias móviles de todo el histórico, y solo se usaban los de la hora prevista;
+  ahora solo se calculan esos, con el mismo resultado. En una prueba con 13 zonas y 35 días de
+  histórico sintético, las 24 h de previsión pasan de 48 s a 8 s. Lo mismo vale para el backtest de
+  cada reentrenamiento completo.
 - **Un evento registrado con antelación ya no obliga a reentrenar el modelo entero.** Solo se
   reentrena de cero si el cambio del registro toca días que el modelo ya ha aprendido (un evento
   pasado o ya empezado), que es la única forma de desaprenderlos; si el evento es futuro, el
