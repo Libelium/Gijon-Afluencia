@@ -300,3 +300,25 @@ def test_fingerprint_follows_days_and_zones_not_type_notes_or_hours():
     assert fingerprint(base) == fingerprint(same_rows)
     assert fingerprint(base) != fingerprint(longer)
     assert fingerprint(base) != fingerprint(other_zone)
+
+
+def test_fingerprint_until_only_counts_the_days_already_learned():
+    """A model whose data reaches 10 December has not learned the market of the 14th:
+    registering, moving or deleting it must not look like a change to that model."""
+    trained = [_event(date(2026, 4, 9), zones={"A"})]
+    with_future = trained + [_event(date(2026, 12, 14), end=date(2026, 12, 20), zones={"A"})]
+    moved_future = trained + [_event(date(2026, 12, 15), end=date(2026, 12, 22), zones={"A"})]
+    until = date(2026, 12, 10)
+
+    assert fingerprint(with_future, until=until) == fingerprint(trained, until=until)
+    assert fingerprint(moved_future, until=until) == fingerprint(trained, until=until)
+    assert fingerprint(with_future) != fingerprint(trained)  # without `until`: the whole registry
+
+
+def test_fingerprint_until_counts_the_learned_part_of_an_event_that_has_begun():
+    begun = [_event(date(2026, 12, 14), end=date(2026, 12, 20), zones={"A"})]
+    longer = [_event(date(2026, 12, 14), end=date(2026, 12, 25), zones={"A"})]
+    until = date(2026, 12, 16)
+
+    assert fingerprint(begun, until=until) != fingerprint([], until=until)  # the 14th-16th are learned
+    assert fingerprint(begun, until=until) == fingerprint(longer, until=until)  # only its future changed

@@ -175,26 +175,34 @@ def events_in_window(zone_id: str, first_day, last_day, events: list) -> list:
     )
 
 
-def fingerprint(events: list) -> str:
+def fingerprint(events: list, until=None) -> str:
     """
     "len:hash" of what decides WHICH ROWS training leaves out: each event's days
     and zones. NOT event_type, notes or hours - they only change what the panel
-    draws, not the trained model. Changes on any edit to the registry that does:
-    a new row, a deleted one, or a RETROACTIVE change to a past row (a fair added
-    for a date already trained on) - see warm_start.events_registry_changed(),
-    which forces a full retrain when this changes, the same way
-    blocking_column_change does for the columns themselves.
+    draws, not the trained model.
+
+    `until` (a local date): only the days up to it count - the days a model whose
+    data reaches `until` has already learned. An event entirely after it does not
+    change the fingerprint, and one crossing it only by its days up to it: so
+    registering, moving or deleting an event AHEAD of time leaves a stored model
+    alone, and its days are left out by the warm start's own window when they come.
+    A retroactive change (a fair added for days already trained on) does change it -
+    see warm_start.events_registry_changed(), which then forces the full retrain
+    that is the only way to unlearn those days. None = every day (the whole registry).
+
     Deliberately NOT Python's hash(): it is randomized per process
     (PYTHONHASHSEED), so the SAME unchanged registry would fingerprint
     differently on every cron invocation and look "changed" forever.
     """
-    canonical = "|".join(sorted(
-        f"{e['date'].isoformat()}:{e['end_date'].isoformat()}:"
-        f"{','.join(sorted(e['device_ids'])) if e['device_ids'] else ''}"
-        for e in events
-    ))
-    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
-    return f"{len(events)}:{digest}"
+    rows = []
+    for e in events:
+        if until is not None and e["date"] > until:
+            continue
+        end = e["end_date"] if until is None else min(e["end_date"], until)
+        zones = ",".join(sorted(e["device_ids"])) if e["device_ids"] else ""
+        rows.append(f"{e['date'].isoformat()}:{end.isoformat()}:{zones}")
+    digest = hashlib.sha256("|".join(sorted(rows)).encode("utf-8")).hexdigest()[:16]
+    return f"{len(rows)}:{digest}"
 
 
 def list_raw_rows(storage, local_dir: str = "/tmp") -> list:

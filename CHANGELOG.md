@@ -53,6 +53,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **Un evento registrado con antelación ya no obliga a reentrenar el modelo entero.** Solo se
+  reentrena de cero si el cambio del registro toca días que el modelo ya ha aprendido (un evento
+  pasado o ya empezado), que es la única forma de desaprenderlos; si el evento es futuro, el
+  arranque en caliente deja fuera sus días cuando llegan. El modelo guarda hasta qué día ha
+  aprendido (`events_fingerprint_until`) y la huella del registro solo cuenta hasta ese día. Un
+  modelo guardado antes de esto se compara con el registro entero, como hasta ahora.
 - **El modelo de afluencia no aprende de los días con evento registrado.** Un mercado navideño o
   unas fiestas no son lo normal: sus días se quitan como filas de entrenamiento y, antes de
   calcular retardos y medias móviles, su ocupación se cambia por la mediana de la misma franja en

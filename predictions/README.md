@@ -96,8 +96,10 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   de texto con los eventos de su zona dentro del horizonte, y el simulador del panel de predicción
   los dibuja encima (`event_type` le sirve si coincide con uno de sus tipos: `market`, `concert`,
   `festival`, `sports`, `localFestival`, `food`; `start_hour`–`end_hour` son las horas que dibuja).
-  Editar las fechas o zonas de un evento, también de uno pasado, fuerza un reentrenamiento completo;
-  cambiar solo el tipo, las notas o las horas no.
+  Registrar, mover o borrar un evento **con antelación** no reentrena nada: el arranque en caliente
+  deja fuera sus días cuando llegan a su ventana. Solo fuerza un reentrenamiento completo cambiar
+  días que el modelo ya ha aprendido (un evento pasado o ya empezado), porque es la única forma de
+  desaprenderlos; cambiar solo el tipo, las notas o las horas no.
 - `crowd_xgboost_model.py` — XGBoost (`count:poisson`, porque son recuentos) sobre la tabla
   anterior, un único modelo para todas las zonas (`zone_id` con codificación *one-hot*). Partición
   **temporal** (la reserva son los últimos días, nunca aleatoria) y `tune_hyperparameters()` con
@@ -177,7 +179,7 @@ Una imagen para todos los puntos de entrada, un comando distinto por trabajo:
   con modelo y sus dos hermanos, arranca en caliente añadiendo `N_ESTIMATORS_INCREMENT` árboles.
   Vuelve a un reentrenamiento completo en nueve casos: las columnas ya no coinciden, el último
   completo es más viejo que `FULL_RETRAIN_AFTER_DAYS`, la meteorología pasó de no configurada a
-  configurada (o al revés), cambió el registro de eventos, `CALENDAR_TIMEZONE` difiere del anotado,
+  configurada (o al revés), cambió el registro de eventos en días ya aprendidos, `CALENDAR_TIMEZONE` difiere del anotado,
   se alcanzó `MAX_ESTIMATORS`, el MAE del último día empeora más de `INCREMENTAL_MAE_TOLERANCE`, el
   fichero hermano no trae hiperparámetros, o `FORCE_FULL_RETRAIN=true`. Y en dos casos no entrena
   nada: sin datos nuevos desde la última ejecución, y con un histórico por debajo del suelo de 7 días.
