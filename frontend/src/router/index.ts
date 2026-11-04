@@ -8,6 +8,7 @@ import entityRoutes from '@/features/entities/routes'
 import mapRoutes from '@/features/map/routes'
 import dashboardRoutes from '@/features/dashboards/routes'
 import alarmRoutes from '@/features/alarms/routes'
+import connectorRoutes from '@/features/connectors/routes'
 import preferenceRoutes from '@/features/preferences/routes'
 import customizationRoutes from '@/features/customization/routes'
 import userRoutes from '@/features/users/routes'
@@ -43,6 +44,7 @@ const routes: RouteRecordRaw[] = [
       ...mapRoutes,
       ...dashboardRoutes,
       ...alarmRoutes,
+      ...connectorRoutes,
       ...preferenceRoutes,
       ...customizationRoutes,
       ...userRoutes,

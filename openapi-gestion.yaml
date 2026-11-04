@@ -30,6 +30,7 @@ tags:
 - name: Auditoría
 - name: Autenticación y usuario
 - name: Ayuda
+- name: Conectores de salida
 - name: Cuadros de mando
 - name: Dispositivos
 - name: Entidades
@@ -869,6 +870,367 @@ paths:
           description: No encontrado
         '422':
           description: Datos inválidos
+  /V1/connectors/out/paginate:
+    post:
+      tags:
+      - Conectores de salida
+      summary: Listado paginado de conectores de salida
+      operationId: OutConnector_paginate_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paginationSize:
+                  type: integer
+                page:
+                  type: integer
+                orderBy:
+                  type: string
+                orderDirection:
+                  type: boolean
+                  description: Verdadero, descendente.
+                search:
+                  type: string
+              required:
+              - orderBy
+              - orderDirection
+              - page
+              - paginationSize
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/connectors/out/mqtt:
+    post:
+      tags:
+      - Conectores de salida
+      summary: Alta de un conector MQTT
+      operationId: MqttConnector_store_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                use_readable_names:
+                  type: boolean
+                ipAddress:
+                  type: string
+                  description: Host o IP del servidor MQTT, sin esquema, ruta ni credenciales.
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                username:
+                  type: string
+                  nullable: true
+                password:
+                  type: string
+                  nullable: true
+                  description: Nunca se devuelve. Al editar, vacía conserva la actual.
+                clientId:
+                  type: string
+                  nullable: true
+                  description: Vacío, se genera uno distinto en cada conexión.
+                ssl:
+                  type: boolean
+                sslCert:
+                  type: string
+                  nullable: true
+                  description: Certificado PEM de la CA del servidor, si no es pública.
+                clientCert:
+                  type: string
+                  nullable: true
+                  description: Certificado PEM de cliente (TLS mutuo). Exige ssl y clientKey.
+                clientKey:
+                  type: string
+                  nullable: true
+                  description: Clave privada PEM del cliente. Nunca se devuelve. Al editar, vacía conserva la actual.
+                topicTemplate:
+                  type: array
+                  description: 'Partes del topic. Variables: urn, tenant y scope (legacy, también measure); en los formatos periódicos, solo id (un mensaje por elemento).'
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - static
+                        - variable
+                      value:
+                        type: string
+                    required:
+                    - type
+                    - value
+                payload_type:
+                  type: string
+                  enum:
+                  - occupancy_readings
+                  - flow_readings
+                  - device_inventory
+                  - normalized
+                  - key_value
+                  - legacy
+                payload_config:
+                  type: array
+                  description: Solo con legacy. Campos de cada mensaje, [{key, value, active}].
+                  items:
+                    type: object
+              required:
+              - name
+              - ipAddress
+              - port
+              - ssl
+              - topicTemplate
+              - payload_type
+      responses:
+        '201':
+          description: Creado. Devuelve el conector, sin contraseña ni clave privada.
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '422':
+          description: Datos inválidos
+  /V1/connectors/out/mqtt/{mqtt}:
+    put:
+      tags:
+      - Conectores de salida
+      summary: Edición de un conector MQTT
+      operationId: MqttConnector_update_put
+      parameters:
+      - name: mqtt
+        in: path
+        required: true
+        description: Id del conector de salida (el mismo de show y destroy).
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                use_readable_names:
+                  type: boolean
+                ipAddress:
+                  type: string
+                  description: Host o IP del servidor MQTT, sin esquema, ruta ni credenciales.
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                username:
+                  type: string
+                  nullable: true
+                password:
+                  type: string
+                  nullable: true
+                  description: Nunca se devuelve. Al editar, vacía conserva la actual.
+                clientId:
+                  type: string
+                  nullable: true
+                  description: Vacío, se genera uno distinto en cada conexión.
+                ssl:
+                  type: boolean
+                sslCert:
+                  type: string
+                  nullable: true
+                  description: Certificado PEM de la CA del servidor, si no es pública.
+                clientCert:
+                  type: string
+                  nullable: true
+                  description: Certificado PEM de cliente (TLS mutuo). Exige ssl y clientKey.
+                clientKey:
+                  type: string
+                  nullable: true
+                  description: Clave privada PEM del cliente. Nunca se devuelve. Al editar, vacía conserva la actual.
+                topicTemplate:
+                  type: array
+                  description: 'Partes del topic. Variables: urn, tenant y scope (legacy, también measure); en los formatos periódicos, solo id (un mensaje por elemento).'
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - static
+                        - variable
+                      value:
+                        type: string
+                    required:
+                    - type
+                    - value
+                payload_type:
+                  type: string
+                  enum:
+                  - occupancy_readings
+                  - flow_readings
+                  - device_inventory
+                  - normalized
+                  - key_value
+                  - legacy
+                payload_config:
+                  type: array
+                  description: Solo con legacy. Campos de cada mensaje, [{key, value, active}].
+                  items:
+                    type: object
+              required:
+              - name
+              - ipAddress
+              - port
+              - ssl
+              - topicTemplate
+              - payload_type
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/connectors/out/{id}/models:
+    put:
+      tags:
+      - Conectores de salida
+      summary: Sustituye las entidades y dispositivos asociados
+      operationId: OutConnector_linkModelsByConnectorId_put
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Id del conector de salida.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Una lista que no se envía conserva sus asociaciones.
+              properties:
+                entities:
+                  type: array
+                  items:
+                    type: integer
+                devices:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '204':
+          description: Asociaciones actualizadas
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/connectors/out/{id}/status:
+    patch:
+      tags:
+      - Conectores de salida
+      summary: Activa o desactiva el conector
+      description: Activarlo pone a cero los fallos acumulados.
+      operationId: OutConnector_updateStatus_patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: Id del conector de salida.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - active
+                  - inactive
+              required:
+              - status
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+        '422':
+          description: Datos inválidos
+  /V1/connectors/out/{out}:
+    get:
+      tags:
+      - Conectores de salida
+      summary: Detalle de un conector de salida
+      operationId: OutConnector_show_get
+      parameters:
+      - name: out
+        in: path
+        required: true
+        description: Id del conector de salida.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK. Sin contraseña ni clave privada (has_password, has_client_key).
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
+    delete:
+      tags:
+      - Conectores de salida
+      summary: Borra el conector con su configuración y credenciales
+      operationId: OutConnector_destroy_delete
+      parameters:
+      - name: out
+        in: path
+        required: true
+        description: Id del conector de salida.
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Borrado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: No encontrado
   /V1/dashboards:
     post:
       tags:

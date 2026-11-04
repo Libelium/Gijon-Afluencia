@@ -31,6 +31,18 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
   admitía el cambio; faltaba la pantalla.
+- **Conector de salida MQTT.** Envía los datos de la plataforma a un servidor MQTT externo y se
+  gestiona desde la interfaz, en el bloque nuevo Integraciones → Conectores: alta y edición del
+  servidor (TLS, CA propia, usuario y contraseña o certificado de cliente para TLS mutuo), formato
+  del mensaje, topic y entidades asociadas; activar, desactivar y borrar; y registro de errores
+  con el motivo que da el servidor. Además de los formatos por notificación (`normalized`,
+  `key_value` y el original), tres formatos periódicos envían cada cierto tiempo la foto de lo
+  asociado: aforos por zona, desplazamientos entre sensores con el porcentaje de cada flujo e
+  inventario de dispositivos; con `{id}` en el topic, un mensaje por elemento a su propio
+  subtopic. Solo publica en los servidores de `MQTT_ALLOWED_DESTINATIONS` y rechaza los que
+  resuelven a una dirección interna, con MQTT 5 y QoS 1. Tras varios fallos seguidos el conector
+  se desactiva solo. Dos migraciones nuevas en `mqtt_connector`; el detalle está en
+  `queues-consumer/docs/out_connectors/mqtt.md`.
 
 ### Cambiado
 

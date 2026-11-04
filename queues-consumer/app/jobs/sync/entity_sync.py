@@ -7,6 +7,7 @@ from jobs.sync.mapping_schemas.factory.mapping_schema_factory import (
 )
 import jobs.sync.check_errors_sync as check_errors
 import jobs.sync.smsp_verticals_sync as smsp_verticals_sync
+import models.crud.crud_out_connectors as crud_out_connectors
 from config.config import settings
 from config.logging import appLogging as logging
 from db.session_helpers import main_session, realtime_session
@@ -70,7 +71,13 @@ class EntitySync(Job):
             self.enqueue_alarms_job,
         ]
 
-        default_observers = base_observers + optional_job_observers
+        data_processing_observers = [
+            self.check_connectors,
+        ]
+
+        default_observers = (
+            base_observers + optional_job_observers + data_processing_observers
+        )
 
         # TIP: update this to filter new datamodels
         observer_map = {"CrowdFlowEvent": (base_observers + [self.save_cfe_commands])}
@@ -250,6 +257,32 @@ class EntitySync(Job):
         from tasks.alarms import alarms_job
 
         alarms_job.delay(entity_data_notification)
+
+    def check_connectors(
+        self, entity_data_notification: EntityDataNotification
+    ) -> None:
+        """
+        Enqueues one job per active out connector related to the entity or its devices.
+        """
+        activated_connectors = crud_out_connectors.get_related_out_connectors(
+            entity_ids=[entity_data_notification.db_id],
+            device_ids=entity_data_notification.devices,
+            db=self.db,
+        )
+        if not activated_connectors:
+            return
+
+        # Deferred import, same as alarms: keeps a connector failure inside this observer.
+        from schemas.out_connector_request import OutConnectorRequest
+        from tasks.out_connectors import generic_connector_job
+
+        for activated_connector in activated_connectors:
+            generic_connector_job.delay(
+                OutConnectorRequest(
+                    out_connector=activated_connector.dict(),
+                    notification=entity_data_notification,
+                )
+            )
 
     def __is_expired(self, entity_id: int) -> bool:
         """

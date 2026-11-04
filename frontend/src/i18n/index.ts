@@ -3,6 +3,7 @@ import entities from '@/features/entities/i18n'
 import map from '@/features/map/i18n'
 import dashboards from '@/features/dashboards/i18n'
 import alarms from '@/features/alarms/i18n'
+import connectors from '@/features/connectors/i18n'
 import preferences from '@/features/preferences/i18n'
 import customization from '@/features/customization/i18n'
 import accessibility from '@/features/accessibility/i18n'
@@ -21,6 +22,7 @@ const messages: Record<string, string> = {
   ...map,
   ...dashboards,
   ...alarms,
+  ...connectors,
   ...preferences,
   ...customization,
   ...accessibility,

@@ -1744,6 +1744,261 @@
       ]
     },
     {
+      "name": "Conectores de salida",
+      "item": [
+        {
+          "name": "Paginate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/paginate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "paginate"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Store (MQTT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/mqtt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "mqtt"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update (MQTT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/mqtt/{mqtt}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "mqtt",
+                "{mqtt}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Link models",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/{id}/models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "{id}",
+                "models"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/{id}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "{id}",
+                "status"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/{out}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "{out}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Destroy",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/connectors/out/{out}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "connectors",
+                "out",
+                "{out}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Cuadros de mando",
       "item": [
         {
