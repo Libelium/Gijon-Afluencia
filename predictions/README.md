@@ -66,8 +66,8 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   calendario cíclicas (seno/coseno de hora y día de la semana), `is_weekend`, `month`,
   `is_holiday`/`is_holiday_eve` (biblioteca `holidays`, región en
   `HOLIDAYS_COUNTRY`/`HOLIDAYS_SUBDIVISION`, que calcula sola las fiestas móviles cada año),
-  `is_high_season`, `event_magnitude`, `precip_mm`, `lag_1d`/`lag_1w`, `rolling_mean_7d`/`28d` y
-  `rolling_std_7d`/`28d`: las 17 de `FEATURE_COLUMNS`.
+  `is_high_season`, `precip_mm`, `lag_1d`/`lag_1w`, `rolling_mean_7d`/`28d` y
+  `rolling_std_7d`/`28d`: las 16 de `FEATURE_COLUMNS`.
   Las de calendario se derivan en `CALENDAR_TIMEZONE`, no en UTC: los datos se guardan en UTC y una
   hora nocturna caería en el DÍA equivocado. Las de retardo y media móvil se buscan por marca de
   tiempo exacta, no por posición, porque las series tienen huecos. Las móviles devuelven `NaN` si no
@@ -82,10 +82,22 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   primer paso de `daily_pipeline.py`. Un fallo ahí no bloquea el entrenamiento ni la predicción.
   Sin `WEATHER_LAT`/`WEATHER_LON` el refresco no hace nada y `precip_mm` vale 0.0.
 - `events_registry.py` — eventos puntuales (mercados, ferias, conciertos) registrados **a mano**,
-  una fila CSV por evento (`date,event_type,device_ids,notes`): a diferencia de festivos, temporada
-  o meteorología, un evento no se puede calcular, alguien tiene que saber que ocurre. Vive en el
-  almacenamiento, bajo el mismo prefijo que el modelo. `device_ids` vacío = afecta a todas las zonas
-  de ese día.
+  una fila CSV por evento (`date,event_type,device_ids,notes,end_date,start_hour,end_hour`; las
+  tres últimas son opcionales): a diferencia de festivos, temporada o meteorología, un evento no se
+  puede calcular, alguien tiene que saber que ocurre. Vive en el almacenamiento, bajo el mismo
+  prefijo que el modelo. `device_ids` vacío = afecta a todas las zonas; `end_date` vacío = un solo
+  día. Las fechas son días locales (`CALENDAR_TIMEZONE`).
+  **El modelo no aprende de los días con evento**, porque no son lo normal:
+  `training_data.mask_event_bins()` los quita como filas de entrenamiento y, antes de calcular
+  ninguna característica, cambia su ocupación por la mediana de la misma zona y franja en las
+  4 semanas anteriores sin evento. Lo hace al entrenar y al predecir; si no, un mercado de una
+  semana inflaría el `lag_1w` y la `rolling_mean_7d` de la semana siguiente. La previsión que se
+  publica es la del día normal. Cada entidad de previsión lleva además `registeredEvents`, un JSON
+  de texto con los eventos de su zona dentro del horizonte, y el simulador del panel de predicción
+  los dibuja encima (`event_type` le sirve si coincide con uno de sus tipos: `market`, `concert`,
+  `festival`, `sports`, `localFestival`, `food`; `start_hour`–`end_hour` son las horas que dibuja).
+  Editar las fechas o zonas de un evento, también de uno pasado, fuerza un reentrenamiento completo;
+  cambiar solo el tipo, las notas o las horas no.
 - `crowd_xgboost_model.py` — XGBoost (`count:poisson`, porque son recuentos) sobre la tabla
   anterior, un único modelo para todas las zonas (`zone_id` con codificación *one-hot*). Partición
   **temporal** (la reserva son los últimos días, nunca aleatoria) y `tune_hyperparameters()` con

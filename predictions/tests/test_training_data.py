@@ -7,7 +7,8 @@ import pandas as pd
 from crowd_predictions.training_data import (
     add_calendar_features, add_lag_features, add_rolling_features,
     clear_caches, feature_columns_from_train_columns, has_minimum_features,
-    select_feature_columns, usable_span_days, FEATURE_COLUMNS, TARGET_COLUMN,
+    mask_event_bins, registered_events, select_feature_columns, usable_span_days,
+    without_event_rows, FEATURE_COLUMNS, TARGET_COLUMN,
     _cached_events_registry, _cached_weather_cache,
 )
 
@@ -285,10 +286,10 @@ def test_select_feature_columns_grows_with_the_available_history():
     # spare. That is exactly the tier where train.py refuses to train.
     assert five_days == ["hour_sin", "hour_cos", "weekday_sin", "weekday_cos", "is_weekend",
                           "month", "is_holiday", "is_holiday_eve", "is_high_season",
-                          "event_magnitude", "precip_mm"]
+                          "precip_mm"]
     assert "lag_1w" in fifteen_days and "rolling_mean_7d" in fifteen_days
     assert "rolling_mean_28d" not in fifteen_days and "rolling_std_28d" not in fifteen_days
-    assert sixty_days == FEATURE_COLUMNS  # all 17
+    assert sixty_days == FEATURE_COLUMNS  # all 16
 
 
 def test_select_feature_columns_keeps_the_declared_order_not_the_tier_order():
@@ -373,33 +374,101 @@ def test_utc_as_the_timezone_leaves_the_features_as_they_were():
     assert row["weekday"] == 5 and row["hour"] == 22   # Saturday, as UTC says
 
 
-# --- event_magnitude / precip_mm: always computable, never block training ---
+# --- precip_mm: always computable, never blocks training ---
 
-def test_event_magnitude_and_precip_default_to_zero_without_a_storage_backend():
+def test_precip_defaults_to_zero_without_a_storage_backend_and_events_are_no_column():
     """No STORAGE_TYPE configured (the test environment) -> get_storage() fails,
-    caught by _cached_events_registry/_cached_weather_cache -> both features are 0,
-    never a crash and never NaN. Unique tenant/scope so this does not collide with
-    the lru_cache entry of any other test in the same process."""
+    caught by _cached_weather_cache -> precip_mm is 0, never a crash and never NaN.
+    Registered events are not a feature at all any more (see mask_event_bins).
+    Unique tenant/scope so this does not collide with the lru_cache entry of any
+    other test in the same process."""
     with patch.dict(os.environ, {"FIWARE_TENANT": "t-cold", "FIWARE_SCOPE": "/"}):
         row = add_calendar_features(
             [{"zone_id": "X", "timestamp": datetime(2026, 8, 15, 10, 0), "occupancy": 3}]).iloc[0]
 
-    assert row["event_magnitude"] == 0
     assert row["precip_mm"] == 0.0
+    assert "event_magnitude" not in row
+    assert "event_magnitude" not in FEATURE_COLUMNS
 
 
-def test_event_magnitude_reflects_the_registered_event_for_that_zone_and_local_day():
-    events = [{"date": date(2026, 8, 15), "magnitude": 2, "device_ids": {"X"}}]
-    with patch.dict(os.environ, {"FIWARE_TENANT": "t-events", "FIWARE_SCOPE": "/"}), \
-         patch("crowd_predictions.training_data.get_storage", return_value=object()), \
-         patch("crowd_predictions.training_data.events_registry.load_events_registry", return_value=events):
-        matching = add_calendar_features(
-            [{"zone_id": "X", "timestamp": datetime(2026, 8, 15, 10, 0), "occupancy": 3}]).iloc[0]
-        other_zone = add_calendar_features(
-            [{"zone_id": "Y", "timestamp": datetime(2026, 8, 15, 10, 0), "occupancy": 3}]).iloc[0]
+# --- registered events: not learned, and not dragged into the lags of the days after ---
 
-    assert matching["event_magnitude"] == 2
-    assert other_zone["event_magnitude"] == 0
+def _event(day, end=None, zones=None):
+    return {"date": day, "end_date": end or day, "device_ids": zones, "event_type": "market",
+            "notes": "", "start_hour": None, "end_hour": None}
+
+
+def _daily_bins(zone, first, days, value_of, hour=10):
+    """One bin a day at `hour` UTC (11:00 in Madrid in winter) - enough for lag_1w."""
+    return [{"zone_id": zone, "timestamp": first + timedelta(days=d, hours=hour), "occupancy": value_of(d)}
+            for d in range(days)]
+
+
+def test_an_event_day_takes_the_median_of_the_same_slot_in_the_previous_clean_weeks():
+    first = datetime(2026, 11, 2)  # a Monday
+    weekly = {0: 10, 7: 20, 14: 30, 21: 40, 28: 50, 35: 500}  # Mondays; the last one has the event
+    bins = _daily_bins("A", first, 36, lambda d: weekly.get(d, 1))
+    masked, kept = mask_event_bins(bins, [_event(date(2026, 12, 7))])
+
+    event_bin = next(b for b in masked if b["timestamp"] == datetime(2026, 12, 7, 10))
+    assert event_bin["occupancy"] == 35  # median of 50, 40, 30, 20 - the four weeks before
+    assert kept == {("A", pd.Timestamp(2026, 12, 7, 10))}
+    assert len(masked) == len(bins)
+
+
+def test_a_week_long_market_does_not_inflate_the_lag_of_the_following_week():
+    """The Christmas market week is not learned, and the week after still sees a
+    normal week behind it: with only the rows dropped, its lag_1w would be the market."""
+    first = datetime(2026, 11, 2)
+    market = range(35, 42)  # 7 Dec - 13 Dec
+    bins = _daily_bins("A", first, 49, lambda d: 300 if d in market else 10)
+    masked, kept = mask_event_bins(bins, [_event(date(2026, 12, 7), end=date(2026, 12, 13))])
+
+    df = without_event_rows(add_lag_features(pd.DataFrame(masked)), kept)
+    week_after = df[df["timestamp"] >= datetime(2026, 12, 14)]
+    assert len(kept) == 7
+    assert not (df["timestamp"].between(datetime(2026, 12, 7), datetime(2026, 12, 14))).any()
+    assert set(week_after["lag_1w"]) == {10}
+    assert set(week_after["occupancy"]) == {10}
+
+
+def test_without_the_mask_the_market_would_be_the_lag_of_the_week_after():
+    """The failure the mask exists for, so the test above cannot pass by accident."""
+    first = datetime(2026, 11, 2)
+    bins = _daily_bins("A", first, 49, lambda d: 300 if d in range(35, 42) else 10)
+    df = add_lag_features(pd.DataFrame(bins))
+    assert set(df[df["timestamp"] >= datetime(2026, 12, 14)]["lag_1w"]) == {300}
+
+
+def test_an_event_day_with_no_clean_week_behind_it_is_dropped_not_invented():
+    bins = _daily_bins("A", datetime(2026, 12, 7), 3, lambda d: 300)
+    masked, kept = mask_event_bins(bins, [_event(date(2026, 12, 7))])
+    assert [b["timestamp"].day for b in masked] == [8, 9]
+    assert kept == set()
+
+
+def test_a_scoped_event_only_masks_its_zones():
+    first = datetime(2026, 11, 2)
+    bins = _daily_bins("A", first, 36, lambda d: 10) + _daily_bins("B", first, 36, lambda d: 10)
+    _masked, kept = mask_event_bins(bins, [_event(date(2026, 12, 7), zones={"A"})])
+    assert {zone for zone, _ts in kept} == {"A"}
+
+
+def test_event_days_are_local_days_not_utc_days():
+    """Madrid is UTC+1 in December: 23:30 UTC on the 6th is already the 7th locally."""
+    first = datetime(2026, 11, 2)
+    bins = (_daily_bins("A", first, 36, lambda d: 10, hour=23)
+            + _daily_bins("A", first, 36, lambda d: 10, hour=22))
+    _masked, kept = mask_event_bins(bins, [_event(date(2026, 12, 7))])
+    assert pd.Timestamp(2026, 12, 6, 23) in {ts for _zone, ts in kept}      # 00:00 local on the 7th
+    assert pd.Timestamp(2026, 12, 6, 22) not in {ts for _zone, ts in kept}  # 23:00 local on the 6th
+    assert pd.Timestamp(2026, 12, 7, 23) not in {ts for _zone, ts in kept}  # 00:00 local on the 8th
+
+
+def test_no_registered_events_leaves_the_bins_alone():
+    bins = _daily_bins("A", datetime(2026, 11, 2), 10, lambda d: d)
+    assert mask_event_bins(bins, []) == (bins, set())
+    assert without_event_rows(pd.DataFrame(bins), set()).equals(pd.DataFrame(bins))
 
 
 def test_precip_mm_comes_off_the_weather_cache_keyed_by_utc_not_local():
@@ -453,8 +522,8 @@ def test_clear_caches_makes_the_next_call_re_fetch_weather():
 
 def test_events_cache_does_not_leak_between_two_tenants_in_the_same_process():
     per_tenant_events = {
-        "tenant_a-multi": [{"date": date(2026, 8, 15), "magnitude": 2, "device_ids": None}],
-        "tenant_b-multi": [{"date": date(2026, 8, 15), "magnitude": 1, "device_ids": None}],
+        "tenant_a-multi": [{"date": date(2026, 8, 15), "notes": "a", "device_ids": None}],
+        "tenant_b-multi": [{"date": date(2026, 8, 15), "notes": "b", "device_ids": None}],
     }
 
     def fake_load(storage):
@@ -463,14 +532,12 @@ def test_events_cache_does_not_leak_between_two_tenants_in_the_same_process():
     with patch("crowd_predictions.training_data.get_storage", return_value=object()), \
          patch("crowd_predictions.training_data.events_registry.load_events_registry", side_effect=fake_load):
         with patch.dict(os.environ, {"FIWARE_TENANT": "tenant_a-multi", "FIWARE_SCOPE": "/"}):
-            tenant_a_row = add_calendar_features(
-                [{"zone_id": "X", "timestamp": datetime(2026, 8, 15, 10, 0), "occupancy": 3}]).iloc[0]
+            tenant_a_events = registered_events()
         with patch.dict(os.environ, {"FIWARE_TENANT": "tenant_b-multi", "FIWARE_SCOPE": "/"}):
-            tenant_b_row = add_calendar_features(
-                [{"zone_id": "X", "timestamp": datetime(2026, 8, 15, 10, 0), "occupancy": 3}]).iloc[0]
+            tenant_b_events = registered_events()
 
-    assert tenant_a_row["event_magnitude"] == 2
-    assert tenant_b_row["event_magnitude"] == 1  # NOT tenant_a's 2 - a stale/shared cache would leak this
+    assert tenant_a_events[0]["notes"] == "a"
+    assert tenant_b_events[0]["notes"] == "b"  # NOT tenant_a's - a stale/shared cache would leak this
 
 
 def test_weather_cache_does_not_leak_between_two_tenants_in_the_same_process():
@@ -493,3 +560,33 @@ def test_weather_cache_does_not_leak_between_two_tenants_in_the_same_process():
 
     assert tenant_a_row["precip_mm"] == 4.5
     assert tenant_b_row["precip_mm"] == 0.0  # NOT tenant_a's 4.5
+
+
+def test_the_training_table_leaves_out_the_event_days_and_keeps_the_week_after_normal():
+    """train_pipeline.load_training_table puts the mask in front of every feature."""
+    from crowd_predictions import train_pipeline
+    first = datetime(2026, 11, 2)
+    bins = _daily_bins("A", first, 49, lambda d: 300 if d in range(35, 42) else 10)
+    with patch.object(train_pipeline, "load_history_bins", return_value=bins), \
+         patch.object(train_pipeline, "resolve_zone_ids", return_value=["A"]), \
+         patch("crowd_predictions.training_data.registered_events",
+               return_value=[_event(date(2026, 12, 7), end=date(2026, 12, 13))]):
+        df = train_pipeline.load_training_table()
+
+    assert len(df) == 49 - 7
+    assert set(df[df["timestamp"] >= datetime(2026, 12, 14)]["lag_1w"]) == {10}
+
+
+def test_the_prediction_history_carries_the_usual_occupancy_on_event_days():
+    """etl/predict/extract.py hands predict_recursive the masked history."""
+    from crowd_predictions.etl.predict import extract
+    first = datetime(2026, 11, 2)
+    bins = _daily_bins("A", first, 42, lambda d: 300 if d in range(35, 42) else 10)
+    with patch.object(extract, "load_history_bins", return_value=bins), \
+         patch.object(extract, "resolve_zone_ids", return_value=["A"]), \
+         patch("crowd_predictions.training_data.registered_events",
+               return_value=[_event(date(2026, 12, 7), end=date(2026, 12, 13))]):
+        history = extract.PredictExtract()._load_history()
+
+    assert {b["occupancy"] for b in history} == {10}
+    assert len(history) == 42

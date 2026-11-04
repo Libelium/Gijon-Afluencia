@@ -26,6 +26,7 @@ DESERIALIZABLE_MODELS: dict[str, str] = {
     "DataImportationRequest": "schemas.data_importation_request",
     "EntityDataNotification": "schemas.entity_data_notification",
     "OneCrowdClassificationRequest": "schemas.crowd_classification_request_schema",
+    "OutConnectorRequest": "schemas.out_connector_request",
     "ProcessVisitorsRequest": "schemas.crowd_process_visitors_request_schema",
     "TypeSubscriptionMessage": "schemas.fiware_subscription_schema",
 }

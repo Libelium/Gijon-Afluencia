@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { t } from '@/i18n'
-import { formatNumber } from '@/lib/format'
+import { formatNumber, urnTail } from '@/lib/format'
+import type { PlacedEntity } from '../lib/geometry'
+import { canSuggest } from '../lib/suggestions'
 
 /**
  * Los mismos controles sirven al panel flotante de escritorio y a la hoja inferior de movil,
@@ -11,7 +13,11 @@ const props = defineProps<{
   datamodels: string[]
   datamodelsLoading?: boolean
   withoutLocation: number
+  suggestions?: PlacedEntity[]
+  suggestionsLoading?: boolean
 }>()
+
+const emit = defineEmits<{ pick: [item: PlacedEntity] }>()
 
 const search = defineModel<string>('search', { default: '' })
 const datamodel = defineModel<string | null>('datamodel', { default: null })
@@ -29,6 +35,32 @@ function clear() {
   search.value = ''
   datamodel.value = null
 }
+
+// El desplegable de sugerencias se abre al escribir y se cierra al elegir una o con Escape. Con la
+// flecha abajo el foco baja a la lista, como en un combo. El texto sigue filtrando el mapa como
+// siempre: elegir una sugerencia no lo cambia.
+const menu = ref(false)
+const suggestable = computed(() => canSuggest(search.value))
+const suggestionItems = computed(() =>
+  (props.suggestions ?? []).map((item) => ({
+    item,
+    title: item.entity.name || urnTail(item.entity.urn),
+    subtitle: item.entity.datamodel,
+  })),
+)
+
+watch(search, (text) => {
+  menu.value = canSuggest(text)
+})
+
+function onFocus() {
+  if (suggestable.value) menu.value = true
+}
+
+function pick(item: PlacedEntity) {
+  menu.value = false
+  emit('pick', item)
+}
 </script>
 
 <template>
@@ -38,7 +70,36 @@ function clear() {
       :label="t('map.search')"
       prepend-inner-icon="mdi-magnify"
       clearable
-    />
+      aria-autocomplete="list"
+      @focus="onFocus"
+    >
+      <VMenu
+        v-model="menu"
+        activator="parent"
+        :disabled="!suggestable"
+        :open-on-click="false"
+        :close-on-content-click="false"
+        location="bottom"
+        max-height="320"
+        content-class="map-suggestions"
+      >
+        <VList density="compact" :aria-label="t('map.suggestions.label')">
+          <VListItem
+            v-if="!suggestionItems.length"
+            :title="suggestionsLoading ? t('map.suggestions.loading') : t('map.suggestions.empty')"
+            disabled
+          />
+          <VListItem
+            v-for="row in suggestionItems"
+            :key="row.item.entity.id"
+            :title="row.title"
+            :subtitle="row.subtitle"
+            prepend-icon="mdi-map-marker-outline"
+            @click="pick(row.item)"
+          />
+        </VList>
+      </VMenu>
+    </VTextField>
 
     <VSelect
       v-model="datamodel"

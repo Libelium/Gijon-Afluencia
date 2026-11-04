@@ -131,13 +131,13 @@ def events_registry_changed(storage, stored_metrics: dict) -> str:
     """
     Empty string if unchanged, otherwise the reason. Unlike weather (which only
     ever flips once, off -> on), the events registry can change on ANY day, and
-    RETROACTIVELY: recording an event for a date already trained on rewrites
-    event_magnitude on rows the stored trees already learned as 0 -
-    blocking_column_change cannot see it, the column is the same, only its past
-    values changed meaning.
+    RETROACTIVELY: recording an event for a date already trained on means those
+    rows should never have been learned (and the lags of the days after should not
+    have seen them) - blocking_column_change cannot see it, the columns are the
+    same, only which rows count changed.
 
-    Covers both edits to the registry FILE and re-weighing an event type: the
-    fingerprint hashes each row's magnitude, not its event_type.
+    The fingerprint hashes each event's days and zones only: a new type, notes or
+    hours change what the panel draws, not what is trained, and retrain nothing.
 
     A bundle with no `events_fingerprint` recorded is left alone, same
     reasoning as the other two guards. `storage` is the caller's (not

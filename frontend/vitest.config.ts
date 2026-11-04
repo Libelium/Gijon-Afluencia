@@ -109,8 +109,27 @@ export default defineConfig({
         // Solo `listEntities` tiene pruebas: es un suelo para que no baje, no una meta.
         'src/features/entities/api/entities.ts': { lines: 20, functions: 8, branches: 25, statements: 20 },
         'src/features/map/lib/viewport.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
-        // Solo `mergePlaced` tiene pruebas: es un suelo para que no baje, no una meta.
-        'src/features/map/lib/geometry.ts': { lines: 20, functions: 14, branches: 95, statements: 20 },
+        // Solo `mergePlaced` y `placeEntities` tienen pruebas: es un suelo para que no baje, no una meta.
+        'src/features/map/lib/geometry.ts': { lines: 75, functions: 70, branches: 95, statements: 75 },
+        'src/features/map/lib/suggestions.ts': { lines: 100, functions: 100, branches: 100, statements: 100 },
+        'src/features/map/components/MapFilters.vue': { lines: 85, functions: 40, branches: 85, statements: 85 },
+        // Solo `pickMeasure`, `detectCategories`, `rankOptions` y `locateEventEntities` tienen pruebas: suelos, no metas.
+        'src/features/dashboards/templates/shared/entities.ts': { lines: 30, functions: 20, branches: 85, statements: 30 },
+        'src/features/dashboards/templates/shared/discovery.ts': { lines: 70, functions: 35, branches: 60, statements: 70 },
+        'src/features/dashboards/api/catalog.ts': { lines: 25, functions: 50, branches: 100, statements: 25 },
+        'src/features/dashboards/templates/registry.ts': { lines: 95, functions: 50, branches: 100, statements: 95 },
+        'src/features/dashboards/templates/lidar/eventSimulation.ts': {
+          lines: 100,
+          functions: 100,
+          branches: 95,
+          statements: 100,
+        },
+        'src/features/dashboards/templates/lidar/components/EventScenarioCard.vue': {
+          lines: 95,
+          functions: 60,
+          branches: 80,
+          statements: 95,
+        },
         'src/features/entities/components/EntityRenameDialog.vue': {
           lines: 95,
           functions: 60,

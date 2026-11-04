@@ -4,7 +4,7 @@ import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
-import { searchEntities, type EntityOption } from '../api/catalog'
+import { rankOptions, searchEntities, type EntityOption } from '../api/catalog'
 import { setDashboardTemplateEntities } from '../api/dashboards'
 
 const props = defineProps<{
@@ -44,7 +44,7 @@ async function load() {
       datamodels: onlyCompatible.value ? props.datamodels : undefined,
       limit: 100,
     })
-    rows.value = page.rows
+    rows.value = rankOptions(page.rows, props.datamodels)
   } catch (e) {
     error.value = errorMessage(e)
     rows.value = []
@@ -180,7 +180,7 @@ const titleId = useId()
                 v-for="row in rows"
                 :key="row.id"
                 :title="row.name"
-                :subtitle="`${urnTail(row.urn)} · ${row.datamodel}`"
+                :subtitle="`${urnTail(row.urn)} · ${row.datamodel} · ${row.tenant}`"
                 @click="toggle(row.id)"
               >
                 <template #prepend>

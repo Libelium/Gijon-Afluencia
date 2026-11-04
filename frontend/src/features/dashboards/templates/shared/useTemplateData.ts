@@ -5,7 +5,7 @@ import { formatDateTime } from '@/lib/format'
 import { useSessionStore } from '@/stores/session'
 import type { Measure } from '@/types'
 import { DEFAULT_RANGE, resolveRange, type DateRange, type RangePresetId } from '../../lib/range'
-import { loadTemplateEntities, pointsOf } from './entities'
+import { loadTemplateEntities, locateEventEntities, pointsOf } from './entities'
 import {
   categoryLabelOf,
   detectCategories,
@@ -109,7 +109,7 @@ export function useTemplateData(options: UseTemplateDataOptions): UseTemplateDat
     loading.value = true
     error.value = null
     try {
-      const entities = await loadTemplateEntities(dashboard)
+      const entities = await locateEventEntities(await loadTemplateEntities(dashboard))
       const resolvedPoints = pointsOf(entities)
       points.value = resolvedPoints
 

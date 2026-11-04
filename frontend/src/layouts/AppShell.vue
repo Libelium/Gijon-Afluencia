@@ -30,6 +30,12 @@ const sections = [
     ],
   },
   {
+    label: 'app.nav.section.integrations',
+    items: [
+      { to: '/conectores', icon: 'mdi-transit-connection-variant', label: 'app.nav.connectors' },
+    ],
+  },
+  {
     label: 'app.nav.section.resources',
     items: [
       { to: '/api', icon: 'mdi-api', label: 'app.nav.api' },

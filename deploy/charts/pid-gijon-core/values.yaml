@@ -908,6 +908,12 @@ components:
       INACTIVITY_ALARM_CHECK_INTERVAL: "3600"
       QUEUE_TASK_CONFIG_PLATFORM_ALARMS_ENTITY_DATA_CHECK_TIMEOUT: "60"
       QUEUE_TASK_CONFIG_PLATFORM_ALARMS_CHECK_INACTIVITY_TIMEOUT: "600"
+      # -- Conectores de salida MQTT. Sin brokers en la lista no se publica nada.
+      MQTT_ALLOWED_DESTINATIONS: ""
+      OUT_CONNECTOR_REQUEST_TIMEOUT: "5"
+      OUT_CONNECTOR_READINGS_INTERVAL: "900"
+      OUT_CONNECTOR_INVENTORY_INTERVAL: "86400"
+      QUEUE_TASK_CONFIG_PLATFORM_OUT_CONNECTOR_GENERIC_TIMEOUT: "30"
       # -- Optional integrations (uncomment + set the matching secrets)
       # WEB_FRONT_URL: <CHANGE_ME>   # TODO: public frontend URL
       # GRID_WRF_URL: <CHANGE_ME>         # TODO: weather grid service

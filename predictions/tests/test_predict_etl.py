@@ -1,6 +1,8 @@
+import json
 import shutil
 import tempfile
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from unittest.mock import patch
 
 from crowd_predictions.training_data import (add_calendar_features, add_lag_features, add_rolling_features,
                             select_feature_columns, FEATURE_COLUMNS)
@@ -83,6 +85,42 @@ def test_predict_transform_csv_has_expected_columns_and_stable_pred_suffixed_urn
         assert row["urn"] == "urn:ngsi-ld:CrowdFlowPrediction:X_pred"
         assert row["zoneId"] == "X"
         assert row["predictedOccupancy"] >= 0
+        # Always written: an empty cell would leave the previous run's events on the entity.
+        assert row["registeredEvents"] == "[]"
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+def test_the_first_row_publishes_the_zone_events_touching_the_horizon():
+    """For the panel's simulator to draw them on top of this normal prediction: the
+    zone's own and the global ones, not another zone's nor one outside the horizon."""
+    def event(day, end=None, zones=None, **extra):
+        return {"date": day, "end_date": end or day, "device_ids": zones, "event_type": "market",
+                "notes": "", "start_hour": None, "end_hour": None, **extra}
+
+    events = [
+        event(date(2026, 2, 9), end=date(2026, 2, 15), event_type="market", notes="Christmas market",
+              start_hour=10, end_hour=21),
+        event(date(2026, 2, 10), zones={"Y"}),       # another zone
+        event(date(2026, 3, 1)),                      # outside the horizon
+    ]
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        history = _history_hourly()
+        model, train_columns = _train_tiny_model(_history())
+        with patch("crowd_predictions.etl.predict.transform.registered_events", return_value=events):
+            transformer = PredictTransform(history_bins=history, model=model, train_columns=train_columns,
+                                             horizon_hours=6, start_ts=datetime(2026, 2, 10, 0, 0),
+                                             output_dir=tmp_dir)
+            assert transformer.transform() is True
+
+        import pandas as pd
+        df = pd.read_csv(transformer.exported_files[0])
+        assert json.loads(df.iloc[0]["registeredEvents"]) == [{
+            "date": "2026-02-09", "endDate": "2026-02-15", "type": "market",
+            "startHour": 10, "endHour": 21, "notes": "Christmas market",
+        }]
+        assert df["registeredEvents"].iloc[1:].isna().all()  # once per entity, not per hour
     finally:
         shutil.rmtree(tmp_dir)
 

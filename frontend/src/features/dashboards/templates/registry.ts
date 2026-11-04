@@ -14,9 +14,20 @@ export interface TemplateDescriptor {
   icon: string
   /** Vista que dibuja la plantilla. Recibe la prop `dashboard`. */
   view: Component
-  /** Modelos de datos que la plantilla sabe interpretar, para filtrar el selector. */
+  /**
+   * Modelos de datos que la plantilla sabe interpretar, para filtrar el selector, en orden de
+   * preferencia: el selector ofrece antes las entidades del primero.
+   */
   datamodels: DatamodelKey[]
 }
+
+/**
+ * Lo que sirve a las plantillas de aforo. Primero la entidad de eventos de la ETL de cada sensor,
+ * que es la que publica el aforo de la plataforma (personas distintas por intervalo, repartidas
+ * por tipo de visitante); despues sus conteos en bruto y los contadores de personas de otros
+ * fabricantes.
+ */
+const OCCUPANCY_DATAMODELS: DatamodelKey[] = ['flowEvent', 'flowObserved', 'peopleCount']
 
 const lazy = (loader: () => Promise<unknown>) =>
   defineAsyncComponent(loader as () => Promise<{ default: Component }>)
@@ -40,7 +51,7 @@ export const TEMPLATES: Record<TemplateKey, TemplateDescriptor> = {
     description: 'Ocupación por punto de medida, con mapa, evolución temporal y reparto por franjas.',
     icon: 'mdi-account-group-outline',
     view: lazy(() => import('./occupancy/OccupancyTemplate.vue')),
-    datamodels: ['flowObserved', 'peopleCount'],
+    datamodels: OCCUPANCY_DATAMODELS,
   },
   classification: {
     key: 'classification',
@@ -49,7 +60,7 @@ export const TEMPLATES: Record<TemplateKey, TemplateDescriptor> = {
     description: 'Reparto de personas por categoría detectada, con evolución y totales.',
     icon: 'mdi-account-multiple-outline',
     view: lazy(() => import('./classification/ClassificationTemplate.vue')),
-    datamodels: ['flowObserved', 'peopleCount'],
+    datamodels: OCCUPANCY_DATAMODELS,
   },
   classificationAdvanced: {
     key: 'classificationAdvanced',
@@ -58,7 +69,7 @@ export const TEMPLATES: Record<TemplateKey, TemplateDescriptor> = {
     description: 'Clasificación con comparativa entre puntos, franjas horarias y acumulados.',
     icon: 'mdi-chart-box-multiple-outline',
     view: lazy(() => import('./classification/ClassificationAdvancedTemplate.vue')),
-    datamodels: ['flowObserved', 'peopleCount'],
+    datamodels: OCCUPANCY_DATAMODELS,
   },
   heatmap: {
     key: 'heatmap',
@@ -67,7 +78,7 @@ export const TEMPLATES: Record<TemplateKey, TemplateDescriptor> = {
     description: 'Intensidad de ocupación por hora y día de la semana, y mapa de densidad.',
     icon: 'mdi-grid',
     view: lazy(() => import('./heatmap/HeatmapTemplate.vue')),
-    datamodels: ['flowObserved', 'peopleCount'],
+    datamodels: OCCUPANCY_DATAMODELS,
   },
   transits: {
     key: 'transits',

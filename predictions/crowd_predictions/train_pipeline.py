@@ -56,7 +56,8 @@ from crowd_predictions.helpers.aether_history import (COLD_START_DAYS, NoHistory
                                      incremental_training_window_hours, load_history_bins,
                                      resolve_zone_ids)
 from crowd_predictions.training_data import (add_calendar_features, add_lag_features, add_rolling_features,
-                            has_minimum_features, select_feature_columns, usable_span_days,
+                            has_minimum_features, mask_event_bins, select_feature_columns,
+                            usable_span_days, without_event_rows,
                             FEATURE_COLUMNS, SEVEN_DAY_FEATURE_COLUMNS, TARGET_COLUMN)
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -81,10 +82,15 @@ def load_training_table(window_hours: int = None):
     bins = load_history_bins(device_ids=resolve_zone_ids(), measure="occupancy",
                              id_column="zone_id", incremental=window_hours is not None,
                              window_hours=window_hours, bin_minutes=60)
+    # Registered event days are not normal: their occupancy is swapped before any
+    # lag/rolling reads it, and they are not trained on (see mask_event_bins). Done
+    # here, before select_feature_columns/dropna, so they stay out of the backtest
+    # and of the prediction band too.
+    bins, event_keys = mask_event_bins(bins)
 
     df = add_calendar_features(bins)
     df = add_lag_features(df)
-    return add_rolling_features(df)
+    return without_event_rows(add_rolling_features(df), event_keys)
 
 
 def usable_training_table(window_hours: int = None):

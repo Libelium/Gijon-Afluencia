@@ -170,6 +170,21 @@ class Settings(BaseSettings):
     )
     HTTP_PUSH_REQUEST_TIMEOUT: int = int(os.getenv("HTTP_PUSH_REQUEST_TIMEOUT", 5))
 
+    # ---- MQTT out connector ----
+    # The broker host is written by the user too: same SSRF guard as the HTTP push.
+    # Comma separated hosts (subdomains included); an empty list sends nothing.
+    MQTT_ALLOWED_DESTINATIONS: str = os.getenv("MQTT_ALLOWED_DESTINATIONS", "")
+    # Prefix of the client id generated when a connector has none of its own.
+    OUT_CONNECTOR_CLIENT_ID_PREFIX: str = os.getenv("OUT_CONNECTOR_CLIENT_ID_PREFIX", "pid-gijon")
+    # Snapshot connectors (occupancy and flow readings, device inventory) do not follow the
+    # ingestion: celery beat sends their snapshot every so many seconds.
+    OUT_CONNECTOR_READINGS_INTERVAL: int = int(
+        os.getenv("OUT_CONNECTOR_READINGS_INTERVAL", 15 * 60)
+    )
+    OUT_CONNECTOR_INVENTORY_INTERVAL: int = int(
+        os.getenv("OUT_CONNECTOR_INVENTORY_INTERVAL", 24 * 60 * 60)
+    )
+
     SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "aws_sns")
     SMS_API_KEY: str = os.getenv("SMS_API_KEY", "")
     SMS_API_SECRET: str = os.getenv("SMS_API_SECRET", "")

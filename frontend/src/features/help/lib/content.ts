@@ -65,7 +65,10 @@ export const SECTIONS: HelpSection[] = [
       'Los paneles agrupan gráficas sobre los datos de los sensores. Cada gráfica tiene su selector de rango de fechas y una tabla con los mismos datos para quien no pueda o no quiera leer la gráfica. Las plantillas disponibles son:',
     ],
     items: [
-      { term: 'Aforo Monitorización', text: 'Ocupación por punto de medida, con mapa, evolución temporal y reparto por franjas.' },
+      {
+        term: 'Aforo Monitorización',
+        text: 'Ocupación por punto de medida, con mapa, evolución temporal y reparto por franjas. A esta plantilla, a las de clasificación y al mapa de calor se les asigna la entidad de eventos de cada sensor de conteo WiFi/BLE, la que termina en _CFE en el espacio de datos de la plataforma: su aforo son las personas distintas detectadas en cada intervalo, repartidas en turistas, residentes y visitantes de corta estancia. El selector la ofrece la primera, y el mapa la sitúa en la ubicación de su sensor.',
+      },
       { term: 'Aforo Clasificación', text: 'Reparto de personas por categoría detectada, con evolución y totales.' },
       { term: 'Clasificación Avanzada', text: 'Clasificación con comparativa entre puntos, franjas horarias y acumulados.' },
       { term: 'Aforo Mapa de Calor', text: 'Intensidad de ocupación por hora y día de la semana, y mapa de densidad sobre los puntos de interés turístico.' },
@@ -76,7 +79,10 @@ export const SECTIONS: HelpSection[] = [
       { term: 'Tránsitos avanzado', text: 'Lo mismo, con matriz origen-destino, rutas principales y evolución. Se asignan las mismas entidades.' },
       { term: 'Zona LIDAR Analítica', text: 'Indicadores de la zona LIDAR: ocupación, aforo, permanencia y series históricas.' },
       { term: 'Zona LIDAR Mapa de calor', text: 'Densidad de ocupación en vivo sobre la zona monitorizada.' },
-      { term: 'Zona LIDAR Predicción', text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo.' },
+      {
+        term: 'Zona LIDAR Predicción',
+        text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo. Incluye un simulador de escenarios: se añaden uno o varios eventos (tipo, hora, duración, meteorología e intensidad) y se ve cómo cambiaría la ocupación prevista de la zona y si superaría su aforo. Sus cifras son orientativas, para comparar escenarios, y solo llegan hasta donde llega la previsión. Los eventos del registro de eventos de la plataforma salen ya como «Registrado» y se suman siempre: la previsión es la de un día normal, porque el modelo no aprende de los días con evento.',
+      },
     ],
     links: [{ label: 'Ir a Paneles', to: '/paneles' }],
   },

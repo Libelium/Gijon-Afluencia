@@ -235,7 +235,7 @@ def test_an_unchanged_registry_lets_the_increment_go_ahead(tmp_path):
 
 
 def test_a_new_event_forces_a_full_retrain_even_with_the_same_column_set(tmp_path):
-    """The column IS event_magnitude either way - blocking_column_change sees no
+    """The columns are the same either way - blocking_column_change sees no
     difference, which is exactly why this guard has to exist on its own."""
     storage = _DictStorage()
     rows = "date,event_type,device_ids,notes\n2026-04-09,large_event,,Concert\n"
@@ -251,36 +251,34 @@ def test_a_new_event_forces_a_full_retrain_even_with_the_same_column_set(tmp_pat
 
 
 def test_a_retroactive_edit_to_a_past_row_also_forces_a_full_retrain(tmp_path):
-    """Not just new rows: editing a date already trained on rewrites
-    event_magnitude on rows the stored trees learned as 0 - same danger, no new
-    row needed."""
+    """Not just new rows: stretching an event over days already trained on changes
+    which rows should have been left out - same danger, no new row needed."""
     storage = _DictStorage()
-    rows = "date,event_type,device_ids,notes\n2026-04-09,small_event,,Concert\n"
+    rows = "date,event_type,device_ids,notes\n2026-04-09,market,,Market\n"
     _upload_registry_csv(storage, rows, tmp_path)
     with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
         stale_fp = events_registry.fingerprint(events_registry.load_events_registry(storage))
 
-    edited_rows = "date,event_type,device_ids,notes\n2026-04-09,large_event,,Concert (bigger than thought)\n"
+    edited_rows = "date,event_type,device_ids,notes,end_date\n2026-04-09,market,,Market,2026-04-15\n"
     _upload_registry_csv(storage, edited_rows, tmp_path)
     with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
         reason = events_registry_changed(storage, {"events_fingerprint": stale_fp})
     assert "events registry changed" in reason
 
 
-def test_reweighing_an_event_type_forces_the_retrain(tmp_path):
-    """The registry file does not change and every row keeps its event_type, but
-    every row's trained value did change - so the fingerprint hashes the magnitude,
-    not the type, and the guard catches it without anyone remembering to."""
+def test_changing_only_the_type_notes_or_hours_retrains_nothing(tmp_path):
+    """They change what the panel draws, not which rows are left out of training."""
     storage = _DictStorage()
-    rows = "date,event_type,device_ids,notes\n2026-04-09,large_event,,Concert\n"
+    rows = "date,event_type,device_ids,notes\n2026-04-09,market,,Market\n"
     _upload_registry_csv(storage, rows, tmp_path)
     with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
         stale_fp = events_registry.fingerprint(events_registry.load_events_registry(storage))
 
-        with patch.dict(os.environ, {"EVENT_MAGNITUDES": '{"large_event": 3}'}):
-            reason = events_registry_changed(storage, {"events_fingerprint": stale_fp})
-
-    assert "events registry changed" in reason
+    edited = ("date,event_type,device_ids,notes,end_date,start_hour,end_hour\n"
+              "2026-04-09,festival,,Bigger than thought,,10,21\n")
+    _upload_registry_csv(storage, edited, tmp_path)
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        assert events_registry_changed(storage, {"events_fingerprint": stale_fp}) == ""
 
 
 def test_an_events_bundle_from_before_this_was_recorded_is_left_alone():
