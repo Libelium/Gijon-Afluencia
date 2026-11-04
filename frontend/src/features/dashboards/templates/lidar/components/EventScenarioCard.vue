@@ -19,13 +19,16 @@ import {
   eventPeak,
   eventStartHours,
   referenceOf,
+  registeredScenarioEvents,
   simulate,
   summariseScenario,
   type EventKind,
   type ScenarioEvent,
   type Weather,
 } from '../eventSimulation'
+import { asPublished, draftFromScenario, type RegistryDraft, type RegistryList } from '../predictionEvents'
 import ChartCard from './ChartCard.vue'
+import EventRegistry from './EventRegistry.vue'
 
 const props = defineProps<{
   /** Gemela de prevision de la zona. */
@@ -39,6 +42,8 @@ const props = defineProps<{
   timeZone?: string
   /** Eventos registrados de la zona: siempre se suman y no se pueden quitar. */
   registered?: ScenarioEvent[]
+  /** La zona como la conoce el modelo de prediccion. Sin ella no se ofrece el registro. */
+  zoneUrn?: string
 }>()
 
 const HOUR_MS = 3_600_000
@@ -137,8 +142,33 @@ function clear() {
   events.value = []
 }
 
+const zone = computed(() => props.timeZone || 'UTC')
+const target = computed(() => ({ tenant: props.twin.tenant, scope: props.twin.scope }))
+const registry = ref<RegistryList | null>(null)
+const registryDraft = ref<RegistryDraft | null>(null)
+
+/**
+ * Los registrados salen del registro en cuanto se carga, asi que lo que se acaba de registrar se
+ * ve ya. Sin el (quien mira no puede leerlo), los que publico la prevision en su ultima ejecucion.
+ */
+const registered = computed(() =>
+  registry.value && props.zoneUrn
+    ? registeredScenarioEvents(asPublished(registry.value.rows, props.zoneUrn), zone.value)
+    : (props.registered ?? []),
+)
+const canRegister = computed(() => !!registry.value?.canEdit && !!props.zoneUrn)
+
+function registerScenario(event: ScenarioEvent) {
+  registryDraft.value = draftFromScenario(event, zone.value)
+}
+
+/** Un evento simulado que se registra pasa a contarse como registrado: se quita de lo simulado. */
+function onRegistered(_saved: unknown, draft: RegistryDraft) {
+  if (draft.fromScenario !== undefined) remove(draft.fromScenario)
+}
+
 // Los registrados van delante: son lo que ya se sabe que va a pasar, lo simulado se suma encima.
-const allEvents = computed(() => [...(props.registered ?? []), ...events.value])
+const allEvents = computed(() => [...registered.value, ...events.value])
 const hasForecast = computed(() => startHours.value.length > 0)
 const reference = computed(() => referenceOf(props.capacity, base.value))
 const simulated = computed(() =>
@@ -290,7 +320,7 @@ const overHint = computed(() =>
           {{ row.label }} · {{ row.when }}
         </VChip>
       </div>
-      <div v-if="registered?.length" class="text-caption text-medium-emphasis">
+      <div v-if="registered.length" class="text-caption text-medium-emphasis">
         {{ t('dashboards.lidar.scenario.registeredHint') }}
       </div>
 
@@ -333,6 +363,7 @@ const overHint = computed(() =>
             <th>{{ t('dashboards.lidar.scenario.table.when') }}</th>
             <th>{{ t('dashboards.lidar.scenario.table.weather') }}</th>
             <th class="text-end">{{ t('dashboards.lidar.scenario.table.extra') }}</th>
+            <th v-if="canRegister"><span class="d-sr-only">{{ t('dashboards.lidar.registry.table.actions') }}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -341,9 +372,33 @@ const overHint = computed(() =>
             <td>{{ row.when }}</td>
             <td>{{ row.weather }}</td>
             <td class="text-end">{{ row.extra === null ? t('common.noValue') : `+${formatNumber(row.extra, 0)}` }}</td>
+            <td v-if="canRegister" class="text-end">
+              <VBtn
+                v-if="!row.event.registered"
+                variant="text"
+                size="small"
+                prepend-icon="mdi-calendar-check"
+                :aria-label="t('dashboards.lidar.registry.registerThis', { name: row.label })"
+                @click="registerScenario(row.event)"
+              >
+                {{ t('dashboards.lidar.registry.registerShort') }}
+              </VBtn>
+            </td>
           </tr>
         </tbody>
       </VTable>
+
+      <VDivider v-if="zoneUrn" />
+      <EventRegistry
+        v-if="zoneUrn"
+        v-model:draft="registryDraft"
+        :target="target"
+        :zone-urn="zoneUrn"
+        :zone-name="zoneName"
+        :time-zone="zone"
+        @loaded="registry = $event"
+        @registered="onRegistered"
+      />
 
       <div class="text-caption text-medium-emphasis">{{ t('dashboards.lidar.scenario.assumptions') }}</div>
     </div>

@@ -81,12 +81,15 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   `training_data.py` nunca llama a la red: lee una caché en el almacenamiento, que refresca el
   primer paso de `daily_pipeline.py`. Un fallo ahí no bloquea el entrenamiento ni la predicción.
   Sin `WEATHER_LAT`/`WEATHER_LON` el refresco no hace nada y `precip_mm` vale 0.0.
-- `events_registry.py` — eventos puntuales (mercados, ferias, conciertos) registrados **a mano**,
+- `events_registry.py` — eventos puntuales (mercados, ferias, conciertos) que registra una persona,
   una fila CSV por evento (`date,event_type,device_ids,notes,end_date,start_hour,end_hour`; las
   tres últimas son opcionales): a diferencia de festivos, temporada o meteorología, un evento no se
   puede calcular, alguien tiene que saber que ocurre. Vive en el almacenamiento, bajo el mismo
   prefijo que el modelo. `device_ids` vacío = afecta a todas las zonas; `end_date` vacío = un solo
-  día. Las fechas son días locales (`CALENDAR_TIMEZONE`).
+  día. Las fechas son días locales (`CALENDAR_TIMEZONE`). Se registran y se borran desde el panel
+  de predicción de zona («Registro de eventos», en el simulador), que escribe este mismo fichero a
+  través del backend (`/prediction-events`, permisos `prediction_events.read` y `.update`); el
+  backend tiene que ver el mismo bucket y el mismo `MODELS_PREFIX`. También se puede subir a mano.
   **El modelo no aprende de los días con evento**, porque no son lo normal:
   `training_data.mask_event_bins()` los quita como filas de entrenamiento y, antes de calcular
   ninguna característica, cambia su ocupación por la mediana de la misma zona y franja en las

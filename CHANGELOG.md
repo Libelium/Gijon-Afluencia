@@ -10,6 +10,16 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Registrar los eventos de verdad desde el panel de predicción.** Debajo del simulador, «Registro
+  de eventos» lista los de la zona (días, tipo, horas, zonas y notas) y deja registrar uno nuevo o
+  borrarlo; en el propio simulador, «Registrar» convierte un evento simulado en registrado, con sus
+  días y sus horas. El backend (`/prediction-events`) lee y escribe el mismo CSV que usa el
+  componente de predicción, en la misma clave del bucket, y lo protegen dos permisos nuevos:
+  `prediction_events.read`, que también tiene quien consulta la organización, y
+  `prediction_events.update`, de los administradores. Lo registrado se suma al simulador al momento;
+  el modelo deja fuera sus días desde su siguiente ejecución diaria y, si alguno ya lo había
+  aprendido (hoy o antes), esa ejecución lo reentrena entero. OpenAPI y Postman incluyen las rutas
+  nuevas.
 - **El simulador de escenarios admite eventos de varios días y dice la zona.** Un evento se puede
   repetir hasta 7 días seguidos a la misma hora local (una semana de mercado) y dura hasta 24 horas
   al día. El título lleva el nombre de la zona que se simula. Un evento registrado de varios días

@@ -13,11 +13,11 @@ simulator, which receives the registered events through the `registeredEvents`
 attribute that etl/predict/transform.py publishes on each prediction entity.
 
 Stored as a small CSV blob in storage (S3/MinIO), UNDER THE SAME PREFIX AS THE
-MODEL (settings.storage().MODELS_PREFIX) - not a prefix of its own. There is
-no live CRUD entry point (decided with the team: it would need per-tenant
-write permissions on the bucket that only the admin has, more machinery than
-this is worth); whoever maintains the bucket uploads/edits this CSV by hand,
-the same way the model gets uploaded - one route to remember, not two.
+MODEL (settings.storage().MODELS_PREFIX) - not a prefix of its own. The platform's
+web back lists, adds and deletes its rows (backend/src/app/Services/PredictionEventsRegistry.php,
+behind the prediction_events.* permissions, from the prediction panel's scenario
+simulator) under the same key and with the same columns as this file: a change to
+either must go to the other. It can still be uploaded or edited by hand in the bucket.
 Segregated by tenant/scope like the model (see
 helpers/model_storage.segregated_key) - NOT a local file: a plain path would
 depend on the machine that runs it, exactly what removing FilesystemStorage

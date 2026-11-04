@@ -117,7 +117,7 @@ export default {
   'dashboards.lidar.scenario.remove': 'Quitar el evento {name}',
   'dashboards.lidar.scenario.registeredLabel': 'Registrado: {kind}',
   'dashboards.lidar.scenario.registeredHint':
-    'Los eventos registrados vienen del registro de eventos de la plataforma. La previsión es la de un día normal, porque el modelo no aprende de los días con evento, y aquí se suman encima.',
+    'Los eventos registrados vienen del registro de eventos de abajo. La previsión es la de un día normal, porque el modelo no aprende de los días con evento, y aquí se suman encima.',
   'dashboards.lidar.scenario.noForecast': 'No hay previsión para las próximas horas',
   'dashboards.lidar.scenario.noForecastHint': 'El simulador suma los eventos a la previsión de la zona, así que necesita que la entidad de predicción tenga valores futuros.',
   'dashboards.lidar.scenario.noEvents': 'Añade un evento para ver cómo cambiaría la ocupación prevista.',
@@ -147,6 +147,45 @@ export default {
   'dashboards.lidar.scenario.weather.rain': 'Lluvia',
   'dashboards.lidar.scenario.weather.storm': 'Tormenta',
   'dashboards.lidar.scenario.weather.heat': 'Calor extremo',
+
+  // --- registro de eventos ---
+  'dashboards.lidar.registry.title': 'Registro de eventos',
+  'dashboards.lidar.registry.hint':
+    'Los días de estos eventos no son lo normal: el modelo de previsión no aprende de ellos desde su siguiente ejecución diaria, y el simulador los suma a la previsión.',
+  'dashboards.lidar.registry.add': 'Registrar un evento',
+  'dashboards.lidar.registry.registerShort': 'Registrar',
+  'dashboards.lidar.registry.registerThis': 'Registrar el evento {name}',
+  'dashboards.lidar.registry.empty': 'No hay eventos registrados para esta zona.',
+  'dashboards.lidar.registry.thisZone': 'Esta zona',
+  'dashboards.lidar.registry.allZones': 'Todas las zonas',
+  'dashboards.lidar.registry.thisAndOthers': 'Esta zona y {n} más',
+  'dashboards.lidar.registry.table.days': 'Días',
+  'dashboards.lidar.registry.table.type': 'Tipo',
+  'dashboards.lidar.registry.table.hours': 'Horas',
+  'dashboards.lidar.registry.table.zones': 'Zonas',
+  'dashboards.lidar.registry.table.notes': 'Notas',
+  'dashboards.lidar.registry.table.actions': 'Acciones',
+  'dashboards.lidar.registry.delete': 'Borrar el evento del {when}',
+  'dashboards.lidar.registry.deleteTitle': 'Borrar el evento registrado',
+  'dashboards.lidar.registry.deleteText':
+    '{kind}, {when}. El modelo volverá a aprender de esos días; si alguno ya ha pasado, se reentrenará entero en su siguiente ejecución.',
+  'dashboards.lidar.registry.deleteConfirm': 'Borrar',
+  'dashboards.lidar.registry.changed': 'El registro había cambiado desde que se cargó y no se ha borrado nada. Ya está actualizado: vuelve a intentarlo.',
+  'dashboards.lidar.registry.dialogTitle': 'Registrar un evento',
+  'dashboards.lidar.registry.dialogHint':
+    'El modelo deja fuera los días enteros del evento. Las horas solo sirven para dibujarlo en el simulador.',
+  'dashboards.lidar.registry.from': 'Desde el día',
+  'dashboards.lidar.registry.to': 'Hasta el día',
+  'dashboards.lidar.registry.startHour': 'Desde las',
+  'dashboards.lidar.registry.endHour': 'Hasta las',
+  'dashboards.lidar.registry.zones': 'Zonas',
+  'dashboards.lidar.registry.notes': 'Notas',
+  'dashboards.lidar.registry.register': 'Registrar',
+  'dashboards.lidar.registry.endBeforeStart': 'El último día no puede ser anterior al primero',
+  'dashboards.lidar.registry.endHourBeforeStart': 'Tiene que acabar después de empezar',
+  'dashboards.lidar.registry.learned':
+    'Empieza hoy o antes: el modelo puede haber aprendido ya esos días, así que su siguiente ejecución lo reentrenará entero para olvidarlos. Tarda más que una ejecución normal.',
+  'dashboards.lidar.registry.forbidden': 'No tienes permiso para cambiar el registro de eventos.',
 
   // --- analitica ---
   'dashboards.lidar.analytics.gauge': 'Ocupación frente al aforo',

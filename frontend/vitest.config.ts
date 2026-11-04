@@ -130,6 +130,24 @@ export default defineConfig({
           branches: 80,
           statements: 95,
         },
+        'src/features/dashboards/templates/lidar/predictionEvents.ts': {
+          lines: 100,
+          functions: 100,
+          branches: 100,
+          statements: 100,
+        },
+        'src/features/dashboards/templates/lidar/components/EventRegistry.vue': {
+          lines: 95,
+          functions: 75,
+          branches: 80,
+          statements: 95,
+        },
+        'src/features/dashboards/templates/lidar/components/EventRegistryDialog.vue': {
+          lines: 95,
+          functions: 30,
+          branches: 80,
+          statements: 95,
+        },
         'src/features/entities/components/EntityRenameDialog.vue': {
           lines: 95,
           functions: 60,
