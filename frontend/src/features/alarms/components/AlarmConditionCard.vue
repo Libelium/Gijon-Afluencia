@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
 import type { Measure } from '@/types'
@@ -26,27 +26,44 @@ const operators = computed(() => operatorItems())
 const unitItems = computed(() => TIMEOUT_UNITS.map((u) => ({ value: u.value, title: t(u.labelKey) })))
 const isRange = computed(() => operatorArity(props.draft.operator) === 2)
 
+async function loadMeasures(entity: ConditionDraft['entity'], keepSelection: boolean) {
+  measures.value = []
+  measureError.value = null
+  if (!entity) return
+
+  measureLoading.value = true
+  try {
+    const rows = await listMeasures({ urn: entity.urn, tenant: entity.tenant, scope: entity.scope })
+    measures.value = rows
+    if (keepSelection && props.draft.measure) {
+      // Al editar, la medida precargada solo trae id y nombre: se sustituye por la completa
+      // (con unidades) si sigue existiendo en la entidad.
+      const match = rows.find((row) => row.id === props.draft.measure?.id)
+      if (match) props.draft.measure = match
+    } else if (rows.length === 1) {
+      // Con una sola medida no hay nada que elegir: elegirla ahorra un paso que no decide nada.
+      props.draft.measure = rows[0]
+    }
+  } catch (e) {
+    measureError.value = errorMessage(e)
+  } finally {
+    measureLoading.value = false
+  }
+}
+
+// Cambiar de entidad invalida la medida anterior: se limpia y se cargan las de la nueva entidad.
 watch(
   () => props.draft.entity,
-  async (entity) => {
+  (entity) => {
     props.draft.measure = null
-    measures.value = []
-    measureError.value = null
-    if (!entity) return
-
-    measureLoading.value = true
-    try {
-      const rows = await listMeasures({ urn: entity.urn, tenant: entity.tenant, scope: entity.scope })
-      measures.value = rows
-      // Con una sola medida no hay nada que elegir: elegirla ahorra un paso que no decide nada.
-      if (rows.length === 1) props.draft.measure = rows[0]
-    } catch (e) {
-      measureError.value = errorMessage(e)
-    } finally {
-      measureLoading.value = false
-    }
+    void loadMeasures(entity, false)
   },
 )
+
+// Al montar una condicion ya existente (edicion), se cargan sus medidas sin perder la elegida.
+onMounted(() => {
+  if (props.draft.entity) void loadMeasures(props.draft.entity, true)
+})
 </script>
 
 <template>

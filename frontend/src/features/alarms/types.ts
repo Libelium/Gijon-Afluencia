@@ -123,3 +123,54 @@ export interface NewAlarm {
   disabled: boolean
   conditions: Array<NewThresholdCondition | NewInactivityCondition>
 }
+
+/**
+ * Campos de la alarma que admite PUT /alarms/{id}. No se manda `up`: es el estado de disparo,
+ * no configuracion, y reenviarlo reiniciaria una alarma que ahora mismo esta disparada.
+ */
+export interface UpdateAlarm {
+  name: string
+  type: AlarmType
+  function: AlarmFunction
+  disabled: boolean
+}
+
+/**
+ * Condiciones tal y como las espera bulkUpdateCreate: forma anidada, distinta a la del alta.
+ * Con `id` actualiza la condicion; sin `id` la crea; las que no se envian, el servidor las borra.
+ */
+export interface BulkThresholdCondition {
+  id?: number
+  entity: { id: number }
+  measure: { id: string }
+  condition: ConditionOperator
+  threshold: number[]
+  // El formulario no edita la restriccion horaria: se conserva la que ya tuviera la condicion.
+  period: ConditionPeriod[] | null
+}
+
+export interface BulkInactivityCondition {
+  id?: number
+  entity: { id: number }
+  measure: string | null
+  timeoutS: number
+}
+
+/** Cuando dispara un aviso: al activarse la alarma (`up`) o al volver a reposo (`down`). */
+export type AlarmTrigger = 'up' | 'down'
+
+/** Contenido de un aviso por correo tal como lo devuelve el backend (`actionable_content`). */
+export interface EmailActionContent {
+  to: string[]
+  subject: string
+  body: string
+}
+
+/** Alta de un aviso por correo (POST /alarms/actions). Los destinatarios viajan como lista. */
+export interface NewEmailAction {
+  to: string[]
+  subject: string
+  body: string
+  trigger: AlarmTrigger
+  name?: string
+}

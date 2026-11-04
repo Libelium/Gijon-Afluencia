@@ -7,12 +7,16 @@ import type {
   AlarmAction,
   AlarmDetail,
   AlarmRow,
+  BulkInactivityCondition,
+  BulkThresholdCondition,
   DateRange,
   EventLevel,
   InactivityCondition,
   NewAlarm,
+  NewEmailAction,
   StatusSeries,
   ThresholdCondition,
+  UpdateAlarm,
 } from '../types'
 
 /** Medida bajo la que el backend publica el estado historico de una alarma (0 / 1). */
@@ -58,6 +62,35 @@ export async function createAlarm(alarm: NewAlarm): Promise<number> {
   return Number(data?.id) || 0
 }
 
+/**
+ * Borra la alarma. El servidor elimina en cascada sus condiciones, avisos y permisos, asi que
+ * no queda nada suelto que limpiar desde aqui.
+ */
+export async function deleteAlarm(id: number): Promise<void> {
+  await http.delete(`/alarms/${id}`)
+}
+
+/** Actualiza los campos de la alarma. Las condiciones se guardan aparte (bulk), como en el backend. */
+export async function updateAlarm(id: number, alarm: UpdateAlarm): Promise<void> {
+  await http.put(`/alarms/${id}`, alarm)
+}
+
+/**
+ * Sincroniza las condiciones de umbral: crea, actualiza y borra para dejar exactamente las que
+ * se envian. Por eso se manda siempre el conjunto completo, no solo las que cambian.
+ */
+export async function saveConditions(id: number, conditions: BulkThresholdCondition[]): Promise<void> {
+  await http.post(`/alarms/${id}/conditions/bulkUpdateCreate`, { conditions })
+}
+
+/** Igual que `saveConditions`, para las condiciones de inactividad. */
+export async function saveInactivityConditions(
+  id: number,
+  conditions: BulkInactivityCondition[],
+): Promise<void> {
+  await http.post(`/alarms/${id}/inactivityConditions/bulkUpdateCreate`, { conditions })
+}
+
 export async function getConditions(id: number): Promise<ThresholdCondition[]> {
   const { data } = await http.get<ThresholdCondition[]>(`/alarms/${id}/conditions`)
   return Array.isArray(data) ? data : []
@@ -71,6 +104,32 @@ export async function getInactivityConditions(id: number): Promise<InactivityCon
 export async function getActions(id: number): Promise<AlarmAction[]> {
   const { data } = await http.get<{ actions?: AlarmAction[] }>(`/alarms/${id}/actions`)
   return Array.isArray(data?.actions) ? data.actions : []
+}
+
+/**
+ * Crea un aviso por correo para la alarma. Se usa el alta por accion (no el bulk) a proposito:
+ * el bulk borra todos los avisos de la alarma, y aqui no se deben tocar los de otros canales
+ * (telegram, SMS, http) que solo se configuran por la API.
+ */
+export async function createEmailAction(alarmId: number, aviso: NewEmailAction): Promise<void> {
+  await http.post('/alarms/actions', {
+    alarm_ids: [alarmId],
+    actions: [
+      {
+        type: 'email',
+        to: aviso.to,
+        subject: aviso.subject,
+        body: aviso.body,
+        alarm_trigger: aviso.trigger,
+        ...(aviso.name ? { name: aviso.name } : {}),
+      },
+    ],
+  })
+}
+
+/** Borra un aviso concreto por su id de accion, sin afectar a los demas. */
+export async function deleteAction(alarmId: number, actionId: number): Promise<void> {
+  await http.delete(`/alarms/${alarmId}/actions/${actionId}`)
 }
 
 export async function listAlarmEvents(

@@ -10,6 +10,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
+  una alarma solo se podía crear y consultar en pantalla; cambiarla, eliminarla o darle avisos
+  requería la API. La ficha incorpora «Editar» y «Borrar» (con confirmación), el formulario permite
+  modificar nombre, estado y condiciones, y tanto al crear como al editar se pueden añadir y quitar
+  avisos por correo (destinatarios, asunto, mensaje y si avisan al dispararse o al resolverse). Los
+  avisos de otros canales (Telegram, SMS…) y las restricciones horarias se conservan y se siguen
+  configurando desde la API. El servidor ya lo admitía; faltaba la pantalla.
 - **El simulador de eventos muestra los eventos registrados.** Los que la previsión de la zona
   publica en `registeredEvents` salen como «Registrado», sin poder quitarse, y se suman a la
   previsión normal junto a los que se simulen; «Limpiar» solo quita los simulados. Un evento de

@@ -1,20 +1,48 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
 import PageHeader from '@/components/PageHeader.vue'
 import AlarmConditionCard from '../components/AlarmConditionCard.vue'
-import { createAlarm } from '../api/alarms'
+import AlarmEmailActions from '../components/AlarmEmailActions.vue'
+import {
+  createAlarm,
+  createEmailAction,
+  deleteAction,
+  getActions,
+  getAlarm,
+  getConditions,
+  getInactivityConditions,
+  saveConditions,
+  saveInactivityConditions,
+  updateAlarm,
+} from '../api/alarms'
 import {
   conditionComplete,
+  fromEmailAction,
+  fromInactivityCondition,
+  fromThresholdCondition,
   newConditionDraft,
+  toBulkInactivityCondition,
+  toBulkThresholdCondition,
   toInactivityCondition,
+  toNewEmailAction,
   toThresholdCondition,
+  type EmailAvisoDraft,
 } from '../lib/draft'
-import type { AlarmFunction, AlarmType, NewAlarm } from '../types'
+import type { AlarmFunction, AlarmType, NewAlarm, UpdateAlarm } from '../types'
 
+const route = useRoute()
 const router = useRouter()
+
+/** El id solo esta en la ruta de edicion; sin el, el formulario es de alta. */
+const alarmId = computed(() => {
+  const raw = Number(route.params.id)
+  return Number.isInteger(raw) && raw > 0 ? raw : null
+})
+const isEdit = computed(() => alarmId.value !== null)
+const backTo = computed(() => (alarmId.value !== null ? `/alarmas/${alarmId.value}` : '/alarmas'))
 
 const name = ref('')
 const nameTouched = ref(false)
@@ -24,6 +52,16 @@ const combination = ref<AlarmFunction>('AND')
 const conditions = ref([newConditionDraft()])
 const saving = ref(false)
 const error = ref<string | null>(null)
+
+// La carga previa solo ocurre al editar; en el alta el formulario arranca listo.
+const loading = ref(false)
+const loadError = ref<string | null>(null)
+
+// Avisos por correo: solo al editar (su alta exige que la alarma ya exista).
+const emailAvisos = ref<EmailAvisoDraft[]>([])
+const loadedAvisoIds = ref<number[]>([])
+// Si no se pueden leer los avisos, no se gestionan: borrarlos a ciegas al guardar seria peor.
+const avisosUnavailable = ref(false)
 
 const typeItems = computed(() => [
   { value: 'basic' as const, title: t('alarms.type.basic'), subtitle: t('alarms.form.typeBasicHint') },
@@ -61,16 +99,88 @@ function removeCondition(key: number) {
   conditions.value = conditions.value.filter((draft) => draft.key !== key)
 }
 
+async function loadForEdit(id: number) {
+  loading.value = true
+  loadError.value = null
+  avisosUnavailable.value = false
+  try {
+    const alarm = await getAlarm(id)
+    name.value = alarm.name ?? ''
+    type.value = (alarm.type as AlarmType) || 'basic'
+    enabled.value = !alarm.disabled
+    combination.value = (alarm.function as AlarmFunction) || 'AND'
+
+    // Las condiciones viven en una tabla u otra segun el tipo: se piden las del tipo de la alarma.
+    if (type.value === 'inactivity') {
+      const list = await getInactivityConditions(id)
+      conditions.value = list.length ? list.map(fromInactivityCondition) : [newConditionDraft()]
+    } else {
+      const list = await getConditions(id)
+      conditions.value = list.length ? list.map(fromThresholdCondition) : [newConditionDraft()]
+    }
+
+    // Los avisos son secundarios: si fallan, se desactiva su gestion y se sigue editando.
+    try {
+      const actions = await getActions(id)
+      const emails = actions.filter((a) => (a.actionable_type ?? '').toLowerCase() === 'email')
+      emailAvisos.value = emails.map(fromEmailAction)
+      loadedAvisoIds.value = emailAvisos.value
+        .map((aviso) => aviso.actionId)
+        .filter((actionId): actionId is number => actionId != null)
+    } catch {
+      avisosUnavailable.value = true
+    }
+  } catch (e) {
+    loadError.value = errorMessage(e)
+  } finally {
+    loading.value = false
+  }
+}
+
 async function submit() {
   if (!canSubmit.value) return
   saving.value = true
   error.value = null
   try {
+    // El servidor exige la combinacion siempre, tambien cuando no combina nada.
+    const fn: AlarmFunction = showCombination.value ? combination.value : 'AND'
+
+    if (isEdit.value && alarmId.value !== null) {
+      const id = alarmId.value
+      // No se manda `up`: es estado de disparo, y reenviarlo reiniciaria una alarma ya disparada.
+      const payload: UpdateAlarm = {
+        name: name.value.trim(),
+        type: type.value,
+        function: fn,
+        disabled: !enabled.value,
+      }
+      await updateAlarm(id, payload)
+      // Las condiciones van por su endpoint bulk: el servidor no las toca en el PUT de la alarma.
+      if (type.value === 'inactivity') {
+        await saveInactivityConditions(id, conditions.value.map(toBulkInactivityCondition))
+      } else {
+        await saveConditions(id, conditions.value.map(toBulkThresholdCondition))
+      }
+      // Avisos por correo: alta de los nuevos y baja de los quitados, sin tocar otros canales.
+      if (!avisosUnavailable.value) {
+        const keptIds = new Set(
+          emailAvisos.value.map((aviso) => aviso.actionId).filter((actionId) => actionId != null),
+        )
+        for (const actionId of loadedAvisoIds.value) {
+          if (!keptIds.has(actionId)) await deleteAction(id, actionId)
+        }
+        for (const aviso of emailAvisos.value) {
+          if (aviso.actionId == null) await createEmailAction(id, toNewEmailAction(aviso))
+        }
+      }
+      await router.push(`/alarmas/${id}`)
+      return
+    }
+
     const payload: NewAlarm = {
       name: name.value.trim(),
       type: type.value,
-      // El servidor exige la combinacion siempre, tambien cuando no combina nada.
-      function: showCombination.value ? combination.value : 'AND',
+      function: fn,
       // Una alarma nace en reposo: `up` es estado de disparo, no una preferencia que elegir.
       up: false,
       disabled: !enabled.value,
@@ -80,6 +190,12 @@ async function submit() {
     }
 
     const id = await createAlarm(payload)
+    // Los avisos necesitan el id de la alarma, asi que se crean despues del alta (todos nuevos).
+    if (id) {
+      for (const aviso of emailAvisos.value) {
+        await createEmailAction(id, toNewEmailAction(aviso))
+      }
+    }
     await router.push(id ? `/alarmas/${id}` : '/alarmas')
   } catch (e) {
     error.value = errorMessage(e)
@@ -87,17 +203,34 @@ async function submit() {
     saving.value = false
   }
 }
+
+onMounted(() => {
+  if (alarmId.value !== null) void loadForEdit(alarmId.value)
+})
 </script>
 
 <template>
   <PageHeader
-    :title="t('alarms.form.title')"
-    :subtitle="t('alarms.form.subtitle')"
-    icon="mdi-bell-plus-outline"
-    back-to="/alarmas"
+    :title="isEdit ? t('alarms.form.editTitle') : t('alarms.form.title')"
+    :subtitle="isEdit ? t('alarms.form.editSubtitle') : t('alarms.form.subtitle')"
+    :icon="isEdit ? 'mdi-bell-cog-outline' : 'mdi-bell-plus-outline'"
+    :back-to="backTo"
   />
 
-  <div class="d-flex flex-column ga-4" style="max-width: 900px">
+  <div v-if="loading" class="d-flex justify-center pa-8">
+    <VProgressCircular indeterminate color="primary" :aria-label="t('common.loading')" />
+  </div>
+
+  <VAlert v-else-if="loadError" type="error" variant="tonal" role="alert" style="max-width: 900px">
+    {{ loadError }}
+    <template #append>
+      <VBtn variant="text" @click="alarmId !== null && loadForEdit(alarmId)">
+        {{ t('alarms.form.retry') }}
+      </VBtn>
+    </template>
+  </VAlert>
+
+  <div v-else class="d-flex flex-column ga-4" style="max-width: 900px">
     <VCard>
       <VCardText class="pa-4 pa-sm-6">
         <div class="d-flex flex-column ga-4">
@@ -115,6 +248,9 @@ async function submit() {
             v-model="type"
             :items="typeItems"
             :label="t('alarms.form.type')"
+            :disabled="isEdit"
+            :hint="isEdit ? t('alarms.form.typeLocked') : undefined"
+            :persistent-hint="isEdit"
           >
             <template #item="{ item, props: itemProps }">
               <VListItem v-bind="itemProps" :subtitle="item.raw.subtitle" />
@@ -172,15 +308,25 @@ async function submit() {
       </VCardText>
     </VCard>
 
+    <!-- En el alta se quedan en borrador y se crean justo despues de guardar la alarma. -->
+    <VCard>
+      <VCardText class="pa-4 pa-sm-6">
+        <AlarmEmailActions v-if="!avisosUnavailable" v-model="emailAvisos" />
+        <VAlert v-else type="warning" variant="tonal" density="comfortable">
+          {{ t('alarms.avisos.unavailable') }}
+        </VAlert>
+      </VCardText>
+    </VCard>
+
     <!-- Lo que este formulario no configura se dice aqui y no se descubre despues de guardar. -->
     <VAlert type="info" variant="tonal" density="comfortable">
-      {{ t('alarms.form.scopeNotice') }}
+      {{ isEdit ? t('alarms.form.scopeNoticeEdit') : t('alarms.form.scopeNotice') }}
     </VAlert>
 
     <VAlert v-if="error" type="error" :text="error" role="alert" />
 
     <div class="d-flex flex-wrap ga-3 justify-end">
-      <VBtn variant="text" to="/alarmas" :disabled="saving">{{ t('common.cancel') }}</VBtn>
+      <VBtn variant="text" :to="backTo" :disabled="saving">{{ t('common.cancel') }}</VBtn>
       <VBtn
         color="primary"
         prepend-icon="mdi-check"
@@ -188,7 +334,7 @@ async function submit() {
         :disabled="!canSubmit"
         @click="submit"
       >
-        {{ t('alarms.form.submit') }}
+        {{ isEdit ? t('alarms.form.save') : t('alarms.form.submit') }}
       </VBtn>
     </div>
   </div>

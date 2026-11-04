@@ -14,6 +14,13 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Nueva alarma' },
   },
   {
+    path: '/alarmas/:id/editar',
+    name: 'alarm-edit',
+    component: () => import('./views/AlarmFormView.vue'),
+    props: true,
+    meta: { title: 'Editar alarma' },
+  },
+  {
     path: '/alarmas/:id',
     name: 'alarm-detail',
     component: () => import('./views/AlarmDetailView.vue'),

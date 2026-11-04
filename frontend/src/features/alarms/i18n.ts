@@ -33,6 +33,14 @@ export default {
 
   'alarms.detail.title': 'Alarma',
   'alarms.detail.notFound': 'La alarma solicitada no existe',
+  'alarms.detail.edit': 'Editar',
+  'alarms.detail.delete': 'Borrar',
+
+  'alarms.delete.title': '¿Borrar esta alarma?',
+  'alarms.delete.text':
+    'Se eliminará «{name}» con sus condiciones y avisos. Esta acción no se puede deshacer.',
+  'alarms.delete.confirm': 'Borrar alarma',
+  'alarms.delete.error': 'No se ha podido borrar la alarma',
 
   'alarms.kpi.state': 'Estado actual',
   'alarms.kpi.conditions': 'Condiciones',
@@ -182,6 +190,34 @@ export default {
   'alarms.form.unitDays': 'Días',
 
   'alarms.form.scopeNotice':
-    'Este formulario crea la alarma y sus condiciones. Los avisos, las restricciones horarias y las alarmas sobre un grupo de entidades siguen configurándose desde la API.',
+    'Este formulario crea la alarma, sus condiciones y los avisos por correo. El resto de avisos (Telegram, SMS…), las restricciones horarias y las alarmas sobre un grupo de entidades siguen configurándose desde la API.',
+  'alarms.form.scopeNoticeEdit':
+    'Al guardar se actualizan la alarma, sus condiciones y los avisos por correo. El resto de avisos (Telegram, SMS…) y las restricciones horarias siguen configurándose desde la API.',
   'alarms.form.submit': 'Crear alarma',
+
+  'alarms.form.editTitle': 'Editar alarma',
+  'alarms.form.editSubtitle': 'Cambia qué se vigila y cuándo debe avisar',
+  'alarms.form.save': 'Guardar cambios',
+  'alarms.form.typeLocked':
+    'El tipo no se puede cambiar al editar; crea una alarma nueva si necesitas otro tipo',
+  'alarms.form.loadError': 'No se ha podido cargar la alarma',
+  'alarms.form.retry': 'Reintentar',
+
+  'alarms.avisos.title': 'Avisos por correo',
+  'alarms.avisos.hint': 'Correos que se envían cuando la alarma cambia de estado.',
+  'alarms.avisos.empty': 'Todavía no hay avisos por correo.',
+  'alarms.avisos.remove': 'Quitar este aviso',
+  'alarms.avisos.unavailable':
+    'No se han podido consultar los avisos. Vuelve a cargar la alarma para gestionarlos.',
+  'alarms.avisos.addTitle': 'Añadir un aviso por correo',
+  'alarms.avisos.recipients': 'Destinatarios',
+  'alarms.avisos.recipientsHint': 'Escribe un correo y pulsa Intro para añadirlo. Puedes poner varios.',
+  'alarms.avisos.recipientsInvalid': 'Corrige estos correos: {emails}',
+  'alarms.avisos.subject': 'Asunto',
+  'alarms.avisos.body': 'Mensaje',
+  'alarms.avisos.bodyHint': 'Texto del correo que recibirán los destinatarios',
+  'alarms.avisos.trigger': 'Cuándo avisar',
+  'alarms.avisos.triggerUp': 'Cuando se dispara',
+  'alarms.avisos.triggerDown': 'Cuando se resuelve',
+  'alarms.avisos.add': 'Añadir aviso',
 } as const
