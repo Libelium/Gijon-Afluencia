@@ -10,6 +10,9 @@ import { toMillis } from '../../charts/chartOptions'
  * tiempo. Durante el evento pesa entero, y la hora anterior y la posterior a medias: la gente llega
  * antes y tarda en irse. Varios eventos a la misma hora se suman. Un evento de varios dias (una
  * semana de mercado) se repite cada dia a la misma hora local.
+ *
+ * La prevision solo cubre el primer dia. Para poder simular una semana, donde no hay prevision se
+ * simula sobre lo habitual en la zona (`usualProfile`), y la grafica lo distingue.
  */
 
 export type EventKind = 'concert' | 'festival' | 'sports' | 'localFestival' | 'food' | 'market'
@@ -197,7 +200,84 @@ export function simulate(
   })
 }
 
-/** Horas en las que puede empezar un evento: las que tienen prevision, desde la hora en curso. */
+/** Semanas de medidas de las que sale lo habitual en la zona. */
+export const USUAL_PROFILE_WEEKS = 4
+
+export interface SeriesPoint {
+  t: string
+  v: number | null
+}
+
+/** La franja de un instante: dia de la semana (1, lunes, a 7) y hora local. */
+const slotOf = (ms: number, timeZone: string): string => {
+  const local = DateTime.fromMillis(ms, { zone: timeZone })
+  return `${local.weekday}-${local.hour}`
+}
+
+/** Los dias locales (ISO) que ocupan unos eventos, contando cada dia que se repiten. */
+export function eventDays(events: ScenarioEvent[], timeZone = 'UTC'): Set<string> {
+  const days = new Set<string>()
+  for (const event of events) {
+    for (const start of eventDayStarts(event, timeZone)) {
+      days.add(DateTime.fromMillis(start, { zone: timeZone }).toISODate()!)
+    }
+  }
+  return days
+}
+
+/**
+ * Lo habitual en la zona: la media medida de cada franja (dia de la semana y hora local), sin los
+ * dias de `excludedDays`. Se le pasan los dias con evento registrado, que no son lo normal, igual
+ * que el modelo de prevision no aprende de ellos. Clave `dia-hora`, como `slotOf`.
+ */
+export function usualProfile(points: SeriesPoint[], timeZone = 'UTC', excludedDays = new Set<string>()): Map<string, number> {
+  const sums = new Map<string, { total: number; count: number }>()
+  for (const point of points) {
+    if (!isValue(point.v)) continue
+    const ms = toMillis(point.t)
+    if (excludedDays.has(DateTime.fromMillis(ms, { zone: timeZone }).toISODate()!)) continue
+    const slot = slotOf(ms, timeZone)
+    const sum = sums.get(slot) ?? { total: 0, count: 0 }
+    sums.set(slot, { total: sum.total + point.v, count: sum.count + 1 })
+  }
+  return new Map([...sums].map(([slot, { total, count }]) => [slot, total / count]))
+}
+
+export interface ScenarioBase {
+  times: string[]
+  base: (number | null)[]
+  /** Si la hora sale de lo habitual en la zona y no de la prevision. */
+  usual: boolean[]
+}
+
+/**
+ * La base del simulador, hora a hora durante `hours` desde `startMs`: la prevision donde la hay y,
+ * donde no, lo habitual en esa franja. Donde no hay ninguna de las dos, nada.
+ */
+export function scenarioBase(
+  startMs: number,
+  hours: number,
+  forecast: SeriesPoint[],
+  profile: Map<string, number>,
+  timeZone = 'UTC',
+): ScenarioBase {
+  const predicted = new Map<number, number>()
+  for (const point of forecast) {
+    if (isValue(point.v)) predicted.set(toMillis(point.t), point.v)
+  }
+  const result: ScenarioBase = { times: [], base: [], usual: [] }
+  for (let i = 0; i < hours; i++) {
+    const ms = startMs + i * HOUR_MS
+    const value = predicted.get(ms)
+    const usual = value === undefined ? profile.get(slotOf(ms, timeZone)) : undefined
+    result.times.push(new Date(ms).toISOString())
+    result.base.push(value ?? (usual === undefined ? null : Math.round(usual)))
+    result.usual.push(value === undefined && usual !== undefined)
+  }
+  return result
+}
+
+/** Horas en las que puede empezar un evento: las que tienen base (prevision o lo habitual), desde la hora en curso. */
 export function eventStartHours(times: string[], base: (number | null)[], nowMs: number): string[] {
   const currentHour = Math.floor(nowMs / HOUR_MS) * HOUR_MS
   return times.filter((iso, i) => isValue(base[i]) && toMillis(iso) >= currentHour)

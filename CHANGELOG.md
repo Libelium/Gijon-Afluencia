@@ -23,7 +23,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 - **El simulador de escenarios admite eventos de varios días y dice la zona.** Un evento se puede
   repetir hasta 7 días seguidos a la misma hora local (una semana de mercado) y dura hasta 24 horas
   al día. El título lleva el nombre de la zona que se simula. Un evento registrado de varios días
-  sale como un solo evento con sus días.
+  sale como un solo evento con sus días. El simulador abarca la semana: la previsión cubre el primer
+  día y el resto se simula sobre lo habitual en la zona, la media medida de las últimas 4 semanas en
+  ese día de la semana y esa hora, sin los días con evento registrado. La gráfica lo distingue con
+  la línea «Habitual (sin previsión)».
 - **El listado de entidades se ordena también por nombre y por último dato.** Las dos cabeceras se
   pulsan como las demás. El nombre se ordena como texto, sin distinguir mayúsculas ni acentos, y
   una entidad sin nombre propio va por el final de su identificador, que es lo que se ve; el último

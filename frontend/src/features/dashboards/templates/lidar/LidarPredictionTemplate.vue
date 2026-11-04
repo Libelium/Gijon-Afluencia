@@ -429,6 +429,8 @@ async function reloadPrediction() {
             :twin="twin"
             :zone-name="zoneName"
             :zone-urn="zoneUrn"
+            :zone="zone ?? undefined"
+            :measured-id="profile?.occupancy?.id"
             :predicted-id="twinProfile.roles.predicted.id"
             :capacity="profile?.capacity ?? null"
             :time-zone="timeZone"

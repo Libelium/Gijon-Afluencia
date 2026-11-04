@@ -119,10 +119,13 @@ export default {
   'dashboards.lidar.scenario.registeredHint':
     'Los eventos registrados vienen del registro de eventos de abajo. La previsión es la de un día normal, porque el modelo no aprende de los días con evento, y aquí se suman encima.',
   'dashboards.lidar.scenario.noForecast': 'No hay previsión para las próximas horas',
-  'dashboards.lidar.scenario.noForecastHint': 'El simulador suma los eventos a la previsión de la zona, así que necesita que la entidad de predicción tenga valores futuros.',
+  'dashboards.lidar.scenario.noForecastHint': 'El simulador suma los eventos a la previsión de la zona o, donde no la hay, a lo habitual en ella. No hay valores futuros en la entidad de predicción ni medidas recientes de la zona.',
   'dashboards.lidar.scenario.noEvents': 'Añade un evento para ver cómo cambiaría la ocupación prevista.',
   'dashboards.lidar.scenario.chart': 'Ocupación prevista con y sin eventos',
   'dashboards.lidar.scenario.base': 'Prevista',
+  'dashboards.lidar.scenario.usual': 'Habitual (sin previsión)',
+  'dashboards.lidar.scenario.usualHint':
+    'La previsión cubre el primer día. Más allá, la línea «Habitual» es la media medida en la zona ese día de la semana y a esa hora en las últimas {weeks} semanas, sin los días con evento registrado: lo normal, no una previsión.',
   'dashboards.lidar.scenario.withEvents': 'Con eventos',
   'dashboards.lidar.scenario.capacity': 'Aforo',
   'dashboards.lidar.scenario.tilePeak': 'Máximo con eventos',
@@ -135,7 +138,7 @@ export default {
   'dashboards.lidar.scenario.table.weather': 'Meteorología',
   'dashboards.lidar.scenario.table.extra': 'Personas de más en su hora punta',
   'dashboards.lidar.scenario.assumptions':
-    'Cifras orientativas para comparar escenarios, no una previsión: cada tipo de evento suma en su hora punta una parte del aforo de la zona (o, si no lo publica, del máximo previsto), por la intensidad y por el efecto del tiempo. La hora anterior y la posterior cuentan a medias, y un evento de varios días se repite cada día a la misma hora. Solo se simula dentro del horizonte de la previsión.',
+    'Cifras orientativas para comparar escenarios, no una previsión: cada tipo de evento suma en su hora punta una parte del aforo de la zona (o, si no lo publica, del máximo previsto), por la intensidad y por el efecto del tiempo. La hora anterior y la posterior cuentan a medias, y un evento de varios días se repite cada día a la misma hora. Más allá de la previsión se simula sobre lo habitual en la zona.',
   'dashboards.lidar.scenario.kind.concert': 'Concierto',
   'dashboards.lidar.scenario.kind.festival': 'Festival',
   'dashboards.lidar.scenario.kind.sports': 'Evento deportivo',

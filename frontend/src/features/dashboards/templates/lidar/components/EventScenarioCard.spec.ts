@@ -120,12 +120,10 @@ describe('EventScenarioCard', () => {
     expect(series.map((s: { name: string }) => s.name)).toEqual(['Prevista', 'Con eventos', 'Aforo'])
     // Concierto de dos horas desde la hora en curso: pleno en las dos primeras, a medias en la tercera.
     const peak = 100 * concertShare
-    expect(series[1].points.map((p: { v: number }) => p.v)).toEqual([
-      Math.round(40 + peak),
-      Math.round(50 + peak),
-      Math.round(60 + peak / 2),
-      50,
-    ])
+    const values = series[1].points.map((p: { v: number | null }) => p.v)
+    expect(values.slice(0, 4)).toEqual([Math.round(40 + peak), Math.round(50 + peak), Math.round(60 + peak / 2), 50])
+    // Sin medidas de la zona no hay nada habitual que dibujar donde acaba la prevision.
+    expect(values.slice(4).every((v: number | null) => v === null)).toBe(true)
     expect(wrapper.find('.v-chip').text()).toContain('Concierto')
     expect(wrapper.find('tbody').text()).toContain(`+${Math.round(peak)}`)
     expect(wrapper.text()).toContain('Horas por encima del aforo')
@@ -290,5 +288,77 @@ describe('EventScenarioCard, registro de eventos', () => {
     expect(wrapper.find('.v-chip').text()).toContain('Registrado: Evento gastronómico')
     expect(wrapper.text()).not.toContain('Registro de eventos')
     expect(button(wrapper, 'Registrar')).toBeUndefined()
+  })
+})
+
+describe('EventScenarioCard, lo habitual donde no hay previsión', () => {
+  const zoneEntity = {
+    id: 12,
+    name: 'Zona',
+    urn: 'urn:ngsi-ld:Zone:plaza',
+    datamodel: 'Zone',
+    tenant: 'demo',
+    scope: '/',
+  } as Entity
+
+  /** Cuatro semanas medidas, hasta la hora en curso, con 30 personas a cualquier hora. */
+  function history(value: number) {
+    const first = Math.floor(Date.now() / HOUR_MS) * HOUR_MS - 28 * 24 * HOUR_MS
+    return Array.from({ length: 28 * 24 }, (_, i) => ({ t: new Date(first + i * HOUR_MS).toISOString(), v: value }))
+  }
+
+  function mountWithZone() {
+    return mount(EventScenarioCard, {
+      props: { twin, predictedId: 'predictedPeopleCount', capacity: 100, zone: zoneEntity, measuredId: 'peopleCount', timeZone: 'UTC' },
+      global: { plugins: [vuetify], stubs: { LineChart: true } },
+      attachTo: document.body,
+    })
+  }
+
+  it('pide las cuatro últimas semanas medidas de la zona, hasta la hora en curso', async () => {
+    fetchZoneSeries.mockImplementation(async (_ref, specs) => (specs[0].key === 'predicted' ? { predicted: forecast([40]) } : { measured: [] }))
+    mountWithZone()
+    await flushPromises()
+
+    const [ref, specs, range, options] = fetchZoneSeries.mock.calls.find(([, s]) => s[0].key === 'measured')!
+    expect(ref.urn).toBe(zoneEntity.urn)
+    expect(specs).toEqual([{ key: 'measured', fn: 'mean', measureId: 'peopleCount' }])
+    expect(options).toEqual({ forceInterval: 'PT1H' })
+    expect((Date.parse(range.end) - Date.parse(range.start)) / HOUR_MS).toBe(28 * 24)
+    expect(Date.parse(range.end)).toBe(Math.floor(Date.now() / HOUR_MS) * HOUR_MS)
+  })
+
+  it('después del primer día simula sobre lo habitual y lo dice', async () => {
+    fetchZoneSeries.mockImplementation(async (_ref, specs) =>
+      specs[0].key === 'predicted' ? { predicted: forecast(Array(24).fill(40)) } : { measured: history(30) },
+    )
+    const wrapper = mountWithZone()
+    await flushPromises()
+    await wrapper.findAllComponents({ name: 'VSelect' }).find((s) => s.props('label') === 'Días')!.vm.$emit('update:modelValue', 3)
+    await button(wrapper, 'Añadir evento').trigger('click')
+    await flushPromises()
+
+    const series = wrapper.findComponent({ name: 'LineChart' }).props('series')
+    expect(series.map((s: { name: string }) => s.name)).toEqual(['Prevista', 'Habitual (sin previsión)', 'Con eventos', 'Aforo'])
+    const [forecastLine, usualLine, withEvents] = series.map((s: { points: { v: number | null }[] }) => s.points.map((p) => p.v))
+    expect(forecastLine[23]).toBe(40)
+    expect(forecastLine[24]).toBeNull()
+    expect([usualLine[22], usualLine[23], usualLine[24], usualLine[167]]).toEqual([null, 40, 30, 30])
+    // El concierto del segundo día se suma a lo habitual: 30 personas, no las 40 previstas.
+    expect(withEvents[24]).toBe(Math.round(30 + 100 * concertShare))
+    expect(wrapper.text()).toContain('La previsión cubre el primer día')
+  })
+
+  it('sin medidas de la zona, sigue con la previsión sola', async () => {
+    fetchZoneSeries.mockImplementation(async (_ref, specs) => {
+      if (specs[0].key === 'measured') throw new Error('caído')
+      return { predicted: forecast([40, 50]) }
+    })
+    const wrapper = mountWithZone()
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('error')
+    expect(button(wrapper, 'Añadir evento')).toBeDefined()
+    expect(wrapper.text()).not.toContain('La previsión cubre el primer día')
   })
 })

@@ -7,11 +7,14 @@ import {
   eventPeak,
   eventStartHours,
   eventDayStarts,
+  eventDays,
   eventWeight,
   referenceOf,
   registeredScenarioEvents,
+  scenarioBase,
   simulate,
   summariseScenario,
+  usualProfile,
   type ScenarioEvent,
 } from './eventSimulation'
 
@@ -231,5 +234,38 @@ describe('registeredScenarioEvents', () => {
     const [event] = registeredScenarioEvents(raw([{ date: '2026-11-03', type: 'market', startHour: 18, endHour: 20 }]), 'UTC')
     const simulated = simulate(times, [20, 30, 40, 50, 50, 40, 30, null], [event], 100)
     expect(simulated[2]).toBe(Math.round(40 + 100 * share('market')))
+  })
+})
+
+describe('lo habitual en la zona', () => {
+  const tz = 'Europe/Madrid'
+  const at = (iso: string, v: number | null) => ({ t: iso, v })
+
+  it('es la media medida de cada día de la semana y hora local', () => {
+    // Dos martes a las 10:00 de Madrid (09:00 UTC en noviembre) y un miércoles a la misma hora.
+    const profile = usualProfile(
+      [at('2026-11-03T09:00:00.000Z', 20), at('2026-11-10T09:00:00.000Z', 40), at('2026-11-04T09:00:00.000Z', 99), at('2026-11-11T09:00:00.000Z', null)],
+      tz,
+    )
+    expect(profile.get('2-10')).toBe(30)
+    expect(profile.get('3-10')).toBe(99)
+    expect(profile.size).toBe(2)
+  })
+
+  it('no cuenta los días con evento registrado', () => {
+    const market = event({ start: '2026-11-10T09:00:00.000Z', hours: 11, days: 2 })
+    const days = eventDays([market], tz)
+    expect([...days]).toEqual(['2026-11-10', '2026-11-11'])
+    const profile = usualProfile([at('2026-11-03T09:00:00.000Z', 20), at('2026-11-10T09:00:00.000Z', 400)], tz, days)
+    expect(profile.get('2-10')).toBe(20)
+  })
+
+  it('la base es la previsión donde la hay y lo habitual donde no, redondeado', () => {
+    const start = Date.parse('2026-11-03T08:00:00.000Z') // martes, 09:00 en Madrid
+    const profile = new Map([['2-10', 30.4], ['2-11', 31.6]])
+    const result = scenarioBase(start, 4, [at('2026-11-03T08:00:00.000Z', 40), at('2026-11-03T09:00:00.000Z', null)], profile, tz)
+    expect(result.times).toEqual(['2026-11-03T08:00:00.000Z', '2026-11-03T09:00:00.000Z', '2026-11-03T10:00:00.000Z', '2026-11-03T11:00:00.000Z'])
+    expect(result.base).toEqual([40, 30, 32, null])
+    expect(result.usual).toEqual([false, true, true, false])
   })
 })

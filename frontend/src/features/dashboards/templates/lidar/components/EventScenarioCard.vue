@@ -15,15 +15,20 @@ import {
   MAX_EVENT_HOURS,
   MAX_INTENSITY,
   MIN_INTENSITY,
+  USUAL_PROFILE_WEEKS,
   WEATHER_FACTORS,
+  eventDays,
   eventPeak,
   eventStartHours,
   referenceOf,
   registeredScenarioEvents,
+  scenarioBase,
   simulate,
   summariseScenario,
+  usualProfile,
   type EventKind,
   type ScenarioEvent,
+  type SeriesPoint,
   type Weather,
 } from '../eventSimulation'
 import { asPublished, draftFromScenario, type RegistryDraft, type RegistryList } from '../predictionEvents'
@@ -44,45 +49,84 @@ const props = defineProps<{
   registered?: ScenarioEvent[]
   /** La zona como la conoce el modelo de prediccion. Sin ella no se ofrece el registro. */
   zoneUrn?: string
+  /** La zona medida y su medida de ocupacion: de ahi sale lo habitual donde no hay prevision. */
+  zone?: Entity
+  measuredId?: string
 }>()
 
 const HOUR_MS = 3_600_000
 
 const loading = ref(false)
 const error = ref<string | null>(null)
-const times = ref<string[]>([])
-const base = ref<(number | null)[]>([])
+const firstHour = ref(0)
+const forecast = ref<SeriesPoint[]>([])
+const measured = ref<SeriesPoint[]>([])
 
-/** Se simula por horas sobre todo lo que publica la prevision (una semana), sea cual sea el rango
- * del panel. */
+/**
+ * Se simula por horas durante una semana desde la hora en curso, sea cual sea el rango del panel.
+ * La prevision cubre el primer dia; para el resto se piden las ultimas semanas medidas de la zona.
+ * Si esas fallan, el simulador sigue con la prevision sola.
+ */
 async function load() {
   loading.value = true
   error.value = null
   try {
     const now = Date.now()
-    const range = {
-      start: new Date(Math.floor(now / HOUR_MS) * HOUR_MS).toISOString(),
+    firstHour.value = Math.floor(now / HOUR_MS) * HOUR_MS
+    const ahead = {
+      start: new Date(firstHour.value).toISOString(),
       end: new Date(now + SCENARIO_HORIZON_HOURS * HOUR_MS).toISOString(),
     }
-    const series = await fetchZoneSeries(
-      refOf(props.twin),
-      [{ key: 'predicted', fn: 'mean', measureId: props.predictedId }],
-      range,
-      { forceInterval: 'PT1H' },
-    )
-    const points = series.predicted ?? []
-    times.value = points.map((point) => point.t)
-    base.value = points.map((point) => point.v)
+    const behind = { start: new Date(firstHour.value - USUAL_PROFILE_WEEKS * 7 * 24 * HOUR_MS).toISOString(), end: ahead.start }
+    const [predicted, history] = await Promise.all([
+      fetchZoneSeries(refOf(props.twin), [{ key: 'predicted', fn: 'mean', measureId: props.predictedId }], ahead, {
+        forceInterval: 'PT1H',
+      }),
+      props.zone && props.measuredId
+        ? fetchZoneSeries(refOf(props.zone), [{ key: 'measured', fn: 'mean', measureId: props.measuredId }], behind, {
+            forceInterval: 'PT1H',
+          }).catch(() => ({}) as Record<string, SeriesPoint[]>)
+        : Promise.resolve({} as Record<string, SeriesPoint[]>),
+    ])
+    forecast.value = predicted.predicted ?? []
+    measured.value = history.measured ?? []
   } catch (e) {
     error.value = errorMessage(e)
-    times.value = []
-    base.value = []
+    forecast.value = []
+    measured.value = []
   } finally {
     loading.value = false
   }
 }
 
-watch(() => [props.twin.id, props.predictedId], () => void load(), { immediate: true })
+watch(() => [props.twin.id, props.predictedId, props.zone?.id, props.measuredId], () => void load(), { immediate: true })
+
+const zone = computed(() => props.timeZone || 'UTC')
+const target = computed(() => ({ tenant: props.twin.tenant, scope: props.twin.scope }))
+const registry = ref<RegistryList | null>(null)
+const registryDraft = ref<RegistryDraft | null>(null)
+
+/**
+ * Los registrados salen del registro en cuanto se carga, asi que lo que se acaba de registrar se
+ * ve ya. Sin el (quien mira no puede leerlo), los que publico la prevision en su ultima ejecucion.
+ */
+const registered = computed(() =>
+  registry.value && props.zoneUrn
+    ? registeredScenarioEvents(asPublished(registry.value.rows, props.zoneUrn), zone.value)
+    : (props.registered ?? []),
+)
+const canRegister = computed(() => !!registry.value?.canEdit && !!props.zoneUrn)
+
+/** Lo habitual no cuenta los dias con evento registrado, que no son lo normal. */
+const profile = computed(() => usualProfile(measured.value, zone.value, eventDays(registered.value, zone.value)))
+const grid = computed(() =>
+  firstHour.value
+    ? scenarioBase(firstHour.value, SCENARIO_HORIZON_HOURS, forecast.value, profile.value, zone.value)
+    : { times: [], base: [], usual: [] },
+)
+const times = computed(() => grid.value.times)
+const base = computed(() => grid.value.base)
+const hasUsual = computed(() => grid.value.usual.some(Boolean))
 
 const people = t('dashboards.lidar.people')
 const kindLabel = (kind: EventKind) => t(`dashboards.lidar.scenario.kind.${kind}`)
@@ -142,22 +186,6 @@ function clear() {
   events.value = []
 }
 
-const zone = computed(() => props.timeZone || 'UTC')
-const target = computed(() => ({ tenant: props.twin.tenant, scope: props.twin.scope }))
-const registry = ref<RegistryList | null>(null)
-const registryDraft = ref<RegistryDraft | null>(null)
-
-/**
- * Los registrados salen del registro en cuanto se carga, asi que lo que se acaba de registrar se
- * ve ya. Sin el (quien mira no puede leerlo), los que publico la prevision en su ultima ejecucion.
- */
-const registered = computed(() =>
-  registry.value && props.zoneUrn
-    ? registeredScenarioEvents(asPublished(registry.value.rows, props.zoneUrn), zone.value)
-    : (props.registered ?? []),
-)
-const canRegister = computed(() => !!registry.value?.canEdit && !!props.zoneUrn)
-
 function registerScenario(event: ScenarioEvent) {
   registryDraft.value = draftFromScenario(event, zone.value)
 }
@@ -169,23 +197,33 @@ function onRegistered(_saved: unknown, draft: RegistryDraft) {
 
 // Los registrados van delante: son lo que ya se sabe que va a pasar, lo simulado se suma encima.
 const allEvents = computed(() => [...registered.value, ...events.value])
+
 const hasForecast = computed(() => startHours.value.length > 0)
 const reference = computed(() => referenceOf(props.capacity, base.value))
 const simulated = computed(() =>
   reference.value === null
     ? base.value
-    : simulate(times.value, base.value, allEvents.value, reference.value, props.timeZone),
+    : simulate(times.value, base.value, allEvents.value, reference.value, zone.value),
 )
 const summary = computed(() => summariseScenario(times.value, base.value, simulated.value, props.capacity))
 
 const series = computed<ChartSeries[]>(() => {
+  const usual = grid.value.usual
   const list: ChartSeries[] = [
     {
       name: t('dashboards.lidar.scenario.base'),
       units: people,
-      points: times.value.map((iso, i) => ({ t: iso, v: base.value[i] })),
+      points: times.value.map((iso, i) => ({ t: iso, v: usual[i] ? null : base.value[i] })),
     },
   ]
+  if (hasUsual.value) {
+    // Empieza en la ultima hora prevista para que las dos lineas se unan.
+    list.push({
+      name: t('dashboards.lidar.scenario.usual'),
+      units: people,
+      points: times.value.map((iso, i) => ({ t: iso, v: usual[i] || usual[i + 1] ? base.value[i] : null })),
+    })
+  }
   if (allEvents.value.length) {
     list.push({
       name: t('dashboards.lidar.scenario.withEvents'),
@@ -355,6 +393,9 @@ const overHint = computed(() =>
       <div v-else class="text-body-2 text-medium-emphasis">{{ t('dashboards.lidar.scenario.noEvents') }}</div>
 
       <LineChart :series="series" :units="people" :height="300" :title="t('dashboards.lidar.scenario.chart')" />
+      <div v-if="hasUsual" class="text-caption text-medium-emphasis">
+        {{ t('dashboards.lidar.scenario.usualHint', { weeks: USUAL_PROFILE_WEEKS }) }}
+      </div>
 
       <VTable v-if="allEvents.length" density="compact">
         <thead>
