@@ -10,6 +10,7 @@ import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { rowsTable } from '../../charts/a11y'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { SURFACE } from '../../palette'
+import { arrowHead, curvedPath, type LatLng } from './curves'
 
 export interface MapPoint {
   key: string
@@ -33,6 +34,11 @@ export interface MapLink {
   /** Grosor en pixeles, entre 1 y 8. */
   weight: number
   color: string
+  /**
+   * Un recorrido con sentido: se dibuja en arco, apartado a la derecha de la marcha, con una punta
+   * de flecha en su mitad. Asi la ida y la vuelta entre dos puntos no se pisan. Sin el, una recta.
+   */
+  curved?: boolean
 }
 
 const props = withDefaults(
@@ -42,9 +48,14 @@ const props = withDefaults(
     height?: number
     /** Leyenda de niveles bajo el mapa. */
     legend?: { color: string; label: string }[]
+    /** Punto resaltado, por su clave. */
+    selected?: string | null
   }>(),
-  { height: 360, links: () => [] },
+  { height: 360, links: () => [], selected: null },
 )
+
+/** Al pulsar un punto. Su clave; la plantilla decide que hace con ella. */
+const emit = defineEmits<{ select: [key: string] }>()
 
 // Cartografia y encuadre inicial salen de `@/lib/mapConfig`, igual que en la vista de mapa.
 // La atribucion es obligacion de la licencia de las teselas: siempre visible.
@@ -55,6 +66,23 @@ const zoom = defaultZoom()
 const theme = useTheme()
 const isDark = computed(() => theme.global.current.value.dark)
 const stroke = computed(() => (isDark.value ? SURFACE.dark : SURFACE.light))
+const highlight = computed(() => theme.global.current.value.colors.primary)
+
+/** El trazo de cada recorrido: la recta, o el arco. */
+const drawnLinks = computed(() =>
+  props.links.map((link) => ({
+    link,
+    path: link.curved ? curvedPath(link.from, link.to) : ([link.from, link.to] as LatLng[]),
+  })),
+)
+
+/** Las puntas de flecha de los recorridos en arco. Son otra linea: la capa no admite varias. */
+const arrowHeads = computed(() =>
+  props.links
+    .filter((link) => link.curved)
+    .map((link) => ({ link, path: arrowHead(link.from, link.to) }))
+    .filter(({ path }) => path.length > 0),
+)
 const tiles = computed(() => tilesForTheme(isDark.value))
 
 const canvas = ref<HTMLElement | null>(null)
@@ -160,9 +188,9 @@ const linksTable = computed(() =>
 
         <!-- Las lineas van antes que los circulos para que estos queden encima. -->
         <LPolyline
-          v-for="link in links"
+          v-for="{ link, path } in drawnLinks"
           :key="link.key"
-          :lat-lngs="[link.from, link.to]"
+          :lat-lngs="path"
           :color="link.color"
           :weight="link.weight"
           :opacity="0.7"
@@ -173,15 +201,26 @@ const linksTable = computed(() =>
           </LTooltip>
         </LPolyline>
 
+        <LPolyline
+          v-for="{ link, path } in arrowHeads"
+          :key="`${link.key}-head`"
+          :lat-lngs="path"
+          :color="link.color"
+          :weight="Math.max(2, link.weight)"
+          :opacity="0.9"
+          :interactive="false"
+        />
+
         <LCircleMarker
           v-for="point in points"
           :key="point.key"
           :lat-lng="[point.lat, point.lon]"
           :radius="point.radius"
-          :color="stroke"
-          :weight="2"
+          :color="point.key === selected ? highlight : stroke"
+          :weight="point.key === selected ? 4 : 2"
           :fill-color="point.color"
           :fill-opacity="0.9"
+          @click="emit('select', point.key)"
         >
           <LTooltip>
             <div class="text-body-2 font-weight-medium">{{ point.label }}</div>

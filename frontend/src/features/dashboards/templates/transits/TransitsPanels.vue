@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import { LineChart, type ChartPoint, type ChartSeries } from '../../charts'
@@ -33,6 +33,41 @@ const props = defineProps<{
 }>()
 
 const { isDark } = useChartTheme()
+
+/**
+ * Punto cuyos recorridos se miran, o null para verlos todos. Se elige en el selector o pulsando
+ * el punto en el mapa; el selector es la via con teclado.
+ */
+const selected = ref<string | null>(null)
+
+// Si cambia lo asignado al panel y el punto ya no esta, se vuelve a ver todo.
+watch(
+  () => props.nodes,
+  (nodes) => {
+    if (selected.value && !nodes.some((node) => node.id === selected.value)) selected.value = null
+  },
+)
+
+const selectedNode = computed(() => props.nodes.find((node) => node.id === selected.value) ?? null)
+
+/** Solo se ofrecen los puntos con algun recorrido con volumen: los demas no tendrian nada que ver. */
+const nodeItems = computed(() => [
+  { title: t('templates.transits.allNodes'), value: null as string | null },
+  ...props.nodes
+    .filter((node) => props.routes.some((route) => route.pair.origin.id === node.id || route.pair.target.id === node.id))
+    .map((node) => ({ title: node.label, value: node.id as string | null })),
+])
+
+function toggle(key: string) {
+  selected.value = selected.value === key ? null : key
+}
+
+/** Los recorridos que se dibujan: todos, o los que salen o llegan al punto elegido. */
+const shownRoutes = computed(() =>
+  selected.value
+    ? props.routes.filter((route) => route.pair.origin.id === selected.value || route.pair.target.id === selected.value)
+    : props.routes,
+)
 
 const legend = computed(() =>
   occupancyColors(isDark.value).map((color, index) => ({ color, label: t(LEVEL_KEYS[index]) })),
@@ -82,7 +117,7 @@ const mapPoints = computed<MapPoint[]>(() =>
 )
 
 const mapLinks = computed<MapLink[]>(() =>
-  props.routes
+  shownRoutes.value
     .filter(
       (route) =>
         route.pair.origin.lat !== null &&
@@ -100,12 +135,13 @@ const mapLinks = computed<MapLink[]>(() =>
         text: formatNumber(route.total),
         weight: 1 + Math.round(7 * ratio),
         color: occupancyColor(ratio, isDark.value),
+        curved: true,
       }
     }),
 )
 
 /** Recorridos con volumen que el mapa no puede dibujar porque les falta un extremo ubicado. */
-const withoutLocation = computed(() => props.routes.length - mapLinks.value.length)
+const withoutLocation = computed(() => shownRoutes.value.length - mapLinks.value.length)
 
 interface RankRow {
   key: string
@@ -141,6 +177,48 @@ function shareText(share: number | null): string {
   return share === null ? t('common.noValue') : `${formatNumber(share, 1)} %`
 }
 
+interface NodeRow {
+  key: string
+  /** El otro extremo del recorrido. */
+  other: string
+  total: number | null
+  share: number | null
+}
+
+/** Recorridos del punto elegido en un sentido, con su parte de todo lo que sale o llega. */
+function nodeRows(side: 'origin' | 'target'): NodeRow[] {
+  const id = selected.value
+  if (!id) return []
+  const routes = props.routes.filter((route) => route.pair[side].id === id)
+  const total = routes.reduce((sum, route) => sum + (route.total ?? 0), 0)
+  return routes.slice(0, MAX_RANK).map((route) => ({
+    key: route.pair.key,
+    other: side === 'origin' ? route.pair.target.label : route.pair.origin.label,
+    total: route.total,
+    share: total > 0 && route.total !== null ? (route.total / total) * 100 : null,
+  }))
+}
+
+const outgoing = computed(() => nodeRows('origin'))
+const incoming = computed(() => nodeRows('target'))
+
+const nodeLists = computed(() => [
+  {
+    key: 'out',
+    title: t('templates.transits.outgoingTitle'),
+    other: t('templates.transits.colTarget'),
+    share: t('templates.transits.colShareOut'),
+    rows: outgoing.value,
+  },
+  {
+    key: 'in',
+    title: t('templates.transits.incomingTitle'),
+    other: t('templates.transits.colOrigin'),
+    share: t('templates.transits.colShareIn'),
+    rows: incoming.value,
+  },
+])
+
 const trendSeries = computed<ChartSeries[]>(() => [
   ...props.routes.slice(0, MAX_TREND).map((route) => ({
     name: route.pair.label,
@@ -167,11 +245,56 @@ const trendEmpty = computed(() => props.routes.length === 0)
             : undefined
         "
       >
-        <PointMap :points="mapPoints" :links="mapLinks" :height="380" :legend="legend" />
+        <VSelect
+          v-model="selected"
+          :items="nodeItems"
+          :label="t('templates.transits.nodeLabel')"
+          density="compact"
+          hide-details
+          class="mb-3"
+          max-width="360"
+        />
+        <PointMap
+          :points="mapPoints"
+          :links="mapLinks"
+          :height="380"
+          :legend="legend"
+          :selected="selected"
+          @select="toggle"
+        />
       </ChartCard>
     </VCol>
 
-    <VCol cols="12" md="5">
+    <VCol v-if="selectedNode" cols="12" md="5">
+      <ChartCard
+        :title="t('templates.transits.nodeTitle', { name: selectedNode.label })"
+        :subtitle="t('templates.transits.nodeSubtitle')"
+        :empty="outgoing.length === 0 && incoming.length === 0"
+      >
+        <template v-for="list in nodeLists" :key="list.key">
+          <div class="text-body-2 font-weight-medium mt-2 mb-1">{{ list.title }}</div>
+          <VTable v-if="list.rows.length" density="compact" class="text-body-2 mb-3">
+            <thead>
+              <tr>
+                <th>{{ list.other }}</th>
+                <th class="text-end">{{ t('templates.transits.volume') }}</th>
+                <th class="text-end">{{ list.share }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in list.rows" :key="row.key">
+                <td>{{ row.other }}</td>
+                <td class="text-end">{{ formatNumber(row.total) }}</td>
+                <td class="text-end">{{ shareText(row.share) }}</td>
+              </tr>
+            </tbody>
+          </VTable>
+          <div v-else class="text-body-2 text-medium-emphasis mb-3">{{ t('templates.transits.noRoutes') }}</div>
+        </template>
+      </ChartCard>
+    </VCol>
+
+    <VCol v-else cols="12" md="5">
       <ChartCard :title="t('templates.transits.rankTitle')" :empty="rankRows.length === 0">
         <div class="overflow-x-auto">
           <VDataTable
