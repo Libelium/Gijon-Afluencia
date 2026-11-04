@@ -10,6 +10,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **El simulador de escenarios admite eventos de varios días y dice la zona.** Un evento se puede
+  repetir hasta 7 días seguidos a la misma hora local (una semana de mercado) y dura hasta 24 horas
+  al día. El título lleva el nombre de la zona que se simula. Un evento registrado de varios días
+  sale como un solo evento con sus días.
 - **El listado de entidades se ordena también por nombre y por último dato.** Las dos cabeceras se
   pulsan como las demás. El nombre se ordena como texto, sin distinguir mayúsculas ni acentos, y
   una entidad sin nombre propio va por el final de su identificador, que es lo que se ve; el último
@@ -26,8 +30,8 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 - **El simulador de eventos muestra los eventos registrados.** Los que la previsión de la zona
   publica en `registeredEvents` salen como «Registrado», sin poder quitarse, y se suman a la
   previsión normal junto a los que se simulen; «Limpiar» solo quita los simulados. Un evento de
-  varios días es uno por día, a sus horas (de 10:00 a 21:00 si el registro no las dice), y su tipo
-  vale si es uno del simulador; si no, se toma por un mercado.
+  varios días se repite cada día, a sus horas (de 10:00 a 21:00 si el registro no las dice), y su
+  tipo vale si es uno del simulador; si no, se toma por un mercado.
 - **El buscador del mapa sugiere las entidades que coinciden.** Al escribir dos letras o más se
   despliega una lista con las primeras entidades con ubicación que coinciden en todo el mapa, no
   solo en el área visible, con su modelo de datos para distinguir las que se llaman igual. Al

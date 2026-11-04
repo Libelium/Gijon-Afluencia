@@ -26,9 +26,9 @@ function forecast(values: (number | null)[]) {
   return values.map((v, i) => ({ t: new Date(first + i * HOUR_MS).toISOString(), v }))
 }
 
-function mountCard(capacity: number | null = 100, registered: ScenarioEvent[] = []) {
+function mountCard(capacity: number | null = 100, registered: ScenarioEvent[] = [], zoneName?: string) {
   return mount(EventScenarioCard, {
-    props: { twin, predictedId: 'predictedPeopleCount', capacity, registered },
+    props: { twin, predictedId: 'predictedPeopleCount', capacity, registered, zoneName },
     global: { plugins: [vuetify], stubs: { LineChart: true } },
     attachTo: document.body,
   })
@@ -45,14 +45,49 @@ afterEach(() => {
 })
 
 describe('EventScenarioCard', () => {
-  it('pide la previsión por horas hasta el horizonte', async () => {
+  it('pide la previsión por horas de toda la semana que publica', async () => {
     fetchZoneSeries.mockResolvedValue({ predicted: forecast([40, 50, 60]) })
     mountCard()
     await flushPromises()
-    const [ref, specs, , options] = fetchZoneSeries.mock.calls[0]
+    const [ref, specs, range, options] = fetchZoneSeries.mock.calls[0]
     expect(ref.urn).toBe(twin.urn)
     expect(specs).toEqual([{ key: 'predicted', fn: 'mean', measureId: 'predictedPeopleCount' }])
     expect(options).toEqual({ forceInterval: 'PT1H' })
+    const hours = (Date.parse(range.end) - Date.parse(range.start)) / HOUR_MS
+    // Desde el comienzo de la hora en curso hasta una semana después de ahora.
+    expect(hours).toBeGreaterThanOrEqual(7 * 24)
+    expect(hours).toBeLessThan(7 * 24 + 1)
+  })
+
+  it('el título dice la zona que se simula', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: forecast([40]) })
+    const wrapper = mountCard(100, [], 'Plaza Norte')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Simulación de escenarios — Plaza Norte')
+  })
+
+  it('la duración llega a las 24 horas: un día entero', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: forecast([40]) })
+    const wrapper = mountCard()
+    await flushPromises()
+    const items = wrapper.findAllComponents({ name: 'VSelect' }).find((s) => s.props('label') === 'Duración')!.props('items')
+    expect(items.at(-1)).toEqual({ title: '24 h', value: 24 })
+  })
+
+  it('un evento de varios días se suma cada día a la misma hora', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: forecast(Array(72).fill(40)) })
+    const wrapper = mountCard()
+    await flushPromises()
+    const daysSelect = wrapper.findAllComponents({ name: 'VSelect' }).find((s) => s.props('label') === 'Días')!
+    await daysSelect.vm.$emit('update:modelValue', 3)
+    await button(wrapper, 'Añadir evento').trigger('click')
+    await flushPromises()
+
+    const points = wrapper.findComponent({ name: 'LineChart' }).props('series')[1].points
+    const full = Math.round(40 + 100 * concertShare)
+    expect([0, 1, 24, 25, 48, 49].map((i) => points[i].v)).toEqual(Array(6).fill(full))
+    expect(points[12].v).toBe(40)
+    expect(wrapper.find('.v-chip').text()).toContain('3 días')
   })
 
   it('sin eventos enseña solo la previsión y el aforo', async () => {

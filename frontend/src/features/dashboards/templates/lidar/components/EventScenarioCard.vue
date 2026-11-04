@@ -6,11 +6,12 @@ import { t } from '@/i18n'
 import { formatDateTime, formatNumber } from '@/lib/format'
 import type { Entity } from '@/types'
 import { LineChart, type ChartSeries } from '../../../charts'
-import { FORECAST_HORIZON_HOURS } from '../../../lib/range'
+import { SCENARIO_HORIZON_HOURS } from '../../../lib/range'
 import { fetchZoneSeries, refOf } from '../data'
 import {
   DEFAULT_INTENSITY,
   EVENT_CATALOG,
+  MAX_EVENT_DAYS,
   MAX_EVENT_HOURS,
   MAX_INTENSITY,
   MIN_INTENSITY,
@@ -29,6 +30,8 @@ import ChartCard from './ChartCard.vue'
 const props = defineProps<{
   /** Gemela de prevision de la zona. */
   twin: Entity
+  /** Nombre de la zona que se simula, para el titulo. */
+  zoneName?: string
   /** Medida con el valor previsto. */
   predictedId: string
   /** Aforo de la zona en personas, o null si no lo publica. */
@@ -45,7 +48,8 @@ const error = ref<string | null>(null)
 const times = ref<string[]>([])
 const base = ref<(number | null)[]>([])
 
-/** Se simula por horas sobre el horizonte de la prevision, sea cual sea el rango del panel. */
+/** Se simula por horas sobre todo lo que publica la prevision (una semana), sea cual sea el rango
+ * del panel. */
 async function load() {
   loading.value = true
   error.value = null
@@ -53,7 +57,7 @@ async function load() {
     const now = Date.now()
     const range = {
       start: new Date(Math.floor(now / HOUR_MS) * HOUR_MS).toISOString(),
-      end: new Date(now + FORECAST_HORIZON_HOURS * HOUR_MS).toISOString(),
+      end: new Date(now + SCENARIO_HORIZON_HOURS * HOUR_MS).toISOString(),
     }
     const series = await fetchZoneSeries(
       refOf(props.twin),
@@ -79,17 +83,21 @@ const people = t('dashboards.lidar.people')
 const kindLabel = (kind: EventKind) => t(`dashboards.lidar.scenario.kind.${kind}`)
 const weatherLabel = (weather: Weather) => t(`dashboards.lidar.scenario.weather.${weather}`)
 const hoursLabel = (n: number) => t('dashboards.lidar.scenario.hoursValue', { n })
+const daysLabel = (n: number) =>
+  n === 1 ? t('dashboards.lidar.scenario.oneDay') : t('dashboards.lidar.scenario.daysValue', { n })
 
 const startHours = computed(() => eventStartHours(times.value, base.value, Date.now()))
 const startItems = computed(() =>
   startHours.value.map((iso) => ({ title: formatDateTime(iso, props.timeZone), value: iso })),
 )
 const hourItems = Array.from({ length: MAX_EVENT_HOURS }, (_, i) => ({ title: hoursLabel(i + 1), value: i + 1 }))
+const dayItems = Array.from({ length: MAX_EVENT_DAYS }, (_, i) => ({ title: daysLabel(i + 1), value: i + 1 }))
 const kindItems = EVENT_CATALOG.map((spec) => ({ title: kindLabel(spec.kind), value: spec.kind }))
 const weatherItems = (Object.keys(WEATHER_FACTORS) as Weather[]).map((w) => ({ title: weatherLabel(w), value: w }))
 
 const start = ref<string | null>(null)
 const hours = ref(2)
+const days = ref(1)
 const kind = ref<EventKind>('concert')
 const weather = ref<Weather>('clear')
 const intensity = ref(DEFAULT_INTENSITY)
@@ -116,6 +124,7 @@ function add() {
       intensity: intensity.value,
       start: start.value,
       hours: hours.value,
+      days: days.value,
     },
   ]
 }
@@ -133,7 +142,9 @@ const allEvents = computed(() => [...(props.registered ?? []), ...events.value])
 const hasForecast = computed(() => startHours.value.length > 0)
 const reference = computed(() => referenceOf(props.capacity, base.value))
 const simulated = computed(() =>
-  reference.value === null ? base.value : simulate(times.value, base.value, allEvents.value, reference.value),
+  reference.value === null
+    ? base.value
+    : simulate(times.value, base.value, allEvents.value, reference.value, props.timeZone),
 )
 const summary = computed(() => summariseScenario(times.value, base.value, simulated.value, props.capacity))
 
@@ -169,7 +180,11 @@ const rows = computed(() =>
     label: event.registered
       ? t('dashboards.lidar.scenario.registeredLabel', { kind: kindLabel(event.kind) })
       : kindLabel(event.kind),
-    when: `${formatDateTime(event.start, props.timeZone)} · ${hoursLabel(event.hours)}`,
+    when: [
+      formatDateTime(event.start, props.timeZone),
+      hoursLabel(event.hours),
+      ...((event.days ?? 1) > 1 ? [daysLabel(event.days!)] : []),
+    ].join(' · '),
     weather: `${weatherLabel(event.weather)} · ${event.intensity.toFixed(1).replace('.', ',')}x`,
     extra: reference.value === null ? null : Math.round(eventPeak(event, reference.value)),
   })),
@@ -187,7 +202,7 @@ const overHint = computed(() =>
 
 <template>
   <ChartCard
-    :title="t('dashboards.lidar.scenario.title')"
+    :title="zoneName ? t('dashboards.lidar.scenario.titleZone', { zone: zoneName }) : t('dashboards.lidar.scenario.title')"
     :subtitle="t('dashboards.lidar.scenario.subtitle')"
     :loading="loading"
     :error="error"
@@ -212,6 +227,14 @@ const overHint = computed(() =>
           v-model="hours"
           :items="hourItems"
           :label="t('dashboards.lidar.scenario.hours')"
+          density="comfortable"
+          hide-details
+          style="flex: 0 1 130px"
+        />
+        <VSelect
+          v-model="days"
+          :items="dayItems"
+          :label="t('dashboards.lidar.scenario.days')"
           density="comfortable"
           hide-details
           style="flex: 0 1 130px"
