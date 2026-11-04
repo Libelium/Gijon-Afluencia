@@ -14,7 +14,9 @@ export interface MeasureIndex {
 /**
  * Candidatas a medida de aforo, en orden de preferencia. `peopleCount` va primero porque es el
  * total instantaneo del periodo de observacion; las variantes por intervalo son lo que publican
- * los sensores cuando no exponen el total suelto.
+ * los sensores cuando no exponen el total suelto. `uniqueVisitors` es el aforo de las entidades
+ * de eventos de la ETL, las personas distintas detectadas en el intervalo: va antes que `count`
+ * porque en esas entidades `count` son los transitos.
  */
 const OCCUPANCY_CANDIDATES = [
   'peopleCount',
@@ -25,6 +27,7 @@ const OCCUPANCY_CANDIDATES = [
   'pedestrianCount',
   'occupancy',
   'occupancyRate',
+  'uniqueVisitors',
   'count',
 ]
 
@@ -130,6 +133,14 @@ const DISCARDED_SUFFIXES = new Set([
   'percent',
   'ratio',
   'index',
+  // Periodos de agregacion, no categorias: `newTouristUniqueVisitorsDaily` y su version mensual
+  // son la misma medida sobre dos ventanas.
+  'hourly',
+  'daily',
+  'weekly',
+  'biweekly',
+  'monthly',
+  'yearly',
 ])
 
 /** Mas de 12 sectores no se leen en un donut. */
@@ -201,8 +212,25 @@ interface Group {
   members: GroupMember[]
 }
 
+/**
+ * Reparto por tipo de visitante que publica la ETL de visitantes en la entidad de eventos de cada
+ * sensor. El tipo va delante (`touristUniqueVisitors`) y no detras, como en el resto de categorias,
+ * asi que se reconoce aparte. Los tres suman las personas distintas del intervalo.
+ */
+const VISITOR_TYPE_CATEGORIES = [
+  { measureId: 'touristUniqueVisitors', label: 'Turistas' },
+  { measureId: 'residentUniqueVisitors', label: 'Residentes' },
+  { measureId: 'shortTermVisitorUniqueVisitors', label: 'Corta estancia' },
+]
+
 export function detectCategories(all: Measure[]): CategorySet {
   const candidates = all.filter(isNumericMeasure).filter((m) => !NOT_A_MEASURE.test(m.id))
+
+  // El orden es el del reparto aunque falte alguno, para que cada tipo conserve su color.
+  const visitorTypes = VISITOR_TYPE_CATEGORIES.map((category, order) => ({ ...category, order })).filter(
+    (category) => candidates.some((m) => m.id === category.measureId),
+  )
+  if (visitorTypes.length) return { base: 'uniqueVisitors', categories: visitorTypes }
 
   const groups = new Map<string, Group>()
   for (const measure of candidates) {

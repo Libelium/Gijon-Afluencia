@@ -10,13 +10,52 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **El simulador de eventos muestra los eventos registrados.** Los que la previsión de la zona
+  publica en `registeredEvents` salen como «Registrado», sin poder quitarse, y se suman a la
+  previsión normal junto a los que se simulen; «Limpiar» solo quita los simulados. Un evento de
+  varios días es uno por día, a sus horas (de 10:00 a 21:00 si el registro no las dice), y su tipo
+  vale si es uno del simulador; si no, se toma por un mercado.
+- **El buscador del mapa sugiere las entidades que coinciden.** Al escribir dos letras o más se
+  despliega una lista con las primeras entidades con ubicación que coinciden en todo el mapa, no
+  solo en el área visible, con su modelo de datos para distinguir las que se llaman igual. Al
+  elegir una, el mapa va hasta ella, se acerca y abre su globo. El texto sigue filtrando el mapa
+  como hasta ahora.
+- **Simulador de escenarios con eventos en la plantilla de predicción de zona.** Debajo de la
+  ocupación prevista se pueden añadir eventos (tipo, hora de inicio, duración, meteorología e
+  intensidad) y ver la previsión con y sin ellos, el máximo resultante, las personas de más y las
+  horas por encima del aforo. El modelo es aditivo y por horas: cada tipo de evento suma en su hora
+  punta una parte del aforo de la zona, por la intensidad y por el efecto del tiempo, y la hora
+  anterior y la posterior cuentan a medias. Las cifras son supuestos para comparar escenarios y
+  solo se simula dentro del horizonte de la previsión.
 - **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
   botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
   admitía el cambio; faltaba la pantalla.
 
+### Cambiado
+
+- **El modelo de afluencia no aprende de los días con evento registrado.** Un mercado navideño o
+  unas fiestas no son lo normal: sus días se quitan como filas de entrenamiento y, antes de
+  calcular retardos y medias móviles, su ocupación se cambia por la mediana de la misma franja en
+  las cuatro semanas anteriores sin evento, al entrenar y al predecir. Así la semana del mercado
+  tampoco infla la previsión de la semana siguiente. Los eventos dejan de ser una característica
+  del modelo (`event_magnitude`, y con ella `EVENT_MAGNITUDES`), lo que fuerza un reentrenamiento
+  completo. El registro admite eventos de varios días (`end_date`) y sus horas (`start_hour`,
+  `end_hour`), y cada entidad de previsión publica `registeredEvents` con los eventos de su zona en
+  el horizonte.
+
 ### Corregido
 
+- **Las plantillas de aforo usan la entidad de eventos de cada sensor.** Las cuatro
+  (monitorización, clasificación, clasificación avanzada y mapa de calor) solo ofrecían los conteos
+  en bruto de los sensores (`…_CFO`); ahora ofrecen primero la entidad de eventos de la ETL
+  (`…_CFE`), que cuenta a cada visitante una vez por intervalo, y dejan las previsiones al final
+  del selector. Cada fila del selector dice además su espacio de datos, para distinguir dos
+  entidades con el mismo nombre. Con esa entidad el aforo son las personas distintas del intervalo
+  (`uniqueVisitors`) y no sus tránsitos (`count`), la clasificación reparte en turistas, residentes
+  y visitantes de corta estancia, y el mapa la sitúa en la ubicación de su sensor, que esa entidad
+  no publica. Los periodos de agregación (diario, quincenal, mensual) ya no se toman por
+  categorías.
 - **Las gráficas de una previsión muestran las horas futuras.** El histórico de una medida en la
   ficha de entidad y las gráficas de los cuadros de mando cortaban la ventana en «ahora», así que
   de una previsión solo se veían las horas ya pasadas. Para las entidades de previsión la ventana

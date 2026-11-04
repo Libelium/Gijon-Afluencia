@@ -1,6 +1,7 @@
 import { http } from '@/api/http'
 import { urnTail } from '@/lib/format'
 import type { EntityRef, Measure } from '@/types'
+import { PREDICTION_URN_SUFFIX } from '../templates/contract'
 
 /** Lo minimo que necesita el area: identificar la entidad y poder pedirle datos. */
 export interface EntityOption {
@@ -36,6 +37,25 @@ interface RawEntity {
   tenant?: string
   scope?: string
   datamodel?: string
+}
+
+/**
+ * Ordena las entidades del selector para que las sugeridas salgan primero: las del modelo de datos
+ * preferido por la plantilla antes que las del siguiente, y las gemelas de prevision (`_pred`) al
+ * final, porque una prevision no es un punto de medida. Dentro de cada grupo se respeta el orden
+ * del servidor.
+ */
+export function rankOptions(rows: EntityOption[], datamodels: string[]): EntityOption[] {
+  const rank = (row: EntityOption) => {
+    const index = datamodels.indexOf(row.datamodel)
+    const preferred = index === -1 ? datamodels.length : index
+    const twin = urnTail(row.urn).toLowerCase().endsWith(PREDICTION_URN_SUFFIX) ? 1 : 0
+    return twin * (datamodels.length + 1) + preferred
+  }
+  return rows
+    .map((row, position) => ({ row, position, rank: rank(row) }))
+    .sort((a, b) => a.rank - b.rank || a.position - b.position)
+    .map(({ row }) => row)
 }
 
 export async function searchEntities(query: EntitySearch): Promise<EntityPage> {

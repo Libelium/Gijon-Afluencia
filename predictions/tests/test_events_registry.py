@@ -3,8 +3,8 @@ from datetime import date
 from unittest.mock import patch
 
 from crowd_predictions.events_registry import (
-    load_events_registry, event_magnitude_for, list_raw_rows, append_event,
-    delete_event_at_index, events_registry_key, DEFAULT_MAGNITUDE,
+    load_events_registry, event_days, events_in_window, fingerprint, list_raw_rows, append_event,
+    delete_event_at_index, events_registry_key,
 )
 
 
@@ -67,8 +67,9 @@ def test_append_then_load_parses_a_global_event_empty_device_ids(tmp_path):
 
     assert len(events) == 1
     assert events[0]["date"] == date(2026, 4, 9)
-    assert events[0]["magnitude"] == 2
+    assert events[0]["end_date"] == date(2026, 4, 9)  # no end_date = a one-day event
     assert events[0]["device_ids"] is None  # None = global, not an empty set
+    assert events[0]["start_hour"] is None and events[0]["end_hour"] is None
 
 
 def test_append_then_load_parses_a_scoped_event_device_ids_list(tmp_path):
@@ -78,15 +79,46 @@ def test_append_then_load_parses_a_scoped_event_device_ids_list(tmp_path):
         events = load_events_registry(storage, local_dir=str(tmp_path))
 
     assert events[0]["device_ids"] == {"SS3", "SS7", "SS11"}
-    assert events[0]["magnitude"] == 1
+    assert events[0]["event_type"] == "small_event"
 
 
-def test_unknown_event_type_uses_the_default_magnitude(tmp_path):
+def test_a_week_long_event_with_hours_round_trips(tmp_path):
     storage = _DictStorage()
     with _tenant_scope():
-        append_event(storage, "2026-10-01", "concert", "", "Concert in the square", local_dir=str(tmp_path))
+        append_event(storage, "2026-12-14", "market", "", "Christmas market", end_date="2026-12-20",
+                     start_hour=10, end_hour=21, local_dir=str(tmp_path))
         events = load_events_registry(storage, local_dir=str(tmp_path))
-    assert events[0]["magnitude"] == DEFAULT_MAGNITUDE
+
+    assert events[0]["date"] == date(2026, 12, 14)
+    assert events[0]["end_date"] == date(2026, 12, 20)
+    assert (events[0]["start_hour"], events[0]["end_hour"]) == (10, 21)
+
+
+def test_appending_to_a_four_column_registry_upgrades_its_header_and_keeps_its_rows(tmp_path):
+    storage = _DictStorage()
+    _upload_raw_csv(storage, "date,event_type,device_ids,notes\n2026-04-09,concert,,Old row\n")
+    with _tenant_scope():
+        append_event(storage, "2026-12-14", "market", end_date="2026-12-20", local_dir=str(tmp_path))
+        text = storage.files[events_registry_key()].decode("utf-8")
+        events = load_events_registry(storage, local_dir=str(tmp_path))
+
+    assert text.splitlines()[0] == "date,event_type,device_ids,notes,end_date,start_hour,end_hour"
+    assert [(e["date"], e["end_date"], e["notes"]) for e in events] == [
+        (date(2026, 4, 9), date(2026, 4, 9), "Old row"),
+        (date(2026, 12, 14), date(2026, 12, 20), ""),
+    ]
+
+
+def test_append_rejects_an_end_date_before_the_date_and_a_bad_hour(tmp_path):
+    storage = _DictStorage()
+    with _tenant_scope():
+        for kwargs in ({"end_date": "2026-12-01"}, {"start_hour": 25}):
+            try:
+                append_event(storage, "2026-12-14", "market", local_dir=str(tmp_path), **kwargs)
+                assert False, f"should have raised ValueError for {kwargs}"
+            except ValueError:
+                pass
+    assert storage.files == {}
 
 
 def test_append_rejects_an_invalid_date(tmp_path):
@@ -125,6 +157,35 @@ def test_a_malformed_date_skips_only_that_row_not_the_whole_registry(tmp_path, c
     assert [e["date"] for e in events] == [date(2026, 4, 9), date(2026, 9, 2)]
     assert "Skipping events_registry row 1" in caplog.text
     assert "2026-8-4" in caplog.text
+
+
+def test_an_end_date_before_its_date_skips_only_that_row(tmp_path, caplog):
+    storage = _DictStorage()
+    _upload_raw_csv(storage, (
+        "date,event_type,device_ids,notes,end_date\n"
+        "2026-12-14,market,,Reversed,2026-12-01\n"
+        "2026-04-09,concert,,Fine,\n"
+    ))
+    with _tenant_scope():
+        with caplog.at_level("WARNING"):
+            events = load_events_registry(storage, local_dir=str(tmp_path))
+
+    assert [e["notes"] for e in events] == ["Fine"]
+    assert "before" in caplog.text
+
+
+def test_a_bad_hour_only_loses_the_hour_not_the_event(tmp_path, caplog):
+    storage = _DictStorage()
+    _upload_raw_csv(storage, (
+        "date,event_type,device_ids,notes,end_date,start_hour,end_hour\n"
+        "2026-12-14,market,,Market,,ten,21\n"
+    ))
+    with _tenant_scope():
+        with caplog.at_level("WARNING"):
+            events = load_events_registry(storage, local_dir=str(tmp_path))
+
+    assert (events[0]["start_hour"], events[0]["end_hour"]) == (None, 21)
+    assert "start_hour" in caplog.text
 
 
 def test_multiple_appends_accumulate_rows_across_uploads(tmp_path):
@@ -177,42 +238,65 @@ def test_delete_event_at_index_with_nothing_uploaded_returns_false(tmp_path):
         assert delete_event_at_index(_DictStorage(), 0, local_dir=str(tmp_path)) is False
 
 
-def test_event_magnitude_for_global_event_applies_to_any_device():
-    events = [{"date": date(2026, 4, 9), "magnitude": 2, "device_ids": None}]
-    assert event_magnitude_for("SS1", date(2026, 4, 9), events) == 2
-    assert event_magnitude_for("L23", date(2026, 4, 9), events) == 2
+def _event(day, end=None, zones=None, **extra):
+    return {"date": day, "end_date": end or day, "device_ids": zones, "event_type": "market",
+            "notes": "", "start_hour": None, "end_hour": None, **extra}
 
 
-def test_event_magnitude_for_scoped_event_only_applies_to_listed_devices():
-    events = [{"date": date(2026, 9, 2), "magnitude": 1, "device_ids": {"SS3", "SS7", "SS11"}}]
-    assert event_magnitude_for("SS3", date(2026, 9, 2), events) == 1
-    assert event_magnitude_for("SS4", date(2026, 9, 2), events) == 0  # same zone, NOT a listed device
+def test_event_days_of_a_global_event_apply_to_any_zone():
+    events = [_event(date(2026, 4, 9))]
+    assert event_days("SS1", events) == {date(2026, 4, 9)}
+    assert event_days("L23", events) == {date(2026, 4, 9)}
+
+
+def test_event_days_of_a_scoped_event_only_apply_to_the_listed_zones():
+    events = [_event(date(2026, 9, 2), zones={"SS3", "SS7", "SS11"})]
+    assert event_days("SS3", events) == {date(2026, 9, 2)}
+    assert event_days("SS4", events) == set()  # same area, NOT a listed zone
+
+
+def test_event_days_cover_the_whole_range_and_merge_overlaps():
+    events = [_event(date(2026, 12, 14), end=date(2026, 12, 20)),          # the market week
+              _event(date(2026, 12, 20), end=date(2026, 12, 21), zones={"A"})]  # + a concert
+    assert event_days("A", events) == {date(2026, 12, d) for d in range(14, 22)}
+    assert event_days("B", events) == {date(2026, 12, d) for d in range(14, 21)}
 
 
 def test_device_ids_is_the_ngsi_ld_urn_not_the_short_ss_code(tmp_path):
-    """device_id in training_data.py comes from Aether's entity "id" (see
-    helpers/aether_history.py::resolve_device_ids) - already a URN, not the
+    """zone_id in training_data.py comes from Aether's entity "id" (see
+    helpers/aether_history.py::resolve_zone_ids) - already a URN, not the
     "SS1"-style shorthand zones_config.py uses for the synthetic fixtures. The
     registry has to be written in that same identifier space to ever match."""
-    urn = "urn:ngsi-ld:CrowdFlowObserved:SPT0123456789ABCDEF01234567_CFO"
+    urn = "urn:ngsi-ld:CrowdFlowZone:P13"
     storage = _DictStorage()
     with _tenant_scope():
-        append_event(storage, "2026-04-09", "large_event", urn, "Concert", local_dir=str(tmp_path))
+        append_event(storage, "2026-04-09", "concert", urn, "Concert", local_dir=str(tmp_path))
         events = load_events_registry(storage, local_dir=str(tmp_path))
 
     assert events[0]["device_ids"] == {urn}
-    assert event_magnitude_for(urn, date(2026, 4, 9), events) == 2
-    assert event_magnitude_for("SS1", date(2026, 4, 9), events) == 0  # the short code is NOT the URN
+    assert event_days(urn, events) == {date(2026, 4, 9)}
+    assert event_days("P13", events) == set()  # the short code is NOT the URN
 
 
-def test_event_magnitude_for_no_matching_date_returns_zero():
-    events = [{"date": date(2026, 4, 9), "magnitude": 2, "device_ids": None}]
-    assert event_magnitude_for("SS1", date(2026, 8, 16), events) == 0
+def test_events_in_window_keeps_the_zone_events_touching_those_days_in_order():
+    market = _event(date(2026, 12, 14), end=date(2026, 12, 20))
+    concert = _event(date(2026, 12, 13), zones={"A"})
+    elsewhere = _event(date(2026, 12, 15), zones={"B"})
+    later = _event(date(2026, 12, 25))
+    events = [later, market, elsewhere, concert]
+
+    assert events_in_window("A", date(2026, 12, 13), date(2026, 12, 14), events) == [concert, market]
+    assert events_in_window("A", date(2026, 12, 20), date(2026, 12, 21), events) == [market]
+    assert events_in_window("A", date(2026, 12, 22), date(2026, 12, 23), events) == []
 
 
-def test_event_magnitude_for_two_events_same_day_keeps_the_larger_not_the_sum():
-    events = [
-        {"date": date(2026, 4, 9), "magnitude": 2, "device_ids": None},        # global fair
-        {"date": date(2026, 4, 9), "magnitude": 1, "device_ids": {"SS3"}},     # + a punctual market
-    ]
-    assert event_magnitude_for("SS3", date(2026, 4, 9), events) == 2  # not 3
+def test_fingerprint_follows_days_and_zones_not_type_notes_or_hours():
+    base = [_event(date(2026, 12, 14), end=date(2026, 12, 20), zones={"A"})]
+    same_rows = [_event(date(2026, 12, 14), end=date(2026, 12, 20), zones={"A"},
+                        event_type="festival", notes="Renamed", start_hour=10, end_hour=21)]
+    longer = [_event(date(2026, 12, 14), end=date(2026, 12, 21), zones={"A"})]
+    other_zone = [_event(date(2026, 12, 14), end=date(2026, 12, 20), zones={"B"})]
+
+    assert fingerprint(base) == fingerprint(same_rows)
+    assert fingerprint(base) != fingerprint(longer)
+    assert fingerprint(base) != fingerprint(other_zone)

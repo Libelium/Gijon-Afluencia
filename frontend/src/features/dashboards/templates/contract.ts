@@ -37,6 +37,8 @@ const ENCODED_DATAMODELS = {
   flowObserved: 'Q3Jvd2RGbG93T2JzZXJ2ZWQ=',
   peopleCount: 'UGVvcGxlQ291bnRPYnNlcnZlZA==',
   flowEvent: 'Q3Jvd2RGbG93RXZlbnRFVEw=',
+  /** Eventos en bruto de un sensor de conteo. Su entidad, a diferencia de la de la ETL, publica ubicacion. */
+  rawEvent: 'Q3Jvd2RGbG93RXZlbnQ=',
   /** La zona en si: es el tipo que se selecciona al configurar una plantilla de zona. */
   zone: 'Q3Jvd2RGbG93Wm9uZQ==',
   /** Gemela con la analitica detallada del sensor de barrido de una zona. */

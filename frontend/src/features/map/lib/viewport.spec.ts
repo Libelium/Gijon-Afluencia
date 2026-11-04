@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { FOCUS_ZOOM, focusZoom, shouldLocate } from './viewport'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { FOCUS_ZOOM, focusZoom, onceOrAfter, shouldLocate } from './viewport'
 
 describe('focusZoom', () => {
   it('desde lejos acerca el mapa hasta el zoom de calle', () => {
@@ -40,5 +40,61 @@ describe('shouldLocate', () => {
 
   it('la primera carga ya filtrada no se recoloca por ser la primera', () => {
     expect(shouldLocate({ ...base, first: true, filtered: true })).toBe(false)
+  })
+})
+
+describe('onceOrAfter', () => {
+  /** Emisor minimo con la forma de los de Leaflet: `once`, `off` y un `fire` para la prueba. */
+  function emitter() {
+    const handlers = new Map<string, Set<() => void>>()
+    return {
+      once(type: string, fn: () => void) {
+        const set = handlers.get(type) ?? new Set()
+        const wrapped = () => {
+          set.delete(wrapped)
+          fn()
+        }
+        Object.assign(wrapped, { original: fn })
+        set.add(wrapped)
+        handlers.set(type, set)
+      },
+      off(type: string, fn: () => void) {
+        for (const h of handlers.get(type) ?? []) {
+          if ((h as unknown as { original: () => void }).original === fn) handlers.get(type)!.delete(h)
+        }
+      },
+      fire(type: string) {
+        for (const h of [...(handlers.get(type) ?? [])]) h()
+      },
+      listeners: (type: string) => handlers.get(type)?.size ?? 0,
+    }
+  }
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('con el evento, avisa una vez y ya no espera al plazo', () => {
+    vi.useFakeTimers()
+    const target = emitter()
+    const done = vi.fn()
+    onceOrAfter(target, 'animationend', 600, done)
+    target.fire('animationend')
+    vi.advanceTimersByTime(600)
+    expect(done).toHaveBeenCalledTimes(1)
+  })
+
+  it('sin el evento, avisa al cumplirse el plazo y deja de escucharlo', () => {
+    vi.useFakeTimers()
+    const target = emitter()
+    const done = vi.fn()
+    onceOrAfter(target, 'animationend', 600, done)
+    vi.advanceTimersByTime(599)
+    expect(done).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(1)
+    expect(done).toHaveBeenCalledTimes(1)
+    expect(target.listeners('animationend')).toBe(0)
+    target.fire('animationend')
+    expect(done).toHaveBeenCalledTimes(1)
   })
 })

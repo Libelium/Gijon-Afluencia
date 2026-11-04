@@ -3,6 +3,15 @@ Manual registry of punctual events (markets, fairs, concerts...) - unlike
 holidays/high season (training_data.py, via a library/fixed date ranges), an
 event cannot be computed, someone has to know it is happening and record it.
 
+What it is for: the days of an event are NOT normal, so the model must not learn
+from them. training_data.mask_event_bins() drops them as training rows and swaps
+their occupancy for the zone's usual one before any lag/rolling is computed, in
+training and in prediction alike - otherwise a week-long market would still
+inflate the lag_1w/rolling_mean_7d of the week after. The model predicts the
+normal day; the event itself is drawn on top by the prediction panel's scenario
+simulator, which receives the registered events through the `registeredEvents`
+attribute that etl/predict/transform.py publishes on each prediction entity.
+
 Stored as a small CSV blob in storage (S3/MinIO), UNDER THE SAME PREFIX AS THE
 MODEL (settings.storage().MODELS_PREFIX) - not a prefix of its own. There is
 no live CRUD entry point (decided with the team: it would need per-tenant
@@ -12,33 +21,31 @@ the same way the model gets uploaded - one route to remember, not two.
 Segregated by tenant/scope like the model (see
 helpers/model_storage.segregated_key) - NOT a local file: a plain path would
 depend on the machine that runs it, exactly what removing FilesystemStorage
-was for. Columns: date,event_type,device_ids,notes.
-  - event_type: free text ("small_event", "large_event", whatever is needed) -
-    see event_magnitudes() for the numeric weight per type.
+was for. Columns: date,event_type,device_ids,notes,end_date,start_hour,end_hour
+(the last three optional - a file with only the first four is still valid).
+  - date / end_date: LOCAL calendar days, ISO. end_date empty = a one-day event;
+    a week-long market is one row from its first day to its last.
+  - event_type: free text. The panel's simulator uses it when it matches one of
+    its event kinds (market, concert, festival...); it does not affect training.
   - device_ids: optional, comma-separated list of affected zones (empty =
     GLOBAL, affects every zone that day; e.g. a market only happening in 2 of
     every zone). MUST be the NGSI-LD `CrowdFlowZone` entity URN
     ("urn:ngsi-ld:CrowdFlowZone:<zone_id>"), matching `zone_id` elsewhere in this
-    repo - training_data.py/add_calendar_features() gets `zone_id` from
-    Aether's entity "id" (see helpers/aether_history.py::resolve_zone_ids),
-    which already IS the URN. A URN is only guaranteed unique WITHIN a
-    tenant+scope, not across the whole platform - harmless here because this
-    registry is already segregated by tenant/scope (see events_registry_key),
-    so two tenants sharing a URN string still get two separate CSVs, one
-    entry each.
-
-With few rows the model will barely learn anything from this yet (thin
-signal) - the point is to start accumulating the data NOW in the right shape,
-so that months from now, with more events recorded, the model has something
-to learn from. It does no harm meanwhile: a date/device with no entry ->
-magnitude 0, same as today.
+    repo - training_data.py gets `zone_id` from Aether's entity "id" (see
+    helpers/aether_history.py::resolve_zone_ids), which already IS the URN. A URN
+    is only guaranteed unique WITHIN a tenant+scope, not across the whole
+    platform - harmless here because this registry is already segregated by
+    tenant/scope (see events_registry_key), so two tenants sharing a URN string
+    still get two separate CSVs, one entry each.
+  - start_hour / end_hour: optional local hours (0-24) for the simulator to draw
+    the event; training always leaves out the WHOLE day.
 """
 import csv
 import hashlib
 import io
 import logging
 import os
-from datetime import date as date_cls
+from datetime import date as date_cls, timedelta
 
 from crowd_predictions.config import settings
 from crowd_predictions.config.config import get_storage
@@ -47,22 +54,7 @@ from crowd_predictions.helpers.model_storage import segregated_key
 logger = logging.getLogger(__name__)
 
 CACHE_FILENAME = "events_registry.csv"
-FIELDNAMES = ["date", "event_type", "device_ids", "notes"]
-
-# Numeric weight per event type - EXTENSIBLE, not a closed enum in code. An
-# event_type not listed here uses DEFAULT_MAGNITUDE (1, "there is an event but
-# we do not know how to weigh it yet"). EVENT_MAGNITUDES overrides and extends
-# this per deployment, so a new event type no longer needs a code change.
-BUILTIN_EVENT_MAGNITUDE = {
-    "small_event": 1,
-    "large_event": 2,
-}
-DEFAULT_MAGNITUDE = 1
-
-
-def event_magnitudes() -> dict:
-    """The built-in weights with the deployment's overrides applied."""
-    return {**BUILTIN_EVENT_MAGNITUDE, **settings.events().magnitudes()}
+FIELDNAMES = ["date", "event_type", "device_ids", "notes", "end_date", "start_hour", "end_hour"]
 
 
 def events_registry_key() -> str:
@@ -91,90 +83,113 @@ def _upload_csv_text(storage, text: str, local_dir: str) -> None:
     storage.upload_file(events_registry_key(), local_path)
 
 
+def _parse_hour(raw: str, field: str, index: int):
+    """A local hour 0-24, None if empty. A bad value only loses the hour (the
+    simulator falls back to its default), never the event itself."""
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    try:
+        hour = int(raw)
+    except ValueError:
+        hour = -1
+    if not 0 <= hour <= 24:
+        logger.warning(f"Ignoring events_registry row {index} {field} {raw!r} - not an hour 0-24")
+        return None
+    return hour
+
+
 def load_events_registry(storage, local_dir: str = "/tmp") -> list:
     """
-    -> [{"date" (date), "magnitude" (int), "device_ids" (set or None if
-    global), "event_type", "notes"}].
+    -> [{"date" (date), "end_date" (date, == date for a one-day event),
+    "device_ids" (set or None if global), "event_type", "notes",
+    "start_hour"/"end_hour" (int or None)}].
 
-    No registry uploaded yet, or an empty one (header only) -> [], not an
+    [] if nothing has been uploaded yet (cold start) - not an
     error - the normal state before the first event is recorded.
-
     A single malformed row (typically a bad date - "2026-8-4" instead of
-    "2026-08-04") is SKIPPED with a WARNING, not fatal to the whole registry:
-    _cached_events_registry's broad except (training_data.py) is meant for
-    "storage unreachable", not "row 7 has a typo" - without this, one bad row
-    would silently empty every OTHER correctly written event too.
+    "2026-08-04", or an end_date before its date) is SKIPPED with a WARNING, not
+    fatal to the whole registry: _cached_events_registry's broad except
+    (training_data.py) is meant for "storage unreachable", not "row 7 has a typo" -
+    without this, one bad row would silently empty every OTHER correctly written
+    event too.
     """
     text = _download_csv_text(storage, local_dir)
     if not text:
         return []
-
     events = []
-    magnitudes = event_magnitudes()   # read once per parse, not once per row
     for index, row in enumerate(csv.DictReader(io.StringIO(text))):
         raw_date = (row.get("date") or "").strip()
         if not raw_date:
             continue  # blank row, skip
-
+        raw_end = (row.get("end_date") or "").strip()
         try:
             parsed_date = date_cls.fromisoformat(raw_date)
+            end_date = date_cls.fromisoformat(raw_end) if raw_end else parsed_date
         except ValueError:
-            logger.warning(f"Skipping events_registry row {index} - invalid date {raw_date!r}")
+            logger.warning(f"Skipping events_registry row {index} - invalid date {raw_date!r}/{raw_end!r}")
             continue
-
+        if end_date < parsed_date:
+            logger.warning(f"Skipping events_registry row {index} - end_date {raw_end!r} before {raw_date!r}")
+            continue
         device_ids_raw = (row.get("device_ids") or "").strip()
         device_ids = {d.strip() for d in device_ids_raw.split(",") if d.strip()} or None
-
-        event_type = (row.get("event_type") or "").strip()
         events.append({
             "date": parsed_date,
-            "magnitude": magnitudes.get(event_type, DEFAULT_MAGNITUDE),
+            "end_date": end_date,
             "device_ids": device_ids,
-            "event_type": event_type,
+            "event_type": (row.get("event_type") or "").strip(),
             "notes": (row.get("notes") or "").strip(),
+            "start_hour": _parse_hour(row.get("start_hour"), "start_hour", index),
+            "end_hour": _parse_hour(row.get("end_hour"), "end_hour", index),
         })
-
     return events
 
 
-def event_magnitude_for(zone_id: str, target_date, events: list) -> int:
-    """
-    Magnitude (the highest) of the event(s) that apply to `zone_id` on
-    `target_date`, 0 if none. A GLOBAL event (device_ids=None in the registry)
-    applies to ANY zone; one with device_ids set only applies to those listed
-    (e.g. a market only happening in some of the zones, not all of them).
+def _applies_to(event: dict, zone_id: str) -> bool:
+    """A GLOBAL event (device_ids=None) applies to ANY zone; one with device_ids
+    set only to those listed (e.g. a market only happening in some zones)."""
+    return event["device_ids"] is None or zone_id in event["device_ids"]
 
-    If two events coincide on the same day over the same zone, the LARGER
-    magnitude wins (never summed - a day with both a fair AND a market is
-    still, at most, "the biggest event that day").
-    """
-    matching = [
-        e["magnitude"] for e in events
-        if e["date"] == target_date and (e["device_ids"] is None or zone_id in e["device_ids"])
-    ]
-    return max(matching, default=0)
+
+def _days_of(event: dict):
+    day = event["date"]
+    while day <= event["end_date"]:
+        yield day
+        day += timedelta(days=1)
+
+
+def event_days(zone_id: str, events: list) -> set:
+    """The local days on which `zone_id` has an event - what training must leave out.
+    Overlapping events simply share their days."""
+    return {day for event in events if _applies_to(event, zone_id) for day in _days_of(event)}
+
+
+def events_in_window(zone_id: str, first_day, last_day, events: list) -> list:
+    """The events of `zone_id` touching the local days [first_day, last_day], in date
+    order - what the prediction entity publishes for the panel."""
+    return sorted(
+        (e for e in events
+         if _applies_to(e, zone_id) and e["date"] <= last_day and e["end_date"] >= first_day),
+        key=lambda e: (e["date"], e["end_date"], e["event_type"]),
+    )
 
 
 def fingerprint(events: list) -> str:
     """
-    "len:hash" of the (date, event_type, device_ids) that actually feed
-    event_magnitude_for() - NOT notes, which does not affect the trained
-    feature. Changes on any edit to the REGISTRY FILE: a new row, a deleted
-    one, or a RETROACTIVE change to a past row (a fair added for a date already
-    trained on) - see warm_start.events_registry_changed(), which forces a full
-    retrain when this changes, the same way blocking_column_change does for the
-    columns themselves.
-
-    Hashes the MAGNITUDE, not the event_type: re-weighing a type (in code or via
-    EVENT_MAGNITUDES) changes every row's trained value without editing the file,
-    and hashing the type left the fingerprint identical through it.
-
+    "len:hash" of what decides WHICH ROWS training leaves out: each event's days
+    and zones. NOT event_type, notes or hours - they only change what the panel
+    draws, not the trained model. Changes on any edit to the registry that does:
+    a new row, a deleted one, or a RETROACTIVE change to a past row (a fair added
+    for a date already trained on) - see warm_start.events_registry_changed(),
+    which forces a full retrain when this changes, the same way
+    blocking_column_change does for the columns themselves.
     Deliberately NOT Python's hash(): it is randomized per process
     (PYTHONHASHSEED), so the SAME unchanged registry would fingerprint
     differently on every cron invocation and look "changed" forever.
     """
     canonical = "|".join(sorted(
-        f"{e['date'].isoformat()}:{e['event_type']}:{e['magnitude']}:"
+        f"{e['date'].isoformat()}:{e['end_date'].isoformat()}:"
         f"{','.join(sorted(e['device_ids'])) if e['device_ids'] else ''}"
         for e in events
     ))
@@ -202,16 +217,22 @@ def list_raw_rows(storage, local_dir: str = "/tmp") -> list:
             "event_type": (row.get("event_type") or "").strip(),
             "device_ids": (row.get("device_ids") or "").strip(),
             "notes": (row.get("notes") or "").strip(),
+            "end_date": (row.get("end_date") or "").strip(),
+            "start_hour": (row.get("start_hour") or "").strip(),
+            "end_hour": (row.get("end_hour") or "").strip(),
         })
     return rows
 
 
 def append_event(storage, date_str: str, event_type: str, device_ids: str = "",
-                 notes: str = "", local_dir: str = "/tmp") -> None:
+                 notes: str = "", end_date: str = "", start_hour=None, end_hour=None,
+                 local_dir: str = "/tmp") -> None:
     """
-    Appends a row to the registry in storage. Validates that `date_str` is a
-    real ISO date before writing - fails fast and clear if the caller sends
-    garbage, instead of leaving a row event_magnitude_for() could not read.
+    Appends a row to the registry in storage. Validates the dates (real ISO dates,
+    end_date not before date) and the hours before writing - fails fast and clear if
+    the caller sends garbage, instead of leaving a row load_events_registry() skips.
+    A registry written with the old four columns gets the new header first, its rows
+    keeping their values.
 
     A caller running in a process that keeps serving afterwards (a CRUD
     endpoint, not a short-lived script) must call training_data.clear_caches()
@@ -220,17 +241,25 @@ def append_event(storage, date_str: str, event_type: str, device_ids: str = "",
     events_registry.py cannot import training_data.py (training_data.py
     already imports this module - the other way around would be a cycle).
     """
-    date_cls.fromisoformat(date_str)
+    first = date_cls.fromisoformat(date_str)
+    if end_date and date_cls.fromisoformat(end_date) < first:
+        raise ValueError(f"end_date {end_date!r} is before date {date_str!r}")
+    for hour in (start_hour, end_hour):
+        if hour is not None and not 0 <= int(hour) <= 24:
+            raise ValueError(f"{hour!r} is not an hour 0-24")
 
-    text = _download_csv_text(storage, local_dir)
+    rows = list(csv.DictReader(io.StringIO(_download_csv_text(storage, local_dir))))
+    rows.append({
+        "date": date_str, "event_type": event_type, "device_ids": device_ids, "notes": notes,
+        "end_date": end_date,
+        "start_hour": "" if start_hour is None else str(int(start_hour)),
+        "end_hour": "" if end_hour is None else str(int(end_hour)),
+    })
+
     buffer = io.StringIO()
-    writer = csv.writer(buffer)
-    if not text:
-        writer.writerow(FIELDNAMES)
-    else:
-        buffer.write(text if text.endswith("\n") else text + "\n")
-    writer.writerow([date_str, event_type, device_ids, notes])
-
+    writer = csv.DictWriter(buffer, fieldnames=FIELDNAMES, extrasaction="ignore", restval="")
+    writer.writeheader()
+    writer.writerows(rows)
     _upload_csv_text(storage, buffer.getvalue(), local_dir)
 
 

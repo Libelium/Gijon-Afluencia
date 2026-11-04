@@ -16,6 +16,7 @@ from crowd_predictions.config import settings
 from crowd_predictions.config.config import get_storage
 from crowd_predictions.helpers.model_storage import model_storage_key
 from crowd_predictions.helpers.aether_history import load_history_bins, resolve_zone_ids
+from crowd_predictions.training_data import mask_event_bins
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +38,12 @@ class PredictExtract:
 
     def _load_history(self) -> list:
         # Live from the platform, per zone (CrowdFlowZone). Zones come from ZONE_IDS
-        # or, if it is empty, from autodiscovery in the broker.
-        return load_history_bins(device_ids=resolve_zone_ids(), measure="occupancy",
+        # or, if it is empty, from autodiscovery in the broker. Registered event days
+        # carry the usual occupancy, so predict_recursive does not drag a market
+        # into the lags of the days after it (see mask_event_bins).
+        bins = load_history_bins(device_ids=resolve_zone_ids(), measure="occupancy",
                                  id_column="zone_id", incremental=True, bin_minutes=60)
+        return mask_event_bins(bins)[0]
 
     def _load_model(self):
         model_input_path = self.model_path

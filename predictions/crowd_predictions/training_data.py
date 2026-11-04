@@ -125,6 +125,96 @@ def _is_high_season(ts, ranges: list) -> bool:
     return False
 
 
+# A registered event's day is not a normal day: its occupancy is swapped for the
+# median of the same zone and hour on the same weekday of the previous weeks
+# without an event - at most EVENT_BASELINE_WEEKS of them, looked for over up to
+# EVENT_BASELINE_LOOKBACK_WEEKS (a two-week event still finds four clean weeks).
+EVENT_BASELINE_WEEKS = 4
+EVENT_BASELINE_LOOKBACK_WEEKS = 8
+
+
+def registered_events() -> list:
+    """The events registry of the current tenant/scope, cached like add_calendar_features
+    reads the weather. [] when storage is unreachable or nothing was recorded."""
+    fiware_settings = settings.fiware()
+    return _cached_events_registry(fiware_settings.FIWARE_TENANT, fiware_settings.FIWARE_SCOPE)
+
+
+def _is_value(value) -> bool:
+    return value is not None and not (isinstance(value, float) and math.isnan(value))
+
+
+def mask_event_bins(bins: list, events: list = None):
+    """
+    (bins, event_keys): the bins with the occupancy of every registered event day
+    replaced by the zone's usual one, and the (zone_id, timestamp) of the bins so
+    replaced - the ones training must not use as rows.
+
+    Leaving the event days out as rows is not enough on its own: their occupancy is
+    still what add_lag_features/add_rolling_features read for the days after, so a
+    week-long market would inflate the lag_1w and rolling_mean_7d of the following
+    week - in training and, through predict_recursive, in what gets published. Hence
+    the swap, done on the bins before any feature, by training and prediction alike.
+
+    The usual occupancy is the median of the same zone and UTC slot one, two... weeks
+    back (the same exact-timestamp convention as lag_1w), skipping other event days.
+    A bin with no clean week to compare against is dropped: an hour without a lag is
+    a gap the rest of the pipeline already handles, an invented number is not.
+
+    Event days are LOCAL calendar days (CALENDAR_TIMEZONE), like is_holiday.
+    """
+    events = registered_events() if events is None else events
+    if not bins or not events:
+        return list(bins), set()
+
+    local_days = local_calendar_timestamps(
+        pd.to_datetime(pd.Series([b["timestamp"] for b in bins])), settings.calendar().timezone()
+    ).dt.date
+    days_by_zone = {}
+    event_keys = set()
+    for b, day in zip(bins, local_days):
+        zone_id = b["zone_id"]
+        if zone_id not in days_by_zone:
+            days_by_zone[zone_id] = events_registry.event_days(zone_id, events)
+        if day in days_by_zone[zone_id]:
+            event_keys.add((zone_id, pd.Timestamp(b["timestamp"])))
+    if not event_keys:
+        return list(bins), set()
+
+    clean = {(b["zone_id"], pd.Timestamp(b["timestamp"])): b["occupancy"]
+             for b in bins if (b["zone_id"], pd.Timestamp(b["timestamp"])) not in event_keys}
+    masked, kept, dropped = [], set(), 0
+    for b in bins:
+        key = (b["zone_id"], pd.Timestamp(b["timestamp"]))
+        if key not in event_keys:
+            masked.append(b)
+            continue
+        usual = []
+        for weeks in range(1, EVENT_BASELINE_LOOKBACK_WEEKS + 1):
+            value = clean.get((key[0], key[1] - timedelta(weeks=weeks)))
+            if _is_value(value):
+                usual.append(value)
+            if len(usual) == EVENT_BASELINE_WEEKS:
+                break
+        if not usual:
+            dropped += 1
+            continue
+        masked.append({**b, "occupancy": statistics.median(usual)})
+        kept.add(key)
+
+    logger.info(f"Registered events: {len(event_keys)} bins on event days, {len(kept)} swapped "
+                f"for the usual occupancy, {dropped} dropped (no clean week to compare against)")
+    return masked, kept
+
+
+def without_event_rows(df: pd.DataFrame, event_keys: set) -> pd.DataFrame:
+    """The feature table minus the rows of event days (see mask_event_bins)."""
+    if df.empty or not event_keys:
+        return df
+    keep = [(zone_id, pd.Timestamp(ts)) not in event_keys for zone_id, ts in zip(df["zone_id"], df["timestamp"])]
+    return df[keep].reset_index(drop=True)
+
+
 def add_calendar_features(bins: list) -> pd.DataFrame:
     """
     Adds calendar features to the table of bins - cyclic encoding (sin/cos) for
@@ -162,17 +252,11 @@ def add_calendar_features(bins: list) -> pd.DataFrame:
 
     # Cached by (tenant, scope): one storage round-trip per deployment per
     # process, not per row nor per recursive prediction step (see the two
-    # _cached_* functions above).
+    # _cached_* functions above). Registered events are not a feature: their days
+    # never reach this table as normal ones (see mask_event_bins).
     fiware_settings = settings.fiware()
-    events = _cached_events_registry(fiware_settings.FIWARE_TENANT, fiware_settings.FIWARE_SCOPE)
     weather_cache = _cached_weather_cache(fiware_settings.FIWARE_TENANT, fiware_settings.FIWARE_SCOPE)
 
-    # An event is a LOCAL-calendar concept too (the market is happening on this
-    # local day) - same `dates` (already local) as is_holiday above.
-    df["event_magnitude"] = [
-        events_registry.event_magnitude_for(zone_id, event_date, events)
-        for zone_id, event_date in zip(df["zone_id"], dates)
-    ]
     # Weather, in contrast, is keyed by UTC in the cache (weather.py fetches
     # Open-Meteo with timezone=UTC) - `timestamp` itself, not `local`. Only
     # precip_mm is kept: temp_c has no reader anywhere (checked before dropping
@@ -290,7 +374,7 @@ def add_rolling_features(df: pd.DataFrame, windows: tuple = (7, 28),
 
 FEATURE_COLUMNS = ["hour_sin", "hour_cos", "weekday_sin", "weekday_cos", "is_weekend", "month",
                    "is_holiday", "is_holiday_eve", "is_high_season",
-                   "event_magnitude", "precip_mm",
+                   "precip_mm",
                    "lag_1d", "lag_1w", "rolling_mean_7d", "rolling_mean_28d",
                    "rolling_std_7d", "rolling_std_28d"]
 TARGET_COLUMN = "occupancy"

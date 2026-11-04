@@ -12,6 +12,10 @@ export default {
   'map.clearFilters': 'Quitar filtros',
   'map.loading': 'Buscando entidades…',
 
+  'map.suggestions.label': 'Entidades que coinciden con la búsqueda',
+  'map.suggestions.loading': 'Buscando coincidencias…',
+  'map.suggestions.empty': 'Ninguna entidad con ubicación coincide con la búsqueda',
+
   'map.count.zero': 'Sin entidades en esta zona',
   'map.count.one': '1 entidad en esta zona',
   'map.count.many': '{n} entidades en esta zona',

@@ -212,11 +212,11 @@ def test_fifteen_days_trains_without_the_28_day_features_and_says_so(env, caplog
     assert metrics["mode"] == "full"
     # Logged on purpose: the day the 28-day features come in, the MAE changes
     # meaning, and without this line it looks like an unexplained jump.
-    assert "FEATURES IN USE (15/17)" in caplog.text
+    assert "FEATURES IN USE (14/16)" in caplog.text
     assert "left out: ['rolling_mean_28d', 'rolling_std_28d']" in caplog.text
 
 
-def test_sixty_days_trains_with_all_seventeen_features(env, caplog):
+def test_sixty_days_trains_with_all_sixteen_features(env, caplog):
     env.state["days"] = 60
     with caplog.at_level(logging.INFO):
         exit_code = env.run()
@@ -224,7 +224,7 @@ def test_sixty_days_trains_with_all_seventeen_features(env, caplog):
     assert exit_code == 0
     _model, columns, _metrics = env.bundle()
     assert "rolling_mean_28d" in columns and "rolling_std_28d" in columns
-    assert "FEATURES IN USE (17/17)" in caplog.text
+    assert "FEATURES IN USE (16/16)" in caplog.text
 
 
 def test_second_run_is_a_warm_start_that_adds_exactly_the_increment(env, caplog):
@@ -277,19 +277,18 @@ def test_a_change_in_the_feature_set_forces_a_full_retrain(env, caplog):
     assert n_trees(model_60) != metrics_15["n_trees"] + 50
 
 
-def test_a_bundle_from_before_event_magnitude_and_precip_mm_existed_forces_a_full_retrain(env, caplog):
-    """Migration scenario: a bundle saved by OLD code (15 columns, no
-    event_magnitude/precip_mm - they did not exist yet) meeting CURRENT code
-    (always 17). blocking_column_change has to catch this by itself: this
-    bundle predates weather_available/events_fingerprint too, so neither of
-    those sidecar guards has anything to compare against (see
+def test_a_bundle_from_before_precip_mm_existed_forces_a_full_retrain(env, caplog):
+    """Migration scenario: a bundle saved by OLD code (no precip_mm - it did not
+    exist yet) meeting CURRENT code. blocking_column_change has to catch this by
+    itself: this bundle predates weather_available/events_fingerprint too, so
+    neither of those sidecar guards has anything to compare against (see
     test_a_weather_bundle_from_before_this_was_recorded_is_left_alone /
     the events equivalent, test_warm_start.py)."""
-    _model, columns_17, _metrics = env.cold_start()
-    assert "event_magnitude" in columns_17 and "precip_mm" in columns_17  # sanity: they are there
+    _model, columns_full, _metrics = env.cold_start()
+    assert "precip_mm" in columns_full  # sanity: it is there
 
-    # Rewrite the stored sidecar as if trained by code that never had them.
-    old_columns = [c for c in columns_17 if c not in ("event_magnitude", "precip_mm")]
+    # Rewrite the stored sidecar as if trained by code that never had it.
+    old_columns = [c for c in columns_full if c != "precip_mm"]
     columns_path = env.storage._path(model_storage_key(env.model_file + COLUMNS_SUFFIX))
     with open(columns_path, "w") as f:
         json.dump(old_columns, f)
@@ -301,7 +300,7 @@ def test_a_bundle_from_before_event_magnitude_and_precip_mm_existed_forces_a_ful
 
     assert "the feature set changed" in caplog.text
     assert metrics_after["mode"] == "full"
-    assert set(columns_after) == set(columns_17)
+    assert set(columns_after) == set(columns_full)
 
 
 def test_a_new_zone_forces_a_full_retrain(env, caplog):
@@ -486,9 +485,31 @@ def test_weather_becoming_available_forces_a_full_retrain(env, caplog):
     assert columns_before == columns_after
 
 
+def test_a_bundle_trained_with_event_magnitude_forces_a_full_retrain(env, caplog):
+    """Migration scenario: a bundle saved while the registered events were still a
+    feature (event_magnitude) meeting code where they are not - the trees expect a
+    column that no longer exists, so blocking_column_change has to retrain."""
+    _model, columns, _metrics = env.cold_start()
+    assert "event_magnitude" not in columns
+
+    columns_path = env.storage._path(model_storage_key(env.model_file + COLUMNS_SUFFIX))
+    with open(columns_path, "w") as f:
+        json.dump(columns + ["event_magnitude"], f)
+
+    env.state["days"] = 61
+    with caplog.at_level(logging.INFO):
+        assert env.run() == 0
+    _model, columns_after, metrics_after = env.bundle()
+
+    assert "the feature set changed" in caplog.text
+    assert metrics_after["mode"] == "full"
+    assert "event_magnitude" not in columns_after
+
+
 def test_a_new_event_forces_a_full_retrain(env, caplog):
-    """End to end. event_magnitude is a column either way - only the fingerprint
-    in the sidecar can catch that its VALUES changed for rows already trained."""
+    """End to end. The columns are the same either way - only the fingerprint in
+    the sidecar can catch that the rows to leave out changed for days already
+    trained."""
     from crowd_predictions import events_registry
 
     _model, columns_before, before = env.cold_start()

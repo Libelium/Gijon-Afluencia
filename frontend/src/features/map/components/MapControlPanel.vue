@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
+import type { PlacedEntity } from '../lib/geometry'
 import MapFilters from './MapFilters.vue'
 
 const props = defineProps<{
@@ -11,7 +12,11 @@ const props = defineProps<{
   withoutLocation: number
   datamodels: string[]
   datamodelsLoading?: boolean
+  suggestions?: PlacedEntity[]
+  suggestionsLoading?: boolean
 }>()
+
+const emit = defineEmits<{ pick: [item: PlacedEntity] }>()
 
 const search = defineModel<string>('search', { default: '' })
 const datamodel = defineModel<string | null>('datamodel', { default: null })
@@ -51,6 +56,12 @@ function toggle() {
   if (smAndDown.value) sheet.value = !sheet.value
   else open.value = !open.value
 }
+
+// En movil la hoja tapa el mapa: al elegir una entidad se cierra para ver adonde va.
+function pick(item: PlacedEntity) {
+  sheet.value = false
+  emit('pick', item)
+}
 </script>
 
 <template>
@@ -82,7 +93,10 @@ function toggle() {
           :datamodels="datamodels"
           :datamodels-loading="datamodelsLoading"
           :without-location="withoutLocation"
+          :suggestions="suggestions"
+          :suggestions-loading="suggestionsLoading"
           class="pa-4"
+          @pick="pick"
         />
       </div>
     </VExpandTransition>
@@ -109,7 +123,10 @@ function toggle() {
         :datamodels="datamodels"
         :datamodels-loading="datamodelsLoading"
         :without-location="withoutLocation"
+        :suggestions="suggestions"
+        :suggestions-loading="suggestionsLoading"
         class="pa-4"
+        @pick="pick"
       />
 
       <div class="px-4 pb-4">
