@@ -90,12 +90,21 @@ describe('orden del listado de entidades', () => {
     expect(lastQuery()).toMatchObject({ orderBy: 'tenant', orderDirection: 'asc' })
   })
 
-  it('el nombre y el ultimo dato no se ofrecen para ordenar', async () => {
+  it('el nombre se ordena en el servidor, que lo lee de la base de datos de tiempo real', async () => {
     const wrapper = await mountList([entity(1, '/')])
-    const calls = listEntities.mock.calls.length
     await header(wrapper, 'Entidad').trigger('click')
+    await flushPromises()
+    expect(lastQuery()).toMatchObject({ orderBy: 'name', orderDirection: 'asc', page: 1 })
+  })
+
+  it('el ultimo dato se ordena con la clave que entiende el servidor, mas reciente primero al repetir', async () => {
+    const wrapper = await mountList([entity(1, '/')])
     await header(wrapper, 'Último dato').trigger('click')
     await flushPromises()
-    expect(listEntities.mock.calls.length).toBe(calls)
+    expect(lastQuery()).toMatchObject({ orderBy: 'last_data', orderDirection: 'asc' })
+
+    await header(wrapper, 'Último dato').trigger('click')
+    await flushPromises()
+    expect(lastQuery()).toMatchObject({ orderBy: 'last_data', orderDirection: 'desc' })
   })
 })

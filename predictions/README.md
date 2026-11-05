@@ -81,12 +81,15 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   `training_data.py` nunca llama a la red: lee una caché en el almacenamiento, que refresca el
   primer paso de `daily_pipeline.py`. Un fallo ahí no bloquea el entrenamiento ni la predicción.
   Sin `WEATHER_LAT`/`WEATHER_LON` el refresco no hace nada y `precip_mm` vale 0.0.
-- `events_registry.py` — eventos puntuales (mercados, ferias, conciertos) registrados **a mano**,
+- `events_registry.py` — eventos puntuales (mercados, ferias, conciertos) que registra una persona,
   una fila CSV por evento (`date,event_type,device_ids,notes,end_date,start_hour,end_hour`; las
   tres últimas son opcionales): a diferencia de festivos, temporada o meteorología, un evento no se
   puede calcular, alguien tiene que saber que ocurre. Vive en el almacenamiento, bajo el mismo
   prefijo que el modelo. `device_ids` vacío = afecta a todas las zonas; `end_date` vacío = un solo
-  día. Las fechas son días locales (`CALENDAR_TIMEZONE`).
+  día. Las fechas son días locales (`CALENDAR_TIMEZONE`). Se registran y se borran desde el panel
+  de predicción de zona («Registro de eventos», en el simulador), que escribe este mismo fichero a
+  través del backend (`/prediction-events`, permisos `prediction_events.read` y `.update`); el
+  backend tiene que ver el mismo bucket y el mismo `MODELS_PREFIX`. También se puede subir a mano.
   **El modelo no aprende de los días con evento**, porque no son lo normal:
   `training_data.mask_event_bins()` los quita como filas de entrenamiento y, antes de calcular
   ninguna característica, cambia su ocupación por la mediana de la misma zona y franja en las
@@ -96,8 +99,10 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   de texto con los eventos de su zona dentro del horizonte, y el simulador del panel de predicción
   los dibuja encima (`event_type` le sirve si coincide con uno de sus tipos: `market`, `concert`,
   `festival`, `sports`, `localFestival`, `food`; `start_hour`–`end_hour` son las horas que dibuja).
-  Editar las fechas o zonas de un evento, también de uno pasado, fuerza un reentrenamiento completo;
-  cambiar solo el tipo, las notas o las horas no.
+  Registrar, mover o borrar un evento **con antelación** no reentrena nada: el arranque en caliente
+  deja fuera sus días cuando llegan a su ventana. Solo fuerza un reentrenamiento completo cambiar
+  días que el modelo ya ha aprendido (un evento pasado o ya empezado), porque es la única forma de
+  desaprenderlos; cambiar solo el tipo, las notas o las horas no.
 - `crowd_xgboost_model.py` — XGBoost (`count:poisson`, porque son recuentos) sobre la tabla
   anterior, un único modelo para todas las zonas (`zone_id` con codificación *one-hot*). Partición
   **temporal** (la reserva son los últimos días, nunca aleatoria) y `tune_hyperparameters()` con
@@ -177,7 +182,7 @@ Una imagen para todos los puntos de entrada, un comando distinto por trabajo:
   con modelo y sus dos hermanos, arranca en caliente añadiendo `N_ESTIMATORS_INCREMENT` árboles.
   Vuelve a un reentrenamiento completo en nueve casos: las columnas ya no coinciden, el último
   completo es más viejo que `FULL_RETRAIN_AFTER_DAYS`, la meteorología pasó de no configurada a
-  configurada (o al revés), cambió el registro de eventos, `CALENDAR_TIMEZONE` difiere del anotado,
+  configurada (o al revés), cambió el registro de eventos en días ya aprendidos, `CALENDAR_TIMEZONE` difiere del anotado,
   se alcanzó `MAX_ESTIMATORS`, el MAE del último día empeora más de `INCREMENTAL_MAE_TOLERANCE`, el
   fichero hermano no trae hiperparámetros, o `FORCE_FULL_RETRAIN=true`. Y en dos casos no entrena
   nada: sin datos nuevos desde la última ejecución, y con un histórico por debajo del suelo de 7 días.

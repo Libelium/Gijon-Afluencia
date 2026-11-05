@@ -1,15 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
   EVENT_CATALOG,
+  MAX_EVENT_HOURS,
   SHOULDER_WEIGHT,
   WEATHER_FACTORS,
   eventPeak,
   eventStartHours,
+  eventDayStarts,
+  eventDays,
   eventWeight,
   referenceOf,
   registeredScenarioEvents,
+  scenarioBase,
   simulate,
   summariseScenario,
+  usualProfile,
   type ScenarioEvent,
 } from './eventSimulation'
 
@@ -40,6 +45,48 @@ describe('eventWeight', () => {
       SHOULDER_WEIGHT,
       0,
     ])
+  })
+})
+
+describe('eventos de varios días', () => {
+  it('se repiten cada día a la misma hora, con sus horas a medias', () => {
+    const e = event({ days: 3 })
+    const later = (days: number, h: number) => ms(h) + days * 24 * 3_600_000
+    expect([18, 19, 20, 21].map((h) => eventWeight(e, later(1, h)))).toEqual([SHOULDER_WEIGHT, 1, 1, SHOULDER_WEIGHT])
+    expect([19, 20].map((h) => eventWeight(e, later(2, h)))).toEqual([1, 1])
+    expect(eventWeight(e, later(3, 19))).toBe(0) // el cuarto día ya no
+  })
+
+  it('cruzando el cambio de hora sigue empezando a la misma hora local', () => {
+    // El 25 de octubre de 2026 Madrid pasa de UTC+2 a UTC+1.
+    const market = event({ start: '2026-10-24T08:00:00.000Z', hours: 11, days: 3 })
+    expect(eventDayStarts(market, 'Europe/Madrid').map((t) => new Date(t).toISOString())).toEqual([
+      '2026-10-24T08:00:00.000Z',
+      '2026-10-25T09:00:00.000Z',
+      '2026-10-26T09:00:00.000Z',
+    ])
+  })
+
+  it('si la hora de después de un día es la de antes del siguiente, cuenta una vez', () => {
+    const e = event({ start: hour(0), hours: 23, days: 2 })
+    expect(eventWeight(e, ms(23))).toBe(SHOULDER_WEIGHT)
+  })
+
+  it('un mercado de todo el día durante una semana pesa entero sin huecos', () => {
+    const e = event({ kind: 'market', start: hour(0), hours: MAX_EVENT_HOURS, days: 7 })
+    const week = Array.from({ length: 7 * 24 }, (_, i) => ms(0) + i * 3_600_000)
+    expect(week.every((t) => eventWeight(e, t) === 1)).toBe(true)
+    expect(eventWeight(e, ms(0) - 3_600_000)).toBe(SHOULDER_WEIGHT)
+    expect(eventWeight(e, ms(0) + 7 * 24 * 3_600_000)).toBe(SHOULDER_WEIGHT)
+  })
+
+  it('una semana de mercado suma cada día sobre la previsión', () => {
+    const week = Array.from({ length: 7 * 24 }, (_, i) => new Date(ms(0) + i * 3_600_000).toISOString())
+    const base = week.map(() => 10)
+    const simulated = simulate(week, base, [event({ kind: 'market', start: hour(10), hours: 11, days: 7 })], 100)
+    const extra = Math.round(10 + 100 * share('market'))
+    expect([0, 1, 2, 3, 4, 5, 6].map((d) => simulated[d * 24 + 15])).toEqual(Array(7).fill(extra))
+    expect(simulated[3]).toBe(10)
   })
 })
 
@@ -140,18 +187,26 @@ describe('registeredScenarioEvents', () => {
   const tz = 'Europe/Madrid'
   const raw = (list: unknown[]) => JSON.stringify(list)
 
-  it('un mercado de varios días es un evento por día, a sus horas locales', () => {
+  it('un mercado de varios días es un evento que se repite cada día, a sus horas locales', () => {
     const events = registeredScenarioEvents(
-      raw([{ date: '2026-12-14', endDate: '2026-12-15', type: 'market', startHour: 10, endHour: 21, notes: 'Navidad' }]),
+      raw([
+        { date: '2026-12-14', endDate: '2026-12-20', type: 'market', startHour: 10, endHour: 21, notes: 'Navidad' },
+        { date: '2026-12-31', type: 'concert', startHour: 22, endHour: 24 },
+      ]),
       tz,
     )
-    expect(events.map((e) => [e.start, e.hours, e.kind, e.registered])).toEqual([
-      ['2026-12-14T09:00:00.000Z', 11, 'market', true], // 10:00 en Madrid, UTC+1 en diciembre
-      ['2026-12-15T09:00:00.000Z', 11, 'market', true],
+    expect(events.map((e) => [e.start, e.hours, e.days, e.kind, e.registered])).toEqual([
+      ['2026-12-14T09:00:00.000Z', 11, 7, 'market', true], // 10:00 en Madrid, UTC+1 en diciembre
+      ['2026-12-31T21:00:00.000Z', 2, 1, 'concert', true],
     ])
     expect(events[0].notes).toBe('Navidad')
     expect(new Set(events.map((e) => e.id)).size).toBe(2)
     expect(events.every((e) => e.id < 0)).toBe(true) // no chocan con los que añade quien simula
+  })
+
+  it('los días de un evento que cruza el cambio de hora se cuentan por calendario', () => {
+    const [event] = registeredScenarioEvents(raw([{ date: '2026-10-24', endDate: '2026-10-26', type: 'market' }]), tz)
+    expect(event.days).toBe(3)
   })
 
   it('sin horas dibuja un día de mercado y un tipo desconocido se toma por mercado', () => {
@@ -179,5 +234,38 @@ describe('registeredScenarioEvents', () => {
     const [event] = registeredScenarioEvents(raw([{ date: '2026-11-03', type: 'market', startHour: 18, endHour: 20 }]), 'UTC')
     const simulated = simulate(times, [20, 30, 40, 50, 50, 40, 30, null], [event], 100)
     expect(simulated[2]).toBe(Math.round(40 + 100 * share('market')))
+  })
+})
+
+describe('lo habitual en la zona', () => {
+  const tz = 'Europe/Madrid'
+  const at = (iso: string, v: number | null) => ({ t: iso, v })
+
+  it('es la media medida de cada día de la semana y hora local', () => {
+    // Dos martes a las 10:00 de Madrid (09:00 UTC en noviembre) y un miércoles a la misma hora.
+    const profile = usualProfile(
+      [at('2026-11-03T09:00:00.000Z', 20), at('2026-11-10T09:00:00.000Z', 40), at('2026-11-04T09:00:00.000Z', 99), at('2026-11-11T09:00:00.000Z', null)],
+      tz,
+    )
+    expect(profile.get('2-10')).toBe(30)
+    expect(profile.get('3-10')).toBe(99)
+    expect(profile.size).toBe(2)
+  })
+
+  it('no cuenta los días con evento registrado', () => {
+    const market = event({ start: '2026-11-10T09:00:00.000Z', hours: 11, days: 2 })
+    const days = eventDays([market], tz)
+    expect([...days]).toEqual(['2026-11-10', '2026-11-11'])
+    const profile = usualProfile([at('2026-11-03T09:00:00.000Z', 20), at('2026-11-10T09:00:00.000Z', 400)], tz, days)
+    expect(profile.get('2-10')).toBe(20)
+  })
+
+  it('la base es la previsión donde la hay y lo habitual donde no, redondeado', () => {
+    const start = Date.parse('2026-11-03T08:00:00.000Z') // martes, 09:00 en Madrid
+    const profile = new Map([['2-10', 30.4], ['2-11', 31.6]])
+    const result = scenarioBase(start, 4, [at('2026-11-03T08:00:00.000Z', 40), at('2026-11-03T09:00:00.000Z', null)], profile, tz)
+    expect(result.times).toEqual(['2026-11-03T08:00:00.000Z', '2026-11-03T09:00:00.000Z', '2026-11-03T10:00:00.000Z', '2026-11-03T11:00:00.000Z'])
+    expect(result.base).toEqual([40, 30, 32, null])
+    expect(result.usual).toEqual([false, true, true, false])
   })
 })

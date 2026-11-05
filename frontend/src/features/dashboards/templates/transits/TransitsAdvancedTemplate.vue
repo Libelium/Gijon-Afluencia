@@ -7,7 +7,9 @@ import StatStrip from '../shared/StatStrip.vue'
 import TemplateShell from '../shared/TemplateShell.vue'
 import type { MatrixCell, TemplateDashboard } from '../shared/types'
 import FlowSankeyChart, { type FlowLink } from './FlowSankeyChart.vue'
+import RouteDetailsPanels from './RouteDetailsPanels.vue'
 import TransitsPanels from './TransitsPanels.vue'
+import { useRouteDetails } from './routeDetails'
 import { useTransits } from './useTransits'
 import type { FlowNode } from './pairs'
 
@@ -24,6 +26,7 @@ const MAX_SANKEY_LINKS = 24
 const props = defineProps<{ dashboard: TemplateDashboard }>()
 
 const tx = useTransits(props.dashboard)
+const details = useRouteDetails(tx.ranked, tx.data.range, true)
 
 /** Volumen total que entra y sale de cada extremo: es el criterio con el que se recorta la matriz. */
 const nodeVolume = computed(() => {
@@ -153,6 +156,8 @@ const sankeyHeight = computed(() => {
       :routes="tx.ranked.value"
       :total-series="tx.totalSeries.value"
     />
+
+    <RouteDetailsPanels :details="details.details.value" :with-visitors="true" :error="details.error.value" />
 
     <VRow class="mt-0">
       <VCol cols="12" lg="6">

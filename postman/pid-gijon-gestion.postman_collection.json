@@ -4889,6 +4889,124 @@
       ]
     },
     {
+      "name": "Previsión: eventos registrados",
+      "item": [
+        {
+          "name": "Listar los eventos registrados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/prediction-events?tenant=&scope=/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "prediction-events"
+              ],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": ""
+                },
+                {
+                  "key": "scope",
+                  "value": "/"
+                }
+              ]
+            },
+            "description": "Los días de los que el modelo de afluencia no debe aprender. Requiere `prediction_events.read`."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar un evento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/prediction-events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "prediction-events"
+              ]
+            },
+            "description": "Requiere `prediction_events.update`. Las dos horas van juntas o ninguna.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant\": \"\",\n  \"scope\": \"/\",\n  \"date\": \"2026-12-14\",\n  \"end_date\": \"2026-12-20\",\n  \"event_type\": \"market\",\n  \"device_ids\": [],\n  \"notes\": \"\",\n  \"start_hour\": 10,\n  \"end_hour\": 21\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Borrar un evento registrado",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/V1/prediction-events/{id}?tenant=&scope=/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "V1",
+                "prediction-events",
+                "{id}"
+              ],
+              "query": [
+                {
+                  "key": "tenant",
+                  "value": ""
+                },
+                {
+                  "key": "scope",
+                  "value": "/"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "El `id` que da el listado"
+                }
+              ]
+            },
+            "description": "Si la fila ha cambiado desde que se listó, responde 409 y no borra nada."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Series temporales",
       "item": [
         {

@@ -1130,6 +1130,10 @@ components:
       DB_REALTIME_HOST: <CHANGE_ME>       # PostgreSQL host
       DB_REALTIME_PORT: "5432"
       FILESYSTEM_DISK: local
+      # Registro de eventos de predictions: el disco de config/filesystems.php que ve el bucket de
+      # predictions y su MODELS_PREFIX. Por defecto, s3 y prediction-models.
+      # PREDICTION_EVENTS_DISK: s3
+      # PREDICTION_MODELS_PREFIX: prediction-models
       # Object storage (mirror the consumers' STORAGE_TYPE choice).
       # AWS_S3_BUCKET: <CHANGE_ME>
       # AWS_S3_REGION: <CHANGE_ME>

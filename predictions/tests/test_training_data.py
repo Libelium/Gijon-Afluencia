@@ -126,6 +126,28 @@ def test_lag_features_independent_per_zone():
     assert row_b_day2["lag_1d"] == 1  # B's one (day 1), not A's 100
 
 
+def test_lags_and_rolling_stats_restricted_to_some_rows_match_the_full_computation():
+    """Prediction asks only for the rows it predicts (`only`): those must get exactly
+    the values the full computation gives them, because they are still looked up
+    against every row; the rest are left empty instead of being computed."""
+    bins = [{"zone_id": zone, "timestamp": datetime(2026, 6, 1, 10, 0) + timedelta(days=day),
+             "occupancy": base + day % 5}
+            for zone, base in (("A", 100), ("B", 3)) for day in range(30)]
+    last = datetime(2026, 6, 1, 10, 0) + timedelta(days=29)
+    wanted = {("A", last), ("B", last)}
+    columns = ["lag_1d", "lag_1w", "rolling_mean_7d", "rolling_mean_28d", "rolling_std_7d", "rolling_std_28d"]
+
+    full = add_rolling_features(add_lag_features(add_calendar_features(bins)))
+    restricted = add_rolling_features(add_lag_features(add_calendar_features(bins), only=wanted), only=wanted)
+
+    is_wanted = [(row.zone_id, row.timestamp) in wanted for row in restricted.itertuples(index=False)]
+    assert sum(is_wanted) == 2
+    pd.testing.assert_frame_equal(full[is_wanted][columns].reset_index(drop=True),
+                                  restricted[is_wanted][columns].reset_index(drop=True))
+    assert restricted[[not w for w in is_wanted]][columns].isna().all().all()
+    assert full[is_wanted][columns].notna().all().all()  # the comparison is over real values
+
+
 def test_rolling_mean_averages_available_past_days_at_same_hour():
     """7 consecutive days, occupancy = 10,11,...,16 - rolling_mean_7d of day 7
     (index 7, occupancy=17) must be the mean of the 7 previous days (10..16)."""

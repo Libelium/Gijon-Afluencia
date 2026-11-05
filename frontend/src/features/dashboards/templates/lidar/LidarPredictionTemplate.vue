@@ -5,7 +5,7 @@ import StatTile from '@/components/StatTile.vue'
 import { errorMessage } from '@/api/http'
 import { getEntityMeasures } from '@/features/entities/api/entities'
 import { t } from '@/i18n'
-import { formatDateTime, formatNumber, relativeFromNow } from '@/lib/format'
+import { formatDateTime, formatNumber, relativeFromNow, urnTail } from '@/lib/format'
 import type { Dashboard, Entity, Measure } from '@/types'
 import { BarChart, toMillis, type ChartPoint } from '../../charts'
 import { FORECAST_HORIZON_HOURS, autoAggregation, extendRange, type DateRange } from '../../lib/range'
@@ -244,6 +244,19 @@ function signed(value: number | null): string {
 
 const rangeHint = computed(() => presetHint(preset.value))
 
+/** La zona que se simula, con el mismo nombre que en el selector. */
+const zoneName = computed(() => (zone.value ? zone.value.name?.trim() || urnTail(zone.value.urn) : undefined))
+
+/** Atributo de la gemela con la zona de la que sale, tal y como la conoce el modelo. */
+const ZONE_ID = 'zoneId'
+
+/** La zona para el registro de eventos: la que dice la gemela o, si no lo dice, la del panel, que
+ * es la misma entidad de zona que lee el modelo. */
+const zoneUrn = computed(() => {
+  const published = twinMeasures.value.find((m) => m.id === ZONE_ID)?.value
+  return (typeof published === 'string' && published.trim()) || zone.value?.urn || undefined
+})
+
 /** Atributo de la gemela con los eventos registrados de la zona, en JSON. */
 const REGISTERED_EVENTS_ID = 'registeredEvents'
 
@@ -414,6 +427,10 @@ async function reloadPrediction() {
         <VCol cols="12">
           <EventScenarioCard
             :twin="twin"
+            :zone-name="zoneName"
+            :zone-urn="zoneUrn"
+            :zone="zone ?? undefined"
+            :measured-id="profile?.occupancy?.id"
             :predicted-id="twinProfile.roles.predicted.id"
             :capacity="profile?.capacity ?? null"
             :time-zone="timeZone"

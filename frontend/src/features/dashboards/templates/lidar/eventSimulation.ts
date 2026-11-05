@@ -8,7 +8,11 @@ import { toMillis } from '../../charts/chartOptions'
  * Lo que atrae un evento en su hora punta es una fraccion del tamaño de la zona (su aforo) segun
  * el tipo de evento, multiplicada por la intensidad que elige quien simula y por el efecto del
  * tiempo. Durante el evento pesa entero, y la hora anterior y la posterior a medias: la gente llega
- * antes y tarda en irse. Varios eventos a la misma hora se suman.
+ * antes y tarda en irse. Varios eventos a la misma hora se suman. Un evento de varios dias (una
+ * semana de mercado) se repite cada dia a la misma hora local.
+ *
+ * La prevision solo cubre el primer dia. Para poder simular una semana, donde no hay prevision se
+ * simula sobre lo habitual en la zona (`usualProfile`), y la grafica lo distingue.
  */
 
 export type EventKind = 'concert' | 'festival' | 'sports' | 'localFestival' | 'food' | 'market'
@@ -46,7 +50,10 @@ export const WEATHER_FACTORS: Readonly<Record<Weather, number>> = {
 export const MIN_INTENSITY = 0.5
 export const MAX_INTENSITY = 3
 export const DEFAULT_INTENSITY = 1
-export const MAX_EVENT_HOURS = 6
+/** Un dia entero: un mercado que no cierra en todo el dia. */
+export const MAX_EVENT_HOURS = 24
+/** Lo que alcanza la prevision: una semana. */
+export const MAX_EVENT_DAYS = 7
 
 /** Peso de la hora anterior y de la posterior al evento. */
 export const SHOULDER_WEIGHT = 0.5
@@ -60,8 +67,10 @@ export interface ScenarioEvent {
   intensity: number
   /** Comienzo de la primera hora del evento, ISO 8601. */
   start: string
-  /** Horas que dura: de 1 a MAX_EVENT_HOURS los que se simulan, sin tope los registrados. */
+  /** Horas que dura cada dia: de 1 a MAX_EVENT_HOURS los que se simulan, sin tope los registrados. */
   hours: number
+  /** Dias seguidos que se repite, a la misma hora local; 1 si falta. */
+  days?: number
   /** Viene del registro de eventos de la plataforma, no lo ha añadido quien simula. */
   registered?: boolean
   /** Lo que el registro dice del evento, para mostrarlo. */
@@ -87,10 +96,11 @@ const isHour = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 24
 
 /**
- * Los eventos registrados de la zona, uno por dia, listos para sumarse a la prevision. Llegan
- * como el texto JSON del atributo `registeredEvents`: el modelo predice el dia normal y el evento
- * se dibuja encima. El tipo vale si es uno del catalogo y si no se toma por un mercado; las fechas
- * son dias locales de `timeZone`. Un texto que no se entiende no rompe el panel: no hay eventos.
+ * Los eventos registrados de la zona, listos para sumarse a la prevision: uno por fila del
+ * registro, que se repite cada dia de su rango. Llegan como el texto JSON del atributo
+ * `registeredEvents`: el modelo predice el dia normal y el evento se dibuja encima. El tipo vale si
+ * es uno del catalogo y si no se toma por un mercado; las fechas son dias locales de `timeZone`. Un
+ * texto que no se entiende no rompe el panel: no hay eventos.
  */
 export function registeredScenarioEvents(raw: unknown, timeZone: string): ScenarioEvent[] {
   let list: unknown
@@ -109,30 +119,45 @@ export function registeredScenarioEvents(raw: unknown, timeZone: string): Scenar
     const startHour = isHour(item.startHour) ? item.startHour : REGISTERED_DEFAULT_HOURS.start
     const endHour = isHour(item.endHour) ? item.endHour : REGISTERED_DEFAULT_HOURS.end
     if (endHour <= startHour) continue
-    for (let day = first; day <= last; day = day.plus({ days: 1 })) {
-      events.push({
-        id: -(events.length + 1),
-        kind: isKind(item.type) ? item.type : 'market',
-        weather: 'clear',
-        intensity: DEFAULT_INTENSITY,
-        start: day.set({ hour: startHour, minute: 0, second: 0, millisecond: 0 }).toUTC().toISO()!,
-        hours: endHour - startHour,
-        registered: true,
-        notes: item.notes || undefined,
-      })
-    }
+    events.push({
+      id: -(events.length + 1),
+      kind: isKind(item.type) ? item.type : 'market',
+      weather: 'clear',
+      intensity: DEFAULT_INTENSITY,
+      start: first.set({ hour: startHour, minute: 0, second: 0, millisecond: 0 }).toUTC().toISO()!,
+      hours: endHour - startHour,
+      days: Math.round(last.startOf('day').diff(first.startOf('day'), 'days').days) + 1,
+      registered: true,
+      notes: item.notes || undefined,
+    })
   }
   return events
 }
 
-/** Peso del evento en la hora que empieza en `hourMs`: 1 mientras dura, a medias justo antes y despues. */
-export function eventWeight(event: ScenarioEvent, hourMs: number): number {
-  const start = toMillis(event.start)
-  const end = start + event.hours * HOUR_MS
-  if (hourMs >= start && hourMs < end) return 1
-  if (hourMs >= start - HOUR_MS && hourMs < start) return SHOULDER_WEIGHT
-  if (hourMs >= end && hourMs < end + HOUR_MS) return SHOULDER_WEIGHT
-  return 0
+/**
+ * Comienzo de cada dia del evento, en milisegundos. Se suma un dia de calendario en `timeZone`, no
+ * 24 horas: un mercado que cruza el cambio de hora sigue abriendo a las 10:00 locales.
+ */
+export function eventDayStarts(event: ScenarioEvent, timeZone = 'UTC'): number[] {
+  const first = DateTime.fromMillis(toMillis(event.start), { zone: timeZone })
+  return Array.from({ length: Math.max(1, event.days ?? 1) }, (_, day) => first.plus({ days: day }).toMillis())
+}
+
+/**
+ * Peso del evento en la hora que empieza en `hourMs`: 1 mientras dura, a medias justo antes y
+ * despues, cada dia que se repite. Si el final de un dia toca el comienzo del siguiente (un evento
+ * de 24 horas), cuenta el mayor: no se suma dos veces la misma gente.
+ */
+export function eventWeight(event: ScenarioEvent, hourMs: number, timeZone = 'UTC'): number {
+  let weight = 0
+  for (const start of eventDayStarts(event, timeZone)) {
+    const end = start + event.hours * HOUR_MS
+    if (hourMs >= start && hourMs < end) return 1
+    if ((hourMs >= start - HOUR_MS && hourMs < start) || (hourMs >= end && hourMs < end + HOUR_MS)) {
+      weight = SHOULDER_WEIGHT
+    }
+  }
+  return weight
 }
 
 /** Personas que suma un evento en su hora punta, para una zona del tamaño `reference`. */
@@ -161,17 +186,98 @@ export function simulate(
   base: (number | null)[],
   events: ScenarioEvent[],
   reference: number,
+  timeZone = 'UTC',
 ): (number | null)[] {
   return times.map((iso, i) => {
     const value = base[i]
     if (!isValue(value)) return null
     const hour = toMillis(iso)
-    const extra = events.reduce((sum, event) => sum + eventPeak(event, reference) * eventWeight(event, hour), 0)
+    const extra = events.reduce(
+      (sum, event) => sum + eventPeak(event, reference) * eventWeight(event, hour, timeZone),
+      0,
+    )
     return Math.round(value + extra)
   })
 }
 
-/** Horas en las que puede empezar un evento: las que tienen prevision, desde la hora en curso. */
+/** Semanas de medidas de las que sale lo habitual en la zona. */
+export const USUAL_PROFILE_WEEKS = 4
+
+export interface SeriesPoint {
+  t: string
+  v: number | null
+}
+
+/** La franja de un instante: dia de la semana (1, lunes, a 7) y hora local. */
+const slotOf = (ms: number, timeZone: string): string => {
+  const local = DateTime.fromMillis(ms, { zone: timeZone })
+  return `${local.weekday}-${local.hour}`
+}
+
+/** Los dias locales (ISO) que ocupan unos eventos, contando cada dia que se repiten. */
+export function eventDays(events: ScenarioEvent[], timeZone = 'UTC'): Set<string> {
+  const days = new Set<string>()
+  for (const event of events) {
+    for (const start of eventDayStarts(event, timeZone)) {
+      days.add(DateTime.fromMillis(start, { zone: timeZone }).toISODate()!)
+    }
+  }
+  return days
+}
+
+/**
+ * Lo habitual en la zona: la media medida de cada franja (dia de la semana y hora local), sin los
+ * dias de `excludedDays`. Se le pasan los dias con evento registrado, que no son lo normal, igual
+ * que el modelo de prevision no aprende de ellos. Clave `dia-hora`, como `slotOf`.
+ */
+export function usualProfile(points: SeriesPoint[], timeZone = 'UTC', excludedDays = new Set<string>()): Map<string, number> {
+  const sums = new Map<string, { total: number; count: number }>()
+  for (const point of points) {
+    if (!isValue(point.v)) continue
+    const ms = toMillis(point.t)
+    if (excludedDays.has(DateTime.fromMillis(ms, { zone: timeZone }).toISODate()!)) continue
+    const slot = slotOf(ms, timeZone)
+    const sum = sums.get(slot) ?? { total: 0, count: 0 }
+    sums.set(slot, { total: sum.total + point.v, count: sum.count + 1 })
+  }
+  return new Map([...sums].map(([slot, { total, count }]) => [slot, total / count]))
+}
+
+export interface ScenarioBase {
+  times: string[]
+  base: (number | null)[]
+  /** Si la hora sale de lo habitual en la zona y no de la prevision. */
+  usual: boolean[]
+}
+
+/**
+ * La base del simulador, hora a hora durante `hours` desde `startMs`: la prevision donde la hay y,
+ * donde no, lo habitual en esa franja. Donde no hay ninguna de las dos, nada.
+ */
+export function scenarioBase(
+  startMs: number,
+  hours: number,
+  forecast: SeriesPoint[],
+  profile: Map<string, number>,
+  timeZone = 'UTC',
+): ScenarioBase {
+  const predicted = new Map<number, number>()
+  for (const point of forecast) {
+    if (isValue(point.v)) predicted.set(toMillis(point.t), point.v)
+  }
+  const result: ScenarioBase = { times: [], base: [], usual: [] }
+  for (let i = 0; i < hours; i++) {
+    const ms = startMs + i * HOUR_MS
+    const value = predicted.get(ms)
+    const usual = value === undefined ? profile.get(slotOf(ms, timeZone)) : undefined
+    result.times.push(new Date(ms).toISOString())
+    result.base.push(value ?? (usual === undefined ? null : Math.round(usual)))
+    result.usual.push(value === undefined && usual !== undefined)
+  }
+  return result
+}
+
+/** Horas en las que puede empezar un evento: las que tienen base (prevision o lo habitual), desde la hora en curso. */
 export function eventStartHours(times: string[], base: (number | null)[], nowMs: number): string[] {
   const currentHour = Math.floor(nowMs / HOUR_MS) * HOUR_MS
   return times.filter((iso, i) => isValue(base[i]) && toMillis(iso) >= currentHour)

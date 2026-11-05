@@ -10,6 +10,37 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Registrar los eventos de verdad desde el panel de predicción.** Debajo del simulador, «Registro
+  de eventos» lista los de la zona (días, tipo, horas, zonas y notas) y deja registrar uno nuevo o
+  borrarlo; en el propio simulador, «Registrar» convierte un evento simulado en registrado, con sus
+  días y sus horas. El backend (`/prediction-events`) lee y escribe el mismo CSV que usa el
+  componente de predicción, en la misma clave del bucket, y lo protegen dos permisos nuevos:
+  `prediction_events.read`, que también tiene quien consulta la organización, y
+  `prediction_events.update`, de los administradores. Lo registrado se suma al simulador al momento;
+  el modelo deja fuera sus días desde su siguiente ejecución diaria y, si alguno ya lo había
+  aprendido (hoy o antes), esa ejecución lo reentrena entero. OpenAPI y Postman incluyen las rutas
+  nuevas.
+- **El simulador de escenarios admite eventos de varios días y dice la zona.** Un evento se puede
+  repetir hasta 7 días seguidos a la misma hora local (una semana de mercado) y dura hasta 24 horas
+  al día. El título lleva el nombre de la zona que se simula. Un evento registrado de varios días
+  sale como un solo evento con sus días. El simulador abarca la semana: la previsión cubre el primer
+  día y el resto se simula sobre lo habitual en la zona, la media medida de las últimas 4 semanas en
+  ese día de la semana y esa hora, sin los días con evento registrado. La gráfica lo distingue con
+  la línea «Habitual (sin previsión)».
+- **El listado de entidades se ordena también por nombre y por último dato.** Las dos cabeceras se
+  pulsan como las demás. El nombre se ordena como texto, sin distinguir mayúsculas ni acentos, y
+  una entidad sin nombre propio va por el final de su identificador, que es lo que se ve; el último
+  dato va por la medida más reciente de cada entidad. Las que no tienen ese dato van al final en
+  los dos sentidos. El orden se calcula en el servidor sobre todas las entidades visibles, no solo
+  sobre la página.
+- **Las plantillas de tránsitos enseñan cuánto se tarda en cada recorrido, quién lo hace y hacia
+  dónde va.** Un panel nuevo da la duración media y la máxima, en minutos, de los diez recorridos
+  principales; la media pesa cada hora por sus tránsitos. La plantilla avanzada reparte además esos
+  recorridos entre turistas, residentes y visitas de corta estancia. Los dos datos ya los publicaba
+  la plataforma en cada par y ningún panel los leía. En el mapa, cada recorrido se dibuja en arco
+  con una flecha en su mitad, así que la ida y la vuelta entre dos puntos ya no se pisan. Al pulsar
+  un punto, o al elegirlo en «Ver los recorridos de», el mapa deja solo sus recorridos y la tabla de
+  al lado dice hacia dónde va la gente desde él y de dónde llega.
 - **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
   una alarma solo se podía crear y consultar en pantalla; cambiarla, eliminarla o darle avisos
   requería la API. La ficha incorpora «Editar» y «Borrar» (con confirmación), el formulario permite
@@ -20,8 +51,8 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 - **El simulador de eventos muestra los eventos registrados.** Los que la previsión de la zona
   publica en `registeredEvents` salen como «Registrado», sin poder quitarse, y se suman a la
   previsión normal junto a los que se simulen; «Limpiar» solo quita los simulados. Un evento de
-  varios días es uno por día, a sus horas (de 10:00 a 21:00 si el registro no las dice), y su tipo
-  vale si es uno del simulador; si no, se toma por un mercado.
+  varios días se repite cada día, a sus horas (de 10:00 a 21:00 si el registro no las dice), y su
+  tipo vale si es uno del simulador; si no, se toma por un mercado.
 - **El buscador del mapa sugiere las entidades que coinciden.** Al escribir dos letras o más se
   despliega una lista con las primeras entidades con ubicación que coinciden en todo el mapa, no
   solo en el área visible, con su modelo de datos para distinguir las que se llaman igual. Al
@@ -53,6 +84,17 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **Prever es unas seis veces más rápido.** En cada hora de la predicción recursiva se calculaban
+  los retardos y las medias móviles de todo el histórico, y solo se usaban los de la hora prevista;
+  ahora solo se calculan esos, con el mismo resultado. En una prueba con 13 zonas y 35 días de
+  histórico sintético, las 24 h de previsión pasan de 48 s a 8 s. Lo mismo vale para el backtest de
+  cada reentrenamiento completo.
+- **Un evento registrado con antelación ya no obliga a reentrenar el modelo entero.** Solo se
+  reentrena de cero si el cambio del registro toca días que el modelo ya ha aprendido (un evento
+  pasado o ya empezado), que es la única forma de desaprenderlos; si el evento es futuro, el
+  arranque en caliente deja fuera sus días cuando llegan. El modelo guarda hasta qué día ha
+  aprendido (`events_fingerprint_until`) y la huella del registro solo cuenta hasta ese día. Un
+  modelo guardado antes de esto se compara con el registro entero, como hasta ahora.
 - **El modelo de afluencia no aprende de los días con evento registrado.** Un mercado navideño o
   unas fiestas no son lo normal: sus días se quitan como filas de entrenamiento y, antes de
   calcular retardos y medias móviles, su ocupación se cambia por la mediana de la misma franja en

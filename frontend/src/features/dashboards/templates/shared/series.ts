@@ -20,6 +20,11 @@ export interface SeriesRequest {
   measureId: string
   /** Contador acumulativo: se pide por maximo y se devuelve por incrementos. */
   cumulative?: boolean
+  /**
+   * Funcion con la que agregar esta serie ('sum', 'max', 'mean'...) cuando el rango la agrega, para
+   * pedir en una sola carga medidas que se agregan distinto. Sin ella, la regla general.
+   */
+  fn?: string
 }
 
 export interface FetchSeriesOptions {
@@ -53,6 +58,7 @@ function resolveAggregation(
   options?: FetchSeriesOptions,
 ): AggregationOption | null {
   if (options?.aggregation !== undefined) return options.aggregation
+  if (request.fn) return autoAggregation(range, request.fn)
   return request.cumulative ? autoAggregation(range, 'max') : autoAggregation(range, 'mean')
 }
 

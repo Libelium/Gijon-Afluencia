@@ -19,6 +19,7 @@ use App\Http\V1\Controllers\OrganizationUserController;
 use App\Http\V1\Controllers\PanelController;
 use App\Http\V1\Controllers\PermissionController;
 use App\Http\V1\Controllers\PhoneVerificationController;
+use App\Http\V1\Controllers\PredictionEventsController;
 use App\Http\V1\Controllers\Realtime\RealtimeDeviceController;
 use App\Http\V1\Controllers\Realtime\RealtimeEntityController;
 use App\Http\V1\Controllers\RegulationController;
@@ -213,6 +214,13 @@ Route::prefix("V1")->group(function () {
         // Regulations (used by the dashboard templates)
         Route::post('regulations/paginate', [RegulationController::class, 'paginate']);
         Route::apiResource('regulations', RegulationController::class)->except(['index']);
+
+        // Events registry of the predictions component (days the occupancy model must not learn from)
+        Route::prefix('prediction-events')->group(function () {
+            Route::get('', [PredictionEventsController::class, 'index']);
+            Route::post('', [PredictionEventsController::class, 'store']);
+            Route::delete('{id}', [PredictionEventsController::class, 'destroy']);
+        });
 
         // Alarms
         Route::post('alarms/paginate', [AlarmController::class, 'paginate']);

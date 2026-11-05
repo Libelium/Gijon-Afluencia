@@ -4,7 +4,7 @@ tests/test_train_modes.py.
 """
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 import numpy as np
@@ -283,3 +283,64 @@ def test_changing_only_the_type_notes_or_hours_retrains_nothing(tmp_path):
 
 def test_an_events_bundle_from_before_this_was_recorded_is_left_alone():
     assert events_registry_changed(_DictStorage(), {"params": {}}) == ""
+
+
+def _fingerprint_until(storage, until):
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        return {"events_fingerprint": events_registry.fingerprint(
+                    events_registry.load_events_registry(storage), until=until),
+                "events_fingerprint_until": until.isoformat()}
+
+
+def test_an_event_registered_ahead_of_time_lets_the_increment_go_ahead(tmp_path):
+    """Its days have not been learned yet: the warm start leaves them out itself
+    when they reach its window, no full retrain needed."""
+    storage = _DictStorage()
+    rows = "date,event_type,device_ids,notes\n2026-04-09,concert,,Concert\n"
+    _upload_registry_csv(storage, rows, tmp_path)
+    stored = _fingerprint_until(storage, date(2026, 12, 10))
+
+    _upload_registry_csv(storage, "date,event_type,device_ids,notes,end_date\n"
+                         "2026-04-09,concert,,Concert,\n2026-12-14,market,,Christmas market,2026-12-20\n", tmp_path)
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        assert events_registry_changed(storage, stored) == ""
+
+
+def test_an_event_registered_once_it_has_begun_forces_the_full_retrain(tmp_path):
+    """The 14th and 15th are already in the trees: only a full retrain unlearns them."""
+    storage = _DictStorage()
+    _upload_registry_csv(storage, "date,event_type,device_ids,notes\n", tmp_path)
+    stored = _fingerprint_until(storage, date(2026, 12, 15))
+
+    _upload_registry_csv(storage, "date,event_type,device_ids,notes,end_date\n"
+                         "2026-12-14,market,,Christmas market,2026-12-20\n", tmp_path)
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        assert "events registry changed" in events_registry_changed(storage, stored)
+
+
+def test_an_event_that_has_just_gone_by_does_not_bounce_into_a_full_retrain(tmp_path):
+    """Registered ahead, saved with `until` before it; the next run compares at that
+    same `until`, so the days it has since learned (masked) do not count as a change."""
+    storage = _DictStorage()
+    _upload_registry_csv(storage, "date,event_type,device_ids,notes,end_date\n"
+                         "2026-12-14,market,,Christmas market,2026-12-20\n", tmp_path)
+    stored = _fingerprint_until(storage, date(2026, 12, 10))
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        assert events_registry_changed(storage, stored) == ""
+        # The next save records the market as learned, and nothing has changed since.
+        after = _fingerprint_until(storage, date(2026, 12, 21))
+        assert events_registry_changed(storage, after) == ""
+
+
+def test_a_bundle_without_the_cutoff_is_compared_on_the_whole_registry(tmp_path):
+    """Saved before events_fingerprint_until existed: same rule as when it was saved."""
+    storage = _DictStorage()
+    rows = "date,event_type,device_ids,notes\n2026-04-09,concert,,Concert\n"
+    _upload_registry_csv(storage, rows, tmp_path)
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        old_style = {"events_fingerprint": events_registry.fingerprint(events_registry.load_events_registry(storage))}
+        assert events_registry_changed(storage, old_style) == ""
+
+    _upload_registry_csv(storage, rows + "2027-12-14,market,,Far future\n", tmp_path)
+    with patch.dict(os.environ, {"FIWARE_TENANT": "t", "FIWARE_SCOPE": "/"}):
+        assert "events registry changed" in events_registry_changed(storage, old_style)

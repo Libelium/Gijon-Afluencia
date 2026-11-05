@@ -40,6 +40,7 @@ tags:
 - name: Notificaciones
 - name: Pantalla de inicio
 - name: Preferencias
+- name: 'Previsión: eventos registrados'
 - name: Series temporales
 - name: Último dato
 - name: Usuarios de la organización
@@ -1891,6 +1892,9 @@ paths:
       tags:
       - Entidades
       summary: Paginate
+      description: '`orderBy` admite las columnas de la entidad (id, urn, datamodel, tenant, scope,
+        created_at, updated_at) y además `name` y `last_data`, el nombre y el último dato, que el
+        servidor ordena aparte: sin clave, al final en los dos sentidos.'
       operationId: Entity_paginate_post
       requestBody:
         required: false
@@ -2952,6 +2956,164 @@ paths:
           description: No autenticado
         '403':
           description: Sin permiso
+  /V1/prediction-events:
+    get:
+      tags:
+      - 'Previsión: eventos registrados'
+      summary: Eventos registrados del componente de predicción
+      description: 'Los días de los que el modelo de afluencia no debe aprender (un mercado, unas
+        fiestas), tal y como están en el registro que lee el componente de predicción. Requiere
+        `prediction_events.read` y acceso de lectura al tenant o al scope. `canEdit` dice si quien
+        pregunta puede cambiarlo.'
+      operationId: PredictionEvents_index_get
+      parameters:
+      - name: tenant
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Tenant del despliegue de predicción, el de sus entidades de previsión.
+      - name: scope
+        in: query
+        required: true
+        schema:
+          type: string
+          example: /
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PredictionEvent'
+                  canEdit:
+                    type: boolean
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: Tenant o scope desconocido
+        '422':
+          description: Datos inválidos
+    post:
+      tags:
+      - 'Previsión: eventos registrados'
+      summary: Registrar un evento
+      description: 'Lo añade al registro. El modelo deja fuera sus días desde la siguiente ejecución
+        de la predicción; si alguno ya lo ha aprendido, esa ejecución reentrena el modelo entero.
+        Requiere `prediction_events.update` y acceso de modificación al tenant o al scope.'
+      operationId: PredictionEvents_store_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tenant:
+                  type: string
+                scope:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                  description: Primer día, local.
+                end_date:
+                  type: string
+                  format: date
+                  nullable: true
+                  description: Último día, local. Vacío, un solo día.
+                event_type:
+                  type: string
+                  maxLength: 60
+                  description: concert, festival, sports, localFestival, food o market para que el
+                    simulador lo reconozca; otro texto se dibuja como un mercado.
+                device_ids:
+                  type: array
+                  nullable: true
+                  items:
+                    type: string
+                  description: URN de las zonas afectadas, las entidades de zona que se eligen en el
+                    panel (cada entidad de previsión publica la suya en `zoneId`). Vacío, todas.
+                notes:
+                  type: string
+                  maxLength: 500
+                  nullable: true
+                start_hour:
+                  type: integer
+                  minimum: 0
+                  maximum: 23
+                  nullable: true
+                end_hour:
+                  type: integer
+                  minimum: 1
+                  maximum: 24
+                  nullable: true
+                  description: Mayor que start_hour. Las dos horas van juntas o ninguna.
+              required:
+              - tenant
+              - scope
+              - date
+              - event_type
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionEvent'
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: Tenant o scope desconocido
+        '422':
+          description: Datos inválidos
+  /V1/prediction-events/{id}:
+    delete:
+      tags:
+      - 'Previsión: eventos registrados'
+      summary: Borrar un evento registrado
+      description: 'Por el `id` que dio el listado. Si la fila ha cambiado o se ha movido desde
+        entonces, no se borra nada y responde 409: hay que volver a listar.'
+      operationId: PredictionEvents_destroy_delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: 3:5f1c0a9e2b7d
+      - name: tenant
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Tenant del despliegue de predicción, el de sus entidades de previsión.
+      - name: scope
+        in: query
+        required: true
+        schema:
+          type: string
+          example: /
+      responses:
+        '204':
+          description: Eliminado
+        '401':
+          description: No autenticado
+        '403':
+          description: Sin permiso
+        '404':
+          description: Tenant o scope desconocido
+        '409':
+          description: El evento ya no está como se listó
   /V1/public/dashboards/{slug}:
     get:
       tags:
@@ -3751,6 +3913,33 @@ components:
       bearerFormat: JWT
       description: JWT emitido por Keycloak (flujo de código con PKCE). Se obtiene y se renueva contra el proveedor de identidad.
   schemas:
+    PredictionEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Posición en el registro y huella de la fila, para borrarla.
+        date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        event_type:
+          type: string
+        device_ids:
+          type: array
+          items:
+            type: string
+          description: Vacío, todas las zonas.
+        notes:
+          type: string
+        start_hour:
+          type: integer
+          nullable: true
+        end_hour:
+          type: integer
+          nullable: true
     OrganizationUser:
       type: object
       properties:
