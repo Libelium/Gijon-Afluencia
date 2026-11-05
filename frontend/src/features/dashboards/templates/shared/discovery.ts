@@ -72,6 +72,9 @@ export function isCumulative(measureId: string): boolean {
   return CUMULATIVE_HINT.test(measureId)
 }
 
+// Los candidatos y las pistas estan en ingles: se comparan con el nombre del servidor, no con el traducido.
+const sourceNameOf = (measure: Measure) => measure.sourceName ?? measure.name
+
 function pickShortest(list: Measure[]): Measure {
   return [...list].sort(
     (a, b) => a.id.length - b.id.length || a.id.localeCompare(b.id, 'es'),
@@ -89,14 +92,14 @@ export function pickMeasure(all: Measure[], intent: MeasureIntent): string | nul
     if (found) return found.id
   }
   for (const name of list) {
-    const found = candidates.find((m) => m.name.toLowerCase() === name.toLowerCase())
+    const found = candidates.find((m) => sourceNameOf(m).toLowerCase() === name.toLowerCase())
     if (found) return found.id
   }
 
   const byId = candidates.filter((m) => hint.test(m.id))
   if (byId.length) return pickShortest(byId).id
 
-  const byName = candidates.filter((m) => hint.test(m.name))
+  const byName = candidates.filter((m) => hint.test(sourceNameOf(m)))
   if (byName.length) return pickShortest(byName).id
 
   return candidates.length ? candidates[0].id : null

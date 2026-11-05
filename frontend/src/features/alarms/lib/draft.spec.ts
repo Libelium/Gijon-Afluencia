@@ -36,7 +36,12 @@ describe('fromThresholdCondition', () => {
 
     expect(draft.id).toBe(12)
     expect(draft.entity).toMatchObject({ id: 7, urn: entity.urn, tenant: 'pid_gijon', scope: '/' })
-    expect(draft.measure).toEqual({ id: 'r_cfo_countm', name: 'Personas' })
+    // El campo en bruto del Smart Spot sale con su nombre traducido; el del servidor se conserva.
+    expect(draft.measure).toMatchObject({
+      id: 'r_cfo_countm',
+      name: 'Dispositivos detectados (intervalo medio)',
+      sourceName: 'Personas',
+    })
     expect(draft.operator).toBe('between')
     expect(draft.from).toBe('10')
     expect(draft.to).toBe('20')

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
+import { measureName } from '@/lib/measureCatalog'
 import type { Panel } from '@/types'
 import { ChartRenderer, chartVariant, provideChartLabel, resolveChartKind, type ChartData } from '../charts'
 import { fetchPanelData, queryableSeries } from '../api/dashboards'
@@ -48,7 +49,9 @@ const units = computed(() => {
 
 /** Rotulo de la cabecera: la medida que se dibuja y su unidad, o cuantas series se comparan. */
 const subtitle = computed(() => {
-  const measures = unique(items.value.map((item) => item.serie.measure?.name))
+  const measures = unique(
+    items.value.map((item) => measureName(item.serie.measure?.id ?? '', item.serie.measure?.name)),
+  )
   const parts: string[] = []
   if (measures.length === 1) parts.push(measures[0])
   else if (measures.length > 1) parts.push(t('dashboards.panel.seriesCount', { count: items.value.length }))

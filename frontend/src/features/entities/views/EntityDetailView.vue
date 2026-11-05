@@ -5,8 +5,9 @@ import { errorMessage } from '@/api/http'
 import PageHeader from '@/components/PageHeader.vue'
 import StatTile from '@/components/StatTile.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { isPredictionEntity } from '@/features/dashboards/templates/contract'
 import { t } from '@/i18n'
-import { formatDateTime, formatNumber, relativeFromNow, urnTail } from '@/lib/format'
+import { formatDateTime, formatNumber, urnTail } from '@/lib/format'
 import { useSessionStore } from '@/stores/session'
 import type { Entity, EntityRef, Measure } from '@/types'
 import { canUpdateEntity, getEntity, getEntityMeasures, latestTimestamp } from '../api/entities'
@@ -16,6 +17,7 @@ import EntityLocationCard from '../components/EntityLocationCard.vue'
 import EntityMeasuresPanel from '../components/EntityMeasuresPanel.vue'
 import { datamodelIcon } from '../lib/datamodel'
 import { resolveEntityLocation } from '../lib/location'
+import { timestampInfo } from '../lib/measures'
 
 const route = useRoute()
 const session = useSessionStore()
@@ -53,6 +55,13 @@ const location = computed(() => resolveEntityLocation(entity.value, measures.val
 const lastData = computed(
   () => latestTimestamp(measures.value) ?? entity.value?.time_last_data ?? null,
 )
+
+const lastDataText = computed(() => {
+  const info = timestampInfo(lastData.value, session.timeZone)
+  return info.future && isPredictionEntity(entity.value)
+    ? t('entities.lastData.forecastUntil', { when: info.text })
+    : info.text
+})
 
 const lastDataHint = computed(() =>
   lastData.value ? formatDateTime(lastData.value, session.timeZone) : undefined,
@@ -155,7 +164,7 @@ watch(entityId, () => void load(), { immediate: true })
       <div class="d-flex flex-wrap ga-4">
         <StatTile
           :label="t('entities.detail.lastData')"
-          :value="relativeFromNow(lastData, session.timeZone)"
+          :value="lastDataText"
           :hint="lastDataHint"
           icon="mdi-clock-outline"
         />

@@ -1,4 +1,5 @@
 import type { EntityOption } from '@/features/dashboards/api/catalog'
+import { localizeMeasure } from '@/lib/measureCatalog'
 import type { Measure } from '@/types'
 import { DEFAULT_OPERATOR, DEFAULT_TIMEOUT_UNIT, TIMEOUT_UNITS, operatorArity } from './operators'
 import type {
@@ -120,7 +121,7 @@ function toEntityOption(entity: ThresholdCondition['entity']): EntityOption | nu
 /** La medida guardada llega solo con id y nombre; la tarjeta la completa (unidades) al cargar. */
 function toMeasure(measure: MeasureRef | null | undefined): Measure | null {
   if (!measure || !measure.id) return null
-  return { id: measure.id, name: measure.name ?? measure.id }
+  return localizeMeasure({ id: measure.id, name: measure.name ?? measure.id })
 }
 
 /** Expresa un plazo en segundos como cantidad + unidad, eligiendo la mayor unidad exacta. */

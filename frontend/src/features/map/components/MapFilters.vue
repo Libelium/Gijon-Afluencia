@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { datamodelLabel } from '@/features/entities/lib/datamodel'
 import { t } from '@/i18n'
 import { formatNumber, urnTail } from '@/lib/format'
 import type { PlacedEntity } from '../lib/geometry'
@@ -22,7 +23,7 @@ const emit = defineEmits<{ pick: [item: PlacedEntity] }>()
 const search = defineModel<string>('search', { default: '' })
 const datamodel = defineModel<string | null>('datamodel', { default: null })
 
-const items = computed(() => props.datamodels.map((name) => ({ title: name, value: name })))
+const items = computed(() => props.datamodels.map((name) => ({ title: datamodelLabel(name), value: name })))
 const filtered = computed(() => Boolean(search.value) || Boolean(datamodel.value))
 
 const withoutLocationText = computed(() =>
@@ -45,7 +46,7 @@ const suggestionItems = computed(() =>
   (props.suggestions ?? []).map((item) => ({
     item,
     title: item.entity.name || urnTail(item.entity.urn),
-    subtitle: item.entity.datamodel,
+    subtitle: item.entity.datamodel ? datamodelLabel(item.entity.datamodel) : undefined,
   })),
 )
 

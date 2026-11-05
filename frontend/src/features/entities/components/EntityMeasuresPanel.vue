@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { isPredictionEntity } from '@/features/dashboards/templates/contract'
 import { t } from '@/i18n'
 import { formatDateTime, relativeFromNow } from '@/lib/format'
 import type { EntityRef, Measure } from '@/types'
-import { hasChartableHistory } from '../lib/measures'
+import { hasChartableHistory, measureTitle, timestampInfo } from '../lib/measures'
 import MeasureCard from './MeasureCard.vue'
 import MeasureHistoryDialog from './MeasureHistoryDialog.vue'
 import MeasureValueCell from './MeasureValueCell.vue'
@@ -35,6 +36,12 @@ const historyOpen = ref(false)
 const historyMeasure = ref<Measure | null>(null)
 
 const available = computed(() => props.entityRef !== null)
+const forecast = computed(() => isPredictionEntity(props.entityRef))
+
+function timestampText(measure: Measure): string {
+  const info = timestampInfo(measure.timestamp, props.timeZone)
+  return info.future && forecast.value ? t('entities.measures.forecastFor', { when: info.text }) : info.text
+}
 
 const headers: Header[] = [
   { title: t('entities.measures.name'), key: 'name', sortable: false, maxWidth: 320 },
@@ -105,6 +112,7 @@ function chartable(measure: Measure): boolean {
           :measure="measure"
           :time-zone="timeZone"
           :history="available"
+          :forecast="forecast"
           style="flex: 1 1 240px"
           @history="openHistory(measure)"
         />
@@ -121,13 +129,13 @@ function chartable(measure: Measure): boolean {
       >
         <template #[`item.name`]="{ item }">
           <div class="py-1 min-w-0">
-            <div class="font-weight-medium text-truncate" :title="item.name">{{ item.name }}</div>
+            <div class="font-weight-medium text-truncate" :title="measureTitle(item)">{{ item.name }}</div>
             <div
-              v-if="item.id !== item.name"
+              v-if="item.description"
               class="text-caption text-medium-emphasis text-truncate"
-              :title="item.id"
+              :title="item.description"
             >
-              {{ item.id }}
+              {{ item.description }}
             </div>
           </div>
         </template>
@@ -140,7 +148,7 @@ function chartable(measure: Measure): boolean {
           <VTooltip :text="formatDateTime(item.timestamp, timeZone)" location="top">
             <template #activator="{ props: tip }">
               <span v-bind="tip" class="text-body-2 text-medium-emphasis">
-                {{ relativeFromNow(item.timestamp, timeZone) }}
+                {{ timestampText(item) }}
               </span>
             </template>
           </VTooltip>

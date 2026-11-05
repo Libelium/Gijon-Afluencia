@@ -1,5 +1,6 @@
 import { http } from '@/api/http'
 import { urnTail } from '@/lib/format'
+import { localizeMeasure } from '@/lib/measureCatalog'
 import type { EntityRef, Measure } from '@/types'
 import { PREDICTION_URN_SUFFIX } from '../templates/contract'
 
@@ -103,13 +104,13 @@ export async function listMeasures(ref: EntityRef): Promise<Measure[]> {
   const byId = new Map<string, Measure>()
   for (const raw of data ?? []) {
     if (!raw?.id || raw.internal === true || raw.internal === 'true') continue
-    const measure: Measure = {
+    const measure: Measure = localizeMeasure({
       id: String(raw.id),
       name: raw.name?.trim() || String(raw.id),
       units: raw.units?.trim() || undefined,
       value_type: raw.value_type,
       timestamp: raw.timestamp ?? undefined,
-    }
+    })
     const current = byId.get(measure.id)
     if (!current || (measure.timestamp ?? '') > (current.timestamp ?? '')) byId.set(measure.id, measure)
   }

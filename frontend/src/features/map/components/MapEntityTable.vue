@@ -9,6 +9,7 @@
  * y cada fila lleva su enlace al detalle: es la ruta equivalente completa.
  */
 import { computed } from 'vue'
+import { datamodelLabel } from '@/features/entities/lib/datamodel'
 import { t } from '@/i18n'
 import { formatNumber, urnTail } from '@/lib/format'
 import type { PlacedEntity } from '../lib/geometry'
@@ -25,7 +26,7 @@ const rows = computed(() =>
   props.placed.map((item) => ({
     id: item.entity.id,
     name: item.entity.name || urnTail(item.entity.urn),
-    datamodel: item.entity.datamodel || t('common.noValue'),
+    datamodel: item.entity.datamodel ? datamodelLabel(item.entity.datamodel) : t('common.noValue'),
     coordinates: `${formatNumber(item.latLng[0], 5)}, ${formatNumber(item.latLng[1], 5)}`,
   })),
 )

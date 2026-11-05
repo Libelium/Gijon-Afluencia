@@ -128,7 +128,7 @@ export default {
   'connectors.form.readableNames': 'Enviar los atributos con su nombre legible',
   'connectors.form.legacyNotice': 'Los campos de cada mensaje del formato original no se editan aquí: se conserva la configuración actual.',
   'connectors.form.entities': 'Qué se envía',
-  'connectors.form.entitiesHint.occupancy_readings': 'Asocia las zonas (CrowdFlowZone) cuyo aforo se envía.',
+  'connectors.form.entitiesHint.occupancy_readings': 'Asocia las zonas de afluencia cuyo aforo se envía.',
   'connectors.form.entitiesHint.flow_readings': 'Asocia los sensores: se envían los desplazamientos que salen de ellos o llegan a ellos.',
   'connectors.form.entitiesHint.device_inventory': 'Asocia las entidades: se envían los datos de sus dispositivos.',
   'connectors.form.entitiesHint.default': 'Asocia las entidades cuyos datos se envían en cuanto llegan.',
