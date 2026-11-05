@@ -273,7 +273,7 @@ def add_calendar_features(bins: list) -> pd.DataFrame:
     return df
 
 
-def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
+def add_lag_features(df: pd.DataFrame, only: set = None) -> pd.DataFrame:
     """
     Adds, PER DEVICE_ID, the occupancy value of:
       - lag_1d: the same bin 1 day ago (same hour, previous day).
@@ -289,6 +289,11 @@ def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
     NaN if there is no exact bin at that past timestamp (there were no events
     that hour) - XGBoost handles NaN natively (missing value handling), there is
     no need to impute here.
+
+    `only`: the (zone_id, timestamp) keys whose lags are wanted; the other rows get
+    None. Prediction needs the lags of the hour it predicts, not of the whole
+    history behind it - see prediction_features.build_prediction_feature_table.
+    The lookups still go against every row, so the wanted ones get the same value.
     """
     if df.empty:
         return df
@@ -296,10 +301,13 @@ def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.sort_values(["zone_id", "timestamp"]).reset_index(drop=True)
     occupancy_by_key = {(row.zone_id, row.timestamp): row.occupancy for row in df.itertuples(index=False)}
 
-    df["lag_1d"] = [occupancy_by_key.get((row.zone_id, row.timestamp - timedelta(days=1)))
-                     for row in df.itertuples(index=False)]
-    df["lag_1w"] = [occupancy_by_key.get((row.zone_id, row.timestamp - timedelta(days=7)))
-                     for row in df.itertuples(index=False)]
+    def lag(row, days):
+        if only is not None and (row.zone_id, row.timestamp) not in only:
+            return None
+        return occupancy_by_key.get((row.zone_id, row.timestamp - timedelta(days=days)))
+
+    df["lag_1d"] = [lag(row, 1) for row in df.itertuples(index=False)]
+    df["lag_1w"] = [lag(row, 7) for row in df.itertuples(index=False)]
 
     return df
 
@@ -311,7 +319,7 @@ def rolling_min_coverage() -> float:
 
 
 def add_rolling_features(df: pd.DataFrame, windows: tuple = (7, 28),
-                         min_coverage: float = None) -> pd.DataFrame:
+                         min_coverage: float = None, only: set = None) -> pd.DataFrame:
     """
     Adds, PER ZONE_ID, the rolling mean AND the rolling deviation of occupancy
     in the SAME time slot over the last `windows` calendar days
@@ -336,6 +344,10 @@ def add_rolling_features(df: pd.DataFrame, windows: tuple = (7, 28),
     "rolling_mean_28d" is a DIFFERENT feature from the one the model learnt, and no
     null check catches it. A fraction and not "all 28 days" because the gaps are
     legitimate (bins only exist where the zone reported).
+
+    `only`: as in add_lag_features. This is the costly part of building features:
+    computed for every row of the history on every recursive step, it made each
+    predicted hour cost ~2 s with 13 zones and 35 days behind them.
     """
     if df.empty:
         return df
@@ -350,6 +362,10 @@ def add_rolling_features(df: pd.DataFrame, windows: tuple = (7, 28),
         mean_values = []
         std_values = []
         for row in df.itertuples(index=False):
+            if only is not None and (row.zone_id, row.timestamp) not in only:
+                mean_values.append(None)
+                std_values.append(None)
+                continue
             past = [occupancy_by_key.get((row.zone_id, row.timestamp - timedelta(days=k)))
                     for k in range(1, window + 1)]
             # pd.notna() on purpose, not "v is not None": if this DataFrame mixes

@@ -17,7 +17,7 @@ silent failure there:
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import xgboost as xgb
 
@@ -138,6 +138,11 @@ def events_registry_changed(storage, stored_metrics: dict) -> str:
 
     The fingerprint hashes each event's days and zones only: a new type, notes or
     hours change what the panel draws, not what is trained, and retrain nothing.
+    And only the days the stored model has already learned, up to the local day
+    recorded as `events_fingerprint_until`: an event registered AHEAD of time
+    changes nothing that was trained, so the increment goes ahead and its days are
+    left out when they reach the warm start's window. A bundle without that date
+    (saved before it existed) is compared on the whole registry, as it was saved.
 
     A bundle with no `events_fingerprint` recorded is left alone, same
     reasoning as the other two guards. `storage` is the caller's (not
@@ -149,8 +154,10 @@ def events_registry_changed(storage, stored_metrics: dict) -> str:
     stored = stored_metrics.get("events_fingerprint")
     if not stored:
         return ""
+    until_raw = stored_metrics.get("events_fingerprint_until")
+    until = date.fromisoformat(until_raw) if until_raw else None
     events = events_registry.load_events_registry(storage)
-    current = events_registry.fingerprint(events)
+    current = events_registry.fingerprint(events, until=until)
     if stored != current:
         return f"events registry changed ({stored} -> {current})"
     return ""

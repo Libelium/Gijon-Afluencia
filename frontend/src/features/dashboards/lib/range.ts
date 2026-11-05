@@ -53,6 +53,9 @@ export function resolveRange(input: RangeInput, timeZone?: string): DateRange {
  */
 export const FORECAST_HORIZON_HOURS = 24
 
+/** Lo que abarca el simulador de escenarios: una semana, para poder poner una semana de mercado. */
+export const SCENARIO_HORIZON_HOURS = 7 * 24
+
 /** Amplia la ventana hacia el futuro, para pedir la parte prevista. */
 export function extendRange(range: DateRange, hours: number): DateRange {
   const end = toUtcIso(DateTime.fromISO(range.end, { zone: 'utc' }).plus({ hours }))

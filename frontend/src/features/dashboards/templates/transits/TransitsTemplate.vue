@@ -3,12 +3,15 @@ import { t } from '@/i18n'
 import StatStrip from '../shared/StatStrip.vue'
 import TemplateShell from '../shared/TemplateShell.vue'
 import type { TemplateDashboard } from '../shared/types'
+import RouteDetailsPanels from './RouteDetailsPanels.vue'
 import TransitsPanels from './TransitsPanels.vue'
+import { useRouteDetails } from './routeDetails'
 import { useTransits } from './useTransits'
 
 const props = defineProps<{ dashboard: TemplateDashboard }>()
 
 const tx = useTransits(props.dashboard)
+const details = useRouteDetails(tx.ranked, tx.data.range, false)
 </script>
 
 <template>
@@ -48,5 +51,7 @@ const tx = useTransits(props.dashboard)
       :routes="tx.ranked.value"
       :total-series="tx.totalSeries.value"
     />
+
+    <RouteDetailsPanels :details="details.details.value" :with-visitors="false" :error="details.error.value" />
   </TemplateShell>
 </template>

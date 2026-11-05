@@ -56,8 +56,8 @@ from crowd_predictions.helpers.aether_history import (COLD_START_DAYS, NoHistory
                                      incremental_training_window_hours, load_history_bins,
                                      resolve_zone_ids)
 from crowd_predictions.training_data import (add_calendar_features, add_lag_features, add_rolling_features,
-                            has_minimum_features, mask_event_bins, select_feature_columns,
-                            usable_span_days, without_event_rows,
+                            has_minimum_features, local_calendar_timestamps, mask_event_bins,
+                            select_feature_columns, usable_span_days, without_event_rows,
                             FEATURE_COLUMNS, SEVEN_DAY_FEATURE_COLUMNS, TARGET_COLUMN)
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -177,6 +177,10 @@ def _metrics(storage, mode: str, results: dict, params: dict, model, usable, hol
     """
     now = datetime.now(timezone.utc).isoformat()
     calendar_settings = settings.calendar()
+    latest = usable["timestamp"].max()
+    # The last local day this model has learned: what a later change to the events
+    # registry is compared against (see warm_start.events_registry_changed).
+    events_until = local_calendar_timestamps(pd.Series([latest]), calendar_settings.timezone()).dt.date.iloc[0]
     return {
         "mode": mode,
         "mae": results["mae"],
@@ -187,7 +191,7 @@ def _metrics(storage, mode: str, results: dict, params: dict, model, usable, hol
         # High-water mark of the DATA, not of the run: it is how the next run knows
         # whether there is anything new, or whether ingestion has stalled and it
         # would be piling up trees over the same rows.
-        "latest_data_timestamp": usable["timestamp"].max().isoformat(),
+        "latest_data_timestamp": latest.isoformat(),
         "trained_at": now,
         # When the model last saw the WHOLE history. A warm start PROPAGATES it
         # instead of re-stamping it, which is what lets the age-based full retrain
@@ -202,7 +206,8 @@ def _metrics(storage, mode: str, results: dict, params: dict, model, usable, hol
         # warm_start.weather_availability_changed/events_registry_changed.
         "weather_available": weather.is_available_for_current_tenant(),
         "events_fingerprint": events_registry.fingerprint(
-            events_registry.load_events_registry(storage)),
+            events_registry.load_events_registry(storage), until=events_until),
+        "events_fingerprint_until": events_until.isoformat(),
         # Full retrains in a row. parking had to MEASURE that its window was too small
         # before it could fix it; this is the number that makes that measurable here.
         # Reset by a successful warm start.

@@ -528,6 +528,24 @@ def test_a_new_event_forces_a_full_retrain(env, caplog):
     assert columns_before == columns_after
 
 
+def test_an_event_registered_ahead_of_time_keeps_the_warm_start(env, caplog):
+    """End to end: the history ends in early March, so a market in April has not been
+    learned - the run stays a warm start and records where its learned days end."""
+    from crowd_predictions import events_registry
+
+    _model, _columns, before = env.cold_start()
+    env.state["days"] = 61
+    with patch.dict(os.environ, {"FIWARE_TENANT": "test_tenant", "FIWARE_SCOPE": "/"}):
+        events_registry.append_event(env.storage, "2026-04-15", "market", end_date="2026-04-20")
+    with caplog.at_level(logging.WARNING):
+        assert env.run() == 0
+    _model, _columns, after = env.bundle()
+
+    assert "events registry changed" not in caplog.text
+    assert after["mode"] == "incremental"
+    assert after["events_fingerprint_until"] < "2026-04-15"
+
+
 def test_the_horizon_backtest_measures_the_error_of_the_recursive_steps(env):
     """evaluate_model() measures ONE step over real lag/rolling. What gets published is
     recursive, each step fed its own output, and that error was measured nowhere - so

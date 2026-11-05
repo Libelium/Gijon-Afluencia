@@ -13,11 +13,11 @@ simulator, which receives the registered events through the `registeredEvents`
 attribute that etl/predict/transform.py publishes on each prediction entity.
 
 Stored as a small CSV blob in storage (S3/MinIO), UNDER THE SAME PREFIX AS THE
-MODEL (settings.storage().MODELS_PREFIX) - not a prefix of its own. There is
-no live CRUD entry point (decided with the team: it would need per-tenant
-write permissions on the bucket that only the admin has, more machinery than
-this is worth); whoever maintains the bucket uploads/edits this CSV by hand,
-the same way the model gets uploaded - one route to remember, not two.
+MODEL (settings.storage().MODELS_PREFIX) - not a prefix of its own. The platform's
+web back lists, adds and deletes its rows (backend/src/app/Services/PredictionEventsRegistry.php,
+behind the prediction_events.* permissions, from the prediction panel's scenario
+simulator) under the same key and with the same columns as this file: a change to
+either must go to the other. It can still be uploaded or edited by hand in the bucket.
 Segregated by tenant/scope like the model (see
 helpers/model_storage.segregated_key) - NOT a local file: a plain path would
 depend on the machine that runs it, exactly what removing FilesystemStorage
@@ -175,26 +175,34 @@ def events_in_window(zone_id: str, first_day, last_day, events: list) -> list:
     )
 
 
-def fingerprint(events: list) -> str:
+def fingerprint(events: list, until=None) -> str:
     """
     "len:hash" of what decides WHICH ROWS training leaves out: each event's days
     and zones. NOT event_type, notes or hours - they only change what the panel
-    draws, not the trained model. Changes on any edit to the registry that does:
-    a new row, a deleted one, or a RETROACTIVE change to a past row (a fair added
-    for a date already trained on) - see warm_start.events_registry_changed(),
-    which forces a full retrain when this changes, the same way
-    blocking_column_change does for the columns themselves.
+    draws, not the trained model.
+
+    `until` (a local date): only the days up to it count - the days a model whose
+    data reaches `until` has already learned. An event entirely after it does not
+    change the fingerprint, and one crossing it only by its days up to it: so
+    registering, moving or deleting an event AHEAD of time leaves a stored model
+    alone, and its days are left out by the warm start's own window when they come.
+    A retroactive change (a fair added for days already trained on) does change it -
+    see warm_start.events_registry_changed(), which then forces the full retrain
+    that is the only way to unlearn those days. None = every day (the whole registry).
+
     Deliberately NOT Python's hash(): it is randomized per process
     (PYTHONHASHSEED), so the SAME unchanged registry would fingerprint
     differently on every cron invocation and look "changed" forever.
     """
-    canonical = "|".join(sorted(
-        f"{e['date'].isoformat()}:{e['end_date'].isoformat()}:"
-        f"{','.join(sorted(e['device_ids'])) if e['device_ids'] else ''}"
-        for e in events
-    ))
-    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
-    return f"{len(events)}:{digest}"
+    rows = []
+    for e in events:
+        if until is not None and e["date"] > until:
+            continue
+        end = e["end_date"] if until is None else min(e["end_date"], until)
+        zones = ",".join(sorted(e["device_ids"])) if e["device_ids"] else ""
+        rows.append(f"{e['date'].isoformat()}:{end.isoformat()}:{zones}")
+    digest = hashlib.sha256("|".join(sorted(rows)).encode("utf-8")).hexdigest()[:16]
+    return f"{len(rows)}:{digest}"
 
 
 def list_raw_rows(storage, local_dir: str = "/tmp") -> list:

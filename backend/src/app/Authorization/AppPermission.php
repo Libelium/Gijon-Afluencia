@@ -150,6 +150,13 @@ enum AppPermission: string
         // BACKGROUND JOBS
     case BACKGROUND_JOBS_READ = 'background_jobs.read';
 
+        // ----------------
+        // PREDICTION EVENTS
+        //     The registry of events the occupancy model must not learn from. Changing it
+        //     changes what the model trains on, so only the update one is not for everyone.
+    case PREDICTION_EVENTS_READ = 'prediction_events.read';
+    case PREDICTION_EVENTS_UPDATE = 'prediction_events.update';
+
     // LINE, BAR, GAUGE, HISTOGRAM, PIE, CUSTOM_TEXT_TILE, CUSTOM_TABLE, SELECTOR
     public static function hiddenPermissions(): array
     {
@@ -260,6 +267,8 @@ enum AppPermission: string
             self::DASHBOARDS_READ,
             ...array_values($dashboardReads),
             self::ALARMS_READ,
+            // The panel's simulator already shows the registered events to whoever sees it.
+            self::PREDICTION_EVENTS_READ,
         ];
     }
 
