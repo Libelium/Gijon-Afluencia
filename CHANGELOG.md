@@ -10,6 +10,9 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Más rangos de fechas en los dashboards.** El selector suma «Última hora», «Últimas 6 h»,
+  «Últimas 12 h» y «Últimos 15 días» a los que ya había. Un rango desconocido usa ahora el de
+  por defecto (24 h) en lugar del primero de la lista.
 - **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
   una alarma solo se podía crear y consultar en pantalla; cambiarla, eliminarla o darle avisos
   requería la API. La ficha incorpora «Editar» y «Borrar» (con confirmación), el formulario permite

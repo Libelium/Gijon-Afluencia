@@ -22,7 +22,13 @@ describe('resolveRange', () => {
     expect(resolveRange('24h', 'Europe/Madrid')).toEqual(DAY)
   })
 
-  it('un preajuste desconocido cae en el primero', () => {
+  it('los preajustes cortos piden solo sus horas', () => {
+    expect(resolveRange('1h', 'Europe/Madrid')).toEqual({ start: '2026-10-27T11:30:00Z', end: DAY.end })
+    expect(resolveRange('6h', 'Europe/Madrid')).toEqual({ start: '2026-10-27T06:30:00Z', end: DAY.end })
+    expect(resolveRange('12h', 'Europe/Madrid')).toEqual({ start: '2026-10-27T00:30:00Z', end: DAY.end })
+  })
+
+  it('un preajuste desconocido cae en el de por defecto', () => {
     expect(resolveRange('xyz' as never)).toEqual(DAY)
   })
 

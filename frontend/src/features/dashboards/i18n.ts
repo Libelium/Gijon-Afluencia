@@ -90,8 +90,12 @@ const messages = {
   'dashboards.detail.entitiesSaved': 'Entidades asignadas',
 
   'dashboards.range.label': 'Rango',
+  'dashboards.range.1h': 'Última hora',
+  'dashboards.range.6h': 'Últimas 6 h',
+  'dashboards.range.12h': 'Últimas 12 h',
   'dashboards.range.24h': 'Últimas 24 h',
   'dashboards.range.7d': 'Últimos 7 días',
+  'dashboards.range.15d': 'Últimos 15 días',
   'dashboards.range.30d': 'Últimos 30 días',
   'dashboards.range.90d': 'Últimos 90 días',
   // Preajuste que necesita el calendario anual del mapa de calor.
