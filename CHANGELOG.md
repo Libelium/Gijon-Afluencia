@@ -10,6 +10,14 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Rango de fechas personalizado en los dashboards.** Además de los rangos relativos, el selector
+  ofrece «Personalizado»: se eligen el día de inicio y el de fin (ambos completos, en la zona
+  horaria del dashboard) y se muestran esos datos. Está en los dashboards, en todas las plantillas
+  y en el histórico de una medida. El rango puede ser de hasta 366 días; si las fechas van al
+  revés o pasan de ese límite, se avisa y no se piden datos.
+- **Más rangos de fechas en los dashboards.** El selector suma «Última hora», «Últimas 6 h»,
+  «Últimas 12 h» y «Últimos 15 días» a los que ya había. Un rango desconocido usa ahora el de
+  por defecto (24 h) en lugar del primero de la lista.
 - **Registrar los eventos de verdad desde el panel de predicción.** Debajo del simulador, «Registro
   de eventos» lista los de la zona (días, tipo, horas, zonas y notas) y deja registrar uno nuevo o
   borrarlo; en el propio simulador, «Registrar» convierte un evento simulado en registrado, con sus

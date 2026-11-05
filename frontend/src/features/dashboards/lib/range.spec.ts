@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   FORECAST_HORIZON_HOURS,
+  MAX_CUSTOM_DAYS,
   autoAggregation,
+  customRange,
   extendRange,
   intervalHours,
+  rangeDays,
   rangeHours,
   resolveAggregation,
   resolveRange,
@@ -22,13 +25,69 @@ describe('resolveRange', () => {
     expect(resolveRange('24h', 'Europe/Madrid')).toEqual(DAY)
   })
 
-  it('un preajuste desconocido cae en el primero', () => {
+  it('los preajustes cortos piden solo sus horas', () => {
+    expect(resolveRange('1h', 'Europe/Madrid')).toEqual({ start: '2026-10-27T11:30:00Z', end: DAY.end })
+    expect(resolveRange('6h', 'Europe/Madrid')).toEqual({ start: '2026-10-27T06:30:00Z', end: DAY.end })
+    expect(resolveRange('12h', 'Europe/Madrid')).toEqual({ start: '2026-10-27T00:30:00Z', end: DAY.end })
+  })
+
+  it('un preajuste desconocido cae en el de por defecto', () => {
     expect(resolveRange('xyz' as never)).toEqual(DAY)
   })
 
   it('un rango ya resuelto se devuelve tal cual', () => {
     const range = { start: '2026-01-01T00:00:00Z', end: '2026-01-02T00:00:00Z' }
     expect(resolveRange(range)).toBe(range)
+  })
+})
+
+describe('customRange', () => {
+  it('un solo dia va de su medianoche a la del dia siguiente, en la zona del dashboard', () => {
+    expect(customRange('2026-07-15', '2026-07-15', 'Europe/Madrid')).toEqual({
+      start: '2026-07-14T22:00:00Z',
+      end: '2026-07-15T22:00:00Z',
+    })
+  })
+
+  it('varios dias incluyen el ultimo entero', () => {
+    expect(customRange('2026-01-10', '2026-01-12', 'Europe/Madrid')).toEqual({
+      start: '2026-01-09T23:00:00Z',
+      end: '2026-01-12T23:00:00Z',
+    })
+  })
+
+  it('el dia del cambio de hora dura 25 horas', () => {
+    const range = customRange('2026-10-25', '2026-10-25', 'Europe/Madrid')
+    expect(range).toEqual({ start: '2026-10-24T22:00:00Z', end: '2026-10-25T23:00:00Z' })
+    expect(rangeHours(range!)).toBe(25)
+  })
+
+  it('sin zona usa la de Madrid', () => {
+    expect(customRange('2026-07-15', '2026-07-15')).toEqual(customRange('2026-07-15', '2026-07-15', 'Europe/Madrid'))
+  })
+
+  it('rechaza fechas ilegibles, al reves o mas largas que el maximo', () => {
+    expect(customRange('no-es-una-fecha', '2026-01-01')).toBeNull()
+    expect(customRange('2026-01-12', '2026-01-10')).toBeNull()
+    // 2024 es bisiesto: del 1 de enero al 1 de enero siguiente, ambos incluidos, son 367 dias.
+    expect(customRange('2024-01-01', '2025-01-01')).toBeNull()
+    expect(MAX_CUSTOM_DAYS).toBe(366)
+    expect(customRange('2025-01-01', '2026-01-01')).not.toBeNull()
+  })
+})
+
+describe('rangeDays', () => {
+  it('devuelve los mismos dias con los que se hizo un rango personalizado', () => {
+    const range = customRange('2026-10-24', '2026-10-25', 'Europe/Madrid')!
+    expect(rangeDays(range, 'Europe/Madrid')).toEqual({ start: '2026-10-24', end: '2026-10-25' })
+  })
+
+  it('un preajuste acaba en el dia de «ahora» en la zona del dashboard', () => {
+    expect(rangeDays(DAY, 'Europe/Madrid')).toEqual({ start: '2026-10-26', end: '2026-10-27' })
+  })
+
+  it('un rango ilegible no da dias', () => {
+    expect(rangeDays({ start: 'x', end: 'y' })).toBeNull()
   })
 })
 

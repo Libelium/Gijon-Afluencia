@@ -15,10 +15,11 @@ import ConfirmDialog from '../components/ConfirmDialog.vue'
 import DashboardEditDialog from '../components/DashboardEditDialog.vue'
 import PanelCard from '../components/PanelCard.vue'
 import PanelCreateDialog from '../components/PanelCreateDialog.vue'
+import RangeSelector from '../components/RangeSelector.vue'
 import TemplateEntitiesDialog from '../components/TemplateEntitiesDialog.vue'
 import TemplateHost from '../components/TemplateHost.vue'
 import { placePanels, type LayoutBreakpoint } from '../lib/layout'
-import { DEFAULT_RANGE, RANGE_PRESETS, resolveRange, type DateRange, type RangePresetId } from '../lib/range'
+import { DEFAULT_RANGE, resolveRange, type DateRange, type RangePresetId } from '../lib/range'
 import { datamodelNames, resolveTemplate } from '../templates/registry'
 
 const route = useRoute()
@@ -30,6 +31,7 @@ const dashboard = ref<DashboardDetail | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const preset = ref<RangePresetId>(DEFAULT_RANGE)
+const custom = ref<DateRange | null>(null)
 const range = ref<DateRange>(resolveRange(DEFAULT_RANGE))
 const reloadKey = ref(0)
 
@@ -49,10 +51,6 @@ const breakpoint = computed<LayoutBreakpoint>(() => (lgAndUp.value ? 'lg' : mdAn
 
 const placements = computed(() =>
   placePanels(dashboard.value?.panels ?? [], dashboard.value?.responsiveLayout, breakpoint.value),
-)
-
-const rangeItems = computed(() =>
-  RANGE_PRESETS.map((option) => ({ value: option.id, title: t(option.labelKey) })),
 )
 
 const isTemplate = computed(() => !!dashboard.value?.templateType)
@@ -85,7 +83,7 @@ const panelCount = computed(() => {
 const headerCount = computed(() => (isTemplate.value ? descriptor.value?.label : panelCount.value))
 
 function applyRange() {
-  range.value = resolveRange(preset.value, timeZone.value)
+  range.value = custom.value ?? resolveRange(preset.value, timeZone.value)
 }
 
 function refresh() {
@@ -158,7 +156,7 @@ async function onEntitiesSaved() {
   notify(t('dashboards.detail.entitiesSaved'))
 }
 
-watch([preset, timeZone], applyRange)
+watch([preset, custom, timeZone], applyRange)
 watch(id, load)
 onMounted(load)
 </script>
@@ -174,13 +172,7 @@ onMounted(load)
     >
       <template #actions>
         <template v-if="!isTemplate && !xs">
-          <VSelect
-            v-model="preset"
-            :items="rangeItems"
-            :label="t('dashboards.range.label')"
-            min-width="190"
-            max-width="220"
-          />
+          <RangeSelector v-model:preset="preset" v-model:custom="custom" :time-zone="timeZone" />
           <VBtn
             icon="mdi-refresh"
             variant="tonal"
@@ -243,12 +235,7 @@ onMounted(load)
 
     <!-- A 390 px el selector no cabe junto al titulo: pasa a su propia fila. -->
     <div v-if="xs && !isTemplate" class="d-flex align-center ga-3 mb-4">
-      <VSelect
-        v-model="preset"
-        :items="rangeItems"
-        :label="t('dashboards.range.label')"
-        class="flex-grow-1"
-      />
+      <RangeSelector v-model:preset="preset" v-model:custom="custom" :time-zone="timeZone" block />
       <VBtn
         icon="mdi-refresh"
         variant="tonal"

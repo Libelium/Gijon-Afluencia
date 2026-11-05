@@ -3,12 +3,15 @@ import { computed } from 'vue'
 import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
 import type { Entity } from '@/types'
-import { RANGE_PRESETS, type RangePresetId } from '../../../lib/range'
+import RangeSelector from '../../../components/RangeSelector.vue'
+import type { DateRange, RangePresetId } from '../../../lib/range'
 
 const props = defineProps<{
   zones: Entity[]
   zoneId: number | null
   preset: RangePresetId
+  custom: DateRange | null
+  timeZone?: string
   showRange: boolean
   loading?: boolean
 }>()
@@ -16,11 +19,11 @@ const props = defineProps<{
 defineEmits<{
   'update:zoneId': [value: number | null]
   'update:preset': [value: RangePresetId]
+  'update:custom': [value: DateRange | null]
   refresh: []
 }>()
 
 const zoneItems = computed(() => props.zones.map((z) => ({ value: z.id, title: z.name || urnTail(z.urn) })))
-const rangeItems = computed(() => RANGE_PRESETS.map((p) => ({ value: p.id, title: t(p.labelKey) })))
 </script>
 
 <template>
@@ -34,14 +37,13 @@ const rangeItems = computed(() => RANGE_PRESETS.map((p) => ({ value: p.id, title
       style="flex: 1 1 240px; max-width: 360px"
       @update:model-value="$emit('update:zoneId', $event)"
     />
-    <VSelect
+    <RangeSelector
       v-if="showRange"
-      :model-value="preset"
-      :items="rangeItems"
-      :label="t('dashboards.range.label')"
-      min-width="190"
-      max-width="220"
-      @update:model-value="$emit('update:preset', $event)"
+      :preset="preset"
+      :custom="custom"
+      :time-zone="timeZone"
+      @update:preset="$emit('update:preset', $event)"
+      @update:custom="$emit('update:custom', $event)"
     />
     <VBtn
       icon="mdi-refresh"

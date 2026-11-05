@@ -47,6 +47,7 @@ const {
   profile,
   usedFallbackEntities,
   preset,
+  custom,
   range,
   ownRange,
   timeZone,
@@ -242,7 +243,7 @@ function signed(value: number | null): string {
   return value > 0 ? `+${text}` : text
 }
 
-const rangeHint = computed(() => presetHint(preset.value))
+const rangeHint = computed(() => presetHint(preset.value, custom.value, timeZone.value))
 
 /** La zona que se simula, con el mismo nombre que en el selector. */
 const zoneName = computed(() => (zone.value ? zone.value.name?.trim() || urnTail(zone.value.urn) : undefined))
@@ -301,10 +302,13 @@ async function reloadPrediction() {
       :zones="zones"
       :zone-id="zoneId"
       :preset="preset"
+      :custom="custom"
+      :time-zone="timeZone"
       :show-range="ownRange"
       :loading="loading"
       @update:zone-id="zoneId = $event"
       @update:preset="preset = $event"
+      @update:custom="custom = $event"
       @refresh="reload"
     />
 

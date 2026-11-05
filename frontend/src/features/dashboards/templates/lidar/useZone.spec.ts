@@ -54,6 +54,16 @@ describe('useZone', () => {
     expect(getEntityMeasures).toHaveBeenCalledTimes(1)
   })
 
+  it('un rango personalizado manda sobre el preajuste, y al borrarlo vuelve el preajuste', async () => {
+    getEntityMeasures.mockResolvedValue(occupancy(45))
+    const z = await mountZone()
+    const custom = { start: '2026-10-19T22:00:00Z', end: '2026-10-27T23:00:00Z' }
+    z.custom.value = custom
+    expect(z.range.value).toEqual(custom)
+    z.custom.value = null
+    expect(z.range.value).not.toEqual(custom)
+  })
+
   it('si falla el cambio de zona lo dice y no deja los datos de la anterior', async () => {
     getEntityMeasures.mockResolvedValueOnce(occupancy(45))
     const z = await mountZone()

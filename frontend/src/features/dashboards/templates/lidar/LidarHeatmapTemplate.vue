@@ -48,6 +48,7 @@ const {
   profile,
   usedFallbackEntities,
   preset,
+  custom,
   range,
   ownRange,
   timeZone,
@@ -137,7 +138,7 @@ const ratio = computed(() => profile.value?.ratio ?? null)
 
 const percentColor = computed(() => levelColor(ratio.value))
 
-const rangeHint = computed(() => presetHint(preset.value))
+const rangeHint = computed(() => presetHint(preset.value, custom.value, timeZone.value))
 
 /** Ocupacion de la zona mas llena ahora mismo. Es la referencia del color cuando no hay aforo. */
 const liveMax = computed(() => Math.max(0, ...Object.values(liveByZone.value).map((live) => live.value ?? 0)))
@@ -178,10 +179,13 @@ const profileBuckets = computed(() => meanByHour(matrix.value, timeZone.value))
       :zones="zones"
       :zone-id="zoneId"
       :preset="preset"
+      :custom="custom"
+      :time-zone="timeZone"
       :show-range="ownRange"
       :loading="loading"
       @update:zone-id="zoneId = $event"
       @update:preset="preset = $event"
+      @update:custom="custom = $event"
       @refresh="reload"
     />
 

@@ -3,10 +3,10 @@ import { computed, ref, useId, watch } from 'vue'
 import { errorMessage } from '@/api/http'
 import StateBlock from '@/components/StateBlock.vue'
 import { LineChart, toMillis, type ChartPoint, type ChartSeries } from '@/features/dashboards/charts'
+import RangeSelector from '@/features/dashboards/components/RangeSelector.vue'
 import {
   DEFAULT_RANGE,
   FORECAST_HORIZON_HOURS,
-  RANGE_PRESETS,
   extendRange,
   intervalHours,
   resolveRange,
@@ -34,6 +34,7 @@ const emit = defineEmits<{ 'update:modelValue': [boolean] }>()
 const CHART_HEIGHT = 320
 
 const preset = ref<RangePresetId>(DEFAULT_RANGE)
+const custom = ref<DateRange | null>(null)
 const points = ref<ChartPoint[]>([])
 const aggregation = ref<AggregationOption | null>(null)
 const queried = ref<DateRange | null>(null)
@@ -44,10 +45,6 @@ const open = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value),
 })
-
-const rangeItems = computed(() =>
-  RANGE_PRESETS.map((option) => ({ value: option.id, title: t(option.labelKey) })),
-)
 
 /** El identificador solo aporta cuando difiere del nombre; las unidades siempre. */
 const subtitle = computed(() => {
@@ -107,7 +104,7 @@ async function load() {
   const measure = props.measure
   if (!entity || !measure) return
 
-  const past = resolveRange(preset.value, props.timeZone)
+  const past = custom.value ?? resolveRange(preset.value, props.timeZone)
   // Una prevision publica horas por delante de «ahora»: cortando ahi solo se verian las pasadas.
   const range = isPredictionEntity(entity) ? extendRange(past, FORECAST_HORIZON_HOURS) : past
   loading.value = true
@@ -130,13 +127,14 @@ async function load() {
  * Un solo observador para apertura, medida y rango: Vue agrupa los cambios del mismo ciclo,
  * asi que abrir con otra medida dispara una unica consulta en lugar de dos.
  */
-watch([() => props.modelValue, () => props.measure?.id, preset], ([isOpen]) => {
+watch([() => props.modelValue, () => props.measure?.id, preset, custom], ([isOpen]) => {
   if (isOpen) {
     void load()
     return
   }
   // Al cerrar se vuelve al rango corto: es el que responde antes y el mas habitual al abrir.
   preset.value = DEFAULT_RANGE
+  custom.value = null
   points.value = []
   aggregation.value = null
   queried.value = null
@@ -177,13 +175,7 @@ const titleId = useId()
       <VCardText class="pa-4">
         <div class="d-flex flex-column ga-4">
           <div class="d-flex flex-wrap align-center ga-3">
-            <VSelect
-              v-model="preset"
-              :items="rangeItems"
-              :label="t('dashboards.range.label')"
-              min-width="190"
-              max-width="220"
-            />
+            <RangeSelector v-model:preset="preset" v-model:custom="custom" :time-zone="timeZone" />
             <VBtn
               icon="mdi-refresh"
               variant="tonal"
