@@ -129,3 +129,28 @@ export function resolveAggregation(
   const autoHours = auto ? (intervalHours(auto.interval) ?? 0) : 0
   return hours >= autoHours ? { type, interval: `PT${hours}H` } : auto
 }
+
+/** Igual que el preajuste mas largo: mas dias castigan al servicio de datos. */
+export const MAX_CUSTOM_DAYS = 366
+
+/**
+ * Rango de dias completos (`yyyy-MM-dd`, ambos incluidos) en la zona del dashboard. Devuelve null
+ * si una fecha no se entiende, si van al reves o si pasan de MAX_CUSTOM_DAYS.
+ */
+export function customRange(startDay: string, endDay: string, timeZone?: string): DateRange | null {
+  const zone = timeZone || FALLBACK_ZONE
+  const start = DateTime.fromISO(startDay, { zone }).startOf('day')
+  // El final es el inicio del dia siguiente para que el ultimo dia entre entero.
+  const end = DateTime.fromISO(endDay, { zone }).startOf('day').plus({ days: 1 })
+  if (!start.isValid || !end.isValid || end <= start) return null
+  if (end.diff(start, 'days').days > MAX_CUSTOM_DAYS) return null
+  return { start: toUtcIso(start), end: toUtcIso(end) }
+}
+
+/** Dias que toca un rango, para rellenar el selector. El final es exclusivo: de ahi el milisegundo. */
+export function rangeDays(range: DateRange, timeZone?: string): { start: string; end: string } | null {
+  const zone = timeZone || FALLBACK_ZONE
+  const start = DateTime.fromISO(range.start, { zone }).toISODate()
+  const end = DateTime.fromISO(range.end, { zone }).minus({ milliseconds: 1 }).toISODate()
+  return start && end ? { start, end } : null
+}

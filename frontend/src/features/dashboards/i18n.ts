@@ -100,6 +100,11 @@ const messages = {
   'dashboards.range.90d': 'Últimos 90 días',
   // Preajuste que necesita el calendario anual del mapa de calor.
   'dashboards.range.365d': 'Último año',
+  'dashboards.range.custom': 'Personalizado',
+  'dashboards.range.from': 'Desde',
+  'dashboards.range.to': 'Hasta',
+  'dashboards.range.days': 'Del {start} al {end}',
+  'dashboards.range.invalid': 'El inicio debe ir antes del final y el rango no puede pasar de {max} días',
 
   'dashboards.panel.untitled': 'Gráfico sin título',
   'dashboards.panel.noData': 'Sin datos en el rango seleccionado',

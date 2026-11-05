@@ -47,8 +47,9 @@ export interface UseTemplateData {
   categoryIds: Ref<string[]>
   /** Categorias efectivas: las elegidas a mano si hay, y si no las detectadas. */
   categories: ComputedRef<Category[]>
-  /** Rango: preajuste escribible y ventana resuelta. */
+  /** Rango: preajuste y dias elegidos a mano, escribibles, y ventana resuelta. */
   preset: Ref<RangePresetId>
+  custom: Ref<DateRange | null>
   range: ComputedRef<DateRange>
   timeZone: ComputedRef<string>
   /** Estado de la fase 1 (puntos + medidas). */
@@ -76,6 +77,7 @@ export function useTemplateData(options: UseTemplateDataOptions): UseTemplateDat
   const measureId = ref<string | null>(null)
   const categoryIds = ref<string[]>([])
   const preset = ref<RangePresetId>(options.defaultPreset ?? DEFAULT_RANGE)
+  const custom = ref<DateRange | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const failed = ref<string[]>([])
@@ -86,7 +88,7 @@ export function useTemplateData(options: UseTemplateDataOptions): UseTemplateDat
 
   const range = computed<DateRange>(() => {
     void refreshTick.value
-    return resolveRange(preset.value, timeZone.value)
+    return custom.value ?? resolveRange(preset.value, timeZone.value)
   })
 
   const measureItems = computed(() => measureOptions(allMeasures.value))
@@ -189,6 +191,7 @@ export function useTemplateData(options: UseTemplateDataOptions): UseTemplateDat
     categoryIds,
     categories,
     preset,
+    custom,
     range,
     timeZone,
     loading,

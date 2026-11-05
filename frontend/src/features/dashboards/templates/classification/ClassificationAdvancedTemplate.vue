@@ -131,6 +131,8 @@ const crossRows = computed<CrossRow[]>(() => {
 <template>
   <TemplateShell
     v-model:preset="data.preset.value"
+    v-model:custom="data.custom.value"
+    :time-zone="data.timeZone.value"
     :loading="data.loading.value || busy"
     :error="data.error.value || seriesError"
     :range-caption="data.rangeCaption.value"

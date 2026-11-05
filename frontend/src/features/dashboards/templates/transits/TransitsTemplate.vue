@@ -14,6 +14,8 @@ const tx = useTransits(props.dashboard)
 <template>
   <TemplateShell
     v-model:preset="tx.data.preset.value"
+    v-model:custom="tx.data.custom.value"
+    :time-zone="tx.data.timeZone.value"
     :loading="tx.data.loading.value || tx.busy.value"
     :error="tx.data.error.value || tx.seriesError.value"
     :range-caption="tx.data.rangeCaption.value"

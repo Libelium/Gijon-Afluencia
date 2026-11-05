@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
-import { RANGE_PRESETS, type RangePresetId } from '../../lib/range'
+import RangeSelector from '../../components/RangeSelector.vue'
+import type { DateRange, RangePresetId } from '../../lib/range'
 
 withDefaults(
   defineProps<{
     preset: RangePresetId
+    custom?: DateRange | null
+    timeZone?: string
     loading?: boolean
     error?: string | null
     rangeCaption?: string
@@ -24,24 +26,22 @@ withDefaults(
 
 const emit = defineEmits<{
   'update:preset': [RangePresetId]
+  'update:custom': [DateRange | null]
   refresh: []
   retry: []
 }>()
-
-const rangeItems = computed(() => RANGE_PRESETS.map((p) => ({ value: p.id, title: t(p.labelKey) })))
 </script>
 
 <template>
   <div>
     <VCard class="mb-6">
       <div class="d-flex flex-wrap align-center ga-3 pa-4">
-        <VSelect
-          :model-value="preset"
-          :items="rangeItems"
-          :label="t('dashboards.range.label')"
-          min-width="180"
-          max-width="220"
-          @update:model-value="emit('update:preset', $event)"
+        <RangeSelector
+          :preset="preset"
+          :custom="custom"
+          :time-zone="timeZone"
+          @update:preset="emit('update:preset', $event)"
+          @update:custom="emit('update:custom', $event)"
         />
         <!-- Selectores propios de cada plantilla: medida, categorias… -->
         <slot name="controls" />

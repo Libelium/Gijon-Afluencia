@@ -47,6 +47,7 @@ const {
   profile,
   usedFallbackEntities,
   preset,
+  custom,
   range,
   ownRange,
   timeZone,
@@ -242,7 +243,7 @@ function signed(value: number | null): string {
   return value > 0 ? `+${text}` : text
 }
 
-const rangeHint = computed(() => presetHint(preset.value))
+const rangeHint = computed(() => presetHint(preset.value, custom.value, timeZone.value))
 
 /** Atributo de la gemela con los eventos registrados de la zona, en JSON. */
 const REGISTERED_EVENTS_ID = 'registeredEvents'
@@ -288,10 +289,13 @@ async function reloadPrediction() {
       :zones="zones"
       :zone-id="zoneId"
       :preset="preset"
+      :custom="custom"
+      :time-zone="timeZone"
       :show-range="ownRange"
       :loading="loading"
       @update:zone-id="zoneId = $event"
       @update:preset="preset = $event"
+      @update:custom="custom = $event"
       @refresh="reload"
     />
 

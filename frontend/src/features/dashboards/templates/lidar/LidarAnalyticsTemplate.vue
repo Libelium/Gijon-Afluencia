@@ -47,6 +47,7 @@ const {
   profile,
   usedFallbackEntities,
   preset,
+  custom,
   range,
   ownRange,
   timeZone,
@@ -169,7 +170,7 @@ const ratio = computed<number | null>(() => profile.value?.ratio ?? null)
 
 const percentColor = computed(() => levelColor(ratio.value))
 
-const rangeHint = computed(() => presetHint(preset.value))
+const rangeHint = computed(() => presetHint(preset.value, custom.value, timeZone.value))
 
 interface Tile {
   id: string
@@ -323,10 +324,13 @@ const attributes = computed<Measure[]>(() => {
       :zones="zones"
       :zone-id="zoneId"
       :preset="preset"
+      :custom="custom"
+      :time-zone="timeZone"
       :show-range="ownRange"
       :loading="loading"
       @update:zone-id="zoneId = $event"
       @update:preset="preset = $event"
+      @update:custom="custom = $event"
       @refresh="reload"
     />
 

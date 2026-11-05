@@ -21,6 +21,7 @@ export interface UseZone {
   profile: ComputedRef<ZoneProfile | null>
   usedFallbackEntities: Ref<boolean>
   preset: Ref<RangePresetId>
+  custom: Ref<DateRange | null>
   range: ComputedRef<DateRange>
   ownRange: ComputedRef<boolean>
   timeZone: ComputedRef<string>
@@ -38,6 +39,7 @@ export function useZone(props: UseZoneProps): UseZone {
   const measures = ref<Measure[]>([])
   const usedFallbackEntities = ref(false)
   const preset = ref<RangePresetId>(DEFAULT_RANGE)
+  const custom = ref<DateRange | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -48,7 +50,9 @@ export function useZone(props: UseZoneProps): UseZone {
 
   const timeZone = computed(() => props.timeZone || props.dashboard.timezone || session.timeZone)
   const ownRange = computed(() => !props.range)
-  const range = computed<DateRange>(() => props.range ?? resolveRange(preset.value, timeZone.value))
+  const range = computed<DateRange>(
+    () => props.range ?? custom.value ?? resolveRange(preset.value, timeZone.value),
+  )
 
   async function loadEntities() {
     const all = await fetchTemplateEntities(props.dashboard.id)
@@ -114,6 +118,7 @@ export function useZone(props: UseZoneProps): UseZone {
     profile,
     usedFallbackEntities,
     preset,
+    custom,
     range,
     ownRange,
     timeZone,

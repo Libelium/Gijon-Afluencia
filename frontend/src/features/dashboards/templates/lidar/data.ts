@@ -5,7 +5,7 @@ import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
 import type { Aggregation, Entity, EntityRef, Measure } from '@/types'
 import type { ChartPoint } from '../../charts'
-import { autoAggregation, RANGE_PRESETS, type DateRange, type RangePresetId } from '../../lib/range'
+import { autoAggregation, RANGE_PRESETS, rangeDays, type DateRange, type RangePresetId } from '../../lib/range'
 import type { RawTimeSeriesResponse as RawEnvelope } from '../../lib/timeseries'
 import { PREDICTION_URN_SUFFIX, datamodelOf, isPredictionEntity } from '../contract'
 import { HIDDEN_IDS, matchRole, normalizeId, type RoleKey } from './roles'
@@ -482,8 +482,13 @@ export function levelColor(ratio: number | null): string {
   return ratio === null ? 'secondary' : LEVEL_COLORS[levelIndex(ratio)]
 }
 
-/** Rotulo traducido del preset de rango vigente, o undefined si no es uno conocido. */
-export function presetHint(preset: RangePresetId): string | undefined {
+/** Rotulo del rango vigente: los dias elegidos a mano, o el del preset si es uno conocido. */
+export function presetHint(preset: RangePresetId, custom?: DateRange | null, timeZone?: string): string | undefined {
+  const days = custom ? rangeDays(custom, timeZone) : null
+  if (days) {
+    const format = (day: string) => DateTime.fromISO(day).toFormat('dd/MM/yyyy')
+    return t('dashboards.range.days', { start: format(days.start), end: format(days.end) })
+  }
   const found = RANGE_PRESETS.find((p) => p.id === preset)
   return found ? t(found.labelKey) : undefined
 }

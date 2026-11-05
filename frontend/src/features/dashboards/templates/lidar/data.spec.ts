@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Entity, Measure } from '@/types'
 import { datamodelOf } from '../contract'
-import { describeZone, predictionModel, zoneEntities, zoneModel } from './data'
+import { describeZone, predictionModel, presetHint, zoneEntities, zoneModel } from './data'
 
 let nextId = 1
 
@@ -88,5 +88,13 @@ describe('describeZone con zonas que nombran explicitamente las personas', () =>
     expect(profile.current).toBe(84)
     expect(profile.capacity).toBe(168)
     expect(profile.ratio).toBe(0.5)
+  })
+})
+
+describe('presetHint', () => {
+  it('rotula el preajuste, o los dias elegidos a mano si los hay', () => {
+    expect(presetHint('7d')).toBe('Últimos 7 días')
+    const custom = { start: '2026-10-19T22:00:00Z', end: '2026-10-27T23:00:00Z' }
+    expect(presetHint('7d', custom, 'Europe/Madrid')).toBe('Del 20/10/2026 al 27/10/2026')
   })
 })
