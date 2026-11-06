@@ -13,6 +13,9 @@ import {
   registeredScenarioEvents,
   scenarioBase,
   simulate,
+  startDayOf,
+  startDays,
+  startHoursOn,
   summariseScenario,
   usualProfile,
   type ScenarioEvent,
@@ -154,6 +157,22 @@ describe('eventStartHours', () => {
   it('ofrece las horas con prevision desde la hora en curso', () => {
     const base = [1, 1, null, 1, 1, 1, 1, 1]
     expect(eventStartHours(times, base, ms(17) + 20 * 60_000)).toEqual([hour(17), ...[19, 20, 21, 22, 23].map(hour)])
+  })
+})
+
+describe('inicio por día y hora', () => {
+  // 21:00 a 00:00 UTC del 3 de noviembre: en Madrid (UTC+1) la última ya es el día 4.
+  const starts = [21, 22, 23].map(hour).concat('2026-11-04T00:00:00.000Z')
+
+  it('agrupa las horas por su día local, no por el de UTC', () => {
+    expect(startDays(starts, 'Europe/Madrid')).toEqual(['2026-11-03', '2026-11-04'])
+    expect(startDayOf(hour(23), 'Europe/Madrid')).toBe('2026-11-04')
+    expect(startHoursOn(starts, '2026-11-04', 'Europe/Madrid')).toEqual([hour(23), '2026-11-04T00:00:00.000Z'])
+  })
+
+  it('en UTC todas caen el mismo día salvo la de medianoche', () => {
+    expect(startDays(starts)).toEqual(['2026-11-03', '2026-11-04'])
+    expect(startHoursOn(starts, '2026-11-03')).toHaveLength(3)
   })
 })
 

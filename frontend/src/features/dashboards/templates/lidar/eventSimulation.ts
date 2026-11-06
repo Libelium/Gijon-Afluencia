@@ -283,6 +283,21 @@ export function eventStartHours(times: string[], base: (number | null)[], nowMs:
   return times.filter((iso, i) => isValue(base[i]) && toMillis(iso) >= currentHour)
 }
 
+/** Dia local (`yyyy-MM-dd`) de una hora de inicio. Es la clave del selector de dia del simulador. */
+export function startDayOf(iso: string, timeZone = 'UTC'): string {
+  return DateTime.fromISO(iso, { zone: 'utc' }).setZone(timeZone).toISODate() ?? ''
+}
+
+/** Dias en los que puede empezar un evento, en orden y sin repetir. */
+export function startDays(startHours: string[], timeZone = 'UTC'): string[] {
+  return [...new Set(startHours.map((iso) => startDayOf(iso, timeZone)))]
+}
+
+/** Horas de inicio que caen en ese dia local. */
+export function startHoursOn(startHours: string[], day: string, timeZone = 'UTC'): string[] {
+  return startHours.filter((iso) => startDayOf(iso, timeZone) === day)
+}
+
 export interface ScenarioSummary {
   /** Maximo de la prevision con eventos, o null si no hay prevision. */
   peak: number | null
