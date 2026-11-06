@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { DateTime } from 'luxon'
 import StatTile from '@/components/StatTile.vue'
 import { errorMessage } from '@/api/http'
 import { t } from '@/i18n'
@@ -24,6 +25,9 @@ import {
   registeredScenarioEvents,
   scenarioBase,
   simulate,
+  startDayOf,
+  startDays,
+  startHoursOn,
   summariseScenario,
   usualProfile,
   type EventKind,
@@ -61,6 +65,8 @@ const error = ref<string | null>(null)
 const firstHour = ref(0)
 const forecast = ref<SeriesPoint[]>([])
 const measured = ref<SeriesPoint[]>([])
+/** Ultima hora prevista, aunque ya haya pasado: sin prevision futura, dice desde cuando falta. */
+const lastForecastAt = ref<string | null>(null)
 
 /**
  * Se simula por horas durante una semana desde la hora en curso, sea cual sea el rango del panel.
@@ -90,12 +96,30 @@ async function load() {
     ])
     forecast.value = predicted.predicted ?? []
     measured.value = history.measured ?? []
+    lastForecastAt.value = forecast.value.length ? null : await lastForecast(ahead.start)
   } catch (e) {
     error.value = errorMessage(e)
     forecast.value = []
     measured.value = []
+    lastForecastAt.value = null
   } finally {
     loading.value = false
+  }
+}
+
+/** La hora mas reciente con prevision en la ultima semana, o null. Un fallo aqui no es un error de carga. */
+async function lastForecast(until: string): Promise<string | null> {
+  const since = new Date(Date.parse(until) - 7 * 24 * HOUR_MS).toISOString()
+  try {
+    const past = await fetchZoneSeries(
+      refOf(props.twin),
+      [{ key: 'predicted', fn: 'mean', measureId: props.predictedId }],
+      { start: since, end: until },
+      { forceInterval: 'PT1H', limit: 1 },
+    )
+    return past.predicted?.find((point) => point.v !== null)?.t ?? null
+  } catch {
+    return null
   }
 }
 
@@ -136,9 +160,24 @@ const daysLabel = (n: number) =>
   n === 1 ? t('dashboards.lidar.scenario.oneDay') : t('dashboards.lidar.scenario.daysValue', { n })
 
 const startHours = computed(() => eventStartHours(times.value, base.value, Date.now()))
-const startItems = computed(() =>
-  startHours.value.map((iso) => ({ title: formatDateTime(iso, props.timeZone), value: iso })),
+const startDay = ref<string | null>(null)
+const local = (iso: string) => DateTime.fromISO(iso, { zone: 'utc' }).setZone(zone.value)
+const startDayItems = computed(() =>
+  startDays(startHours.value, zone.value).map((day) => {
+    const date = DateTime.fromISO(day, { zone: zone.value })
+    return { title: `${t(`dashboards.lidar.weekdayShort.${date.weekday}`)} ${date.toFormat('dd/MM')}`, value: day }
+  }),
 )
+const startTimeItems = computed(() =>
+  startDay.value
+    ? startHoursOn(startHours.value, startDay.value, zone.value).map((iso) => ({ title: local(iso).toFormat('HH:mm'), value: iso }))
+    : [],
+)
+/** Hasta donde llega lo que se puede simular: el limite de la lista de horas, dicho en claro. */
+const simulableUntil = computed(() => {
+  const last = startHours.value[startHours.value.length - 1]
+  return last ? formatDateTime(last, props.timeZone) : null
+})
 const hourItems = Array.from({ length: MAX_EVENT_HOURS }, (_, i) => ({ title: hoursLabel(i + 1), value: i + 1 }))
 const dayItems = Array.from({ length: MAX_EVENT_DAYS }, (_, i) => ({ title: daysLabel(i + 1), value: i + 1 }))
 const kindItems = EVENT_CATALOG.map((spec) => ({ title: kindLabel(spec.kind), value: spec.kind }))
@@ -154,8 +193,19 @@ const events = ref<ScenarioEvent[]>([])
 let nextId = 1
 
 // Al recargar la prevision, la hora elegida puede haber quedado atras: se pasa a la primera libre.
-watch(startHours, (list) => {
-  if (!start.value || !list.includes(start.value)) start.value = list[0] ?? null
+watch(
+  startHours,
+  (list) => {
+    if (!start.value || !list.includes(start.value)) start.value = list[0] ?? null
+    startDay.value = start.value ? startDayOf(start.value, zone.value) : null
+  },
+  { immediate: true },
+)
+
+// Al cambiar de dia se empieza a la primera hora libre de ese dia, si la elegida era de otro.
+watch(startDay, (day) => {
+  if (!day || (start.value && startDayOf(start.value, zone.value) === day)) return
+  start.value = startHoursOn(startHours.value, day, zone.value)[0] ?? null
 })
 
 const intensityLabel = computed(() =>
@@ -199,6 +249,11 @@ function onRegistered(_saved: unknown, draft: RegistryDraft) {
 const allEvents = computed(() => [...registered.value, ...events.value])
 
 const hasForecast = computed(() => startHours.value.length > 0)
+const noForecastSince = computed(() =>
+  lastForecastAt.value
+    ? t('dashboards.lidar.scenario.noForecastSince', { when: formatDateTime(lastForecastAt.value, props.timeZone) })
+    : null,
+)
 const reference = computed(() => referenceOf(props.capacity, base.value))
 const simulated = computed(() =>
   reference.value === null
@@ -274,27 +329,40 @@ const overHint = computed(() =>
     :subtitle="t('dashboards.lidar.scenario.subtitle')"
     :loading="loading"
     :error="error"
-    :empty="!hasForecast"
-    :empty-text="t('dashboards.lidar.scenario.noForecast')"
-    :empty-hint="t('dashboards.lidar.scenario.noForecastHint')"
-    empty-icon="mdi-calendar-star"
     :min-height="240"
     @retry="load"
   >
+    <!-- Sin nada que simular el formulario se queda a la vista, desactivado y con el motivo, y el
+         registro sigue disponible: apuntar un evento real no depende de que haya prevision. -->
     <div class="d-flex flex-column ga-4">
+      <VAlert v-if="!hasForecast" type="info" variant="tonal" density="compact" :title="t('dashboards.lidar.scenario.noForecast')">
+        <span v-if="noForecastSince">{{ noForecastSince }} </span>{{ t('dashboards.lidar.scenario.noForecastHint') }}
+      </VAlert>
+
       <div class="d-flex flex-wrap align-center ga-3">
         <VSelect
-          v-model="start"
-          :items="startItems"
-          :label="t('dashboards.lidar.scenario.start')"
+          v-model="startDay"
+          :items="startDayItems"
+          :label="t('dashboards.lidar.scenario.startDay')"
+          :disabled="!hasForecast"
           density="comfortable"
           hide-details
-          style="flex: 1 1 200px"
+          style="flex: 1 1 140px"
+        />
+        <VSelect
+          v-model="start"
+          :items="startTimeItems"
+          :label="t('dashboards.lidar.scenario.startTime')"
+          :disabled="!hasForecast"
+          density="comfortable"
+          hide-details
+          style="flex: 0 1 130px"
         />
         <VSelect
           v-model="hours"
           :items="hourItems"
           :label="t('dashboards.lidar.scenario.hours')"
+          :disabled="!hasForecast"
           density="comfortable"
           hide-details
           style="flex: 0 1 130px"
@@ -303,6 +371,7 @@ const overHint = computed(() =>
           v-model="days"
           :items="dayItems"
           :label="t('dashboards.lidar.scenario.days')"
+          :disabled="!hasForecast"
           density="comfortable"
           hide-details
           style="flex: 0 1 130px"
@@ -311,6 +380,7 @@ const overHint = computed(() =>
           v-model="kind"
           :items="kindItems"
           :label="t('dashboards.lidar.scenario.kind')"
+          :disabled="!hasForecast"
           density="comfortable"
           hide-details
           style="flex: 1 1 190px"
@@ -319,6 +389,7 @@ const overHint = computed(() =>
           v-model="weather"
           :items="weatherItems"
           :label="t('dashboards.lidar.scenario.weather')"
+          :disabled="!hasForecast"
           density="comfortable"
           hide-details
           style="flex: 1 1 160px"
@@ -329,14 +400,19 @@ const overHint = computed(() =>
           :max="MAX_INTENSITY"
           :step="0.1"
           :label="intensityLabel"
+          :disabled="!hasForecast"
           color="primary"
           hide-details
           style="flex: 1 1 260px"
         />
       </div>
 
+      <div v-if="simulableUntil" class="text-caption text-medium-emphasis">
+        {{ t('dashboards.lidar.scenario.window', { until: simulableUntil }) }}
+      </div>
+
       <div class="d-flex flex-wrap ga-2">
-        <VBtn color="primary" variant="tonal" prepend-icon="mdi-plus" :disabled="!start" @click="add">
+        <VBtn color="primary" variant="tonal" prepend-icon="mdi-plus" :disabled="!hasForecast || !start" @click="add">
           {{ t('dashboards.lidar.scenario.add') }}
         </VBtn>
         <VBtn variant="text" prepend-icon="mdi-broom" :disabled="!events.length" @click="clear">
@@ -362,7 +438,7 @@ const overHint = computed(() =>
         {{ t('dashboards.lidar.scenario.registeredHint') }}
       </div>
 
-      <div v-if="allEvents.length" class="d-flex flex-wrap ga-4">
+      <div v-if="hasForecast && allEvents.length" class="d-flex flex-wrap ga-4">
         <StatTile
           style="flex: 1 1 200px"
           :label="t('dashboards.lidar.scenario.tilePeak')"
@@ -390,14 +466,22 @@ const overHint = computed(() =>
           :color="summary.hoursOverCapacity ? 'error' : 'secondary'"
         />
       </div>
-      <div v-else class="text-body-2 text-medium-emphasis">{{ t('dashboards.lidar.scenario.noEvents') }}</div>
+      <div v-else-if="hasForecast" class="text-body-2 text-medium-emphasis">
+        {{ t('dashboards.lidar.scenario.noEvents') }}
+      </div>
 
-      <LineChart :series="series" :units="people" :height="300" :title="t('dashboards.lidar.scenario.chart')" />
-      <div v-if="hasUsual" class="text-caption text-medium-emphasis">
+      <LineChart
+        v-if="hasForecast"
+        :series="series"
+        :units="people"
+        :height="300"
+        :title="t('dashboards.lidar.scenario.chart')"
+      />
+      <div v-if="hasForecast && hasUsual" class="text-caption text-medium-emphasis">
         {{ t('dashboards.lidar.scenario.usualHint', { weeks: USUAL_PROFILE_WEEKS }) }}
       </div>
 
-      <VTable v-if="allEvents.length" density="compact">
+      <VTable v-if="hasForecast && allEvents.length" density="compact">
         <thead>
           <tr>
             <th>{{ t('dashboards.lidar.scenario.table.event') }}</th>

@@ -112,6 +112,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **El simulador de escenarios ya no desaparece sin previsión, y el inicio se elige por día y hora.**
+  Antes, si la zona no tenía previsión futura ni datos habituales, la tarjeta solo decía «No hay
+  previsión para las próximas horas» y ocultaba todo, incluido el registro de eventos. Ahora el
+  formulario sigue a la vista, desactivado, con el motivo y la última hora prevista («La última
+  hora prevista fue el …»), y el registro de eventos reales sigue disponible porque no depende de
+  la previsión. El selector «Empieza», una lista larga de horas, se divide en «Día» y «Hora de
+  inicio», y debajo se dice hasta cuándo se puede simular.
 - **Prever es unas seis veces más rápido.** En cada hora de la predicción recursiva se calculaban
   los retardos y las medias móviles de todo el histórico, y solo se usaban los de la hora prevista;
   ahora solo se calculan esos, con el mismo resultado. En una prueba con 13 zonas y 35 días de

@@ -153,12 +153,54 @@ describe('EventScenarioCard', () => {
     expect(series.map((s: { name: string }) => s.name)).toEqual(['Prevista', 'Con eventos'])
   })
 
-  it('sin previsión futura lo dice y no ofrece el formulario', async () => {
+  it('sin previsión futura lo dice, deja el formulario a la vista pero desactivado y no dibuja la gráfica', async () => {
     fetchZoneSeries.mockResolvedValue({ predicted: forecast([null, null]) })
     const wrapper = mountCard()
     await flushPromises()
     expect(wrapper.text()).toContain('No hay previsión para las próximas horas')
-    expect(button(wrapper, 'Añadir evento')).toBeUndefined()
+    expect(button(wrapper, 'Añadir evento').attributes('disabled')).toBeDefined()
+    expect(wrapper.findComponent({ name: 'LineChart' }).exists()).toBe(false)
+  })
+
+  it('sin previsión futura dice cuál fue la última hora prevista', async () => {
+    const last = new Date(Math.floor(Date.now() / HOUR_MS) * HOUR_MS - 4 * HOUR_MS).toISOString()
+    fetchZoneSeries
+      .mockResolvedValueOnce({ predicted: [] })
+      .mockResolvedValueOnce({ predicted: [{ t: last, v: 12 }] })
+    const wrapper = mountCard()
+    await flushPromises()
+    expect(wrapper.text()).toContain('La última hora prevista fue el')
+    // La segunda consulta mira hacia atrás y pide solo el último valor.
+    const [, , range, options] = fetchZoneSeries.mock.calls[1]
+    expect(Date.parse(range.end)).toBeLessThanOrEqual(Date.now())
+    expect(options).toMatchObject({ limit: 1 })
+  })
+
+  it('sin previsión el registro de eventos sigue disponible', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: [] })
+    listRegistry.mockResolvedValue({ rows: [], canEdit: true })
+    const wrapper = mount(EventScenarioCard, {
+      props: { twin, predictedId: 'predictedPeopleCount', capacity: 100, zoneUrn: 'urn:ngsi-ld:Zone:Z01' },
+      global: { plugins: [vuetify], stubs: { LineChart: true } },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    expect(button(wrapper, 'Registrar un evento')).toBeDefined()
+  })
+
+  it('el inicio se elige por día y hora, y dice hasta cuándo se puede simular', async () => {
+    fetchZoneSeries.mockResolvedValue({ predicted: forecast(Array(48).fill(40)) })
+    const wrapper = mountCard()
+    await flushPromises()
+    const select = (label: string) => wrapper.findAllComponents({ name: 'VSelect' }).find((s) => s.props('label') === label)!
+    const days = select('Día').props('items') as { value: string }[]
+    expect(days.length).toBeGreaterThanOrEqual(2)
+    await select('Día').vm.$emit('update:modelValue', days[1].value)
+    await flushPromises()
+    const hoursOfDay = select('Hora de inicio').props('items') as { value: string }[]
+    expect(hoursOfDay.every((item) => item.value.startsWith(days[1].value))).toBe(true)
+    expect(select('Hora de inicio').props('modelValue')).toBe(hoursOfDay[0].value)
+    expect(wrapper.text()).toContain('Se puede simular desde ahora hasta el')
   })
 
   it('si falla la petición lo dice y deja reintentar', async () => {
