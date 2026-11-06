@@ -46,8 +46,8 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   `prediction_events.read`, que también tiene quien consulta la organización, y
   `prediction_events.update`, de los administradores. Lo registrado se suma al simulador al momento;
   el modelo deja fuera sus días desde su siguiente ejecución diaria y, si alguno ya lo había
-  aprendido (hoy o antes), esa ejecución lo reentrena entero. OpenAPI y Postman incluyen las rutas
-  nuevas.
+  aprendido (hoy o antes), esa ejecución lo reentrena entero. El registro está siempre a la vista,
+  también cuando la zona no tiene previsión. OpenAPI y Postman incluyen las rutas nuevas.
 - **El simulador de escenarios admite eventos de varios días y dice la zona.** Un evento se puede
   repetir hasta 7 días seguidos a la misma hora local (una semana de mercado) y dura hasta 24 horas
   al día. El título lleva el nombre de la zona que se simula. Un evento registrado de varios días
@@ -87,12 +87,14 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   elegir una, el mapa va hasta ella, se acerca y abre su globo. El texto sigue filtrando el mapa
   como hasta ahora.
 - **Simulador de escenarios con eventos en la plantilla de predicción de zona.** Debajo de la
-  ocupación prevista se pueden añadir eventos (tipo, hora de inicio, duración, meteorología e
+  ocupación prevista se pueden añadir eventos (tipo, día y hora de inicio, duración, meteorología e
   intensidad) y ver la previsión con y sin ellos, el máximo resultante, las personas de más y las
   horas por encima del aforo. El modelo es aditivo y por horas: cada tipo de evento suma en su hora
   punta una parte del aforo de la zona, por la intensidad y por el efecto del tiempo, y la hora
-  anterior y la posterior cuentan a medias. Las cifras son supuestos para comparar escenarios y
-  solo se simula dentro del horizonte de la previsión.
+  anterior y la posterior cuentan a medias. Las cifras son supuestos para comparar escenarios.
+  Bajo el selector se dice hasta cuándo se puede simular; si la zona no tiene previsión ni datos
+  habituales, el formulario se queda a la vista, desactivado, con el motivo y la última hora
+  prevista.
 - **Renombrar una entidad desde su ficha.** Quien tiene permiso para modificar la entidad ve el
   botón «Renombrar» junto al título; el nombre nuevo se guarda en el broker como la propiedad
   `name` y es el que muestra toda la plataforma. El identificador no cambia. El servidor ya
@@ -112,13 +114,6 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
-- **El simulador de escenarios ya no desaparece sin previsión, y el inicio se elige por día y hora.**
-  Antes, si la zona no tenía previsión futura ni datos habituales, la tarjeta solo decía «No hay
-  previsión para las próximas horas» y ocultaba todo, incluido el registro de eventos. Ahora el
-  formulario sigue a la vista, desactivado, con el motivo y la última hora prevista («La última
-  hora prevista fue el …»), y el registro de eventos reales sigue disponible porque no depende de
-  la previsión. El selector «Empieza», una lista larga de horas, se divide en «Día» y «Hora de
-  inicio», y debajo se dice hasta cuándo se puede simular.
 - **Prever es unas seis veces más rápido.** En cada hora de la predicción recursiva se calculaban
   los retardos y las medias móviles de todo el histórico, y solo se usaban los de la hora prevista;
   ahora solo se calculan esos, con el mismo resultado. En una prueba con 13 zonas y 35 días de
