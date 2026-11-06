@@ -1,8 +1,7 @@
 /**
  * Geometria de los recorridos dibujados en un mapa. Una recta entre dos puntos pinta A→B y B→A
- * en el mismo sitio y no dice hacia donde va la gente; un arco que se aparta siempre hacia la
- * derecha del sentido de la marcha separa los dos sentidos, y una punta de flecha en su mitad dice
- * cual es cada uno.
+ * en el mismo sitio; un arco que se aparta siempre hacia la derecha del sentido de la marcha separa
+ * los dos sentidos. Hacia donde va cada uno lo dice el trazo animado de PointMap.
  *
  * Se calcula en un plano local, con la longitud escalada por el coseno de la latitud, para que el
  * arco tenga la misma forma en pantalla a cualquier latitud. Es una aproximacion valida para
@@ -16,9 +15,6 @@ export const CURVE_BEND = 0.18
 
 /** Tramos rectos con que se dibuja el arco. */
 export const CURVE_STEPS = 16
-
-/** Largo de la punta de flecha, en fraccion de la longitud del recorrido. */
-export const ARROW_SIZE = 0.07
 
 interface Plane {
   toXY: (point: LatLng) => [number, number]
@@ -56,32 +52,4 @@ export function curvedPath(from: LatLng, to: LatLng, bend = CURVE_BEND, steps = 
     const [x, y] = bezier(p0, c, p1, i / steps)
     return plane.toLatLng(x, y)
   })
-}
-
-/**
- * La punta de flecha en la mitad del arco, como tres puntos (ala, punta, ala) que se dibujan con la
- * misma linea. En la mitad, la tangente de un arco cuadratico es paralela a la recta de `from` a
- * `to`. Vacia si los dos puntos coinciden.
- */
-export function arrowHead(from: LatLng, to: LatLng, bend = CURVE_BEND, size = ARROW_SIZE): LatLng[] {
-  const plane = planeFor(from, to)
-  const p0 = plane.toXY(from)
-  const p1 = plane.toXY(to)
-  const dx = p1[0] - p0[0]
-  const dy = p1[1] - p0[1]
-  const length = Math.hypot(dx, dy)
-  if (length === 0) return []
-
-  const [mx, my] = bezier(p0, control(p0, p1, bend), p1, 0.5)
-  const ux = dx / length
-  const uy = dy / length
-  const head = length * size
-  const tip: [number, number] = [mx + (ux * head) / 2, my + (uy * head) / 2]
-  const back: [number, number] = [tip[0] - ux * head, tip[1] - uy * head]
-  const wing = head * 0.6
-  return [
-    plane.toLatLng(back[0] + uy * wing, back[1] - ux * wing),
-    plane.toLatLng(tip[0], tip[1]),
-    plane.toLatLng(back[0] - uy * wing, back[1] + ux * wing),
-  ]
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AA_NON_TEXT,
   AA_TEXT,
+  brandRamp,
   contrast,
   darkColors,
   ensureContrast,
@@ -170,5 +171,44 @@ describe('paleta derivada de la marca', () => {
     // Contrasta poco con la superficie precisamente porque es un velo, no un color de texto.
     expect(contrast(lightPrimary, surface)).toBeLessThan(AA_NON_TEXT)
     expect(contrast(lightPrimary, '#E9E6F2')).toBeGreaterThanOrEqual(AA_TEXT)
+  })
+})
+
+describe('brandRamp', () => {
+  const cases = [
+    ['morado por defecto', '#7233C2'],
+    ['rojo', '#C62828'],
+    ['gris azulado', '#4A4766'],
+  ] as const
+  const surfaces = [
+    ['claro', '#FFFFFF', false],
+    ['oscuro', '#1A1726', true],
+  ] as const
+
+  for (const [brand, primary] of cases) {
+    for (const [mode, surface, isDark] of surfaces) {
+      it(`${brand} en tema ${mode}: cinco pasos que se distinguen del fondo y van a mas`, () => {
+        const ramp = brandRamp(primary, surface, isDark)
+        expect(ramp).toHaveLength(5)
+        const ratios = ramp.map((color) => contrast(color, surface))
+        for (const ratio of ratios) expect(ratio).toBeGreaterThanOrEqual(AA_NON_TEXT)
+        ratios.slice(1).forEach((ratio, i) => expect(ratio).toBeGreaterThan(ratios[i]))
+      })
+    }
+  }
+
+  it('conserva el tono de la marca: un rojo da una escala roja', () => {
+    for (const color of brandRamp('#C62828', '#FFFFFF', false)) {
+      const { r, g, b } = parseHex(color)!
+      expect(r).toBeGreaterThan(g)
+      expect(r).toBeGreaterThan(b)
+    }
+  })
+
+  it('una marca apagada no se satura: un gris azulado da una escala gris azulada', () => {
+    for (const color of brandRamp('#4A4766', '#FFFFFF', false)) {
+      const { r, g, b } = parseHex(color)!
+      expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(0.25)
+    }
   })
 })

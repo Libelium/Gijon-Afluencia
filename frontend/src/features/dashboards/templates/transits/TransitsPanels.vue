@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useTheme } from 'vuetify'
+import { brandRamp } from '@/customization/palette'
 import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import { LineChart, type ChartPoint, type ChartSeries } from '../../charts'
-import { useChartTheme } from '../../charts/useChartTheme'
 import { levelRatio } from '../shared/aggregate'
-import { occupancyColor, occupancyColors } from '../../palette'
 import ChartCard from '../shared/ChartCard.vue'
 import PointMap, { type MapLink, type MapPoint } from '../shared/PointMap.vue'
 import type { FlowNode } from './pairs'
@@ -32,7 +32,18 @@ const props = defineProps<{
   totalSeries: ChartPoint[]
 }>()
 
-const { isDark } = useChartTheme()
+const theme = useTheme()
+
+/**
+ * Los recorridos y sus extremos se pintan con el color de marca de la organizacion, en una escala
+ * de menos a mas volumen. Sigue a la personalizacion y al tema claro u oscuro sin recargar.
+ */
+const ramp = computed(() => {
+  const { colors, dark } = theme.current.value
+  return brandRamp(colors.primary, colors.surface, dark)
+})
+const rampColor = (ratio: number) =>
+  ramp.value[Math.round(Math.min(1, Math.max(0, Number.isFinite(ratio) ? ratio : 0)) * (ramp.value.length - 1))]
 
 /**
  * Punto cuyos recorridos se miran, o null para verlos todos. Se elige en el selector o pulsando
@@ -70,7 +81,7 @@ const shownRoutes = computed(() =>
 )
 
 const legend = computed(() =>
-  occupancyColors(isDark.value).map((color, index) => ({ color, label: t(LEVEL_KEYS[index]) })),
+  ramp.value.map((color, index) => ({ color, label: t(LEVEL_KEYS[index]) })),
 )
 
 interface NodeLoad {
@@ -110,7 +121,7 @@ const mapPoints = computed<MapPoint[]>(() =>
         lon: node.lon as number,
         label: node.label,
         text: t('templates.transits.pointText', { count: load?.routes ?? 0 }),
-        color: occupancyColor(ratio, isDark.value),
+        color: rampColor(ratio),
         radius: 6 + Math.round(16 * ratio),
       }
     }),
@@ -133,8 +144,9 @@ const mapLinks = computed<MapLink[]>(() =>
         to: [route.pair.target.lat as number, route.pair.target.lon as number],
         label: route.pair.label,
         text: formatNumber(route.total),
-        weight: 1 + Math.round(7 * ratio),
-        color: occupancyColor(ratio, isDark.value),
+        // Por debajo de 2 px un trazo discontinuo apenas se ve sobre las teselas.
+        weight: 2 + Math.round(6 * ratio),
+        color: rampColor(ratio),
         curved: true,
       }
     }),

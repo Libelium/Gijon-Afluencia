@@ -23,4 +23,6 @@ export default {
   'templates.common.levelMedium': 'Medio',
   'templates.common.levelHigh': 'Alto',
   'templates.common.levelVeryHigh': 'Muy alto',
+  'templates.common.flowPause': 'Detener el movimiento',
+  'templates.common.flowResume': 'Mover los recorridos',
 } as const

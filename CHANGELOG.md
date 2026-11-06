@@ -65,8 +65,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   dónde va.** Un panel nuevo da la duración media y la máxima, en minutos, de los diez recorridos
   principales; la media pesa cada hora por sus tránsitos. La plantilla avanzada reparte además esos
   recorridos entre turistas, residentes y visitas de corta estancia. Los dos datos ya los publicaba
-  la plataforma en cada par y ningún panel los leía. En el mapa, cada recorrido se dibuja en arco
-  con una flecha en su mitad, así que la ida y la vuelta entre dos puntos ya no se pisan. Al pulsar
+  la plataforma en cada par y ningún panel los leía. En el mapa, cada recorrido se dibuja en arco,
+  así que la ida y la vuelta entre dos puntos ya no se pisan, con un trazo discontinuo que avanza
+  hacia el destino; el movimiento se puede detener con un botón bajo el mapa y empieza detenido si
+  el sistema pide reducir el movimiento. Al pulsar
   un punto, o al elegirlo en «Ver los recorridos de», el mapa deja solo sus recorridos y la tabla de
   al lado dice hacia dónde va la gente desde él y de dónde llega.
 - **Editar y borrar alarmas, y configurar sus avisos por correo, desde la interfaz.** Hasta ahora
@@ -112,6 +114,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **Los recorridos del mapa de tránsitos llevan el color de la marca.** Recorridos y puntos dejan
+  la escala de ocupación, cuyo nivel más bajo apenas se veía sobre el mapa, y toman el color
+  principal de la personalización de la organización, en una escala de menos a más volumen que
+  sigue al tema claro u oscuro: morados con la marca por defecto, rojos con una marca roja. Cada
+  paso cumple 3:1 frente al fondo, las marcas apagadas conservan su tono y los recorridos tienen
+  como mínimo 2 px de grosor.
 - **Prever es unas seis veces más rápido.** En cada hora de la predicción recursiva se calculaban
   los retardos y las medias móviles de todo el histórico, y solo se usaban los de la hora prevista;
   ahora solo se calculan esos, con el mismo resultado. En una prueba con 13 zonas y 35 días de

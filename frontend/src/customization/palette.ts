@@ -134,6 +134,32 @@ export function mix(hex: string, base: string, amount: number): string {
   })
 }
 
+/** Luminosidad HSL del extremo intenso de la escala de marca, en cada tema. */
+const RAMP_STRONG = { light: 0.18, dark: 0.88 }
+
+/**
+ * Escala secuencial del color de marca, de menos a mas intenso: en claro, de suave a oscuro; en
+ * oscuro, de apagado a luminoso. Se calcula en HSL con el tono de la marca: mezclar en RGB con la
+ * superficie agrisa los pasos suaves y los hace parecer mas oscuros de lo que son. El paso mas
+ * suave es el mas cercano al fondo que aun llega a 3:1 (WCAG 1.4.11); el resto se reparte hasta el
+ * extremo intenso con la misma saturacion, asi que la luminosidad cambia en un solo sentido.
+ */
+export function brandRamp(primary: string, surface: string, isDark: boolean, steps = 5): string[] {
+  const rgb = parseHex(primary)
+  if (!rgb) return Array.from({ length: steps }, () => primary)
+  const { h, s } = toHsl(rgb)
+  // Una marca gris o apagada se queda asi: saturarla inventaria un color que no es el suyo.
+  const saturation = s < 0.3 ? s : Math.max(s, 0.6)
+  const softest = toHex(fromHsl(h, saturation, isDark ? 0.08 : 0.97))
+  const low = ensureContrast(softest, surface, AA_NON_TEXT, isDark ? 'lighter' : 'darker')
+  const lowL = toHsl(parseHex(low) ?? rgb).l
+  const highL = isDark ? RAMP_STRONG.dark : RAMP_STRONG.light
+  // El primero es el que ya cumple: recalcularlo desde su luminosidad redondea y lo deja por debajo.
+  return Array.from({ length: steps }, (_, i) =>
+    i === 0 ? low : toHex(fromHsl(h, saturation, lowL + ((highL - lowL) * i) / (steps - 1))),
+  )
+}
+
 /** Blanco o negro, el que mas contraste dé sobre `hex`. Para el texto que va encima del color. */
 export function readableOn(hex: string): string {
   return contrast(hex, '#FFFFFF') >= contrast(hex, '#000000') ? '#FFFFFF' : '#000000'
