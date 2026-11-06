@@ -112,6 +112,14 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **El mapa de recorridos muestra el flujo en movimiento.** Las flechas en la mitad de cada arco
+  se sustituyen por un trazo discontinuo que avanza hacia el destino; el arco se mantiene para que
+  la ida y la vuelta no se pisen. El movimiento se puede detener con un botón bajo el mapa, y
+  empieza detenido si el sistema pide reducir el movimiento. Los recorridos tienen como mínimo
+  2 px para que el discontinuo se vea. Recorridos y puntos toman el color principal de la
+  personalización de la organización, en una escala de menos a más volumen que sigue al tema claro
+  u oscuro: morados con la marca por defecto, rojos con una marca roja. El paso más suave cumple
+  3:1 frente al fondo, cosa que la escala de ocupación que usaban antes no hacía.
 - **Prever es unas seis veces más rápido.** En cada hora de la predicción recursiva se calculaban
   los retardos y las medias móviles de todo el histórico, y solo se usaban los de la hora prevista;
   ahora solo se calculan esos, con el mismo resultado. En una prueba con 13 zonas y 35 días de

@@ -11,7 +11,7 @@ export default {
   'templates.transits.modeDerived': 'Combinando los puntos del panel',
   'templates.transits.modeExplicit': 'Recorridos asignados al panel',
   'templates.transits.mapTitle': 'Recorridos sobre el mapa',
-  'templates.transits.mapSubtitle': 'Grosor proporcional al volumen; la flecha marca el sentido',
+  'templates.transits.mapSubtitle': 'Grosor y color según el volumen; el trazo avanza en el sentido del recorrido',
   'templates.transits.nodeLabel': 'Ver los recorridos de',
   'templates.transits.allNodes': 'Todos los puntos',
   'templates.transits.nodeTitle': 'Recorridos de {name}',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CURVE_STEPS, arrowHead, curvedPath, type LatLng } from './curves'
+import { CURVE_STEPS, curvedPath, type LatLng } from './curves'
 
 const A: LatLng = [43.54, -5.67]
 const B: LatLng = [43.545, -5.66]
@@ -39,21 +39,5 @@ describe('curvedPath', () => {
     const middle = curvedPath(A, B, 0)[CURVE_STEPS / 2]
     expect(middle[0]).toBeCloseTo((A[0] + B[0]) / 2, 12)
     expect(middle[1]).toBeCloseTo((A[1] + B[1]) / 2, 12)
-  })
-})
-
-describe('arrowHead', () => {
-  it('son tres puntos con la punta por delante de las alas, en el sentido de la marcha', () => {
-    const [left, tip, right] = arrowHead(A, B)
-    const towards = (p: LatLng) => (p[0] - A[0]) * (B[0] - A[0]) + (p[1] - A[1]) * (B[1] - A[1])
-    expect(towards(tip)).toBeGreaterThan(towards(left))
-    expect(towards(tip)).toBeGreaterThan(towards(right))
-    // Las alas quedan a cada lado del eje de la flecha, que es paralelo a la recta A→B.
-    const ahead: LatLng = [tip[0] + (B[0] - A[0]), tip[1] + (B[1] - A[1])]
-    expect(side(tip, ahead, left) * side(tip, ahead, right)).toBeLessThan(0)
-  })
-
-  it('dos puntos iguales no tienen sentido: no hay flecha', () => {
-    expect(arrowHead(A, A)).toEqual([])
   })
 })

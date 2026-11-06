@@ -10,7 +10,7 @@ import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { rowsTable } from '../../charts/a11y'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { SURFACE } from '../../palette'
-import { arrowHead, curvedPath, type LatLng } from './curves'
+import { curvedPath, type LatLng } from './curves'
 
 export interface MapPoint {
   key: string
@@ -35,8 +35,9 @@ export interface MapLink {
   weight: number
   color: string
   /**
-   * Un recorrido con sentido: se dibuja en arco, apartado a la derecha de la marcha, con una punta
-   * de flecha en su mitad. Asi la ida y la vuelta entre dos puntos no se pisan. Sin el, una recta.
+   * Un recorrido con sentido: se dibuja en arco, apartado a la derecha de la marcha, para que la ida
+   * y la vuelta entre dos puntos no se pisen, y con un trazo discontinuo que avanza hacia el
+   * destino. Sin el, una recta continua.
    */
   curved?: boolean
 }
@@ -76,12 +77,17 @@ const drawnLinks = computed(() =>
   })),
 )
 
-/** Las puntas de flecha de los recorridos en arco. Son otra linea: la capa no admite varias. */
-const arrowHeads = computed(() =>
-  props.links
-    .filter((link) => link.curved)
-    .map((link) => ({ link, path: arrowHead(link.from, link.to) }))
-    .filter(({ path }) => path.length > 0),
+/** Trazo y hueco de un recorrido en arco. La animacion desplaza el trazo justo su suma. */
+const FLOW_DASH = '8 10'
+
+const hasFlow = computed(() => props.links.some((link) => link.curved))
+
+/**
+ * El movimiento dice hacia donde va la gente, pero no puede ser obligatorio (WCAG 2.2.2): se puede
+ * parar, y empieza parado si el sistema pide reducir el movimiento.
+ */
+const flowing = ref(
+  typeof window === 'undefined' || !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
 )
 const tiles = computed(() => tilesForTheme(isDark.value))
 
@@ -167,7 +173,7 @@ const linksTable = computed(() =>
     <div
       ref="canvas"
       class="point-map rounded-lg overflow-hidden"
-      :class="{ 'map-tiles--dark': tiles.darken }"
+      :class="{ 'map-tiles--dark': tiles.darken, 'point-map--flowing': hasFlow && flowing }"
       :style="{ height: `${height}px` }"
     >
       <!-- `group` y no `img`: dentro del mapa hay controles que deben seguir siendo
@@ -193,23 +199,16 @@ const linksTable = computed(() =>
           :lat-lngs="path"
           :color="link.color"
           :weight="link.weight"
-          :opacity="0.7"
+          :opacity="0.85"
+          :dash-array="link.curved ? FLOW_DASH : undefined"
+          :line-cap="link.curved ? 'round' : undefined"
+          :class-name="link.curved ? 'point-map__flow' : undefined"
         >
           <LTooltip>
             <div class="text-body-2 font-weight-medium">{{ link.label }}</div>
             <div class="text-caption">{{ link.text }}</div>
           </LTooltip>
         </LPolyline>
-
-        <LPolyline
-          v-for="{ link, path } in arrowHeads"
-          :key="`${link.key}-head`"
-          :lat-lngs="path"
-          :color="link.color"
-          :weight="Math.max(2, link.weight)"
-          :opacity="0.9"
-          :interactive="false"
-        />
 
         <LCircleMarker
           v-for="point in points"
@@ -242,7 +241,7 @@ const linksTable = computed(() =>
       :table="linksTable"
     />
 
-    <div v-if="legend?.length" class="d-flex flex-wrap align-center ga-4 mt-3">
+    <div v-if="legend?.length || hasFlow" class="d-flex flex-wrap align-center ga-4 mt-3">
       <span
         v-for="item in legend"
         :key="item.label"
@@ -251,6 +250,16 @@ const linksTable = computed(() =>
         <span class="point-map__swatch" :style="{ background: item.color }" />
         {{ item.label }}
       </span>
+      <VSpacer />
+      <VBtn
+        v-if="hasFlow"
+        variant="text"
+        size="small"
+        :prepend-icon="flowing ? 'mdi-pause' : 'mdi-play'"
+        @click="flowing = !flowing"
+      >
+        {{ flowing ? t('templates.common.flowPause') : t('templates.common.flowResume') }}
+      </VBtn>
     </div>
   </div>
 </template>
@@ -258,6 +267,17 @@ const linksTable = computed(() =>
 <style scoped>
 .point-map {
   border: 1px solid rgb(var(--v-theme-outline));
+}
+
+/* El trazo avanza del origen al destino: desplazarlo su periodo entero hace el bucle continuo. */
+.point-map--flowing :deep(.point-map__flow) {
+  animation: point-map-flow 1.2s linear infinite;
+}
+
+@keyframes point-map-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
 }
 
 .point-map__swatch {
