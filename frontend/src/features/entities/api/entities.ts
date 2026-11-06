@@ -1,5 +1,6 @@
 import { http } from '@/api/http'
 import { parseApiDateTime } from '@/lib/format'
+import { localizeMeasure } from '@/lib/measureCatalog'
 import type { Entity, EntityRef, Measure, PageQuery, Paginated } from '@/types'
 
 /** Solo las propiedades son medidas: relaciones y comandos no representan un valor observado. */
@@ -152,7 +153,7 @@ function measureUnits(value?: string | null): string | undefined {
 
 function toMeasure(raw: RawMeasure): Measure {
   const id = String(raw.id)
-  return {
+  return localizeMeasure({
     id,
     name: raw.name?.trim() || id,
     units: measureUnits(raw.units),
@@ -160,7 +161,7 @@ function toMeasure(raw: RawMeasure): Measure {
     value: raw.value,
     timestamp: raw.timestamp ?? undefined,
     type: raw.type,
-  }
+  })
 }
 
 /** Las propiedades internas son de uso tecnico del sistema y no se muestran al usuario. */

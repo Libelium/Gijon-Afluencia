@@ -1,22 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { t } from '@/i18n'
-import { formatDateTime, relativeFromNow } from '@/lib/format'
+import { formatDateTime } from '@/lib/format'
 import type { Measure } from '@/types'
-import { describeMeasure } from '../lib/measures'
+import { describeMeasure, measureTitle, timestampInfo } from '../lib/measures'
 
 const props = defineProps<{
   measure: Measure
   timeZone?: string
   /** false cuando la entidad no admite consultas: sin ellas no hay historico que ofrecer. */
   history?: boolean
+  /** La entidad es una prevision: su marca de tiempo es la hora prevista, no la de una lectura. */
+  forecast?: boolean
 }>()
 
 const emit = defineEmits<{ history: [] }>()
 
 const display = computed(() => describeMeasure(props.measure, props.timeZone))
-// Sin nombre propio el titular ya es el identificador: repetirlo debajo no aporta nada.
-const showId = computed(() => props.measure.id !== props.measure.name)
+const nameTitle = computed(() => measureTitle(props.measure))
+const updatedText = computed(() => {
+  const info = timestampInfo(props.measure.timestamp, props.timeZone)
+  if (!info.future) return t('entities.measures.updated', { when: info.text })
+  return t(props.forecast ? 'entities.measures.forecastFor' : 'entities.measures.updatedAt', { when: info.text })
+})
 const showHistory = computed(() => props.history && display.value.kind === 'number')
 </script>
 
@@ -24,15 +30,15 @@ const showHistory = computed(() => props.history && display.value.kind === 'numb
   <VCard class="d-flex flex-column ga-3 pa-4 min-w-0">
     <div class="d-flex align-start ga-2">
       <div class="flex-grow-1 min-w-0">
-        <div class="text-subtitle-2 font-weight-medium text-truncate" :title="measure.name">
+        <div class="text-subtitle-2 font-weight-medium text-truncate" :title="nameTitle">
           {{ measure.name }}
         </div>
         <div
-          v-if="showId"
-          class="text-caption text-medium-emphasis text-truncate"
-          :title="measure.id"
+          v-if="measure.description"
+          class="text-caption text-medium-emphasis clamp-2"
+          :title="measure.description"
         >
-          {{ measure.id }}
+          {{ measure.description }}
         </div>
       </div>
 
@@ -87,7 +93,17 @@ const showHistory = computed(() => props.history && display.value.kind === 'numb
       class="text-caption text-medium-emphasis text-truncate"
       :title="formatDateTime(measure.timestamp, timeZone)"
     >
-      {{ t('entities.measures.updated', { when: relativeFromNow(measure.timestamp, timeZone) }) }}
+      {{ updatedText }}
     </div>
   </VCard>
 </template>
+
+<style scoped>
+/* Una descripcion larga no puede descuadrar la rejilla: se recorta a dos lineas. */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+</style>

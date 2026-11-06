@@ -60,7 +60,7 @@ export default {
   'templates.transits.flowLabel': 'Diagrama de flujo entre puntos',
   'templates.transits.needTwo': 'Hacen falta al menos dos puntos de medida para calcular tránsitos',
   'templates.transits.needTwoHint':
-    'Asigna al panel al menos dos sensores de conteo WiFi/BLE: su entidad de tránsitos (la que termina en _CFE en el espacio de datos de la plataforma) o la de sus conteos (la que termina en _CFO).',
+    'Asigna al panel al menos dos sensores de conteo WiFi/BLE: su entidad de «Visitas y recorridos» (la que termina en _CFE) o la de «Conteos WiFi/BLE» (la que termina en _CFO).',
   'templates.transits.emptyPairs': 'No se han encontrado tránsitos entre los puntos de este panel',
   'templates.transits.emptyPairsHint':
     'La plataforma calcula los tránsitos cada hora y solo cuenta a quien dos sensores detectan dentro de la misma hora. Amplía el rango a 7 o 30 días y comprueba la medida seleccionada.',

@@ -5,14 +5,16 @@ import { useDebounceFn } from '@/composables/useDebounce'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { isPredictionEntity } from '@/features/dashboards/templates/contract'
 import { t } from '@/i18n'
-import { formatNumber, relativeFromNow, urnTail } from '@/lib/format'
+import { formatNumber, urnTail } from '@/lib/format'
 import { clickableRowProps } from '@/lib/a11y'
 import { useSessionStore } from '@/stores/session'
 import { dataScopeLabel, hasNamedScope, listDataScopes, type DataScope } from '@/api/scopes'
 import type { Entity } from '@/types'
 import { getLastDataTimes, listDatamodels, listEntities } from '../api/entities'
-import { datamodelIcon } from '../lib/datamodel'
+import { datamodelIcon, datamodelLabel } from '../lib/datamodel'
+import { timestampInfo } from '../lib/measures'
 
 const SEARCH_DEBOUNCE = 400
 
@@ -92,6 +94,17 @@ const pageText = `{0}-{1} ${t('common.of')} {2}`
 const applySearch = useDebounceFn((value: string | null) => {
   searchTerm.value = (value ?? '').trim()
 }, SEARCH_DEBOUNCE)
+
+const datamodelItems = computed(() =>
+  datamodels.value.map((name) => ({ title: datamodelLabel(name), value: name })),
+)
+
+function lastDataText(entity: Entity): string {
+  const info = timestampInfo(lastData.value[entity.id], session.timeZone)
+  return info.future && isPredictionEntity(entity)
+    ? t('entities.lastData.forecastUntil', { when: info.text })
+    : info.text
+}
 
 // La marca de ultimo dato es una peticion secundaria: se encadena a cada carga aceptada y no
 // bloquea la tabla. `isCurrent` evita escribir la respuesta de una carga que ya quedo atras.
@@ -179,7 +192,7 @@ onMounted(() => {
         />
         <VSelect
           v-model="types"
-          :items="datamodels"
+          :items="datamodelItems"
           :label="t('entities.list.datamodel')"
           :no-data-text="t('entities.list.datamodelEmpty')"
           multiple
@@ -281,7 +294,8 @@ onMounted(() => {
               variant="tonal"
               color="secondary"
               :prepend-icon="datamodelIcon(item.datamodel)"
-              :text="item.datamodel"
+              :text="datamodelLabel(item.datamodel)"
+              :title="item.datamodel"
             />
             <span v-else class="text-medium-emphasis">{{ t('common.noValue') }}</span>
           </template>
@@ -298,7 +312,7 @@ onMounted(() => {
 
           <template #[`item.last_data`]="{ item }">
             <span class="text-body-2 text-medium-emphasis">
-              {{ relativeFromNow(lastData[item.id], session.timeZone) }}
+              {{ lastDataText(item) }}
             </span>
           </template>
         </VDataTableServer>

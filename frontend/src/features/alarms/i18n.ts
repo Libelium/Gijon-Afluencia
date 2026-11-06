@@ -94,7 +94,7 @@ export default {
   'alarms.status.unconfigured':
     'El histórico de estado no está disponible: este despliegue no tiene configurado el identificador de las entidades de alarma.',
   'alarms.status.unresolved':
-    'El histórico de estado no está disponible: no se ha podido determinar el ámbito de datos de la organización.',
+    'El histórico de estado no está disponible: no se ha podido determinar el espacio de datos de la organización.',
   'alarms.status.forbidden': 'No tienes permiso para consultar el histórico de estado de esta alarma.',
   'alarms.status.stateColumn': 'Estado',
   'alarms.status.up': 'Disparada',

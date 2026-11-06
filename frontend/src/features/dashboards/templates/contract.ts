@@ -45,6 +45,10 @@ const ENCODED_DATAMODELS = {
   zoneScan: 'Q3Jvd2RGbG93TGlkYXJab25l',
   /** Gemela con la prevision de ocupacion. Su URN acaba en PREDICTION_URN_SUFFIX. */
   zonePrediction: 'Q3Jvd2RGbG93UHJlZGljdGlvbg==',
+  /** Metricas por sensor de barrido. Ninguna plantilla las lee: solo se rotulan en los listados. */
+  lidarObserved: 'Q3Jvd2RGbG93TGlkYXJPYnNlcnZlZA==',
+  /** Salud de cada sensor de barrido. Tampoco la lee ninguna plantilla. */
+  lidarDevice: 'Q3Jvd2RGbG93TGlkYXJEZXZpY2U=',
 } as const
 
 export type DatamodelKey = keyof typeof ENCODED_DATAMODELS

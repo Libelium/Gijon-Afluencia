@@ -59,6 +59,10 @@ export type EntityRef = Pick<Entity, 'urn' | 'tenant' | 'scope'>
 export interface Measure {
   id: string
   name: string
+  /** Nombre que da el servidor, antes de traducirlo: las heuristicas que reconocen medidas lo comparan con terminos en ingles. */
+  sourceName?: string
+  /** Que mide, en castellano. Solo existe si el nombre no basta para entenderlo. */
+  description?: string
   units?: string
   value_type?: string
   value?: unknown

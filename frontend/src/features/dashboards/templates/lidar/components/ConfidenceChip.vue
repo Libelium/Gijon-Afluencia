@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
+import { measureValueLabel } from '@/lib/measureCatalog'
 import { numericValue } from '../data'
 
 const props = defineProps<{ value: unknown }>()
@@ -11,6 +12,12 @@ type Level = 'high' | 'medium' | 'low' | 'unknown'
 const HIGH_WORDS = ['high', 'alta', 'alto', 'good', 'buena', 'reliable', 'fiable']
 const MEDIUM_WORDS = ['medium', 'media', 'medio', 'moderate', 'moderada', 'fair']
 const LOW_WORDS = ['low', 'baja', 'bajo', 'poor', 'pobre', 'unreliable']
+// Lo que publica de verdad la fusion: no es un grado sino como se obtuvo la cifra.
+const SOURCE_LEVELS: Record<string, Level> = {
+  measured: 'high',
+  estimated: 'medium',
+  estimated_uncalibrated: 'low',
+}
 
 const resolved = computed<{ level: Level; label: string }>(() => {
   const num = numericValue(props.value)
@@ -21,6 +28,9 @@ const resolved = computed<{ level: Level; label: string }>(() => {
   }
 
   const text = String(props.value ?? '').trim().toLowerCase()
+  const source = SOURCE_LEVELS[text]
+  // Rotulo generico: la misma palabra sale en la fiabilidad de una zona y en la de una prevision.
+  if (source) return { level: source, label: measureValueLabel('confidenceLevel', text) ?? text }
   if (HIGH_WORDS.includes(text)) return { level: 'high', label: t('dashboards.lidar.confidence.high') }
   if (MEDIUM_WORDS.includes(text)) return { level: 'medium', label: t('dashboards.lidar.confidence.medium') }
   if (LOW_WORDS.includes(text)) return { level: 'low', label: t('dashboards.lidar.confidence.low') }

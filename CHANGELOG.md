@@ -10,6 +10,26 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Las medidas se muestran en castellano y explican qué miden.** En «Medidas actuales» de cada
+  entidad, el nombre sale traducido y, debajo, una descripción cuando el nombre no basta (unidades,
+  ventana de tiempo, cómo se clasifica a residentes y turistas…). Las que se explican solas, como
+  la latitud, no llevan descripción. El identificador de la variable se ve al pasar el ratón por
+  el nombre y sigue en el histórico. Los mismos nombres salen en los dashboards, en el alta de
+  gráficos y en las alarmas. Cubre las medidas de afluencia, la zona fusionada, la previsión, los
+  LIDAR y los Smart Spot, también cuando llegan con su nombre en bruto (`r_cfo_countm`). Solo se
+  describe lo que se ha comprobado en el código que publica cada dato; las variables sin productor
+  en el repositorio se traducen pero no se describen.
+- **Los modelos de datos de afluencia tienen nombre en castellano.** El listado de entidades, su
+  ficha, sus filtros y el mapa dicen «Zona de afluencia», «Previsión de afluencia», «Visitas y
+  recorridos», «Conteos WiFi/BLE», «Detecciones WiFi/BLE», «Zona medida por LIDAR», «Conteos por
+  LIDAR» y «Estado de los LIDAR» en lugar del nombre técnico, que se ve al pasar el ratón. Los
+  modelos que no son de afluencia conservan su nombre. Las ayudas que mandaban buscar las
+  entidades terminadas en `_CFE` o `_CFO` dicen además cómo se llaman ahora en el listado.
+- **Los valores fijos de la zona fusionada se leen en castellano.** Los sensores de la zona salen
+  como «LIDAR y WiFi/BLE», «Solo LIDAR» o «Solo WiFi/BLE», y la fiabilidad de la cifra como
+  «Medida por LIDAR», «Estimada con WiFi/BLE» o «Estimada con WiFi/BLE, sin calibrar». Antes se
+  mostraban los valores internos (`lidar_only`, `measured`…) y el indicador de fiabilidad no los
+  reconocía.
 - **Rango de fechas personalizado en los dashboards.** Además de los rangos relativos, el selector
   ofrece «Personalizado»: se eligen el día de inicio y el de fin (ambos completos, en la zona
   horaria del dashboard) y se muestran esos datos. Está en los dashboards, en todas las plantillas
@@ -115,6 +135,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Las previsiones ya no dicen «Último dato: dentro de 14 horas».** Una previsión publica horas
+  futuras, y el listado y la ficha de entidades las mostraban en relativo como si fueran el último
+  dato leído. Ahora dicen hasta cuándo llega la previsión («Previsión hasta el 06/11/2026 09:00»),
+  y cada medida, para qué hora es («Previsión para el …»). Una entidad que no es una previsión
+  con una marca futura (un reloj adelantado) muestra la fecha sin el relativo.
 - **Las plantillas de aforo usan la entidad de eventos de cada sensor.** Las cuatro
   (monitorización, clasificación, clasificación avanzada y mapa de calor) solo ofrecían los conteos
   en bruto de los sensores (`…_CFO`); ahora ofrecen primero la entidad de eventos de la ETL

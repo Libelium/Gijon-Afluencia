@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { datamodelLabel } from '@/features/entities/lib/datamodel'
 import type { Entity } from '@/types'
 import { t } from '@/i18n'
 import { urnTail } from '@/lib/format'
@@ -29,7 +30,13 @@ const showIdentifier = computed(() => identifier.value !== heading.value)
     </div>
 
     <div class="d-flex flex-wrap align-center ga-2">
-      <VChip v-if="entity.datamodel" variant="tonal" color="secondary" :text="entity.datamodel" />
+      <VChip
+        v-if="entity.datamodel"
+        variant="tonal"
+        color="secondary"
+        :text="datamodelLabel(entity.datamodel)"
+        :title="entity.datamodel"
+      />
       <span v-else class="text-caption text-medium-emphasis">{{ t('common.noValue') }}</span>
     </div>
 

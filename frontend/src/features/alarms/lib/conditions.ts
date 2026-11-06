@@ -1,5 +1,6 @@
 import { t } from '@/i18n'
 import { formatNumber, urnTail } from '@/lib/format'
+import { measureName } from '@/lib/measureCatalog'
 import { humanDuration } from './display'
 import type {
   ConditionEntity,
@@ -26,7 +27,7 @@ function capitalize(text: string): string {
 }
 
 function measureLabel(measure?: MeasureRef | null): string {
-  const raw = measure?.name?.trim() || measure?.id?.trim() || ''
+  const raw = measureName(measure?.id?.trim() ?? '', measure?.name?.trim())
   return raw ? capitalize(raw) : '—'
 }
 
@@ -160,7 +161,7 @@ function thresholdLine(condition: ThresholdCondition, index: number): ConditionL
 
 function inactivityLine(condition: InactivityCondition, index: number): ConditionLine {
   const entity = entityLabel(condition.entity)
-  const raw = condition.measure?.name?.trim() || condition.measure?.id?.trim() || ''
+  const raw = measureName(condition.measure?.id?.trim() ?? '', condition.measure?.name?.trim())
   const duration = humanDuration(condition.timeoutS)
 
   return {

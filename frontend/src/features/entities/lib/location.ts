@@ -123,7 +123,7 @@ export function resolveEntityLocation(
 
   const exact = measures.filter((m) => GEO_ID.test(m.id))
   const hinted = measures.filter(
-    (m) => !GEO_ID.test(m.id) && (GEO_HINT.test(m.id) || GEO_HINT.test(m.name)),
+    (m) => !GEO_ID.test(m.id) && (GEO_HINT.test(m.id) || GEO_HINT.test(m.sourceName ?? m.name)),
   )
   for (const measure of [...exact, ...hinted]) {
     const point = geoJsonLatLon(parseGeoJson(measure.value))

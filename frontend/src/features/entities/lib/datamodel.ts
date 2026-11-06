@@ -1,3 +1,5 @@
+import { datamodelOf, type DatamodelKey } from '@/features/dashboards/templates/contract'
+
 /**
  * Un icono por familia de modelo de datos. Orienta la lectura del listado mucho mas que el
  * nombre solo, que suele ser un termino tecnico en ingles. El orden importa: gana la primera
@@ -30,4 +32,31 @@ export function datamodelIcon(datamodel?: string | null): string {
     if (pattern.test(name)) return icon
   }
   return DATAMODEL_ICON_FALLBACK
+}
+
+/**
+ * Nombre en castellano de los modelos de datos de afluencia. Se indexa por la clave del contrato
+ * y no por el nombre: los nombres son contrato heredado y no se escriben como literales.
+ */
+const LABELS: Partial<Record<DatamodelKey, string>> = {
+  zone: 'Zona de afluencia',
+  zoneScan: 'Zona medida por LIDAR',
+  zonePrediction: 'Previsión de afluencia',
+  flowObserved: 'Conteos WiFi/BLE',
+  rawEvent: 'Detecciones WiFi/BLE',
+  flowEvent: 'Visitas y recorridos',
+  peopleCount: 'Conteo de personas',
+  lidarObserved: 'Conteos por LIDAR',
+  lidarDevice: 'Estado de los LIDAR',
+}
+
+let byName: Map<string, string> | null = null
+
+/** Nombre legible de un modelo de datos, o el propio nombre si no se conoce. */
+export function datamodelLabel(datamodel?: string | null): string {
+  const name = String(datamodel ?? '')
+  byName ??= new Map(
+    (Object.entries(LABELS) as [DatamodelKey, string][]).map(([key, label]) => [datamodelOf(key), label]),
+  )
+  return byName.get(name) ?? name
 }

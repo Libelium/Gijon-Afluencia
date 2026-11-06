@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
 import type { Entity } from '@/types'
-import { datamodelIcon } from '../lib/datamodel'
+import { datamodelIcon, datamodelLabel } from '../lib/datamodel'
 import CopyButton from './CopyButton.vue'
 
 defineProps<{ entity: Entity }>()
@@ -47,7 +47,8 @@ defineProps<{ entity: Entity }>()
           variant="tonal"
           color="secondary"
           :prepend-icon="datamodelIcon(entity.datamodel)"
-          :text="entity.datamodel"
+          :text="datamodelLabel(entity.datamodel)"
+          :title="entity.datamodel"
         />
         <div v-else class="text-body-2 text-medium-emphasis">{{ t('common.noValue') }}</div>
       </VListItem>
