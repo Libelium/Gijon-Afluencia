@@ -145,6 +145,14 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Un reinicio del servidor ya no borra tablas al arrancar el backend.** El script de arranque
+  del despliegue (`migration.sh`) deshacía el último lote de migraciones cuando una fallaba. Tras
+  un reinicio del nodo las migraciones corrían antes de que PostgreSQL aceptara conexiones, y la
+  vuelta atrás borró `background_jobs_steps` de la base de tiempo real: desde entonces todas las
+  importaciones de CSV, incluidas las que publica el componente de predicción, fallaban nada más
+  empezar. Ahora espera a que cada base responda (hasta 5 minutos) y, si una migración falla, no
+  deshace nada (cada una va en su propia transacción) y termina con error. Deja además de migrar
+  la conexión `device_manager`, que la aplicación no usa.
 - **Las previsiones ya no dicen «Último dato: dentro de 14 horas».** Una previsión publica horas
   futuras, y el listado y la ficha de entidades las mostraban en relativo como si fueran el último
   dato leído. Ahora dicen hasta cuándo llega la previsión («Previsión hasta el 06/11/2026 09:00»),

@@ -153,9 +153,10 @@ docker compose exec backend php artisan migrate --force
 docker compose exec backend php artisan db:seed --class=SyncSeeder   # permisos, preferencias, límites
 ```
 
-`src/migration.sh` es el arranque no interactivo que se usa en el despliegue: migra las tres
-conexiones (principal, realtime y gestor de dispositivos), carga los modelos de datos CSV y
-ejecuta los sembradores idempotentes.
+`src/migration.sh` es el arranque no interactivo que se usa en el despliegue: espera a que
+PostgreSQL responda, migra las conexiones principal y realtime, carga los modelos de datos CSV y
+ejecuta los sembradores idempotentes. Si una migración falla no deshace nada: termina con error y
+la siguiente ejecución la vuelve a intentar.
 
 ## Pruebas
 
