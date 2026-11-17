@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDebounceFn } from '@/composables/useDebounce'
 import { usePaginatedList } from '@/composables/usePaginatedList'
+import InfoTip from '@/components/InfoTip.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { isPredictionEntity } from '@/features/dashboards/templates/contract'
@@ -13,6 +14,7 @@ import { useSessionStore } from '@/stores/session'
 import { dataScopeLabel, hasNamedScope, listDataScopes, type DataScope } from '@/api/scopes'
 import type { Entity } from '@/types'
 import { getLastDataTimes, listDatamodels, listEntities } from '../api/entities'
+import DatamodelExplanation from '../components/DatamodelExplanation.vue'
 import { datamodelIcon, datamodelLabel } from '../lib/datamodel'
 import { timestampInfo } from '../lib/measures'
 
@@ -289,14 +291,17 @@ onMounted(() => {
           </template>
 
           <template #[`item.datamodel`]="{ item }">
-            <VChip
-              v-if="item.datamodel"
-              variant="tonal"
-              color="secondary"
-              :prepend-icon="datamodelIcon(item.datamodel)"
-              :text="datamodelLabel(item.datamodel)"
-              :title="item.datamodel"
-            />
+            <div v-if="item.datamodel" class="d-flex align-center ga-1">
+              <VChip
+                variant="tonal"
+                color="secondary"
+                :prepend-icon="datamodelIcon(item.datamodel)"
+                :text="datamodelLabel(item.datamodel)"
+              />
+              <InfoTip :label="t('entities.datamodel.info', { name: datamodelLabel(item.datamodel) })">
+                <DatamodelExplanation :datamodel="item.datamodel" />
+              </InfoTip>
+            </div>
             <span v-else class="text-medium-emphasis">{{ t('common.noValue') }}</span>
           </template>
 

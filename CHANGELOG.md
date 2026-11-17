@@ -11,23 +11,32 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 ### Añadido
 
 - **Las medidas se muestran en castellano y explican qué miden.** En «Medidas actuales» de cada
-  entidad, el nombre sale traducido y, debajo, una descripción cuando el nombre no basta (unidades,
-  ventana de tiempo, cómo se clasifica a residentes y turistas…). Las que se explican solas, como
-  la latitud, no llevan descripción. El identificador de la variable se ve al pasar el ratón por
-  el nombre y sigue en el histórico. Los mismos nombres salen en los dashboards, en el alta de
+  entidad, el nombre sale traducido y lleva un icono de información. Al pasar el ratón por él, o al
+  llegar con el teclado, explica qué es la medida, también las que se explican solas, como la
+  latitud, y cómo se calcula cuando hay un cálculo detrás (la ocupación de la zona, las
+  permanencias del LIDAR, los visitantes únicos y su periodo…). Las descripciones de
+  las medidas que se confundían entre sí dicen en qué se diferencian. El identificador de la
+  variable sigue en el histórico. Los mismos nombres salen en los dashboards, en el alta de
   gráficos y en las alarmas. Cubre las medidas de afluencia, la zona fusionada, la previsión, los
-  LIDAR y los Smart Spot, también cuando llegan con su nombre en bruto (`r_cfo_countm`). Solo se
-  describe lo que se ha comprobado en el código que publica cada dato; las variables sin productor
-  en el repositorio se traducen pero no se describen.
-- **Los modelos de datos de afluencia tienen nombre en castellano.** El listado de entidades, su
-  ficha, sus filtros y el mapa dicen «Zona de afluencia», «Previsión de afluencia», «Visitas y
-  recorridos», «Conteos WiFi/BLE», «Detecciones WiFi/BLE», «Zona medida por LIDAR», «Conteos por
-  LIDAR» y «Estado de los LIDAR» en lugar del nombre técnico, que se ve al pasar el ratón. Los
+  LIDAR y los Smart Spot, también cuando llegan con su nombre en bruto (`r_cfo_countm`). Los
+  cálculos están comprobados en el código que publica cada dato; las variables sin productor en el
+  repositorio solo se describen por lo que dice su nombre. Los textos evitan siglas y nombres
+  técnicos: están escritos para quien no es técnico.
+- **Los modelos de datos de afluencia tienen nombre en castellano y dicen de dónde salen sus
+  datos.** El listado de entidades, su ficha, sus filtros y el mapa dicen «Zona de afluencia
+  (combinada)», «Zona de afluencia (solo LIDAR)», «Previsión de afluencia», «Visitas y recorridos»,
+  «Conteos WiFi/BLE (por sensor)», «Detecciones WiFi/BLE (por sensor)», «Conteos por
+  LIDAR (por sensor)» y «Estado de los LIDAR» en lugar del nombre técnico. Cada uno explica qué es
+  y cómo se obtiene: a la vista en la ficha, y con un icono de información en el listado y el
+  mapa, que también se abre con el teclado y da el nombre técnico. Queda claro, por ejemplo, que
+  hay una sola zona combinada por zona, tenga LIDAR, sensores WiFi/BLE o los dos, y que
+  la de solo LIDAR es otra entidad. Los textos están escritos para quien no es técnico. Los
   modelos que no son de afluencia conservan su nombre. Las ayudas que mandaban buscar las
   entidades terminadas en `_CFE` o `_CFO` dicen además cómo se llaman ahora en el listado.
 - **Los valores fijos de la zona fusionada se leen en castellano.** Los sensores de la zona salen
-  como «LIDAR y WiFi/BLE», «Solo LIDAR» o «Solo WiFi/BLE», y la fiabilidad de la cifra como
-  «Medida por LIDAR», «Estimada con WiFi/BLE» o «Estimada con WiFi/BLE, sin calibrar». Antes se
+  como «LIDAR y WiFi/BLE», «Solo LIDAR» o «Solo WiFi/BLE», y la fiabilidad de la cifra
+  como «Contada por LIDAR», «Estimada con WiFi/BLE» o «Estimada con WiFi/BLE, sin
+  ajustar». Antes se
   mostraban los valores internos (`lidar_only`, `measured`…) y el indicador de fiabilidad no los
   reconocía.
 - **Rango de fechas personalizado en los dashboards.** Además de los rangos relativos, el selector

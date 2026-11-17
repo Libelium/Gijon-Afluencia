@@ -74,7 +74,7 @@ export const SECTIONS: HelpSection[] = [
       { term: 'Aforo Mapa de Calor', text: 'Intensidad de ocupación por hora y día de la semana, y mapa de densidad sobre los puntos de interés turístico.' },
       {
         term: 'Aforo Tránsitos',
-        text: 'Personas que un sensor de conteo WiFi/BLE detecta y que después aparecen en otro, con origen, destino y volumen por hora. Asigna al menos dos sensores: su entidad de «Visitas y recorridos» (la que termina en _CFE) o la de «Conteos WiFi/BLE» (la que termina en _CFO), que además los sitúa en el mapa. Las zonas LIDAR y las zonas de aforo no sirven para esta plantilla.',
+        text: 'Personas que un sensor de conteo WiFi/BLE detecta y que después aparecen en otro, con origen, destino y volumen por hora. Asigna al menos dos sensores: su entidad de «Visitas y recorridos» (la que termina en _CFE) o la de «Conteos WiFi/BLE (por sensor)» (la que termina en _CFO), que además los sitúa en el mapa. Las zonas LIDAR y las zonas de aforo no sirven para esta plantilla.',
       },
       { term: 'Tránsitos avanzado', text: 'Lo mismo, con matriz origen-destino, rutas principales y evolución. Se asignan las mismas entidades.' },
       { term: 'Zona LIDAR Analítica', text: 'Indicadores de la zona LIDAR: ocupación, aforo, permanencia y series históricas.' },

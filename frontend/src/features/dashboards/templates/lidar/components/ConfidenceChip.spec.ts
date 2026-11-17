@@ -7,8 +7,8 @@ const text = (value: unknown) => mount(ConfidenceChip, { props: { value }, globa
 
 describe('ConfidenceChip', () => {
   it('rotula como se obtuvo la cifra, que es lo que publica la fusion', () => {
-    expect(text('measured')).toBe('Medida')
-    expect(text('estimated_uncalibrated')).toBe('Estimada sin calibrar')
+    expect(text('measured')).toBe('Contada')
+    expect(text('estimated_uncalibrated')).toBe('Estimada sin ajustar')
   })
 
   it('sigue entendiendo grados y proporciones', () => {

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import InfoTip from '@/components/InfoTip.vue'
 import StateBlock from '@/components/StateBlock.vue'
 import { isPredictionEntity } from '@/features/dashboards/templates/contract'
 import { t } from '@/i18n'
 import { formatDateTime, relativeFromNow } from '@/lib/format'
 import type { EntityRef, Measure } from '@/types'
-import { hasChartableHistory, measureTitle, timestampInfo } from '../lib/measures'
+import { hasChartableHistory, timestampInfo } from '../lib/measures'
 import MeasureCard from './MeasureCard.vue'
+import MeasureExplanation from './MeasureExplanation.vue'
 import MeasureHistoryDialog from './MeasureHistoryDialog.vue'
 import MeasureValueCell from './MeasureValueCell.vue'
 
@@ -129,13 +131,11 @@ function chartable(measure: Measure): boolean {
       >
         <template #[`item.name`]="{ item }">
           <div class="py-1 min-w-0">
-            <div class="font-weight-medium text-truncate" :title="measureTitle(item)">{{ item.name }}</div>
-            <div
-              v-if="item.description"
-              class="text-caption text-medium-emphasis text-truncate"
-              :title="item.description"
-            >
-              {{ item.description }}
+            <div class="d-flex align-center ga-1 min-w-0">
+              <div class="font-weight-medium text-truncate" :title="item.name">{{ item.name }}</div>
+              <InfoTip :label="t('entities.measures.info', { name: item.name })">
+                <MeasureExplanation :measure="item" />
+              </InfoTip>
             </div>
           </div>
         </template>
