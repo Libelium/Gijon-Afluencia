@@ -3,7 +3,8 @@ import { localizeMeasure, measureInfo, measureName, measureValueLabel } from './
 
 describe('measureInfo', () => {
   it('traduce sin distinguir mayusculas, y solo describe lo que no se explica solo', () => {
-    expect(measureInfo('latitude')).toEqual({ name: 'Latitud' })
+    expect(measureInfo('latitude')).toMatchObject({ name: 'Latitud' })
+    expect(measureInfo('latitude')?.description).toMatch(/norte-sur/)
     expect(measureInfo('predictedOccupancy')?.name).toBe('Ocupación prevista')
     expect(measureInfo('PREDICTEDOCCUPANCY')?.description).toMatch(/a la vez/)
   })
@@ -15,7 +16,7 @@ describe('measureInfo', () => {
   it('compone grupo de visitante y metrica, y anade como se clasifica el grupo', () => {
     const info = measureInfo('touristaverageVisitDuration')
     expect(info?.name).toBe('Duración media de la visita (turistas)')
-    expect(info?.description).toMatch(/en segundos\. Turistas: vistos 1 o 2 días/)
+    expect(info?.description).toMatch(/en segundos\. Turistas: los que se ven 1 o 2 días/)
     // Las ETL escriben el mismo atributo con mayusculas distintas.
     expect(measureInfo('shortTermVisitorAverageVisitDuration')?.name).toBe(
       'Duración media de la visita (corta estancia)',
@@ -32,7 +33,7 @@ describe('measureInfo', () => {
 
   it('las metricas del LIDAR llevan la etiqueta salvo en el total', () => {
     expect(measureInfo('totalConcurrentMax')?.name).toBe('Máximo a la vez')
-    expect(measureInfo('adultCount')?.name).toBe('Objetos detectados (adultos)')
+    expect(measureInfo('adultCount')?.name).toBe('Detectados en la hora (adultos)')
     expect(measureInfo('vehicleStayP90')?.description).toMatch(/en segundos/)
   })
 
@@ -56,9 +57,10 @@ describe('localizeMeasure', () => {
   it('conserva el nombre del servidor para las heuristicas en ingles', () => {
     expect(localizeMeasure({ id: 'r_cfo_countm', name: 'People count medium', units: 'u' })).toEqual({
       id: 'r_cfo_countm',
-      name: 'Dispositivos detectados (intervalo medio)',
+      name: 'Dispositivos detectados (periodo medio)',
       sourceName: 'People count medium',
       description: expect.stringMatching(/de 2 a 5 minutos/),
+      calculation: expect.stringMatching(/dispositivos distintos que detecta el sensor/),
       units: 'u',
     })
     expect(localizeMeasure({ id: 'mystery', name: 'Mystery' })).toEqual({
@@ -79,5 +81,33 @@ describe('measureValueLabel', () => {
     // Lo que publica pre con otros nombres: rotulos genericos, valen para zona y prevision.
     expect(measureValueLabel('confidenceLevel', 'estimated')).toBe('Estimada')
     expect(measureValueLabel('caseType', 'mixed')).toBe('Mixta')
+  })
+})
+
+describe('descripciones y cálculos', () => {
+  it('toda medida del catálogo tiene descripción, también las que se explican solas', () => {
+    const ids = [
+      'name', 'location', 'temperature', 'occupancy', 'peopleCountInZone', 'occupancyRatio', 'capacity',
+      'predictedOccupancy', 'horizonStep', 'r_cfo_countm', 'rssi', 'count', 'visits', 'uniqueVisitors',
+      'totalConcurrentMax', 'adultStayP90', 'touristaverageVisitDuration', 'newResidentUniqueVisitorsMonthly',
+    ]
+    for (const id of ids) expect(measureInfo(id)?.description, id).toBeTruthy()
+  })
+
+  it('distingue la ocupación del máximo del LIDAR y del recuento de la zona', () => {
+    expect(measureInfo('occupancy')?.calculation).toMatch(/Nunca se suman/)
+    expect(measureInfo('totalConcurrentMax')?.calculation).toMatch(/ocupación de la zona/)
+    expect(measureInfo('peopleCountInZone')?.description).toMatch(/No es la ocupación/)
+  })
+
+  it('el periodo añade su ventana al cálculo', () => {
+    expect(measureInfo('uniqueVisitorsWeekly')?.calculation).toMatch(/Cuenta la semana anterior/)
+    expect(measureInfo('newTouristUniqueVisitorsDaily')?.calculation).toMatch(/Cuenta el día anterior/)
+  })
+
+  it('localizeMeasure lleva el cálculo', () => {
+    expect(localizeMeasure({ id: 'visits', name: 'Visits' })).toMatchObject({
+      calculation: expect.stringMatching(/rato seguido/),
+    })
   })
 })

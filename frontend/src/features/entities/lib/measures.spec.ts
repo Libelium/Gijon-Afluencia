@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { measureTitle, timestampInfo } from './measures'
+import { timestampInfo } from './measures'
 
 describe('timestampInfo', () => {
   beforeEach(() => {
@@ -23,12 +23,5 @@ describe('timestampInfo', () => {
 
   it('sin marca no hay nada que decir', () => {
     expect(timestampInfo(null).future).toBe(false)
-  })
-})
-
-describe('measureTitle', () => {
-  it('junta nombre e identificador, y no repite el identificador si es el nombre', () => {
-    expect(measureTitle({ id: 'visits', name: 'Visitas' })).toBe('Visitas · visits')
-    expect(measureTitle({ id: 'mystery', name: 'mystery' })).toBe('mystery')
   })
 })

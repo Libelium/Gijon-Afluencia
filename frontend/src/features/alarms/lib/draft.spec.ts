@@ -39,7 +39,7 @@ describe('fromThresholdCondition', () => {
     // El campo en bruto del Smart Spot sale con su nombre traducido; el del servidor se conserva.
     expect(draft.measure).toMatchObject({
       id: 'r_cfo_countm',
-      name: 'Dispositivos detectados (intervalo medio)',
+      name: 'Dispositivos detectados (periodo medio)',
       sourceName: 'Personas',
     })
     expect(draft.operator).toBe('between')

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import InfoTip from '@/components/InfoTip.vue'
 import { t } from '@/i18n'
 import { formatDateTime } from '@/lib/format'
 import type { Measure } from '@/types'
-import { describeMeasure, measureTitle, timestampInfo } from '../lib/measures'
+import { describeMeasure, timestampInfo } from '../lib/measures'
+import MeasureExplanation from './MeasureExplanation.vue'
 
 const props = defineProps<{
   measure: Measure
@@ -17,7 +19,6 @@ const props = defineProps<{
 const emit = defineEmits<{ history: [] }>()
 
 const display = computed(() => describeMeasure(props.measure, props.timeZone))
-const nameTitle = computed(() => measureTitle(props.measure))
 const updatedText = computed(() => {
   const info = timestampInfo(props.measure.timestamp, props.timeZone)
   if (!info.future) return t('entities.measures.updated', { when: info.text })
@@ -30,15 +31,11 @@ const showHistory = computed(() => props.history && display.value.kind === 'numb
   <VCard class="d-flex flex-column ga-3 pa-4 min-w-0">
     <div class="d-flex align-start ga-2">
       <div class="flex-grow-1 min-w-0">
-        <div class="text-subtitle-2 font-weight-medium text-truncate" :title="nameTitle">
-          {{ measure.name }}
-        </div>
-        <div
-          v-if="measure.description"
-          class="text-caption text-medium-emphasis clamp-2"
-          :title="measure.description"
-        >
-          {{ measure.description }}
+        <div class="d-flex align-center ga-1 min-w-0">
+          <div class="text-subtitle-2 font-weight-medium text-truncate" :title="measure.name">{{ measure.name }}</div>
+          <InfoTip :label="t('entities.measures.info', { name: measure.name })">
+            <MeasureExplanation :measure="measure" />
+          </InfoTip>
         </div>
       </div>
 
@@ -97,13 +94,3 @@ const showHistory = computed(() => props.history && display.value.kind === 'numb
     </div>
   </VCard>
 </template>
-
-<style scoped>
-/* Una descripcion larga no puede descuadrar la rejilla: se recorta a dos lineas. */
-.clamp-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-</style>

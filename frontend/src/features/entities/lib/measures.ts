@@ -139,11 +139,6 @@ export function hasChartableHistory(measure: Measure, timeZone?: string): boolea
   return describeMeasure(measure, timeZone).kind === 'number'
 }
 
-/** Rotulo emergente del nombre: el nombre completo, por si se recorta, y el identificador de la variable. */
-export function measureTitle(measure: Measure): string {
-  return measure.id === measure.name ? measure.id : `${measure.name} · ${measure.id}`
-}
-
 /**
  * Marca de tiempo para «ultimo dato» o «actualizado». Una prevision publica horas futuras y
  * «dentro de 14 horas» no se entiende como ultimo dato: a futuro se da la fecha, no el relativo.

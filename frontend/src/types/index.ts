@@ -61,8 +61,10 @@ export interface Measure {
   name: string
   /** Nombre que da el servidor, antes de traducirlo: las heuristicas que reconocen medidas lo comparan con terminos en ingles. */
   sourceName?: string
-  /** Que mide, en castellano. Solo existe si el nombre no basta para entenderlo. */
+  /** Que mide, en castellano. Lo explica el icono de informacion del nombre. */
   description?: string
+  /** Como se calcula, si no es una lectura directa. */
+  calculation?: string
   units?: string
   value_type?: string
   value?: unknown
