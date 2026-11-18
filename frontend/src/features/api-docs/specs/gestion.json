@@ -2584,30 +2584,29 @@
     }
    }
   },
-  "/V1/documentation/{lang}": {
+  "/V1/documentation": {
    "get": {
     "tags": [
      "Ayuda"
     ],
     "summary": "Download Documentation",
+    "description": "Returns the PDF stored at `documentation/manual-plataforma.pdf` in object storage as an attachment. No session required. Answers 404 until it has been uploaded.",
     "operationId": "Help_downloadDocumentation_get",
-    "parameters": [
-     {
-      "name": "lang",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string"
-      }
-     }
-    ],
     "security": [],
     "responses": {
      "200": {
-      "description": "OK"
+      "description": "OK",
+      "content": {
+       "application/pdf": {
+        "schema": {
+         "type": "string",
+         "format": "binary"
+        }
+       }
+      }
      },
      "404": {
-      "description": "No encontrado"
+      "description": "Not found"
      }
     }
    }

@@ -10,6 +10,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
+  botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
+  `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,
+  el botón avisa de que el manual todavía no está disponible. Cómo subirlo está en
+  `deploy/docs/06-post-install.md`.
 - **Las medidas se muestran en castellano y explican qué miden.** En «Medidas actuales» de cada
   entidad, el nombre sale traducido y lleva un icono de información. Al pasar el ratón por él, o al
   llegar con el teclado, explica qué es la medida, también las que se explican solas, como la
@@ -125,6 +130,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **`GET /V1/documentation` sustituye a `GET /V1/documentation/{lang}`.** El manual está en un
+  solo idioma: el endpoint ya no recibe el idioma ni busca el primer fichero de
+  `documentation/<idioma>/` (con `en` de respaldo), sino que sirve siempre
+  `documentation/manual-plataforma.pdf`. OpenAPI y Postman están actualizados.
 - **Los recorridos del mapa de tránsitos llevan el color de la marca.** Recorridos y puntos dejan
   la escala de ocupación, cuyo nivel más bajo apenas se veía sobre el mapa, y toman el color
   principal de la personalización de la organización, en una escala de menos a más volumen que

@@ -75,7 +75,7 @@ Route::middleware('auth:api')->group(function () {
 
 Route::prefix("V1")->group(function () {
     //Documentation
-    Route::get('documentation/{lang}', [HelpController::class, 'downloadDocumentation']);
+    Route::get('documentation', [HelpController::class, 'downloadDocumentation']);
 
     //time series for public dashboards
     Route::post('public/timeseries/{slug}', [TimeSeriesController::class, 'unauthenticated_timeseries_request'])->middleware('throttle:60,1');
