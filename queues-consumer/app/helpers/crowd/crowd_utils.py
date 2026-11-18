@@ -1,4 +1,5 @@
 import ast
+import json
 import pandas as pd
 import dateutil.parser
 from config.logging import appLogging as logging
@@ -7,11 +8,32 @@ from config.logging import appLogging as logging
 # it reaches the broker and Timescale under that name instead of cfeBlock: request and accept both.
 CFE_BLOCK_MEASURES = ["cfeBlock", "r_cfe_block"]
 
+# Older cache files wrote the Smart Spot cfeBlock rows (newer firmware) with
+# lowercase names and the loose-attribute rows (older firmware) in camelCase,
+# sometimes both in the same file. Readers fold them onto the camelCase name.
+CROWD_LEGACY_COLUMN_ALIASES = {
+    "entityid": "entityId",
+    "israndommac": "random",
+    "visitorid": "visitorId",
+    "detectiontype": "detectionType",
+    "visitortype": "visitorType",
+}
+
+
+def _parse_cfe_block(value):
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except ValueError:
+        return ast.literal_eval(value)
+
 
 def crowd_row_processing_lambda(df, measures_renames = None):
     """
-    Custom row processing function to handle specific transformations.
-    This can be modified as needed for different ETL processes.
+    Flattens the Smart Spot cfeBlock (newer firmware) so that each detection in
+    the block becomes one row, like the loose-attribute rows of the older firmware.
+    The block arrives as a list of detections or, with a single one, as a dict.
     """
 
     # Nothing to process
@@ -51,28 +73,56 @@ def crowd_row_processing_lambda(df, measures_renames = None):
     # Parse timeinstant now so the dtype is consistent when concatenating at the end
     df_without_cfe["timeinstant"] = pd.to_datetime(df_without_cfe["timeinstant"], format="mixed")
 
-    # The CFE block's own timeinstant replaces the parent row's
-    df_with_cfe.drop(columns=["timeinstant"], inplace=True)
+    # The CFE block's own timeinstant replaces the parent row's; the parent's is
+    # kept only as a fallback for detections that arrive without one
+    parent_timeinstant = pd.to_datetime(df_with_cfe.pop("timeinstant"), format="mixed")
+    df_with_cfe["_parent_timeinstant"] = parent_timeinstant
+    df_with_cfe["cfeBlock"] = df_with_cfe["cfeBlock"].apply(_parse_cfe_block)
+    # A single detection arrives as a dict: explode() would split it into its keys
     df_with_cfe["cfeBlock"] = df_with_cfe["cfeBlock"].apply(
-        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
+        lambda x: [x] if isinstance(x, dict) else x
     )
-    # Each element in the cfeBlock array becomes its own row
-    df_with_cfe = df_with_cfe.explode("cfeBlock").reset_index(drop=True)
-    df_cfe = pd.json_normalize(df_with_cfe["cfeBlock"])
+    # Each element in the cfeBlock array becomes its own row. An empty block
+    # explodes to NaN and carries no detection: drop it instead of keeping a
+    # row with only the entityId
+    df_with_cfe = df_with_cfe.explode("cfeBlock")
+    df_with_cfe = df_with_cfe[df_with_cfe["cfeBlock"].apply(lambda x: isinstance(x, dict))]
+    df_with_cfe = df_with_cfe.reset_index(drop=True)
+    df_cfe = pd.json_normalize(df_with_cfe["cfeBlock"].tolist(), max_level=0)
     df_cfe.rename(columns=measures_renames, inplace=True)
     if "timeinstant" in df_cfe.columns:
         df_cfe["timeinstant"] = pd.to_datetime(df_cfe["timeinstant"], unit="s")
+    else:
+        df_cfe["timeinstant"] = pd.NaT
+    df_cfe["timeinstant"] = df_cfe["timeinstant"].fillna(df_with_cfe["_parent_timeinstant"])
 
     # Ensure all target columns exist (even if NA) and are in a fixed order
     target_columns = list(dict.fromkeys(measures_renames.values()))
     df_cfe[list(set(target_columns) - set(df_cfe.columns))] = pd.NA
     df_cfe = df_cfe[[c for c in target_columns if c in df_cfe.columns]]
     # Drop columns from df_with_cfe that are already in df_cfe to avoid duplicates
-    cols_to_drop = ["cfeBlock"] + [c for c in target_columns if c in df_with_cfe.columns]
+    cols_to_drop = ["cfeBlock", "_parent_timeinstant"] + [c for c in target_columns if c in df_with_cfe.columns]
     df_with_cfe = pd.concat([df_with_cfe.drop(columns=cols_to_drop, errors="ignore"), df_cfe], axis=1)
 
     result = pd.concat([df_without_cfe, df_with_cfe], ignore_index=True)
     return result
+
+
+def coalesce_legacy_crowd_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Folds the lowercase column names of old cache files onto their camelCase
+    name. Renaming instead would leave two columns with the same name when a
+    file (or a batch of files) has both, and a later dropna() would drop every row.
+    """
+    for legacy, canonical in CROWD_LEGACY_COLUMN_ALIASES.items():
+        if legacy not in df.columns:
+            continue
+        if canonical in df.columns:
+            df[canonical] = df[canonical].combine_first(df[legacy])
+            df = df.drop(columns=[legacy])
+        else:
+            df = df.rename(columns={legacy: canonical})
+    return df
 
 VISITOR_DAY_KEYS = ["visitorid", "date"]
 

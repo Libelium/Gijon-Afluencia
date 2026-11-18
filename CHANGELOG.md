@@ -176,6 +176,16 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Las detecciones de un bloque con una sola detección ya no se pierden.** El Smart Spot manda el
+  bloque de detecciones como lista o, si solo trae una, como un objeto; ese objeto se desmontaba en
+  sus claves y la detección se perdía en visitas, flujos y la caché de crowd. Ahora se lee de las
+  dos formas, también como texto JSON; un bloque vacío ya no deja una fila sin detección y una
+  detección sin hora propia toma la de la notificación.
+- **El lector de la caché de crowd ya no pierde filas al mezclar los dos formatos de columnas.** Los
+  ficheros guardan las detecciones del bloque con nombres en minúscula y las del firmware antiguo en
+  camelCase; al renombrar, un lote con las dos quedaba con columnas repetidas y clasificación y
+  visitantes únicos se quedaban sin filas. Ahora se juntan en el nombre camelCase. Las horas con
+  zona horaria también se leen: antes se descartaban.
 - **Si el programador de tareas periódicas muere, el pod se reinicia.** Si celery beat terminaba,
   por ejemplo al perder su conexión tras un reinicio de PostgreSQL, se paraban todas las tareas
   periódicas (ETL de crowd, caché, alarmas de inactividad, conector MQTT) y el pod seguía `Running`

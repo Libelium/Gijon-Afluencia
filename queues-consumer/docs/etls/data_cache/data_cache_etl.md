@@ -143,7 +143,10 @@ entidades y un rango de tiempo concretos.
 3.  **Convertir a DataFrame**: la respuesta JSON de la API se convierte en un DataFrame de pandas
     para facilitar el procesado.
 4.  **Procesar los datos en bruto**: se hace una limpieza inicial de los datos y se renombran las
-    columnas del DataFrame.
+    columnas del DataFrame. El bloque de detecciones del Smart Spot (`cfeBlock` o `r_cfe_block`) se
+    despliega en una fila por detección. Llega como lista o, con una sola detección, como un objeto;
+    también como texto JSON. Un bloque vacío no deja fila, y una detección sin hora propia toma la
+    de la notificación.
 5.  **Agrupar por entidad**: los datos procesados se agrupan por identificador de entidad para
     preparar el paso de transformación.
 
@@ -213,3 +216,12 @@ entidad `CrowdFlowEvent`:
 -   `detectionType`: (cadena)
 -   `signature`: (cadena)
 -   `ssid`: (cadena)
+
+#### Lectura de la caché
+
+Clasificación y visitantes únicos leen estos ficheros con `get_time_series_from_data_cache`. Los
+ficheros escritos hasta ahora usan nombres en minúscula para las detecciones del bloque
+(`visitorid`, `detectiontype`, `israndommac`) y en camelCase para las del firmware antiguo, a veces
+los dos en el mismo fichero. El lector junta cada pareja en el nombre camelCase (`visitorId`,
+`detectionType`, `random`) en lugar de renombrar: renombrar dejaba dos columnas con el mismo nombre
+y las ETL acababan sin ninguna fila. Las horas se leen con y sin zona horaria y se comparan en UTC.
