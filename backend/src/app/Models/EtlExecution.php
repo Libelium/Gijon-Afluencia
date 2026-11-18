@@ -13,11 +13,15 @@ class EtlExecution extends Model
         'user_id',
         'execution_date',
         'params',
+        'status',
+        'error',
+        'finished_at',
     ];
 
     protected $casts = [
         'params' => 'array',
         'execution_date' => 'date',
+        'finished_at' => 'datetime',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
