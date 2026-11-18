@@ -163,6 +163,17 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Una hora de visitas o flujos que falla ya no queda como hueco para siempre.** Cada ejecución
+  de las ETL de crowd se apuntaba en `etl_executions` antes de lanzarse y no se actualizaba nunca:
+  si fallaba o se cortaba (un reinicio del pod, una caída de RabbitMQ), esa hora contaba como hecha
+  y no se volvía a calcular. Ahora cada ejecución guarda su estado (`started`, `success` o
+  `failed`, con el motivo) y el disparo periódico de visitas y flujos vuelve a pedir las tres
+  últimas horas: las que salieron bien se saltan y las demás se repiten. Repetir no duplica datos.
+  En visitantes únicos y clasificación, una ventana fallida se relanza a mano sin `force`. La
+  conexión a la base de datos ya no se queda ocupada durante toda la ETL. Lleva una migración:
+  `etl_executions` gana `status`, `error` y `finished_at`.
+- **`CROWD_UNIQUE_VISITORS_INTERVAL` ya se lee de su propia variable.** Leía la de clasificación.
+  Sin efecto hoy: el despliegue no fija ninguna de las dos.
 - **El selector «Categorías» de las plantillas de clasificación solo junta partes de un mismo
   total.** La plantilla suma las categorías y da el porcentaje de cada una, pero el selector
   ofrecía cualquier medida numérica: coordenadas, duraciones, la ocupación… Con la duración máxima
