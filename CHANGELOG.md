@@ -130,6 +130,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **La clasificación de visitantes ya no carga la semana entera en memoria.** Los miércoles leía
+  de la caché los 7 días de detecciones de golpe en `generic-consumer`, que no tiene límite de
+  memoria y comparte nodo. Ahora lee hora a hora (`CROWD_CLASSIFICATION_BATCH_HOURS`), guarda solo
+  la primera y la última detección de cada visitante y día, y clasifica con las mismas reglas: el
+  resultado es el mismo. Con 3,4 millones de detecciones sintéticas, el pico de memoria baja de
+  unos 990 MB a 220 MB.
 - **`GET /V1/documentation` sustituye a `GET /V1/documentation/{lang}`.** El manual está en un
   solo idioma: el endpoint ya no recibe el idioma ni busca el primer fichero de
   `documentation/<idioma>/` (con `en` de respaldo), sino que sirve siempre

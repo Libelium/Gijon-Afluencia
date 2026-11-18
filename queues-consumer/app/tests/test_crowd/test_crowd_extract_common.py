@@ -189,6 +189,8 @@ CLASSIFICATION_CONFIG = {
     "request_class": CrowdClassificationRequest,
     "entity_factory": _create_classification_entity,
     "patch_path": "etls.crowd.crowd_classification_etl.etl",
+    # Hourly windows over the request range
+    "expected_requests": 30 * 24 + 1,
     "request_params": lambda entities: {
         "entities": entities,
         "start_date": datetime(2023, 1, 1, 10, 0, 0),
@@ -549,16 +551,16 @@ class TestCrowdExtractBatchedRequest:
 
             extractor.extract()
 
-            # Should have made exactly 1 request (batched)
-            assert len(captured_request) == 1
+            # One request per window
+            assert len(captured_request) == etl_config.get("expected_requests", 1)
 
-            # The request should contain both entity URNs in device_ids
-            request_data = captured_request[0]
-            assert len(request_data) == 1  # Single batched request
-            device_ids = request_data[0]["device_ids"]
-            assert len(device_ids) == 2
-            assert "urn:ngsi-ld:CrowdFlowEvent:sensor-01_CFE" in device_ids
-            assert "urn:ngsi-ld:CrowdFlowEvent:sensor-02_CFE" in device_ids
+            # Each request batches both entities
+            for request_data in captured_request:
+                assert len(request_data) == 1  # Single batched request
+                device_ids = request_data[0]["device_ids"]
+                assert len(device_ids) == 2
+                assert "urn:ngsi-ld:CrowdFlowEvent:sensor-01_CFE" in device_ids
+                assert "urn:ngsi-ld:CrowdFlowEvent:sensor-02_CFE" in device_ids
 
     @pytest.mark.parametrize("etl_config", ALL_ETL_CONFIGS, ids=lambda c: c["name"])
     def test_extract_uses_first_entity_tenant_and_scope(
