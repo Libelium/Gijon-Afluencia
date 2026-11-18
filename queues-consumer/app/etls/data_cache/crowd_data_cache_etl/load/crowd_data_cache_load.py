@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from config.config import storage
 from config.config import settings
 from config.logging import appLogging as logging
@@ -8,8 +9,20 @@ from schemas.crowd_data_cache_etl_request_schema import (
 )
 import db.realtime as realtime_db
 import helpers.aether_link.aether_link_helper as aether_link_helper
+from helpers.crowd.crowd_utils import append_new_crowd_rows, to_crowd_cache_schema
 from db import deps
 
+
+def _is_not_found(error: Exception) -> bool:
+    """True when the storage error means the object does not exist (S3 or MinIO)."""
+    code = getattr(error, "code", None)
+    response = getattr(error, "response", None) or {}
+    code = code or response.get("Error", {}).get("Code")
+    return str(code) in ("404", "NoSuchKey", "NotFound")
+
+
+# Where each hour's CSV is written before it is uploaded.
+TEMP_DIR = "/code/temp"
 
 class CrowdDataCacheLoad:
 
@@ -64,6 +77,36 @@ class CrowdDataCacheLoad:
 
         return aether_link_helper.delete_time_series(self.delete_request)
 
+    def __merge_with_existing(self, df, s3_prefix, filename, tenant, urn_split):
+        """
+        Adds the rows already cached for this hour, so that re-running an hour
+        (late notifications, a forced run) never drops what was cached before.
+        Only a missing object counts as "nothing cached": any other storage
+        error is raised, so nothing is uploaded nor deleted from Timescale.
+        """
+        try:
+            existing_path = storage.download_file(
+                f"existing_{tenant}_{urn_split}_{filename}", s3_prefix
+            )
+        except Exception as e:
+            if _is_not_found(e):
+                return df
+            raise
+
+        try:
+            if os.path.getsize(existing_path) == 0:
+                return df
+            existing = to_crowd_cache_schema(pd.read_csv(existing_path, low_memory=False))
+        finally:
+            os.remove(existing_path)
+
+        merged = append_new_crowd_rows(existing, df)
+        logging.info(
+            f"Added {len(merged) - len(existing)} of {len(df)} rows read to the "
+            f"{len(existing)} already cached in {s3_prefix}"
+        )
+        return merged
+
     def __store_to_s3(self):
         """
         Function to store the processed data to S3
@@ -78,11 +121,12 @@ class CrowdDataCacheLoad:
             filename = item["filename"]
             s3_prefix = item["s3_prefix"]
 
-            local_dir = f"/code/temp/{tenant}/{scope}/{urn_split}"
+            local_dir = f"{TEMP_DIR}/{tenant}/{scope}/{urn_split}"
             os.makedirs(local_dir, exist_ok=True)
             local_path = f"{local_dir}/{filename}"
 
             try:
+                df = self.__merge_with_existing(df, s3_prefix, filename, tenant, urn_split)
                 df.to_csv(local_path, index=False)
                 storage.upload_file(s3_prefix, local_path)
                 logging.info(f"Uploaded {local_path} to S3 as {s3_prefix}")
