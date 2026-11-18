@@ -226,15 +226,15 @@ const VISITOR_TYPE_CATEGORIES = [
   { measureId: 'shortTermVisitorUniqueVisitors', label: 'Corta estancia' },
 ]
 
-export function detectCategories(all: Measure[]): CategorySet {
-  const candidates = all.filter(isNumericMeasure).filter((m) => !NOT_A_MEASURE.test(m.id))
+const categoryCandidates = (all: Measure[]) =>
+  all.filter(isNumericMeasure).filter((m) => !NOT_A_MEASURE.test(m.id))
 
-  // El orden es el del reparto aunque falte alguno, para que cada tipo conserve su color.
-  const visitorTypes = VISITOR_TYPE_CATEGORIES.map((category, order) => ({ ...category, order })).filter(
-    (category) => candidates.some((m) => m.id === category.measureId),
-  )
-  if (visitorTypes.length) return { base: 'uniqueVisitors', categories: visitorTypes }
-
+/**
+ * Grupos de medidas hermanas con la categoria detras (`peopleCount_male`, `peopleCountTourist`),
+ * del mas al menos reconocible. Solo los que parecen un reparto: dos medidas hermanas con sufijos
+ * que no reconozco pueden ser cualquier cosa; tres ya es un patron.
+ */
+function suffixGroups(candidates: Measure[]): Group[] {
   const groups = new Map<string, Group>()
   for (const measure of candidates) {
     const split = splitMeasureId(measure.id)
@@ -247,14 +247,13 @@ export function detectCategories(all: Measure[]): CategorySet {
     groups.set(key, group)
   }
 
-  const eligible = [...groups.values()].filter((g) => g.members.length >= 2)
-  if (!eligible.length) return { base: null, categories: [] }
-
-  const scored = eligible
+  return [...groups.values()]
+    .filter((group) => group.members.length >= 2)
     .map((group) => ({
       group,
       known: group.members.filter((m) => CATEGORY_SUFFIXES[m.suffix.toLowerCase()] !== undefined),
     }))
+    .filter(({ group, known }) => known.length > 0 || group.members.length >= 3)
     .sort((a, b) => {
       if (b.known.length !== a.known.length) return b.known.length - a.known.length
       if (b.group.members.length !== a.group.members.length) {
@@ -262,12 +261,22 @@ export function detectCategories(all: Measure[]): CategorySet {
       }
       return a.group.base.localeCompare(b.group.base, 'es')
     })
+    .map(({ group }) => group)
+}
 
-  const winner = scored[0]
-  // Dos medidas hermanas con sufijos que no reconozco pueden ser cualquier cosa; tres ya es un patron.
-  if (winner.known.length === 0 && winner.group.members.length < 3) return { base: null, categories: [] }
+export function detectCategories(all: Measure[]): CategorySet {
+  const candidates = categoryCandidates(all)
 
-  const categories: Category[] = winner.group.members
+  // El orden es el del reparto aunque falte alguno, para que cada tipo conserve su color.
+  const visitorTypes = VISITOR_TYPE_CATEGORIES.map((category, order) => ({ ...category, order })).filter(
+    (category) => candidates.some((m) => m.id === category.measureId),
+  )
+  if (visitorTypes.length) return { base: 'uniqueVisitors', categories: visitorTypes }
+
+  const winner = suffixGroups(candidates)[0]
+  if (!winner) return { base: null, categories: [] }
+
+  const categories: Category[] = winner.members
     .map((m) => {
       const suffixLower = m.suffix.toLowerCase()
       return {
@@ -283,7 +292,7 @@ export function detectCategories(all: Measure[]): CategorySet {
     })
     .slice(0, MAX_CATEGORIES)
 
-  return { base: winner.group.base, categories }
+  return { base: winner.base, categories }
 }
 
 /** Nombre presentable de una medida: su `name`, y si no lo hay el id partido en palabras. */
@@ -300,6 +309,92 @@ export function measureOptions(all: Measure[]): MeasureOption[] {
       title: m.units ? `${humanizeMeasure(m)} (${m.units})` : humanizeMeasure(m),
     }))
     .sort((a, b) => a.title.localeCompare(b.title, 'es'))
+}
+
+/**
+ * Categorias que van delante de la metrica (`touristCount`, `adultEntered`), con la familia del
+ * reparto: los tipos de visitante de las ETL y las clases del LIDAR. `total` no es una parte.
+ */
+const CATEGORY_PREFIXES: Array<[prefix: string, family: string]> = [
+  ['shortTermVisitor', 'visitor'],
+  ['resident', 'visitor'],
+  ['tourist', 'visitor'],
+  ['adult', 'lidar'],
+  ['vehicle', 'lidar'],
+]
+
+const PREFIX_BASES = new Set([...CATEGORY_PREFIXES.map(([prefix]) => prefix.toLowerCase()), 'total'])
+
+/**
+ * Metricas que cuentan personas u objetos detras de un prefijo de categoria: las partes de un mismo
+ * total suman ese total. Duraciones, medias, maximos o permanencias no se suman.
+ */
+const SUMMABLE_METRICS = new Set(['count', 'uniquevisitors', 'visits', 'entered', 'exited'])
+
+/** Bases de un grupo por sufijo que no son recuentos (`dwellTime_male`): sus partes no suman nada. */
+const NOT_SUMMABLE = /(duration|dwell|stay|time|average|avg|mean|minimum|maximum|median|percent|rate|ratio|occupan|concurrent)/i
+
+export interface CategoryOption extends MeasureOption {
+  /** Reparto al que pertenece. Solo se juntan categorias de la misma familia. */
+  family: string
+}
+
+/** Familia de un recuento que no es parte de ningun reparto: se elige solo. */
+const ALONE = 'alone:'
+
+/**
+ * Items del selector de categorias, con su familia. La plantilla suma las categorias y da el
+ * porcentaje de cada una, asi que solo se juntan las partes de un mismo total. Los demas recuentos
+ * (los totales, las ventanas de tiempo) se pueden elegir, pero de uno en uno: juntos contarian a la
+ * misma gente dos veces. Duraciones, estadisticos, la ocupacion o coordenadas no son personas
+ * contadas y no se ofrecen.
+ */
+export function categoryOptions(all: Measure[]): CategoryOption[] {
+  const candidates = categoryCandidates(all)
+  const options: CategoryOption[] = []
+  const add = (measure: Measure, family: string) =>
+    options.push({
+      value: measure.id,
+      title: measure.units ? `${humanizeMeasure(measure)} (${measure.units})` : humanizeMeasure(measure),
+      family,
+    })
+
+  for (const measure of candidates) {
+    const lower = measure.id.toLowerCase()
+    const prefix = CATEGORY_PREFIXES.find(([p]) => lower.startsWith(p.toLowerCase()))
+    if (!prefix) continue
+    const metric = lower.slice(prefix[0].length)
+    if (SUMMABLE_METRICS.has(metric)) add(measure, `${prefix[1]}:${metric}`)
+  }
+
+  for (const group of suffixGroups(candidates)) {
+    // `adultCount`, `adultEntered`… son metricas de una clase, no un reparto: ese ya va arriba.
+    if (PREFIX_BASES.has(group.base.toLowerCase()) || NOT_SUMMABLE.test(group.base)) continue
+    for (const member of group.members) {
+      const measure = candidates.find((m) => m.id === member.measureId)
+      if (measure) add(measure, `suffix:${group.base.toLowerCase()}`)
+    }
+  }
+
+  const inGroup = new Set(options.map((option) => option.value))
+  for (const measure of candidates) {
+    if (!inGroup.has(measure.id) && !NOT_SUMMABLE.test(measure.id)) add(measure, `${ALONE}${measure.id}`)
+  }
+
+  // Primero los repartos, cada uno junto; despues lo que va solo, por nombre.
+  const alone = (option: CategoryOption) => (option.family.startsWith(ALONE) ? 1 : 0)
+  return options.sort(
+    (a, b) =>
+      alone(a) - alone(b) ||
+      (alone(a) ? 0 : a.family.localeCompare(b.family)) ||
+      a.title.localeCompare(b.title, 'es'),
+  )
+}
+
+/** Con algo elegido, solo quedan las categorias de su mismo reparto; un recuento suelto se queda solo. */
+export function categoryItemsFor(options: CategoryOption[], selected: string[]): CategoryOption[] {
+  const family = options.find((option) => selected.includes(option.value))?.family
+  return family ? options.filter((option) => option.family === family) : options
 }
 
 /**

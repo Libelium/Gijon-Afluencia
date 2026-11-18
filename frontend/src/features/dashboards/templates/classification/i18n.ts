@@ -1,7 +1,7 @@
 export default {
   'templates.classification.categoriesLabel': 'Categorías',
   'templates.classification.categoriesHint':
-    'Vacío: se usan las categorías detectadas automáticamente',
+    'Vacío: se usan las categorías detectadas automáticamente. Solo se juntan partes de un mismo total; el resto, de una en una',
   'templates.classification.statTotal': 'Total del periodo',
   'templates.classification.statTop': 'Categoría principal',
   'templates.classification.statTopHint': '{percent} % del total',
