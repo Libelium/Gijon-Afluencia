@@ -163,6 +163,17 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **El selector «Categorías» de las plantillas de clasificación solo junta partes de un mismo
+  total.** La plantilla suma las categorías y da el porcentaje de cada una, pero el selector
+  ofrecía cualquier medida numérica: coordenadas, duraciones, la ocupación… Con la duración máxima
+  y la mínima de la visita daba un «Total del periodo» en segundos y un reparto del 53 %. Ahora
+  solo ofrece personas u objetos contados. Las partes de un mismo reparto se juntan: por tipo de
+  visitante en los Smart Spot y en las entidades de visitas y recorridos, y por clase en los
+  LIDAR. Los demás recuentos (los totales, como «Recuento», y las ventanas de tiempo, como los
+  dispositivos detectados en el periodo corto, medio y largo) se eligen de uno en uno, porque
+  juntos contarían a la misma gente dos veces. En cuanto se elige una categoría, quedan solo las
+  que se pueden juntar con ella; para cambiar se vacía la selección. Duraciones, estadísticos,
+  ocupación y coordenadas ya no se ofrecen. Lo que se detecta solo no cambia.
 - **Un reinicio del servidor ya no borra tablas al arrancar el backend.** El script de arranque
   del despliegue (`migration.sh`) deshacía el último lote de migraciones cuando una fallaba. Tras
   un reinicio del nodo las migraciones corrían antes de que PostgreSQL aceptara conexiones, y la
