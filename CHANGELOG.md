@@ -163,6 +163,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Si el programador de tareas periódicas muere, el pod se reinicia.** Si celery beat terminaba,
+  por ejemplo al perder su conexión tras un reinicio de PostgreSQL, se paraban todas las tareas
+  periódicas (ETL de crowd, caché, alarmas de inactividad, conector MQTT) y el pod seguía `Running`
+  sin que nadie se enterara. Ahora `main.py` vigila workers y beat y, si uno termina, sale para que
+  Kubernetes reinicie el pod; la conexión del beat se comprueba antes de usarse. Al parar el pod,
+  Celery termina las tareas en curso en lugar de morir a los 30 s, y cada arranque da a sus workers
+  un nombre propio.
 - **Una hora de visitas o flujos que falla ya no queda como hueco para siempre.** Cada ejecución
   de las ETL de crowd se apuntaba en `etl_executions` antes de lanzarse y no se actualizaba nunca:
   si fallaba o se cortaba (un reinicio del pod, una caída de RabbitMQ), esa hora contaba como hecha

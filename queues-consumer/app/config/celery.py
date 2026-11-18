@@ -116,6 +116,10 @@ app = Celery(
 
 app.conf.beat_dburi = settings.DATABASE.connection_uri
 app.conf.beat_scheduler = "sqlalchemy_celery_beat.schedulers:DatabaseScheduler"
+app.conf.beat_engine_options = {
+    "pool_pre_ping": True,
+    "pool_recycle": settings.CELERY_BEAT_DB_POOL_RECYCLE_SECONDS,
+}
 
 # Default arguments for all tasks
 DEFAULT_TASK_ARGS = {

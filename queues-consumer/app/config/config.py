@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     APNS_ENVIRONMENT: str = os.getenv("APNS_ENVIRONMENT", "sandbox")
     WORKER_TYPE: WorkerType = WorkerType(os.getenv("WORKER_TYPE", "universal"))
     LAUNCH_UVICORN: bool = os.getenv("LAUNCH_UVICORN", "true") == "true"
+    # What main.py gives celery to stop in order on SIGTERM, under the pod's 30 s grace period.
+    SHUTDOWN_GRACE_SECONDS: float = float(os.getenv("SHUTDOWN_GRACE_SECONDS", 25))
     LAUNCH_CELERY_SCHEDULER: bool = (
         os.getenv("LAUNCH_CELERY_SCHEDULER", "true") == "true"
     )
@@ -206,6 +208,9 @@ class Settings(BaseSettings):
     SMS_AWS_REGION: str = os.getenv("SMS_AWS_REGION", "eu-south-2")
     METRICS_PORT: int = int(os.getenv("METRICS_PORT", 8000))
     PROMETHEUS_MULTIPROC_DIR: str = os.getenv("PROMETHEUS_MULTIPROC_DIR", "/tmp/prometheus_multiproc")
+    CELERY_BEAT_DB_POOL_RECYCLE_SECONDS: int = int(
+        os.getenv("CELERY_BEAT_DB_POOL_RECYCLE_SECONDS", 5 * 60)
+    )
 
 
 settings = Settings()
