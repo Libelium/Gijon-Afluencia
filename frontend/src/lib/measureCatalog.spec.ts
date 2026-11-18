@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { localizeMeasure, measureInfo, measureName, measureValueLabel } from './measureCatalog'
 
+describe('measureInfo de la deteccion de anomalias', () => {
+  it('explica isOutlier en castellano y como se calcula', () => {
+    const info = measureInfo('isOutlier')
+    expect(info?.name).toBe('Hora anómala')
+    expect(info?.calculation).toContain('una vez al día')
+  })
+})
+
 describe('measureInfo', () => {
   it('traduce sin distinguir mayusculas, y solo describe lo que no se explica solo', () => {
     expect(measureInfo('latitude')).toMatchObject({ name: 'Latitud' })

@@ -15,6 +15,7 @@ import ChartCard from './components/ChartCard.vue'
 import LidarControlBar from './components/LidarControlBar.vue'
 import LidarNotice from './components/LidarNotice.vue'
 import {
+  anomalyMarkers,
   fetchZoneSeries,
   incrementsOf,
   levelColor,
@@ -69,6 +70,8 @@ const trendMean = ref<ChartPoint[]>([])
 const trendMax = ref<ChartPoint[]>([])
 const inflow = ref<ChartPoint[]>([])
 const outflow = ref<ChartPoint[]>([])
+/** 1 en los intervalos con alguna hora anomala, si la zona publica la deteccion de anomalias. */
+const anomaly = ref<ChartPoint[]>([])
 /** Serie forzada a hora, unica base valida para los perfiles por hora y por dia. */
 const shape = ref<ChartPoint[]>([])
 
@@ -77,11 +80,14 @@ const flowRoles = computed(() => {
   return { inflow: roles?.inflow ?? null, outflow: roles?.outflow ?? null }
 })
 
+const anomalyRole = computed(() => profile.value?.roles.anomaly ?? null)
+
 function reset() {
   trendMean.value = []
   trendMax.value = []
   inflow.value = []
   outflow.value = []
+  anomaly.value = []
   shape.value = []
 }
 
@@ -105,6 +111,8 @@ async function loadSeries() {
     // Un contador acumulativo solo se puede agregar por su maximo: su media no significa nada.
     if (flowRoles.value.inflow) specs.push({ key: 'in', fn: 'max', measureId: flowRoles.value.inflow.id })
     if (flowRoles.value.outflow) specs.push({ key: 'out', fn: 'max', measureId: flowRoles.value.outflow.id })
+    // Por maximo: un intervalo largo (un dia) cuenta como anomalo si lo es alguna de sus horas.
+    if (anomalyRole.value) specs.push({ key: 'anomaly', fn: 'max', measureId: anomalyRole.value.id })
 
     const [trendRes, shapeRes] = await Promise.all([
       fetchZoneSeries(ref_, specs, range.value, { forceInterval: interval.value }),
@@ -121,6 +129,7 @@ async function loadSeries() {
     trendMax.value = trendRes.max ?? []
     inflow.value = trendRes.in ?? []
     outflow.value = trendRes.out ?? []
+    anomaly.value = trendRes.anomaly ?? []
     shape.value = shapeRes.shape ?? []
   } catch (e) {
     seriesError.value = errorMessage(e)
@@ -138,6 +147,7 @@ watch(
     () => profile.value?.occupancy?.id,
     () => flowRoles.value.inflow?.id,
     () => flowRoles.value.outflow?.id,
+    () => anomalyRole.value?.id,
   ],
   () => void loadSeries(),
   { immediate: true },
@@ -279,10 +289,20 @@ const tiles = computed<Tile[]>(() => {
   return list
 })
 
-const trendSeries = computed<ChartSeries[]>(() => [
-  { name: t('dashboards.lidar.analytics.trendMean'), units: t('dashboards.lidar.people'), points: trendMean.value },
-  { name: t('dashboards.lidar.analytics.trendMax'), units: t('dashboards.lidar.people'), points: trendMax.value },
-])
+const anomalyPoints = computed<ChartPoint[]>(() => anomalyMarkers(trendMax.value, anomaly.value))
+
+const trendSeries = computed<ChartSeries[]>(() => {
+  const people = t('dashboards.lidar.people')
+  const list: ChartSeries[] = [
+    { name: t('dashboards.lidar.analytics.trendMean'), units: people, points: trendMean.value },
+    { name: t('dashboards.lidar.analytics.trendMax'), units: people, points: trendMax.value },
+  ]
+  // Solo si hay alguna: una leyenda con una serie vacia haria buscar algo que no esta.
+  if (anomalyPoints.value.some((p) => p.v !== null)) {
+    list.push({ name: t('dashboards.lidar.analytics.anomalies'), units: people, points: anomalyPoints.value, markers: true })
+  }
+  return list
+})
 
 /** El contador es acumulativo: lo que interesa es cuanta gente ha pasado en cada intervalo. */
 const flowSeries = computed<ChartSeries[]>(() => {

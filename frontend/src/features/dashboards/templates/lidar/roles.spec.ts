@@ -19,6 +19,14 @@ const PREDICTION = [
   'generatedAt',
 ]
 
+describe('matchRole con la deteccion de anomalias', () => {
+  it('isOutlier es el papel de anomalia y no se confunde con la ocupacion', () => {
+    expect(matchRole([...ZONE, 'isOutlier'], 'anomaly')).toBe('isOutlier')
+    expect(matchRole([...ZONE, 'isOutlier'], 'occupancy')).toBe('occupancy')
+    expect(matchRole(ZONE, 'anomaly')).toBeNull()
+  })
+})
+
 describe('matchRole con la zona fusionada', () => {
   it('`occupancy` son las personas de la zona, no un porcentaje', () => {
     expect(matchRole(ZONE, 'occupancy')).toBe('occupancy')

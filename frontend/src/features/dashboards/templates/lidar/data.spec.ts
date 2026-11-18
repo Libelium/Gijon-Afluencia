@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Entity, Measure } from '@/types'
 import { datamodelOf } from '../contract'
-import { describeZone, predictionModel, presetHint, zoneEntities, zoneModel } from './data'
+import { anomalyMarkers, describeZone, predictionModel, presetHint, zoneEntities, zoneModel } from './data'
 
 let nextId = 1
 
@@ -74,6 +74,41 @@ describe('describeZone con la zona fusionada', () => {
   it('con aforo el porcentaje sale de las personas sobre el aforo', () => {
     const withCapacity = describeZone([measure('occupancy', 45), measure('maxCapacity', 90)])
     expect(withCapacity.ratio).toBe(0.5)
+  })
+})
+
+describe('describeZone con la deteccion de anomalias', () => {
+  const profile = describeZone([measure('occupancy', 45), measure('isOutlier', 0)])
+
+  it('reconoce isOutlier y no lo usa nunca como ocupacion', () => {
+    expect(profile.roles.anomaly?.id).toBe('isOutlier')
+    expect(profile.occupancy?.id).toBe('occupancy')
+  })
+
+  it('una zona sin ocupacion no toma isOutlier como ocupacion de reserva', () => {
+    const onlyFlags = describeZone([measure('isOutlier', 1), measure('smartspotSignal', 30)])
+    expect(onlyFlags.occupancy?.id).toBe('smartspotSignal')
+  })
+})
+
+describe('anomalyMarkers', () => {
+  const reference = [
+    { t: '2026-03-01T10:00:00Z', v: 10 },
+    { t: '2026-03-01T11:00:00Z', v: 90 },
+    { t: '2026-03-01T12:00:00Z', v: 12 },
+  ]
+
+  it('deja el valor solo en los instantes marcados con 1, aunque la hora venga escrita de otra forma', () => {
+    const flags = [
+      { t: '2026-03-01T10:00:00.000Z', v: 0 },
+      { t: '2026-03-01T11:00:00.000Z', v: 1 },
+      { t: '2026-03-01T12:00:00.000Z', v: null },
+    ]
+    expect(anomalyMarkers(reference, flags).map((p) => p.v)).toEqual([null, 90, null])
+  })
+
+  it('sin marcas no hay ningun punto', () => {
+    expect(anomalyMarkers(reference, []).every((p) => p.v === null)).toBe(true)
   })
 })
 
