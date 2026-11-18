@@ -10,6 +10,14 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Detección de anomalías en la ocupación de las zonas.** El módulo de anomalías existía pero no
+  estaba enganchado a nada: nadie le daba datos, no se ejecutaba y su resultado no llegaba a la
+  plataforma. Ahora un CronJob diario (`anomalies`) lee la ocupación por hora de cada zona en los
+  últimos días ya cerrados, la puntúa con un modelo que aprende lo normal de cada zona para cada hora
+  y día de la semana, sin umbrales fijos, y publica `isOutlier` (0/1) en la propia zona. En la
+  analítica de zona LIDAR, la evolución de la ocupación marca las horas anómalas como puntos, y la
+  medida «Hora anómala» se explica en la ficha de la zona. Necesita `ANOMALY_STATE_HMAC_KEY` en el
+  despliegue para que el modelo aprenda de un día para otro.
 - **Descargar en CSV los datos de cada gráfico.** Junto a «Ver los datos en una tabla», cada
   gráfico de los paneles y las plantillas, y el histórico de una medida, ofrece «Descargar CSV»
   con los mismos datos que dibuja, todas las filas aunque la tabla en pantalla se recorte. El

@@ -1407,6 +1407,12 @@ components:
         schedule: "0 3 * * *"
         command: ["python", "scripts/run_daily.py"]
         activeDeadlineSeconds: 14400
+      # Diario y no horario: puntua los dias ya cerrados de cada zona, asi no compite con la
+      # fusion horaria que los publica. Sin ANOMALY_CONFIG para CrowdFlowZone no hace nada.
+      anomalies:
+        schedule: "30 5 * * *"
+        command: ["python", "scripts/run_anomalies.py"]
+        activeDeadlineSeconds: 1800
     config:
       AETHER_LINK_URL: http://aether-link:8000
       QUEUES_CONSUMER_API_URL: http://carrot:8001
@@ -1424,12 +1430,18 @@ components:
       FIWARE_SCOPE: /
       QUEUES_CONSUMER_USER_ID: <CHANGE_ME>  # user_id de la cuenta de servicio de integraciones
       CALENDAR_TIMEZONE: <CHANGE_ME>      # IANA, e.g. Europe/Madrid
+      # Deteccion de anomalias de la ocupacion de cada zona (CronJob anomalies). Marca isOutlier
+      # en la propia CrowdFlowZone. rolling_hours 2: un pico de una hora marca tambien las dos
+      # siguientes, mientras sigue dentro de la ventana de volatilidad.
+      ANOMALY_CONFIG: '{"CrowdFlowZone": {"measures": ["occupancy"], "cadence_minutes": 60, "calendar": ["hour", "weekday"], "rolling_hours": 2}}'
       HOLIDAYS_COUNTRY: <CHANGE_ME>       # ISO, e.g. ES
       # HOLIDAYS_SUBDIVISION: <CHANGE_ME> # e.g. AS
       # WEATHER_LAT: <CHANGE_ME>          # sin las dos, la lluvia no entra en el modelo
       # WEATHER_LON: <CHANGE_ME>
     secrets: {}
     #   QUEUES_CONSUMER_API_TOKEN: ""   # TODO: set (the same /publish secret carrot has)
+    #   ANOMALY_STATE_HMAC_KEY: ""      # TODO: set. Firma el modelo de anomalias guardado: sin
+    #                                   # ella no se carga el del dia anterior y no aprende nunca
     #   STORAGE_TYPE s3:    AWS_S3_ACCESS_ID / AWS_S3_SECRET_KEY
     #   STORAGE_TYPE local: LOCAL_ACCESS_ID / LOCAL_SECRET_KEY
 
