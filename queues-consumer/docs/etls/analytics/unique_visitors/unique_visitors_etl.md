@@ -106,7 +106,7 @@ Es el caso manual más habitual: lanzas el ETL para una lista concreta de entida
     `"Biweekly"` o `"Monthly"`. Por defecto, `"Daily"`.
 -   `user_id`: identificador de la persona usuaria que inicia la petición. Se usa para recuperar las
     claves de API y las clasificaciones de visitante correctas.
--   `force`: booleano opcional para forzar la reejecución aunque el ETL ya se haya ejecutado con
+-   `force`: booleano opcional para forzar la reejecución aunque el ETL ya haya salido bien con
     estos parámetros. Por defecto, `false`.
 
 #### B) Disparo para todas las entidades (`unique_visitors_all_job`)
@@ -134,8 +134,9 @@ asociadas.
 -   `organization_id`: opcional. Si se indica, restringe la ejecución a las entidades de esa
     organización concreta en lugar de procesarlas todas. Útil para relanzar a mano un ETL fallido de
     un solo tenant.
--   `force`: opcional. Con `true`, se salta la comprobación de duplicados y vuelve a ejecutar cada
-    job individual aunque ya se hubiera ejecutado con los mismos parámetros. Por defecto, `false`.
+-   `force`: opcional. Con `true`, vuelve a ejecutar cada job individual aunque ya hubiera salido
+    bien con los mismos parámetros. Sin él, solo se repiten las ventanas que fallaron o se quedaron a
+    medias. Por defecto, `false`.
 
 **Ejemplo — relanzar para una sola organización, forzando la reejecución:**
 
@@ -173,6 +174,19 @@ periódica de Celery.
 -   **Base de datos**: la conexión se configura por variables de entorno.
 -   **Colas**: las tareas de Celery usan colas propias, definidas por
     `CROWD_QUEUE_UNIQUE_VISITORS_NAME` y `CROWD_QUEUE_UNIQUE_VISITORS_ALL_NAME`.
+
+### 2.4. Estado de cada ejecución
+
+Cada ventana se apunta en `etl_executions` con su estado: `started` al empezar, `success` si termina
+bien y `failed` si falla o no encuentra datos, con el motivo en `error`. Una ventana se salta si ya
+salió bien o si sigue en marcha; una que lleva en `started` más de `CROWD_ETL_STALE_RUNNING_MINUTES`
+minutos (45) se da por perdida y se repite. Las filas anteriores a este estado no lo tienen y cuentan
+como bien hechas. `CROWD_ETL_MAX_RETRIES` (0) añade reintentos dentro de la misma tarea, con una
+espera que crece desde `CROWD_ETL_RETRY_BACKOFF_SECONDS` (120) hasta
+`CROWD_ETL_RETRY_BACKOFF_MAX_SECONDS` (900).
+
+El disparo periódico pide una ventana nueva cada vez, así que una ventana que falla no se repite
+sola: hay que relanzarla a mano con las mismas fechas. Como quedó en `failed`, no hace falta `force`.
 
 ## 3. Pasos del ETL
 

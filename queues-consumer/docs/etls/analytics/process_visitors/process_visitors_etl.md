@@ -115,14 +115,15 @@ asociadas, troceado por horas.
 }
 ```
 
--   `start_date`: opcional. Inicio de la ventana de procesado (formato ISO 8601). Por defecto, hace
-    una hora.
+-   `start_date`: opcional. Inicio de la ventana de procesado (formato ISO 8601). Por defecto, las
+    últimas `CROWD_ETL_LOOKBACK_HOURS` horas (3).
 -   `end_date`: opcional. Fin de la ventana de procesado (formato ISO 8601). Por defecto, ahora.
 -   `organization_id`: opcional. Si se indica, restringe la ejecución a las entidades de esa
     organización concreta en lugar de procesarlas todas. Útil para relanzar a mano un ETL fallido de
     un solo tenant.
--   `force`: opcional. Con `true`, se salta la comprobación de duplicados y vuelve a ejecutar cada
-    job individual aunque ya se hubiera ejecutado con los mismos parámetros. Por defecto, `false`.
+-   `force`: opcional. Con `true`, vuelve a ejecutar cada job individual aunque ya hubiera salido
+    bien con los mismos parámetros. Sin él, solo se repiten las ventanas que fallaron o se quedaron a
+    medias. Por defecto, `false`.
 
 **Ejemplo — relanzar para una sola organización, forzando la reejecución:**
 
@@ -143,6 +144,20 @@ asociadas, troceado por horas.
 -   **Base de datos**: la conexión se configura por variables de entorno.
 -   **Colas**: la tarea de Celery usa una cola propia, que se puede definir con una variable de
     entorno como `CROWD_QUEUE_PROCESS_VISITORS_NAME`.
+
+### 2.3. Estado de cada ejecución
+
+Cada ventana se apunta en `etl_executions` con su estado: `started` al empezar, `success` si termina
+bien y `failed` si falla o no encuentra datos, con el motivo en `error`. Una ventana se salta si ya
+salió bien o si sigue en marcha; una que lleva en `started` más de `CROWD_ETL_STALE_RUNNING_MINUTES`
+minutos (45) se da por perdida y se repite. Las filas anteriores a este estado no lo tienen y cuentan
+como bien hechas. `CROWD_ETL_MAX_RETRIES` (0) añade reintentos dentro de la misma tarea, con una
+espera que crece desde `CROWD_ETL_RETRY_BACKOFF_SECONDS` (120) hasta
+`CROWD_ETL_RETRY_BACKOFF_MAX_SECONDS` (900).
+
+El disparo periódico pide cada hora las últimas `CROWD_ETL_LOOKBACK_HOURS` horas (3), así que una
+hora que falla o se corta se vuelve a intentar en los dos disparos siguientes. Repetir una hora no
+duplica datos: el resultado se publica con la hora de la ventana y Timescale guarda el primero.
 
 ## 3. Pasos del ETL
 
