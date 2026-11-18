@@ -8,4 +8,7 @@ export default {
   'help.noResultsHint': 'Prueba con otras palabras o escribe a soporte.',
   'help.index': 'Contenido',
   'help.faq': 'Preguntas frecuentes',
+  'help.manual.download': 'Descargar manual (PDF)',
+  'help.manual.notAvailable':
+    'El manual todavía no está disponible. Consulta con quien administra la plataforma.',
 } as const

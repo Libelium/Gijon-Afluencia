@@ -1524,24 +1524,16 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/V1/documentation/{lang}",
+              "raw": "{{baseUrl}}/V1/documentation",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "V1",
-                "documentation",
-                "{lang}"
-              ],
-              "variable": [
-                {
-                  "key": "lang",
-                  "value": "",
-                  "description": ""
-                }
+                "documentation"
               ]
             },
-            "description": "",
+            "description": "Returns the PDF stored at `documentation/manual-plataforma.pdf` in object storage as an attachment. No session required. Answers 404 until it has been uploaded.",
             "auth": {
               "type": "noauth"
             }

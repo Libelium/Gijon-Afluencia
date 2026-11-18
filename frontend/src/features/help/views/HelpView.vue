@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StateBlock from '@/components/StateBlock.vue'
+import { ApiError, errorMessage } from '@/api/http'
 import { t } from '@/i18n'
+import { fetchManual } from '../api/manual'
 import { FAQ, SECTIONS } from '../lib/content'
 import { filterFaq, filterSections } from '../lib/search'
+
+const MANUAL_FILE_NAME = 'manual-plataforma.pdf'
 
 /**
  * Ayuda de la aplicacion: un indice a la izquierda (fijo en escritorio) y una tarjeta por
@@ -33,11 +37,43 @@ function goTo(id: string) {
   heading.focus()
   heading.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
+
+const downloading = ref(false)
+const snack = reactive({ open: false, text: '' })
+
+async function downloadManual() {
+  downloading.value = true
+  try {
+    const url = URL.createObjectURL(await fetchManual())
+    const link = document.createElement('a')
+    link.href = url
+    link.download = MANUAL_FILE_NAME
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    snack.text = e instanceof ApiError && e.kind === 'notFound' ? t('help.manual.notAvailable') : errorMessage(e)
+    snack.open = true
+  } finally {
+    downloading.value = false
+  }
+}
 </script>
 
 <template>
   <div>
-    <PageHeader :title="t('help.title')" :subtitle="t('help.subtitle')" icon="mdi-help-circle-outline" />
+    <PageHeader :title="t('help.title')" :subtitle="t('help.subtitle')" icon="mdi-help-circle-outline">
+      <template #actions>
+        <VBtn
+          variant="tonal"
+          color="primary"
+          prepend-icon="mdi-download"
+          :loading="downloading"
+          @click="downloadManual"
+        >
+          {{ t('help.manual.download') }}
+        </VBtn>
+      </template>
+    </PageHeader>
 
     <div class="d-flex flex-wrap align-center ga-4 mb-6">
       <VTextField
@@ -151,6 +187,14 @@ function goTo(id: string) {
         </VCol>
       </VRow>
     </StateBlock>
+
+    <!-- Sin cierre automatico (WCAG 2.2.1), como el resto de avisos de la aplicacion. -->
+    <VSnackbar v-model="snack.open" color="error" :timeout="-1" location="bottom">
+      <div role="alert">{{ snack.text }}</div>
+      <template #actions>
+        <VBtn variant="text" @click="snack.open = false">{{ t('common.close') }}</VBtn>
+      </template>
+    </VSnackbar>
   </div>
 </template>
 

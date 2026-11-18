@@ -18,6 +18,9 @@ class HelpController extends Controller
 {
     const DOCS_FOLDER = '/platform-docs/';
 
+    // The platform manual, uploaded to the bucket by hand: there is a single one, in Spanish.
+    const MANUAL_PATH = 'documentation/manual-plataforma.pdf';
+
     /**
      * Checks if the folder given is a valid one from the documentation
      * and if the user has access to it
@@ -367,32 +370,19 @@ class HelpController extends Controller
         return response($resultIndex, 200)->header('Access-Control-Allow-Origin', '*')->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
     }
 
-    public function downloadDocumentation(string $lang): Response|StreamedResponse
+    public function downloadDocumentation(): Response|StreamedResponse
     {
-        $folder = 'documentation/' . $lang;
-
         $storage = Storage::disk('s3');
 
-        $files = $storage->files($folder);
-
-        if (empty($files)) {
-            $folder = 'documentation/en';
-            $files = $storage->files($folder);
-
-            if (empty($files)) {
-                return response('No documentation found for the specified language.', 404);
-            }
+        if (!$storage->exists(self::MANUAL_PATH)) {
+            return response('No documentation found.', 404);
         }
-
-        $firstFile = $files[0];
-        $filename = basename($firstFile);
 
         // Stream the file from S3 instead of loading it into memory:
         // the PDFs weigh tens of MB and response($contents) would duplicate
         // the string, exceeding PHP's memory_limit
-        return $storage->download($firstFile, $filename, [
+        return $storage->download(self::MANUAL_PATH, basename(self::MANUAL_PATH), [
             'Content-Type' => 'application/pdf',
-            'File-Name' => $filename
         ]);
     }
 }

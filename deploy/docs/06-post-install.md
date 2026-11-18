@@ -79,6 +79,33 @@ después de este paso.
 
 ---
 
+## 6.2 Manual de la plataforma (opcional, en cualquier momento)
+
+El botón **Descargar manual (PDF)** de la página «Ayuda» descarga el fichero
+`documentation/manual-plataforma.pdf` del bucket de la plataforma (`S3_BUCKET` en `config.env`; el
+mismo que `web-back` tiene en `AWS_S3_BUCKET`). Hasta que se sube, el botón avisa de que el manual
+todavía no está disponible. El endpoint (`GET /api/V1/documentation`) no pide sesión: no subas
+nada que no pueda leer cualquiera que conozca la dirección.
+
+Con MinIO, desde su consola:
+
+```bash
+kubectl -n minio port-forward svc/minio-console 19001:9001      # y abre http://localhost:19001
+kubectl -n minio get secret minio -o jsonpath='{.data.rootUser}' | base64 -d; echo
+kubectl -n minio get secret minio -o jsonpath='{.data.rootPassword}' | base64 -d; echo
+```
+
+En el bucket, crea la carpeta `documentation` y sube el PDF con el nombre exacto
+`manual-plataforma.pdf`. Con S3: `aws s3 cp manual-plataforma.pdf s3://<bucket>/documentation/manual-plataforma.pdf`.
+
+Para publicar una versión nueva, sube el fichero otra vez con el mismo nombre. Comprobación:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://api.<dominio>/api/V1/documentation   # 200; 404 si falta
+```
+
+---
+
 ## Listo
 
 Vuelve al [README.md](../README.md) de despliegue y ejecuta la fase `webback`. Cuando termine de
