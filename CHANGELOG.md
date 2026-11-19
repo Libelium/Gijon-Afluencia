@@ -10,6 +10,28 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Las zonas pueden publicar su contorno.** `zones.json` admite en cada zona un campo opcional
+  `polygon`, con los vértices `[lat, lon]` del área. Si lo tiene, la fusión y la ETL de los LIDAR
+  publican como `location` de la zona un `Polygon` de GeoJSON, con el anillo cerrado; si no, el
+  punto de `location`, como hasta ahora. `location` se sigue leyendo para lo demás. Un contorno
+  mal formado se descarta con un aviso y la zona sigue con su punto. La ficha de una entidad
+  dibuja el área cuando su ubicación es un contorno, y el mapa general la dibuja bajo su marcador.
+- **Nueva plantilla «Zona · Mapa de coropletas».** Pinta cada zona de afluencia con el color del
+  porcentaje de su aforo que está ocupado, de verde a rojo en tramos de 20 %, según la cifra de la
+  zona que combina sus LIDAR y sus sensores WiFi/BLE. El aforo máximo se toma de la zona o, si no
+  lo trae, de su gemela con la analítica del LIDAR (`maxCapacity`); sin ninguno, la zona sale en
+  gris. Encima se sitúan los dispositivos de cada zona (los que declara la fusión en
+  `lidarSerial` y `smartspotSerial`), con una tabla que los lista por zona. Muestra la ocupación
+  de ahora y, con una barra que se puede reproducir y pausar, la de cada hora o cada día del rango
+  elegido: por horas hasta un mes de rango, y por defecto por horas hasta una semana y por días a
+  partir de ahí. Al reproducir, los cambios de color muestran cómo sube y baja la gente. Arriba
+  resume la ocupación conjunta, cuántas zonas están al 80 % o más, la más llena y la
+  seleccionada. Solo se pintan las zonas cuya ubicación es su contorno (un polígono); las que solo
+  tienen un punto lo avisan y siguen, con su ocupación, en la lista de debajo del mapa, que es
+  también la forma de elegir zona con el teclado. El mapa es apaisado y cabe en la pantalla, con
+  el borde de cada zona en un tono más oscuro de su color. Los dispositivos se pueden ocultar, y el
+  navegador lo recuerda. El doble clic en una zona, o elegirla en la lista, la encuadra; la rueda
+  del ratón y los botones acercan con pasos más cortos que en el resto de mapas.
 - **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
   botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
   `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,
@@ -163,6 +185,9 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **El mapa general ya no pierde las entidades cuya ubicación es un área.** El filtro por área
+  visible del listado de entidades solo reconocía ubicaciones de tipo punto: una entidad con un
+  polígono no aparecía nunca en el mapa. Ahora un polígono cuenta por su primer vértice.
 - **Si el programador de tareas periódicas muere, el pod se reinicia.** Si celery beat terminaba,
   por ejemplo al perder su conexión tras un reinicio de PostgreSQL, se paraban todas las tareas
   periódicas (ETL de crowd, caché, alarmas de inactividad, conector MQTT) y el pod seguía `Running`

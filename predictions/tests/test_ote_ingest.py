@@ -29,6 +29,7 @@ from crowd_predictions.etl.ote.transform import (
     transitions,
     zone_metrics,
 )
+from crowd_predictions.zones_config import ZONES
 
 WINDOW_START = datetime(2026, 8, 11, 11, 0, tzinfo=timezone.utc)
 WINDOW_END = datetime(2026, 8, 11, 12, 0, tzinfo=timezone.utc)
@@ -822,3 +823,22 @@ def test_device_ids_that_are_in_no_zone_are_not_a_green_run():
     assert etl.device_metrics[unmapped]["lastFrameAt"] is not None   # it did report
     assert etl.zone_metrics == {}                            # and no zone claims it
     assert etl._window_is_trustworthy() is False
+
+
+def test_load_publishes_the_zone_outline_when_zones_json_has_one(monkeypatch):
+    output_dir = tempfile.mkdtemp()
+    try:
+        _segments, _track_rows, zones = _metrics(
+            [("A", _event("p1", second)) for second in (0, 10)])
+        monkeypatch.setattr(ZONES["Z01"], "polygon",
+                            [(10.001, 20.001), (10.001, 20.003), (10.003, 20.003)])
+        loader = OteLoad(zones, {}, WINDOW_START, output_dir=output_dir)
+
+        rows = {pd.read_csv(path)["urn"].iloc[0]: pd.read_csv(path)
+                for path in loader.export_csvs()}
+
+        zone_location = json.loads(rows["urn:ngsi-ld:CrowdFlowLidarZone:Z01"]["location"].iloc[0])
+        assert zone_location == {"type": "Polygon", "coordinates": [[
+            [20.001, 10.001], [20.003, 10.001], [20.003, 10.003], [20.001, 10.001]]]}
+    finally:
+        shutil.rmtree(output_dir, ignore_errors=True)

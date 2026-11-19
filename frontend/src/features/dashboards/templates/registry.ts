@@ -125,6 +125,15 @@ export const TEMPLATES: Record<TemplateKey, TemplateDescriptor> = {
     view: lazy(() => import('./lidar/LidarAnalyticsTemplate.vue')),
     datamodels: ['zone'],
   },
+  lidarChoropleth: {
+    key: 'lidarChoropleth',
+    family: 'lidar',
+    label: 'Zona · Mapa de coropletas',
+    description: 'Cada zona pintada según el porcentaje de su aforo, ahora o en cada hora de la última semana.',
+    icon: 'mdi-map-legend',
+    view: lazy(() => import('./lidar/ZoneChoroplethTemplate.vue')),
+    datamodels: ['zone'],
+  },
 }
 
 export const FAMILY_LABEL: Record<TemplateFamily, string> = {

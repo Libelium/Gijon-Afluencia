@@ -39,6 +39,13 @@ export const OCCUPANCY_LIGHT = ['#FBE7D2', '#F3C193', '#E68E53', '#C24A20', '#B3
 
 export const OCCUPANCY_DARK = ['#3F2E2A', '#6B4433', '#9C6440', '#D08B55', '#FF8A7A']
 
+/**
+ * Escala del mapa de coropletas, la habitual de verde a rojo: un color por cada tramo de 20 % del
+ * aforo. Es la misma en los dos temas porque se pinta sobre el mapa, y el porcentaje va siempre
+ * escrito al lado: el color nunca es el unico portador del dato.
+ */
+export const AFORO_SCALE = ['#1A9850', '#91CF60', '#FEE08B', '#FC8D59', '#D73027']
+
 /** Tinta, lineas, texto secundario y superficie de cada tema, en el mismo orden que Vuetify. */
 export const INK = { light: '#1C1830', dark: '#E9E6F2' }
 export const LINE = { light: '#E2DEEE', dark: '#2E2A3D' }
@@ -59,6 +66,26 @@ export function occupancyColor(ratio: number, isDark = false): string {
   if (!Number.isFinite(ratio)) return scale[0]
   const index = Math.round(Math.min(1, Math.max(0, ratio)) * (scale.length - 1))
   return scale[index]
+}
+
+/** Tramo 0..4 de la escala para una proporcion del aforo: 0-20 %, 20-40 %… y del 80 % en adelante. */
+export function aforoLevel(ratio: number): number {
+  if (!Number.isFinite(ratio) || ratio < 0) return 0
+  return Math.min(AFORO_SCALE.length - 1, Math.floor(ratio * AFORO_SCALE.length))
+}
+
+export function aforoColor(ratio: number): string {
+  return AFORO_SCALE[aforoLevel(ratio)]
+}
+
+/** El mismo color mezclado con negro: `amount` 0 lo deja igual y 1 lo vuelve negro. */
+export function darken(hex: string, amount: number): string {
+  const value = hex.replace('#', '')
+  const mix = Math.min(1, Math.max(0, amount))
+  return `#${[0, 2, 4]
+    .map((i) => Math.round(parseInt(value.slice(i, i + 2), 16) * (1 - mix)).toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase()}`
 }
 
 function toLinear(component: number): number {

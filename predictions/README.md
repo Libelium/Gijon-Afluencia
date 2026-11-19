@@ -45,7 +45,11 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   **filtra por este registro**, así que un `zones.json` que falte es un fallo duro y nunca un valor
   por defecto: un registro vacío se parece demasiado a una ejecución correcta que no publicó nada.
   El formato no admite aforo máximo ni porcentaje de ocupación: un aforo que nadie ha medido es un
-  número que parece oficial y es inventado.
+  número que parece oficial y es inventado. Cada zona puede llevar su contorno en `polygon`, una
+  lista de vértices `[lat, lon]`: si lo tiene, es lo que la zona publica como `location` (un
+  `Polygon` de GeoJSON, con el anillo cerrado) y los mapas pintan el área; si no, publica el punto de
+  `location`. Un contorno mal formado se descarta con un aviso en el log y la zona sigue con su
+  punto.
 - `lidar_estimation.py` — recuento por zona según tres casos (`classify_zone_case`):
   - **mixto** (LIDAR + Smart Spot): manda el LIDAR cuando tiene lectura en la ventana. La señal de
     Smart Spot se reporta aparte como `smartspot_delta_pct` (diagnóstico: cuánto se desvía del

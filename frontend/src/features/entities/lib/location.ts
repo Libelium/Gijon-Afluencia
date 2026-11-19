@@ -1,3 +1,4 @@
+import { polygonLatLngs } from '@/features/map/lib/geometry'
 import { formatNumber } from '@/lib/format'
 import type { Entity, Geolocation, Measure } from '@/types'
 
@@ -10,6 +11,13 @@ export interface EntityLocation {
   source: LocationSource
   /** Medida de la que se ha leido, cuando no venia en la ficha de la entidad. */
   measureId?: string
+  /** Contorno [lat, lon] si la ubicacion es un area; entonces lat y lon son su centro. */
+  polygon?: [number, number][]
+}
+
+function withPolygon(point: { lat: number; lon: number }, geo: Geolocation | null | undefined) {
+  const polygon = polygonLatLngs(geo)
+  return polygon ? { ...point, polygon } : point
 }
 
 const GEO_ID = /^(location|geolocation|position|coordinates)$/i
@@ -119,15 +127,16 @@ export function resolveEntityLocation(
   measures: Measure[] = [],
 ): EntityLocation | null {
   const own = geoJsonLatLon(entity?.geolocation)
-  if (own) return { ...own, source: 'entity' }
+  if (own) return { ...withPolygon(own, entity?.geolocation), source: 'entity' }
 
   const exact = measures.filter((m) => GEO_ID.test(m.id))
   const hinted = measures.filter(
     (m) => !GEO_ID.test(m.id) && (GEO_HINT.test(m.id) || GEO_HINT.test(m.sourceName ?? m.name)),
   )
   for (const measure of [...exact, ...hinted]) {
-    const point = geoJsonLatLon(parseGeoJson(measure.value))
-    if (point) return { ...point, source: 'measure', measureId: measure.id }
+    const geo = parseGeoJson(measure.value)
+    const point = geoJsonLatLon(geo)
+    if (point) return { ...withPolygon(point, geo), source: 'measure', measureId: measure.id }
   }
 
   const lat = numberFromMeasure(measures, LATITUDE_ID)

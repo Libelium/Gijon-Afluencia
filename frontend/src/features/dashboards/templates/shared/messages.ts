@@ -25,4 +25,9 @@ export default {
   'templates.common.levelVeryHigh': 'Muy alto',
   'templates.common.flowPause': 'Detener el movimiento',
   'templates.common.flowResume': 'Mover los recorridos',
+  'templates.common.timeline': 'Momento que muestra el mapa',
+  'templates.common.timelineHour': 'Paso que muestra el mapa',
+  'templates.common.timelinePlay': 'Reproducir',
+  'templates.common.timelinePause': 'Pausar',
+  'templates.common.timelineNoHours': 'No hay lecturas en este rango',
 } as const
