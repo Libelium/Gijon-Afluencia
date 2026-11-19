@@ -60,19 +60,21 @@ class CrowdFlowsMunicipalityAll(Job):
         from tasks.crowd import flows_municipality_job
 
         current_date = datetime.now()
-        
+
         if self.request.start_date:
             start_date = self.request.start_date
         else:
-            start_date = current_date - timedelta(hours=1)
+            start_date = current_date - timedelta(
+                hours=settings.CROWD_ETL_LOOKBACK_HOURS
+            )
 
         if self.request.end_date:
             end_date = self.request.end_date
         else:
             end_date = current_date
-            
+
         start_date = start_date.replace(minute=0, second=0, microsecond=0)
-        
+
         end_date = end_date.replace(minute=0, second=0, microsecond=0)
 
         while start_date < end_date:
@@ -116,11 +118,15 @@ class CrowdFlowsMunicipalityAll(Job):
                                 f"Organization {self.request.organization_id} admin has no readable crowd entities"
                             )
                     else:
-                        logging.warning(f"Organization {self.request.organization_id} not found")
+                        logging.warning(
+                            f"Organization {self.request.organization_id} not found"
+                        )
                         return None
 
                 for user in users:
-                    logging.info(f"Starting crowd flows municipality for user {user.id}")
+                    logging.info(
+                        f"Starting crowd flows municipality for user {user.id}"
+                    )
                     entities = self.__get_user_crowd_entities(user.id)
 
                     if len(entities) > 0:

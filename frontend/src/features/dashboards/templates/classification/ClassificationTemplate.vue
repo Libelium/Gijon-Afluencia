@@ -117,7 +117,7 @@ function shareText(share: number | null): string {
     <template #controls>
       <VSelect
         v-model="data.categoryIds.value"
-        :items="data.measureItems.value"
+        :items="data.categoryItems.value"
         :label="t('templates.classification.categoriesLabel')"
         multiple
         chips

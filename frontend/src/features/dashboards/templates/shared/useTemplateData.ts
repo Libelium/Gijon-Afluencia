@@ -7,7 +7,9 @@ import type { Measure } from '@/types'
 import { DEFAULT_RANGE, resolveRange, type DateRange, type RangePresetId } from '../../lib/range'
 import { loadTemplateEntities, locateEventEntities, pointsOf } from './entities'
 import {
+  categoryItemsFor,
   categoryLabelOf,
+  categoryOptions,
   detectCategories,
   isCumulative,
   loadMeasures,
@@ -45,6 +47,8 @@ export interface UseTemplateData {
   cumulative: ComputedRef<boolean>
   /** Medidas que forman el reparto. Escribible; vacio = usar las detectadas. */
   categoryIds: Ref<string[]>
+  /** Lo que se puede elegir como categoria: partes de un total, y con algo elegido, solo de su reparto. */
+  categoryItems: ComputedRef<MeasureOption[]>
   /** Categorias efectivas: las elegidas a mano si hay, y si no las detectadas. */
   categories: ComputedRef<Category[]>
   /** Rango: preajuste y dias elegidos a mano, escribibles, y ventana resuelta. */
@@ -92,6 +96,9 @@ export function useTemplateData(options: UseTemplateDataOptions): UseTemplateDat
   })
 
   const measureItems = computed(() => measureOptions(allMeasures.value))
+
+  const categoryChoices = computed(() => categoryOptions(allMeasures.value))
+  const categoryItems = computed(() => categoryItemsFor(categoryChoices.value, categoryIds.value))
 
   const cumulative = computed(() => (measureId.value ? isCumulative(measureId.value) : false))
 
@@ -189,6 +196,7 @@ export function useTemplateData(options: UseTemplateDataOptions): UseTemplateDat
     measureId,
     cumulative,
     categoryIds,
+    categoryItems,
     categories,
     preset,
     custom,

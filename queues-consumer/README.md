@@ -210,7 +210,16 @@ curl -X POST localhost:20430/publish -H 'Content-Type: application/json' \
 ```
 
 Las tareas periódicas las programa **celery beat** contra la propia base de datos
-(`sqlalchemy_celery_beat`), y se activan con `LAUNCH_CELERY_SCHEDULER=true`.
+(`sqlalchemy_celery_beat`), y se activan con `LAUNCH_CELERY_SCHEDULER=true`. Su conexión comprueba
+que sigue viva antes de usarse y se renueva cada `CELERY_BEAT_DB_POOL_RECYCLE_SECONDS` (300), para
+sobrevivir a un reinicio de PostgreSQL.
+
+`main.py` vigila sus procesos de Celery (workers y beat): si uno termina, para los demás y sale con
+código 1 para que Kubernetes reinicie el pod, en lugar de dejarlo `Running` sin ellos. Al recibir
+SIGTERM se lo pasa a Celery, que termina las tareas en curso, y mata lo que quede a los
+`SHUTDOWN_GRACE_SECONDS` (25, por debajo de los 30 s de gracia del pod). Cada arranque da a sus
+workers un nombre propio (`worker@<host>-<instancia>-<n>`, con `POD_NAME` si está definida), así que
+el pod viejo y el nuevo de un despliegue no se llaman igual.
 
 ## Estructura
 

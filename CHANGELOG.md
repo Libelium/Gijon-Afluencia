@@ -17,24 +17,38 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   coma decimal, fechas `2026-11-17 13:00` en la zona del panel, que se indica en la cabecera, y
   tildes correctas. En rangos largos los valores son los agregados que pinta el gráfico (medias
   por hora o por día), no las lecturas una a una.
+- **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
+  botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
+  `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,
+  el botón avisa de que el manual todavía no está disponible. Cómo subirlo está en
+  `deploy/docs/06-post-install.md`.
 - **Las medidas se muestran en castellano y explican qué miden.** En «Medidas actuales» de cada
-  entidad, el nombre sale traducido y, debajo, una descripción cuando el nombre no basta (unidades,
-  ventana de tiempo, cómo se clasifica a residentes y turistas…). Las que se explican solas, como
-  la latitud, no llevan descripción. El identificador de la variable se ve al pasar el ratón por
-  el nombre y sigue en el histórico. Los mismos nombres salen en los dashboards, en el alta de
+  entidad, el nombre sale traducido y lleva un icono de información. Al pasar el ratón por él, o al
+  llegar con el teclado, explica qué es la medida, también las que se explican solas, como la
+  latitud, y cómo se calcula cuando hay un cálculo detrás (la ocupación de la zona, las
+  permanencias del LIDAR, los visitantes únicos y su periodo…). Las descripciones de
+  las medidas que se confundían entre sí dicen en qué se diferencian. El identificador de la
+  variable sigue en el histórico. Los mismos nombres salen en los dashboards, en el alta de
   gráficos y en las alarmas. Cubre las medidas de afluencia, la zona fusionada, la previsión, los
-  LIDAR y los Smart Spot, también cuando llegan con su nombre en bruto (`r_cfo_countm`). Solo se
-  describe lo que se ha comprobado en el código que publica cada dato; las variables sin productor
-  en el repositorio se traducen pero no se describen.
-- **Los modelos de datos de afluencia tienen nombre en castellano.** El listado de entidades, su
-  ficha, sus filtros y el mapa dicen «Zona de afluencia», «Previsión de afluencia», «Visitas y
-  recorridos», «Conteos WiFi/BLE», «Detecciones WiFi/BLE», «Zona medida por LIDAR», «Conteos por
-  LIDAR» y «Estado de los LIDAR» en lugar del nombre técnico, que se ve al pasar el ratón. Los
+  LIDAR y los Smart Spot, también cuando llegan con su nombre en bruto (`r_cfo_countm`). Los
+  cálculos están comprobados en el código que publica cada dato; las variables sin productor en el
+  repositorio solo se describen por lo que dice su nombre. Los textos evitan siglas y nombres
+  técnicos: están escritos para quien no es técnico.
+- **Los modelos de datos de afluencia tienen nombre en castellano y dicen de dónde salen sus
+  datos.** El listado de entidades, su ficha, sus filtros y el mapa dicen «Zona de afluencia
+  (combinada)», «Zona de afluencia (solo LIDAR)», «Previsión de afluencia», «Visitas y recorridos»,
+  «Conteos WiFi/BLE (por sensor)», «Detecciones WiFi/BLE (por sensor)», «Conteos por
+  LIDAR (por sensor)» y «Estado de los LIDAR» en lugar del nombre técnico. Cada uno explica qué es
+  y cómo se obtiene: a la vista en la ficha, y con un icono de información en el listado y el
+  mapa, que también se abre con el teclado y da el nombre técnico. Queda claro, por ejemplo, que
+  hay una sola zona combinada por zona, tenga LIDAR, sensores WiFi/BLE o los dos, y que
+  la de solo LIDAR es otra entidad. Los textos están escritos para quien no es técnico. Los
   modelos que no son de afluencia conservan su nombre. Las ayudas que mandaban buscar las
   entidades terminadas en `_CFE` o `_CFO` dicen además cómo se llaman ahora en el listado.
 - **Los valores fijos de la zona fusionada se leen en castellano.** Los sensores de la zona salen
-  como «LIDAR y WiFi/BLE», «Solo LIDAR» o «Solo WiFi/BLE», y la fiabilidad de la cifra como
-  «Medida por LIDAR», «Estimada con WiFi/BLE» o «Estimada con WiFi/BLE, sin calibrar». Antes se
+  como «LIDAR y WiFi/BLE», «Solo LIDAR» o «Solo WiFi/BLE», y la fiabilidad de la cifra
+  como «Contada por LIDAR», «Estimada con WiFi/BLE» o «Estimada con WiFi/BLE, sin
+  ajustar». Antes se
   mostraban los valores internos (`lidar_only`, `measured`…) y el indicador de fiabilidad no los
   reconocía.
 - **Rango de fechas personalizado en los dashboards.** Además de los rangos relativos, el selector
@@ -123,6 +137,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **`GET /V1/documentation` sustituye a `GET /V1/documentation/{lang}`.** El manual está en un
+  solo idioma: el endpoint ya no recibe el idioma ni busca el primer fichero de
+  `documentation/<idioma>/` (con `en` de respaldo), sino que sirve siempre
+  `documentation/manual-plataforma.pdf`. OpenAPI y Postman están actualizados.
 - **Los recorridos del mapa de tránsitos llevan el color de la marca.** Recorridos y puntos dejan
   la escala de ocupación, cuyo nivel más bajo apenas se veía sobre el mapa, y toman el color
   principal de la personalización de la organización, en una escala de menos a más volumen que
@@ -152,6 +170,35 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Si el programador de tareas periódicas muere, el pod se reinicia.** Si celery beat terminaba,
+  por ejemplo al perder su conexión tras un reinicio de PostgreSQL, se paraban todas las tareas
+  periódicas (ETL de crowd, caché, alarmas de inactividad, conector MQTT) y el pod seguía `Running`
+  sin que nadie se enterara. Ahora `main.py` vigila workers y beat y, si uno termina, sale para que
+  Kubernetes reinicie el pod; la conexión del beat se comprueba antes de usarse. Al parar el pod,
+  Celery termina las tareas en curso en lugar de morir a los 30 s, y cada arranque da a sus workers
+  un nombre propio.
+- **Una hora de visitas o flujos que falla ya no queda como hueco para siempre.** Cada ejecución
+  de las ETL de crowd se apuntaba en `etl_executions` antes de lanzarse y no se actualizaba nunca:
+  si fallaba o se cortaba (un reinicio del pod, una caída de RabbitMQ), esa hora contaba como hecha
+  y no se volvía a calcular. Ahora cada ejecución guarda su estado (`started`, `success` o
+  `failed`, con el motivo) y el disparo periódico de visitas y flujos vuelve a pedir las tres
+  últimas horas: las que salieron bien se saltan y las demás se repiten. Repetir no duplica datos.
+  En visitantes únicos y clasificación, una ventana fallida se relanza a mano sin `force`. La
+  conexión a la base de datos ya no se queda ocupada durante toda la ETL. Lleva una migración:
+  `etl_executions` gana `status`, `error` y `finished_at`.
+- **`CROWD_UNIQUE_VISITORS_INTERVAL` ya se lee de su propia variable.** Leía la de clasificación.
+  Sin efecto hoy: el despliegue no fija ninguna de las dos.
+- **El selector «Categorías» de las plantillas de clasificación solo junta partes de un mismo
+  total.** La plantilla suma las categorías y da el porcentaje de cada una, pero el selector
+  ofrecía cualquier medida numérica: coordenadas, duraciones, la ocupación… Con la duración máxima
+  y la mínima de la visita daba un «Total del periodo» en segundos y un reparto del 53 %. Ahora
+  solo ofrece personas u objetos contados. Las partes de un mismo reparto se juntan: por tipo de
+  visitante en los Smart Spot y en las entidades de visitas y recorridos, y por clase en los
+  LIDAR. Los demás recuentos (los totales, como «Recuento», y las ventanas de tiempo, como los
+  dispositivos detectados en el periodo corto, medio y largo) se eligen de uno en uno, porque
+  juntos contarían a la misma gente dos veces. En cuanto se elige una categoría, quedan solo las
+  que se pueden juntar con ella; para cambiar se vacía la selección. Duraciones, estadísticos,
+  ocupación y coordenadas ya no se ofrecen. Lo que se detecta solo no cambia.
 - **Un reinicio del servidor ya no borra tablas al arrancar el backend.** El script de arranque
   del despliegue (`migration.sh`) deshacía el último lote de migraciones cuando una fallaba. Tras
   un reinicio del nodo las migraciones corrían antes de que PostgreSQL aceptara conexiones, y la

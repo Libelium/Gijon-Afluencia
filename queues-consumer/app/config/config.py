@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     APNS_ENVIRONMENT: str = os.getenv("APNS_ENVIRONMENT", "sandbox")
     WORKER_TYPE: WorkerType = WorkerType(os.getenv("WORKER_TYPE", "universal"))
     LAUNCH_UVICORN: bool = os.getenv("LAUNCH_UVICORN", "true") == "true"
+    # What main.py gives celery to stop in order on SIGTERM, under the pod's 30 s grace period.
+    SHUTDOWN_GRACE_SECONDS: float = float(os.getenv("SHUTDOWN_GRACE_SECONDS", 25))
     LAUNCH_CELERY_SCHEDULER: bool = (
         os.getenv("LAUNCH_CELERY_SCHEDULER", "true") == "true"
     )
@@ -101,7 +103,21 @@ class Settings(BaseSettings):
         os.getenv("CROWD_CLASSIFICATION_INTERVAL", 60 * 60 * 24)
     )
     CROWD_UNIQUE_VISITORS_INTERVAL: int = int(
-        os.getenv("CROWD_CLASSIFICATION_INTERVAL", 60 * 60 * 24)
+        os.getenv("CROWD_UNIQUE_VISITORS_INTERVAL", 60 * 60 * 24)
+    )
+    # Hourly crowd ETLs re-dispatch the last N windows each tick; done ones are skipped.
+    CROWD_ETL_LOOKBACK_HOURS: int = int(os.getenv("CROWD_ETL_LOOKBACK_HOURS", 3))
+    # In-task retries with backoff; 0 leaves retries to the lookback re-dispatch.
+    CROWD_ETL_MAX_RETRIES: int = int(os.getenv("CROWD_ETL_MAX_RETRIES", 0))
+    CROWD_ETL_RETRY_BACKOFF_SECONDS: int = int(
+        os.getenv("CROWD_ETL_RETRY_BACKOFF_SECONDS", 120)
+    )
+    CROWD_ETL_RETRY_BACKOFF_MAX_SECONDS: int = int(
+        os.getenv("CROWD_ETL_RETRY_BACKOFF_MAX_SECONDS", 15 * 60)
+    )
+    # `started` older than this is a lost job; must be < the hourly beat interval.
+    CROWD_ETL_STALE_RUNNING_MINUTES: int = int(
+        os.getenv("CROWD_ETL_STALE_RUNNING_MINUTES", 45)
     )
     WEB_FRONT_URL: str = os.getenv("WEB_FRONT_URL", "")
     DATA_CACHE_CROWD_PROCESS_INTERVAL: int = int(
@@ -192,6 +208,9 @@ class Settings(BaseSettings):
     SMS_AWS_REGION: str = os.getenv("SMS_AWS_REGION", "eu-south-2")
     METRICS_PORT: int = int(os.getenv("METRICS_PORT", 8000))
     PROMETHEUS_MULTIPROC_DIR: str = os.getenv("PROMETHEUS_MULTIPROC_DIR", "/tmp/prometheus_multiproc")
+    CELERY_BEAT_DB_POOL_RECYCLE_SECONDS: int = int(
+        os.getenv("CELERY_BEAT_DB_POOL_RECYCLE_SECONDS", 5 * 60)
+    )
 
 
 settings = Settings()

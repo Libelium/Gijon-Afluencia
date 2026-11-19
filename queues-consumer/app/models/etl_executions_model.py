@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, JSON, Date
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, JSON, Date, Text
 from sqlalchemy.sql import func
 from db.session import Base
 
@@ -11,6 +11,9 @@ class ETLExecution(Base):
     user_id = Column(Integer, nullable=True)
     execution_date = Column(Date, nullable=True)
     params = Column(JSON, nullable=True)
+    status = Column(String(20), nullable=True)
+    error = Column(Text, nullable=True)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
