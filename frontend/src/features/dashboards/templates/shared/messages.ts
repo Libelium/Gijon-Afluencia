@@ -25,4 +25,7 @@ export default {
   'templates.common.levelVeryHigh': 'Muy alto',
   'templates.common.flowPause': 'Detener el movimiento',
   'templates.common.flowResume': 'Mover los recorridos',
+  'templates.common.autoRefreshLabel': 'Auto-refresco',
+  'templates.common.autoRefreshOff': 'Desactivado',
+  'templates.common.autoRefreshEvery': 'Cada {minutes} min',
 } as const

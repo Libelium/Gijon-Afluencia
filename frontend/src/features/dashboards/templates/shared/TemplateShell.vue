@@ -3,8 +3,9 @@ import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import RangeSelector from '../../components/RangeSelector.vue'
 import type { DateRange, RangePresetId } from '../../lib/range'
+import { AUTO_REFRESH_INTERVALS, useAutoRefresh } from './useAutoRefresh'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     preset: RangePresetId
     custom?: DateRange | null
@@ -30,6 +31,17 @@ const emit = defineEmits<{
   refresh: []
   retry: []
 }>()
+
+// Pausa el auto-refresco mientras carga (no solapar peticiones) y con un rango fijo (no cambia).
+const { minutes: autoRefresh } = useAutoRefresh(
+  () => emit('refresh'),
+  () => Boolean(props.loading) || props.custom != null,
+)
+
+const autoRefreshItems = AUTO_REFRESH_INTERVALS.map((minutes) => ({
+  value: minutes,
+  title: minutes === 0 ? t('templates.common.autoRefreshOff') : t('templates.common.autoRefreshEvery', { minutes }),
+}))
 </script>
 
 <template>
@@ -46,6 +58,20 @@ const emit = defineEmits<{
         <!-- Selectores propios de cada plantilla: medida, categorias… -->
         <slot name="controls" />
         <VSpacer />
+        <!-- Opt-in y con «Desactivado» por defecto: contenido que se actualiza solo (WCAG 2.2.2). -->
+        <VSelect
+          v-model="autoRefresh"
+          :items="autoRefreshItems"
+          :aria-label="t('templates.common.autoRefreshLabel')"
+          :title="t('templates.common.autoRefreshLabel')"
+          prepend-inner-icon="mdi-autorenew"
+          density="compact"
+          variant="outlined"
+          hide-details
+          min-width="160"
+          max-width="190"
+          class="flex-grow-0"
+        />
         <VBtn
           icon="mdi-refresh"
           variant="tonal"
