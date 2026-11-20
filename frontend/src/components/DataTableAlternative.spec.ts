@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import vuetify from '@/plugins/vuetify'
 import DataTableAlternative from './DataTableAlternative.vue'
+
+const { downloadCsv } = vi.hoisted(() => ({ downloadCsv: vi.fn() }))
+vi.mock('@/lib/csv', async (original) => ({ ...(await original<typeof import('@/lib/csv')>()), downloadCsv }))
 import type { AlternativeTable } from '@/features/dashboards/charts/a11y'
 
 /**
@@ -83,5 +87,24 @@ describe('DataTableAlternative', () => {
       global,
     })
     expect(wrapper.find('summary').text()).toContain('Ver los puntos del mapa en una tabla')
+  })
+})
+
+describe('DataTableAlternative, descarga', () => {
+  it('sin datos que descargar no ofrece el botón', () => {
+    const wrapper = mount(DataTableAlternative, { props: { title: 'Aforo', table: TABLE }, global: { plugins: [vuetify] } })
+    expect(wrapper.text()).not.toContain('Descargar CSV')
+  })
+
+  it('descarga todas las filas, no solo las que enseña la tabla, con un nombre accesible que contiene el texto visible', async () => {
+    const download = { columns: ['Fecha y hora (Europe/Madrid)', 'Entrada'], rows: [['2026-01-01 00:00', 5], ['2026-01-01 01:00', 7], ['2026-01-01 02:00', 9]] }
+    const wrapper = mount(DataTableAlternative, {
+      props: { title: 'Aforo', table: { ...TABLE, download } },
+      global: { plugins: [vuetify] },
+    })
+    const button = wrapper.findAll('button').find((b) => b.text().includes('Descargar CSV'))!
+    expect(button.attributes('aria-label')).toBe('Descargar CSV: datos de Aforo')
+    await button.trigger('click')
+    expect(downloadCsv).toHaveBeenCalledWith(expect.stringMatching(/^aforo_\d{4}-\d{2}-\d{2}\.csv$/), download.columns, download.rows)
   })
 })

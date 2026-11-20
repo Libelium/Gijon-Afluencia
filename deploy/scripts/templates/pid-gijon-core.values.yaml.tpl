@@ -357,6 +357,9 @@ components:
     secrets:
       # Firma los POST /publish a carrot (SEC-017).
       QUEUES_CONSUMER_API_TOKEN: "${QUEUES_CONSUMER_API_TOKEN}"
+      # Firma el modelo de anomalias guardado (SEC-019): sin ella no se carga el del dia
+      # anterior y el CronJob anomalies no aprende nunca.
+      ANOMALY_STATE_HMAC_KEY: "${ANOMALY_STATE_HMAC_KEY}"
       AWS_S3_ACCESS_ID: "${S3_ACCESS_KEY}"
       AWS_S3_SECRET_KEY: "${S3_SECRET_KEY}"
       LOCAL_ACCESS_ID: "${MINIO_ACCESS_KEY}"

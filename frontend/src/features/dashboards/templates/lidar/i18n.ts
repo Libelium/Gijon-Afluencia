@@ -246,6 +246,7 @@ export default {
   'dashboards.lidar.analytics.trend': 'Evolución de la ocupación',
   'dashboards.lidar.analytics.trendMean': 'Media',
   'dashboards.lidar.analytics.trendMax': 'Máximo',
+  'dashboards.lidar.analytics.anomalies': 'Anomalía',
   'dashboards.lidar.analytics.byHour': 'Media por hora del día',
   'dashboards.lidar.analytics.byWeekday': 'Media por día de la semana',
   'dashboards.lidar.analytics.profileWindow': 'Los perfiles por hora y por día se calculan sobre los últimos {days} días del rango: la consulta horaria no admite más puntos.',

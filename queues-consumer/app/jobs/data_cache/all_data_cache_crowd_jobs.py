@@ -75,6 +75,15 @@ class DataCacheCrowdAll(Job):
 
         end_date = end_date.replace(minute=0, second=0, microsecond=0)
 
+        # Periodic run: also re-read the closed hours of the lookback window.
+        # Timescale only keeps what arrived after each was cached (the rest was
+        # deleted), so these runs are cheap and merge into the existing CSV.
+        sweep_until = start_date
+        if not self.request.start_date:
+            start_date = start_date - timedelta(
+                hours=max(settings.DATA_CACHE_CROWD_LOOKBACK_HOURS, 0)
+            )
+
         while start_date < end_date:
             next_date = start_date + timedelta(hours=1)
 
@@ -83,7 +92,8 @@ class DataCacheCrowdAll(Job):
                 entities=entities,
                 start_date=start_date.isoformat(),
                 end_date=next_date.isoformat(),
-                force=self.request.force,
+                # An already-run hour is skipped by the execution guard unless forced
+                force=self.request.force or start_date < sweep_until,
             )
 
             logging.info(

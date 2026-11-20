@@ -42,6 +42,21 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   elegida se marca con una línea fina y discontinua. El mapa es apaisado y cabe en la pantalla; el
   doble clic en una zona, o elegirla en la lista, la encuadra, y la rueda del ratón y los botones
   acercan con pasos más cortos que en el resto de mapas.
+- **Detección de anomalías en la ocupación de las zonas.** El módulo de anomalías existía pero no
+  estaba enganchado a nada: nadie le daba datos, no se ejecutaba y su resultado no llegaba a la
+  plataforma. Ahora un CronJob diario (`anomalies`) lee la ocupación por hora de cada zona en los
+  últimos días ya cerrados, la puntúa con un modelo que aprende lo normal de cada zona para cada hora
+  y día de la semana, sin umbrales fijos, y publica `isOutlier` (0/1) en la propia zona. En la
+  analítica de zona LIDAR, la evolución de la ocupación marca las horas anómalas como puntos, y la
+  medida «Hora anómala» se explica en la ficha de la zona. Necesita `ANOMALY_STATE_HMAC_KEY` en el
+  despliegue para que el modelo aprenda de un día para otro.
+- **Descargar en CSV los datos de cada gráfico.** Junto a «Ver los datos en una tabla», cada
+  gráfico de los paneles y las plantillas, y el histórico de una medida, ofrece «Descargar CSV»
+  con los mismos datos que dibuja, todas las filas aunque la tabla en pantalla se recorte. El
+  fichero abre bien en una hoja de cálculo en castellano: columnas separadas por punto y coma,
+  coma decimal, fechas `2026-11-17 13:00` en la zona del panel, que se indica en la cabecera, y
+  tildes correctas. En rangos largos los valores son los agregados que pinta el gráfico (medias
+  por hora o por día), no las lecturas una a una.
 - **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
   botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
   `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,
@@ -162,6 +177,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **La clasificación de visitantes ya no carga la semana entera en memoria.** Los miércoles leía
+  de la caché los 7 días de detecciones de golpe en `generic-consumer`, que no tiene límite de
+  memoria y comparte nodo. Ahora lee hora a hora (`CROWD_CLASSIFICATION_BATCH_HOURS`), guarda solo
+  la primera y la última detección de cada visitante y día, y clasifica con las mismas reglas: el
+  resultado es el mismo. Con 3,4 millones de detecciones sintéticas, el pico de memoria baja de
+  unos 990 MB a 220 MB.
 - **`GET /V1/documentation` sustituye a `GET /V1/documentation/{lang}`.** El manual está en un
   solo idioma: el endpoint ya no recibe el idioma ni busca el primer fichero de
   `documentation/<idioma>/` (con `en` de respaldo), sino que sirve siempre
@@ -198,6 +219,25 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 - **El mapa general ya no pierde las entidades cuya ubicación es un área.** El filtro por área
   visible del listado de entidades solo reconocía ubicaciones de tipo punto: una entidad con un
   polígono no aparecía nunca en el mapa. Ahora un polígono cuenta por su primer vértice.
+- **La caché de crowd recoge las detecciones que llegan tarde y guarda todos sus campos.** Las filas
+  que llegaban a Timescale después de cachear su hora (por ejemplo, tras un atasco de colas) no
+  llegaban nunca a MinIO y se perdían de clasificación y visitantes únicos. Ahora cada ejecución
+  vuelve a leer las horas cerradas de las últimas 24 (`DATA_CACHE_CROWD_LOOKBACK_HOURS`) y añade al
+  CSV de cada hora las filas que no tenía; repetir una hora no duplica. Los CSV se escriben con las
+  mismas columnas y tipos para los dos firmware del Smart Spot, incluido `r_cfe_fields` (en
+  `fields`), y sin filas que no sean una detección. Un error del almacén que no sea «no existe» ya
+  no sobrescribe ni borra nada. **Volver a una versión anterior al nuevo lector de la caché no es
+  seguro**: no lee una ventana que mezcle ficheros de los dos formatos.
+- **Las detecciones de un bloque con una sola detección ya no se pierden.** El Smart Spot manda el
+  bloque de detecciones como lista o, si solo trae una, como un objeto; ese objeto se desmontaba en
+  sus claves y la detección se perdía en visitas, flujos y la caché de crowd. Ahora se lee de las
+  dos formas, también como texto JSON; un bloque vacío ya no deja una fila sin detección y una
+  detección sin hora propia toma la de la notificación.
+- **El lector de la caché de crowd ya no pierde filas al mezclar los dos formatos de columnas.** Los
+  ficheros guardan las detecciones del bloque con nombres en minúscula y las del firmware antiguo en
+  camelCase; al renombrar, un lote con las dos quedaba con columnas repetidas y clasificación y
+  visitantes únicos se quedaban sin filas. Ahora se juntan en el nombre camelCase. Las horas con
+  zona horaria también se leen: antes se descartaban.
 - **Si el programador de tareas periódicas muere, el pod se reinicia.** Si celery beat terminaba,
   por ejemplo al perder su conexión tras un reinicio de PostgreSQL, se paraban todas las tareas
   periódicas (ETL de crowd, caché, alarmas de inactividad, conector MQTT) y el pod seguía `Running`

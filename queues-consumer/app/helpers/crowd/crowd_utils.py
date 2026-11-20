@@ -1,4 +1,5 @@
 import ast
+import json
 import pandas as pd
 import dateutil.parser
 from config.logging import appLogging as logging
@@ -7,11 +8,90 @@ from config.logging import appLogging as logging
 # it reaches the broker and Timescale under that name instead of cfeBlock: request and accept both.
 CFE_BLOCK_MEASURES = ["cfeBlock", "r_cfe_block"]
 
+CFE_BLOCK_PREFIX = "r_cfe_"
 
-def crowd_row_processing_lambda(df, measures_renames = None):
+# Older cache files wrote the Smart Spot cfeBlock rows (newer firmware) with
+# lowercase names and the loose-attribute rows (older firmware) in camelCase,
+# sometimes both in the same file. Readers fold them onto the camelCase name.
+CROWD_LEGACY_COLUMN_ALIASES = {
+    "entityid": "entityId",
+    "israndommac": "random",
+    "visitorid": "visitorId",
+    "detectiontype": "detectionType",
+    "visitortype": "visitorType",
+}
+
+# Fixed layout of the hourly CSVs written to data_cache/crowd. Same columns,
+# names and types whatever the firmware that produced the detection.
+CROWD_CACHE_SCHEMA_VERSION = 2
+CROWD_CACHE_INT_COLUMNS = ["detectionType", "random", "rssi", "period"]
+CROWD_CACHE_COLUMNS = [
+    "timeinstant",
+    "entityId",
+    "detectionType",
+    "random",
+    "visitorId",
+    "rssi",
+    "ssid",
+    "signature",
+    "fields",
+    "period",
+    "schemaVersion",
+]
+CROWD_CACHE_TIMEINSTANT_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+# What identifies one reported row. The firmware repeats a visitor in every
+# report with the same first-seen timeinstant, so those repeats are real rows:
+# only the full set of reported values tells a row apart. fields is left out
+# because files cached before schema 2 never had it.
+CROWD_CACHE_ROW_KEYS = [
+    c for c in CROWD_CACHE_COLUMNS if c not in ("fields", "schemaVersion")
+]
+
+
+def append_new_crowd_rows(existing: pd.DataFrame, new: pd.DataFrame) -> pd.DataFrame:
     """
-    Custom row processing function to handle specific transformations.
-    This can be modified as needed for different ETL processes.
+    Appends to an hour already cached the rows of a new read that it does not
+    have yet. Repeats inside each side are kept as they are (they are real
+    reports); a row of the new read that the cached file already holds is not
+    added again, so re-running an hour is idempotent.
+    """
+    if existing.empty:
+        return new
+    # NaN (read back from a CSV) and pd.NA (built in memory) must compare equal
+    keys_of = lambda df: (
+        df[CROWD_CACHE_ROW_KEYS].astype("string").fillna("").agg("\x1f".join, axis=1)
+    )
+    already = set(keys_of(existing))
+    fresh = new[~keys_of(new).isin(already)] if not new.empty else new
+    merged = pd.concat([existing, fresh], ignore_index=True)
+    return merged.sort_values("timeinstant", kind="stable").reset_index(drop=True)
+
+
+def _parse_cfe_block(value):
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except ValueError:
+        return ast.literal_eval(value)
+
+
+def _to_json_if_nested(value):
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, separators=(",", ":"))
+    return value
+
+
+def crowd_row_processing_lambda(df, measures_renames = None, keep_unmapped_fields = False):
+    """
+    Flattens the Smart Spot cfeBlock (newer firmware) so that each detection in
+    the block becomes one row, like the loose-attribute rows of the older firmware.
+    The block arrives as a list of detections or, with a single one, as a dict.
+
+    With keep_unmapped_fields, block keys without an entry in measures_renames
+    (e.g. r_cfe_fields) are kept as columns named without the r_cfe_ prefix, and
+    list/dict values are serialised as JSON. Only the data cache uses it: the
+    advanced crowd ETLs drop rows with any NaN, so extra columns would cost rows.
     """
 
     # Nothing to process
@@ -51,28 +131,170 @@ def crowd_row_processing_lambda(df, measures_renames = None):
     # Parse timeinstant now so the dtype is consistent when concatenating at the end
     df_without_cfe["timeinstant"] = pd.to_datetime(df_without_cfe["timeinstant"], format="mixed")
 
-    # The CFE block's own timeinstant replaces the parent row's
-    df_with_cfe.drop(columns=["timeinstant"], inplace=True)
+    # The CFE block's own timeinstant replaces the parent row's; the parent's is
+    # kept only as a fallback for detections that arrive without one
+    parent_timeinstant = pd.to_datetime(df_with_cfe.pop("timeinstant"), format="mixed")
+    df_with_cfe["_parent_timeinstant"] = parent_timeinstant
+    df_with_cfe["cfeBlock"] = df_with_cfe["cfeBlock"].apply(_parse_cfe_block)
+    # A single detection arrives as a dict: explode() would split it into its keys
     df_with_cfe["cfeBlock"] = df_with_cfe["cfeBlock"].apply(
-        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
+        lambda x: [x] if isinstance(x, dict) else x
     )
-    # Each element in the cfeBlock array becomes its own row
-    df_with_cfe = df_with_cfe.explode("cfeBlock").reset_index(drop=True)
-    df_cfe = pd.json_normalize(df_with_cfe["cfeBlock"])
+    # Each element in the cfeBlock array becomes its own row. An empty block
+    # explodes to NaN and carries no detection: drop it instead of writing a
+    # row with only the entityId
+    df_with_cfe = df_with_cfe.explode("cfeBlock")
+    df_with_cfe = df_with_cfe[df_with_cfe["cfeBlock"].apply(lambda x: isinstance(x, dict))]
+    df_with_cfe = df_with_cfe.reset_index(drop=True)
+    df_cfe = pd.json_normalize(df_with_cfe["cfeBlock"].tolist(), max_level=0)
     df_cfe.rename(columns=measures_renames, inplace=True)
+
+    target_columns = list(dict.fromkeys(measures_renames.values()))
+    if keep_unmapped_fields:
+        unmapped = {
+            c: c[len(CFE_BLOCK_PREFIX):]
+            for c in df_cfe.columns
+            if c.startswith(CFE_BLOCK_PREFIX) and c not in measures_renames
+        }
+        df_cfe.rename(columns=unmapped, inplace=True)
+        for column in unmapped.values():
+            df_cfe[column] = df_cfe[column].apply(_to_json_if_nested)
+        target_columns += [c for c in unmapped.values() if c not in target_columns]
+
     if "timeinstant" in df_cfe.columns:
         df_cfe["timeinstant"] = pd.to_datetime(df_cfe["timeinstant"], unit="s")
+    else:
+        df_cfe["timeinstant"] = pd.NaT
+    df_cfe["timeinstant"] = df_cfe["timeinstant"].fillna(df_with_cfe["_parent_timeinstant"])
 
     # Ensure all target columns exist (even if NA) and are in a fixed order
-    target_columns = list(dict.fromkeys(measures_renames.values()))
     df_cfe[list(set(target_columns) - set(df_cfe.columns))] = pd.NA
     df_cfe = df_cfe[[c for c in target_columns if c in df_cfe.columns]]
     # Drop columns from df_with_cfe that are already in df_cfe to avoid duplicates
-    cols_to_drop = ["cfeBlock"] + [c for c in target_columns if c in df_with_cfe.columns]
+    cols_to_drop = ["cfeBlock", "_parent_timeinstant"] + [c for c in target_columns if c in df_with_cfe.columns]
     df_with_cfe = pd.concat([df_with_cfe.drop(columns=cols_to_drop, errors="ignore"), df_cfe], axis=1)
 
     result = pd.concat([df_without_cfe, df_with_cfe], ignore_index=True)
     return result
+
+
+def coalesce_legacy_crowd_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Folds the lowercase column names of old cache files onto their camelCase
+    name. Renaming instead would leave two columns with the same name when a
+    file (or a batch of files) has both, and a later dropna() would drop every row.
+    """
+    for legacy, canonical in CROWD_LEGACY_COLUMN_ALIASES.items():
+        if legacy not in df.columns:
+            continue
+        if canonical in df.columns:
+            df[canonical] = df[canonical].combine_first(df[legacy])
+            df = df.drop(columns=[legacy])
+        else:
+            df = df.rename(columns={legacy: canonical})
+    return df
+
+
+def to_crowd_cache_schema(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalises CrowdFlowEvent rows from both firmware versions to the fixed
+    data cache layout (CROWD_CACHE_COLUMNS): integer columns as integers,
+    timeinstant as naive UTC ISO 8601, and only rows that are a detection.
+    """
+    df = coalesce_legacy_crowd_columns(df.copy())
+
+    for column in CROWD_CACHE_COLUMNS:
+        if column not in df.columns:
+            df[column] = pd.NA
+
+    # Rows without visitorId are not detections: another attribute of the
+    # same notification (e.g. period) that landed on its own timestamp
+    df = df[df["visitorId"].notna() & (df["visitorId"] != "")]
+
+    for column in CROWD_CACHE_INT_COLUMNS:
+        df[column] = pd.to_numeric(df[column], errors="coerce").round().astype("Int64")
+
+    df["timeinstant"] = pd.to_datetime(
+        df["timeinstant"], format="mixed", utc=True, errors="coerce"
+    ).dt.tz_localize(None)
+    df = df.sort_values("timeinstant", kind="stable")
+    df["timeinstant"] = df["timeinstant"].dt.strftime(CROWD_CACHE_TIMEINSTANT_FORMAT)
+    df["schemaVersion"] = CROWD_CACHE_SCHEMA_VERSION
+
+    return df[CROWD_CACHE_COLUMNS].reset_index(drop=True)
+
+VISITOR_DAY_KEYS = ["visitorid", "date"]
+
+
+def aggregate_visitor_days(df: pd.DataFrame) -> pd.DataFrame:
+    """Reduces detections to one row per visitor/day with first and last detection."""
+    if df is None or df.empty:
+        return pd.DataFrame(columns=VISITOR_DAY_KEYS + ["first_seen", "last_seen"])
+
+    times = pd.to_datetime(df["timeinstant"], format="mixed")
+    detections = pd.DataFrame(
+        {
+            "visitorid": df["visitorid"].to_numpy(),
+            "date": times.dt.date.to_numpy(),
+            "timeinstant": times.to_numpy(),
+        }
+    )
+
+    return detections.groupby(VISITOR_DAY_KEYS, as_index=False).agg(
+        first_seen=("timeinstant", "min"), last_seen=("timeinstant", "max")
+    )
+
+
+def merge_visitor_days(visitor_days: list) -> pd.DataFrame:
+    """Merges partial per-visitor/day summaries."""
+    frames = [frame for frame in visitor_days if frame is not None and not frame.empty]
+    if not frames:
+        return pd.DataFrame(columns=VISITOR_DAY_KEYS + ["first_seen", "last_seen"])
+
+    return (
+        pd.concat(frames, ignore_index=True)
+        .groupby(VISITOR_DAY_KEYS, as_index=False)
+        .agg(first_seen=("first_seen", "min"), last_seen=("last_seen", "max"))
+    )
+
+
+def classify_visitor_days(
+    visitor_days: pd.DataFrame,
+    previous_visitor_types: dict = None,
+    resident_threshold_days: int = 2,
+    tourist_min_hours: int = 3,
+) -> pd.DataFrame:
+    """Classifies visitors from per-day summaries. Same rules as classify_visitors."""
+    if previous_visitor_types is None:
+        previous_visitor_types = {}
+
+    if visitor_days is None or visitor_days.empty:
+        return pd.DataFrame(columns=["visitorid", "visitortype"])
+
+    hours_per_day = (
+        pd.to_datetime(visitor_days["last_seen"]) - pd.to_datetime(visitor_days["first_seen"])
+    ).dt.total_seconds() / 3600
+
+    per_visitor = (
+        visitor_days.assign(hours=hours_per_day)
+        .groupby("visitorid", sort=False)
+        .agg(days=("date", "nunique"), hours=("hours", "sum"))
+    )
+
+    previous = per_visitor.index.map(lambda vid: previous_visitor_types.get(vid))
+    resident = (per_visitor["days"] > resident_threshold_days) | pd.Series(
+        previous, index=per_visitor.index
+    ).isin(["Resident", "Tourist"])
+    tourist = ~resident & (per_visitor["days"] <= 2) & (per_visitor["hours"] > tourist_min_hours)
+
+    visitor_types = pd.Series("ShortTermVisitor", index=per_visitor.index)
+    visitor_types[tourist] = "Tourist"
+    visitor_types[resident] = "Resident"
+
+    return pd.DataFrame(
+        {"visitorid": per_visitor.index.to_numpy(), "visitortype": visitor_types.to_numpy()}
+    )
+
 
 def classify_visitors(df: pd.DataFrame, previous_visitor_types: dict = None, resident_threshold_days: int = 2, tourist_min_hours: int = 3) -> pd.DataFrame:
         """

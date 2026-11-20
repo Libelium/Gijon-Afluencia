@@ -87,6 +87,7 @@ const NUMERIC_POOL_ROLES: RoleKey[] = [
   'predicted',
   'predLower',
   'predUpper',
+  'anomaly',
 ]
 const VISIBLE_POOL_ROLES: RoleKey[] = ['confidence', 'case', 'sensor']
 
@@ -426,6 +427,15 @@ export function meanByWeekday(points: ChartPoint[], timeZone: string): Bucket[] 
  * Incrementos entre intervalos para contadores acumulativos. Un descenso significa reinicio
  * del contador, no un valor negativo: se devuelve null.
  */
+/**
+ * Las horas anomalas como puntos sobre la serie de referencia: su valor donde la deteccion de
+ * anomalias marco el mismo instante con 1, y null en el resto, para que solo se dibujen esas.
+ */
+export function anomalyMarkers(reference: ChartPoint[], flags: ChartPoint[]): ChartPoint[] {
+  const flagged = new Set(flags.filter((f) => f.v !== null && f.v >= 1).map((f) => Date.parse(f.t)))
+  return reference.map((p) => ({ t: p.t, v: flagged.has(Date.parse(p.t)) ? p.v : null }))
+}
+
 export function incrementsOf(points: ChartPoint[]): ChartPoint[] {
   const out: ChartPoint[] = []
   for (let i = 1; i < points.length; i++) {

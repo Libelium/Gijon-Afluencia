@@ -17,6 +17,7 @@ export type RoleKey =
   | 'confidence'
   | 'case'
   | 'sensor'
+  | 'anomaly'
 
 export function normalizeId(raw: string): string {
   return raw.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -93,6 +94,8 @@ export const ROLE_CANDIDATES: Record<RoleKey, readonly string[]> = {
   confidence: ['confidencelevel', 'confidence', 'reliability', 'fiabilidad'],
   case: ['casetype', 'usecase', 'scenario', 'situation', 'case'],
   sensor: ['lidarid', 'sensorid', 'deviceid', 'refdevice', 'sensor', 'source'],
+  // 1 en las horas que la deteccion de anomalias marca como fuera de lo normal para la zona.
+  anomaly: ['isoutlier', 'outlier', 'anomaly'],
 }
 
 const rank = (a: string, b: string): number => a.length - b.length || a.localeCompare(b, 'es')

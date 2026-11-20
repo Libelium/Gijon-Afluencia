@@ -29,6 +29,7 @@ import pandas as pd
 
 from crowd_predictions.anomaly_detection import storage as anomaly_storage
 from crowd_predictions.anomaly_detection.core import evaluate_batch
+from crowd_predictions.anomaly_detection.zones import score_zones
 from crowd_predictions.config import settings
 from crowd_predictions.config.config import get_storage
 from crowd_predictions.helpers.fiware_targets import run_for_each_target
@@ -229,8 +230,17 @@ def _archive(storage, key: str, df: pd.DataFrame, local_dir: str) -> None:
 
 
 def run_one(tenant: str, scope: str) -> int:
-    """One sweep for one tenant/scope. 0 even with nothing to do: an empty folder is
-    the normal state of most runs, not a failure."""
+    """One run for one tenant/scope: first the daily scoring of the zones (read from
+    the platform, see zones.py), then the sweep of csvs left in the folder. 0 even
+    with nothing to do: no zone configured and an empty folder is a normal run."""
+    with tempfile.TemporaryDirectory() as zones_dir:
+        zones_failed = score_zones(zones_dir)
+    return max(zones_failed, sweep_folder(tenant, scope))
+
+
+def sweep_folder(tenant: str, scope: str) -> int:
+    """Score the csvs waiting in this tenant/scope's folder. 0 with an empty folder:
+    that is the normal state of most runs, not a failure."""
     storage = get_storage()
     keys = pending_csv_keys(storage)
     if not keys:

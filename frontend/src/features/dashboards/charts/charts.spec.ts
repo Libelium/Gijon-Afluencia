@@ -120,6 +120,32 @@ describe('LineChart con previsiones', () => {
   })
 })
 
+describe('LineChart con una serie de solo puntos', () => {
+  const seriesOf = (series: ChartSeries[]) => {
+    const wrapper = mount(LineChart, { props: { series }, ...options })
+    const option = wrapper.findComponent(VChart).props('option') as EChartsOption
+    return option.series as LineSeriesOption[]
+  }
+  const points = [
+    { t: '2026-03-01T10:00:00Z', v: 10 },
+    { t: '2026-03-01T11:00:00Z', v: 90 },
+    { t: '2026-03-01T12:00:00Z', v: 12 },
+  ]
+
+  it('dibuja solo los puntos, sin linea ni muestreo, y la serie normal no cambia', () => {
+    const [line, marks] = seriesOf([
+      { name: 'Maximo', points },
+      { name: 'Anomalia', points: points.map((p) => ({ ...p, v: p.v === 90 ? 90 : null })), markers: true },
+    ])
+    expect(marks.showSymbol).toBe(true)
+    expect(marks.lineStyle).toEqual({ width: 0, opacity: 0 })
+    expect(marks.sampling).toBeUndefined()
+    expect(line.showSymbol).toBe(false)
+    expect(line.sampling).toBe('lttb')
+    expect(echartsMessages).toEqual([])
+  })
+})
+
 describe('DataTableChart', () => {
   it('pinta las lecturas con lo mas reciente arriba', () => {
     const wrapper = mount(DataTableChart, { props: { series: SERIES }, ...options })

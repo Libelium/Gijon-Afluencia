@@ -29,6 +29,8 @@ export default {
   'a11y.dataTable.caption': 'Tabla de datos equivalente: {title}',
   'a11y.dataTable.empty': 'No hay datos que representar.',
   'a11y.dataTable.truncated': 'Se muestran las primeras {shown} filas de {total}.',
+  'a11y.dataTable.download': 'Descargar CSV',
+  'a11y.dataTable.downloadLabel': 'Descargar CSV: datos de {title}',
   'a11y.chart.description': '{title}. Gráfica; los mismos datos están disponibles en la tabla que sigue.',
 
   'common.search': 'Buscar',
