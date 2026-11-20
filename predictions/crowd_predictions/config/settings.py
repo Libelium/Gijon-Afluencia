@@ -151,6 +151,8 @@ DEFAULT_ANOMALY_MIN_MEASURE_COVERAGE = 0.9
 DEFAULT_ANOMALY_ROLLING_HOURS = 5.0
 # How long a sustained shift takes to be accepted as the new normal.
 DEFAULT_ANOMALY_REGIME_SHIFT_HOURS = 3.0
+# Closed days re-read by the daily zone scoring (see AnomalySettings.ANOMALY_LOOKBACK_DAYS).
+DEFAULT_ANOMALY_LOOKBACK_DAYS = 3
 
 # PROVISIONAL, same reason as DEFAULT_PREDICTION_ENTITY_TYPE: the datamodel
 # documentation marks these names as not fixed in the platform yet. Published by an ETL
@@ -538,6 +540,10 @@ class AnomalySettings(EnvSettings):
     # a fresh model, which load_state already handles. It does NOT mean
     # "load unsigned bundles". See anomaly_detection/storage.py.
     ANOMALY_STATE_HMAC_KEY: str = ""
+    # Closed days the daily zone scoring reads (anomaly_detection/zones.py). More than
+    # one so that a missed run is caught up by the next: days already learnt are only
+    # re-scored (the watermark), never learnt twice.
+    ANOMALY_LOOKBACK_DAYS: int = DEFAULT_ANOMALY_LOOKBACK_DAYS
 
     def _config(self) -> dict:
         if not self.ANOMALY_CONFIG:

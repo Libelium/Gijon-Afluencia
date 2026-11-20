@@ -59,6 +59,13 @@ const MEASURES: Record<string, MeasureInfo> = {
     calculation:
       'Si la zona tiene LIDAR y ha dado datos en esa hora, se usa lo que cuenta el LIDAR. Si no, se usa lo que detectan los sensores WiFi/BLE, ajustado con lo aprendido en las zonas que tienen los dos. Nunca se suman las dos cifras.',
   },
+  isoutlier: {
+    name: 'Hora anómala',
+    description:
+      'Vale 1 si la ocupación de esa hora se sale de lo normal en la zona para esa hora y ese día de la semana, y 0 si no.',
+    calculation:
+      'Lo calcula la plataforma una vez al día sobre los días ya cerrados. Aprende lo normal de cada zona con su historia, sin umbrales fijos, y marca lo que se aparta. Un pico de una sola hora marca también las dos horas siguientes.',
+  },
   confidence: {
     name: 'Origen de la cifra',
     description: 'Si la ocupación la ha contado un LIDAR o se ha estimado con los sensores WiFi/BLE.',
