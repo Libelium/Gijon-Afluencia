@@ -275,13 +275,17 @@ def _normalize_timeinstant_column(df: pd.DataFrame) -> pd.DataFrame:
 
     df["timeinstant"] = df["timeinstant"].astype(str)
 
-    # Add microseconds to timestamps missing them
-    mask = ~df["timeinstant"].str.contains(".", regex=False, na=False)
+    # Add microseconds to timestamps missing them. Not to those with an offset:
+    # appended after it, the value no longer parses and the row is dropped
+    has_offset = df["timeinstant"].str.contains(r"(?:Z|[+-]\d{2}:?\d{2})$", regex=True, na=False)
+    mask = ~df["timeinstant"].str.contains(".", regex=False, na=False) & ~has_offset
     df.loc[mask, "timeinstant"] = df.loc[mask, "timeinstant"] + ".000000"
 
+    # utc=True so files with and without an offset compare against the naive
+    # (UTC) request window instead of raising
     df["timeinstant"] = pd.to_datetime(
-        df["timeinstant"], errors="coerce", format="mixed"
-    )
+        df["timeinstant"], errors="coerce", format="mixed", utc=True
+    ).dt.tz_localize(None)
     df = df.dropna(subset=["timeinstant"])
 
     return df
@@ -319,6 +323,7 @@ def get_time_series_from_data_cache(
     Retrieves and combines time series data from the S3 cache.
     """
     import pandas as pd
+    from helpers.crowd.crowd_utils import coalesce_legacy_crowd_columns
 
     all_cached_dfs = []
     all_measures = set()
@@ -375,16 +380,7 @@ def get_time_series_from_data_cache(
             (final_df["timeinstant"] >= global_start_date)
             & (final_df["timeinstant"] <= global_end_date)
         ]
-    final_df.rename(
-        columns={
-            "israndommac": "random",
-            "entityid": "entityId",
-            "visitorid": "visitorId",
-            "visitortype": "visitorType",
-            "detectiontype": "detectionType",
-        },
-        inplace=True,
-    )
+    final_df = coalesce_legacy_crowd_columns(final_df)
 
     columns_to_keep = ["timeinstant", "entityId"] + list(all_measures)
     return final_df[[col for col in columns_to_keep if col in final_df.columns]]
