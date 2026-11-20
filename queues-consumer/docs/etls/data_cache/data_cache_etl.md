@@ -117,6 +117,10 @@ una tarea periódica de Celery.
     `DATA_CACHE_CROWD_PROCESS_INTERVAL`.
 -   **Condición**: la ejecución periódica solo se activa si `settings.IS_ON_PREMISE` es `False`. Por
     tanto, este ETL no se ejecuta en entornos on-premise.
+-   **Horas que llegan tarde**: además de la última hora, cada ejecución vuelve a pedir las horas
+    cerradas de las últimas `DATA_CACHE_CROWD_LOOKBACK_HOURS` (24), con `force`. Con
+    `DATA_CACHE_DELETE_AFTER_UPLOAD`, lo que queda en Timescale de una hora ya cacheada es lo que llegó
+    después; se añade al CSV de esa hora (ver 3.3). Si no queda nada, no se sube ni se borra nada.
 
 ### 2.3. Configuración general
 
@@ -172,11 +176,17 @@ de la API de series temporales los datos ya procesados y liberar espacio.
 
 **Pasos:**
 
-1.  **Guardar en S3**: el proceso recorre los datos transformados de cada entidad. Los datos se
+1.  **Juntar con lo ya cacheado**: si la hora ya tiene CSV, se descarga y se le añaden solo las
+    filas nuevas: las que no tiene ya con los mismos valores. Repetir una hora no duplica filas; las
+    repeticiones de un visitante dentro de una misma lectura son reportes reales y se conservan. Solo
+    un fichero que no existe cuenta como hora vacía: cualquier otro error del almacén hace que no se
+    suba ni se borre nada.
+2.  **Guardar en S3**: el proceso recorre los datos transformados de cada entidad. Los datos se
     guardan como un fichero CSV local temporal, se suben a la ruta de S3 correspondiente y después
     se borra el fichero local.
-2.  **Borrar las series**: se construye una petición para borrar de la API de series temporales los
-    datos que se acaban de procesar.
+3.  **Borrar las series**: si `DATA_CACHE_DELETE_AFTER_UPLOAD` está activo y todas las subidas han
+    ido bien, se construye una petición para borrar de la API de series temporales los datos que se
+    acaban de procesar.
 
 ## 4. Formato del fichero CSV de salida
 
@@ -204,18 +214,25 @@ particionar con eficacia. El formato de la ruta es:
 Si no se encuentran datos de la organización en ese periodo para las entidades disponibles, no se
 genera ningún CSV para ese rango de tiempo.
 
-El fichero CSV contiene estas columnas, que se corresponden con los datos en bruto del tipo de
-entidad `CrowdFlowEvent`:
+Todos los ficheros tienen las mismas columnas, en este orden, sea cual sea el firmware del Smart
+Spot que envió la detección (formato 2):
 
--   `timeinstant`: (cadena) la hora UTC en formato ISO 8601.
--   `visitorId`: (cadena) identificador único del visitante.
+-   `timeinstant`: (cadena) hora UTC sin zona, `AAAA-MM-DDTHH:MM:SS.ffffff`. Si la detección no trae
+    hora propia, la de la notificación.
 -   `entityId`: (cadena) la URN de la entidad que generó el dato.
--   `period`: (entero)
--   `random`: (booleano)
--   `rssi`: (entero)
--   `detectionType`: (cadena)
--   `signature`: (cadena)
--   `ssid`: (cadena)
+-   `detectionType`: (entero) WiFi o BLE.
+-   `random`: (entero) si el dispositivo usa una dirección aleatoria.
+-   `visitorId`: (cadena) identificador del visitante. Las filas sin él no son una detección y no se
+    guardan.
+-   `rssi`: (entero) intensidad de la señal.
+-   `ssid`, `signature`: (cadena) los envía el firmware antiguo y las primeras versiones del bloque.
+-   `fields`: (cadena JSON) `r_cfe_fields` del bloque, tal cual.
+-   `period`: (entero) lo envía el firmware antiguo.
+-   `schemaVersion`: (entero) `2`.
+
+Los ficheros escritos antes de este formato tienen otras columnas (nombres en minúscula para las
+detecciones del bloque); se leen igual (ver «Lectura de la caché»). Al juntar una hora antigua con
+filas nuevas, el fichero se reescribe en el formato 2.
 
 #### Lectura de la caché
 

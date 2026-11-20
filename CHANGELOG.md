@@ -176,6 +176,15 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **La caché de crowd recoge las detecciones que llegan tarde y guarda todos sus campos.** Las filas
+  que llegaban a Timescale después de cachear su hora (por ejemplo, tras un atasco de colas) no
+  llegaban nunca a MinIO y se perdían de clasificación y visitantes únicos. Ahora cada ejecución
+  vuelve a leer las horas cerradas de las últimas 24 (`DATA_CACHE_CROWD_LOOKBACK_HOURS`) y añade al
+  CSV de cada hora las filas que no tenía; repetir una hora no duplica. Los CSV se escriben con las
+  mismas columnas y tipos para los dos firmware del Smart Spot, incluido `r_cfe_fields` (en
+  `fields`), y sin filas que no sean una detección. Un error del almacén que no sea «no existe» ya
+  no sobrescribe ni borra nada. **Volver a una versión anterior al nuevo lector de la caché no es
+  seguro**: no lee una ventana que mezcle ficheros de los dos formatos.
 - **Las detecciones de un bloque con una sola detección ya no se pierden.** El Smart Spot manda el
   bloque de detecciones como lista o, si solo trae una, como un objeto; ese objeto se desmontaba en
   sus claves y la detección se perdía en visitas, flujos y la caché de crowd. Ahora se lee de las
