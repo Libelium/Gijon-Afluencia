@@ -19,7 +19,6 @@ import { useChartTheme } from '../../charts/useChartTheme'
 import {
   asItems,
   chartGrid,
-  chartStyle,
   scrollLegend,
   timeFormatOf,
   timeLabel,
@@ -31,6 +30,7 @@ import {
 import { useChartLabel } from '../../charts/chartLabel'
 import { ariaOption, seriesTable } from '../../charts/a11y'
 import type { NamedSeries } from '../shared/types'
+import { useChartStyle } from '../../charts/expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, LineSeries, GridComponent, TooltipComponent, LegendComponent, AriaComponent])
@@ -101,7 +101,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 const table = computed(() =>
   seriesTable(props.series, { timeZone: timeZone.value, units: props.units }),

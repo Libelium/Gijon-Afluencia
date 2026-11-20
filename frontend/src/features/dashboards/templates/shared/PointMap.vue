@@ -11,6 +11,7 @@ import { rowsTable } from '../../charts/a11y'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { SURFACE } from '../../palette'
 import { curvedPath, type LatLng } from './curves'
+import { useChartHeight } from '../../charts/expanded'
 
 export interface MapPoint {
   key: string
@@ -113,11 +114,15 @@ function onReady(instance: LeafletMap) {
 
 watch(() => props.points, fit, { deep: false })
 
+/** Alto del mapa: el suyo, o casi toda la pantalla con la tarjeta ampliada. */
+const mapHeight = useChartHeight(() => props.height)
+
 /**
  * Leaflet cachea el tamaño de su contenedor: hay que avisarle cuando cambia (al plegar el
  * menu lateral, al redimensionar la ventana), igual que en MapView.vue.
  */
 let resizeTimer: ReturnType<typeof setTimeout> | undefined
+
 let observer: ResizeObserver | undefined
 
 function onCanvasResize() {
@@ -174,7 +179,7 @@ const linksTable = computed(() =>
       ref="canvas"
       class="point-map rounded-lg overflow-hidden"
       :class="{ 'map-tiles--dark': tiles.darken, 'point-map--flowing': hasFlow && flowing }"
-      :style="{ height: `${height}px` }"
+      :style="{ height: typeof mapHeight === 'number' ? `${mapHeight}px` : mapHeight }"
     >
       <!-- `group` y no `img`: dentro del mapa hay controles que deben seguir siendo
            alcanzables (zoom, enlace de atribucion). La alternativa textual es la tabla que

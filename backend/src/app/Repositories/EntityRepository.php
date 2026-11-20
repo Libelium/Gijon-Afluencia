@@ -160,9 +160,10 @@ class EntityRepository
 
     private static function urnsWithinBounds(array $bounds, ?string $tenant, ?string $scope)
     {
-        $pointGuard = "value ~ '[''\"]Point[''\"]'";
-        $longitude = "(CASE WHEN $pointGuard THEN substring(value from 'coordinates[^\[]{0,4}\[\s*(-?[0-9]+\.?[0-9]*)') END)::float8";
-        $latitude = "(CASE WHEN $pointGuard THEN substring(value from 'coordinates[^\[]{0,4}\[\s*-?[0-9]+\.?[0-9]*\s*,\s*(-?[0-9]+\.?[0-9]*)') END)::float8";
+        // De un poligono vale su primer vertice: una zona es pequena frente al area visible del mapa.
+        $geometryGuard = "value ~ '[''\"](Point|Polygon)[''\"]'";
+        $longitude = "(CASE WHEN $geometryGuard THEN substring(value from 'coordinates[^\[]{0,4}[\[\s]*(-?[0-9]+\.?[0-9]*)') END)::float8";
+        $latitude = "(CASE WHEN $geometryGuard THEN substring(value from 'coordinates[^\[]{0,4}[\[\s]*-?[0-9]+\.?[0-9]*\s*,\s*(-?[0-9]+\.?[0-9]*)') END)::float8";
 
         return DB::connection('pgsql_realtime')
             ->table('entity_properties')

@@ -6,6 +6,7 @@ import { formatDateTime, formatMeasure, formatNumber, relativeFromNow } from '@/
 import { useChartTheme } from './useChartTheme'
 import { nonNull } from './chartOptions'
 import type { ChartSeries } from './types'
+import { useChartHeight } from './expanded'
 
 const props = withDefaults(
   defineProps<{
@@ -69,8 +70,9 @@ const others = computed(() =>
 const timestamp = computed(() => formatDateTime(last.value?.t, session.timeZone))
 const relative = computed(() => relativeFromNow(last.value?.t, session.timeZone))
 
+const height = useChartHeight(() => props.height)
 const style = computed(() => ({
-  minHeight: typeof props.height === 'number' ? `${props.height}px` : props.height,
+  minHeight: typeof height.value === 'number' ? `${height.value}px` : height.value,
 }))
 </script>
 

@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
-import { LMap, LMarker, LPopup, LTileLayer } from '@vue-leaflet/vue-leaflet'
+import { LMap, LMarker, LPolygon, LPopup, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import type { LeafletMouseEvent, Map as LeafletMap, Marker, MarkerCluster, MarkerClusterGroup } from 'leaflet'
 import { errorMessage } from '@/api/http'
 import { useDebouncedResize } from '@/composables/useDebouncedResize'
@@ -15,7 +15,7 @@ import EntityClusterGroup from '../components/EntityClusterGroup.vue'
 import EntityPopupCard from '../components/EntityPopupCard.vue'
 import MapControlPanel from '../components/MapControlPanel.vue'
 import { createEntityIcon } from '../lib/cluster'
-import { boundsOf, mergePlaced, placeEntities, type LatLng, type PlacedEntity } from '../lib/geometry'
+import { boundsOf, mergePlaced, placeEntities, polygonLatLngs, type LatLng, type PlacedEntity } from '../lib/geometry'
 import { SUGGEST_FETCH_SIZE, canSuggest, suggestionsFrom } from '../lib/suggestions'
 import { REGROUP_FALLBACK_MS, focusZoom, onceOrAfter, shouldLocate } from '../lib/viewport'
 import MapEntityTable from '../components/MapEntityTable.vue'
@@ -44,6 +44,15 @@ const mapReady = ref(false)
 const placed = shallowRef<PlacedEntity[]>([])
 // Lo que hay en el grupo de marcadores: lo visible mas lo que se fue viendo con los mismos filtros.
 const markers = shallowRef<PlacedEntity[]>([])
+
+/** Contornos de las entidades cuya ubicacion es un area, como una zona de afluencia. */
+const areas = computed(() =>
+  markers.value.flatMap((item) => {
+    const polygon = polygonLatLngs(item.entity.geolocation)
+    return polygon ? [{ id: item.entity.id, polygon }] : []
+  }),
+)
+const areaColor = computed(() => theme.global.current.value.colors.primary)
 const withoutLocation = ref(0)
 const total = ref(0)
 const loading = ref(false)
@@ -366,6 +375,19 @@ void loadDatamodels()
           :url="tiles.url"
           :attribution="tiles.attribution"
           :options="tiles.options"
+        />
+
+        <!-- El area de las entidades que la tienen, debajo de su marcador. No responde al raton:
+             el marcador, en su centro, sigue siendo lo que se pulsa, se agrupa y se enfoca. -->
+        <LPolygon
+          v-for="area in areas"
+          :key="`area-${area.id}`"
+          :lat-lngs="area.polygon"
+          :color="areaColor"
+          :weight="2"
+          :fill-color="areaColor"
+          :fill-opacity="0.12"
+          :interactive="false"
         />
 
         <EntityClusterGroup v-if="mapReady" ref="clusters">

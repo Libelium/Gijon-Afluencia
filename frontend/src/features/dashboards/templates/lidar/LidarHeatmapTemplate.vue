@@ -29,6 +29,8 @@ import {
   summarise,
 } from './data'
 import { useZone } from './useZone'
+import ExpandButton from '../../components/ExpandButton.vue'
+import ExpandFrame from '../../components/ExpandFrame.vue'
 import type { DateRange } from '../../lib/range'
 
 /** Se declaran las cuatro props aunque el registro solo prometa `dashboard`: si el anfitrion
@@ -258,19 +260,22 @@ const profileBuckets = computed(() => meanByHour(matrix.value, timeZone.value))
 
       <VRow class="mb-2">
         <VCol cols="12" md="5">
-          <VCard>
-            <div class="d-flex align-center ga-2 px-4 pt-4 pb-2">
-              <VIcon icon="mdi-map-marker-radius-outline" size="18" class="text-medium-emphasis" />
-              <div class="min-w-0">
-                <div class="text-subtitle-2 font-weight-medium">{{ t('dashboards.lidar.heatmap.map') }}</div>
-                <div class="text-caption text-medium-emphasis">{{ mapHint }}</div>
+          <ExpandFrame v-slot="{ expanded, toggle }" :label="t('dashboards.lidar.heatmap.map')">
+            <VCard class="h-100">
+              <div class="d-flex align-center ga-2 px-4 pt-4 pb-2">
+                <VIcon icon="mdi-map-marker-radius-outline" size="18" class="text-medium-emphasis" />
+                <div class="min-w-0 flex-grow-1">
+                  <div class="text-subtitle-2 font-weight-medium">{{ t('dashboards.lidar.heatmap.map') }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ mapHint }}</div>
+                </div>
+                <ExpandButton :expanded="expanded" @toggle="toggle" />
               </div>
-            </div>
-            <VDivider />
-            <div class="pa-4">
-              <ZoneMapCard :markers="markers" :loading="loading" :error="error" @select="zoneId = $event" @retry="reload" />
-            </div>
-          </VCard>
+              <VDivider />
+              <div class="pa-4">
+                <ZoneMapCard :markers="markers" :loading="loading" :error="error" @select="zoneId = $event" @retry="reload" />
+              </div>
+            </VCard>
+          </ExpandFrame>
         </VCol>
         <VCol cols="12" md="7">
           <ChartCard

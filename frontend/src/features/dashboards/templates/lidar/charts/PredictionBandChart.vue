@@ -13,7 +13,6 @@ import { useChartTheme } from '../../../charts'
 import {
   asItems,
   chartGrid,
-  chartStyle,
   scrollLegend,
   timeFormatFor,
   timeLabel,
@@ -26,6 +25,7 @@ import {
 import { useChartLabel } from '../../../charts/chartLabel'
 import { ariaOption, rowsTable } from '../../../charts/a11y'
 import { MUTED, seriesColors } from '../../../palette'
+import { useChartStyle } from '../../../charts/expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([
@@ -197,7 +197,7 @@ const option = computed<EChartsOption>(() => ({
   ],
 }))
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 /**
  * Tabla equivalente: instante, medido, previsto y los dos extremos del intervalo. El intervalo

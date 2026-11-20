@@ -7,6 +7,8 @@ import { measureName } from '@/lib/measureCatalog'
 import type { Panel } from '@/types'
 import { ChartRenderer, chartVariant, provideChartLabel, resolveChartKind, type ChartData } from '../charts'
 import { fetchPanelData, queryableSeries } from '../api/dashboards'
+import ExpandButton from './ExpandButton.vue'
+import ExpandFrame from './ExpandFrame.vue'
 import type { DateRange } from '../lib/range'
 
 /**
@@ -99,60 +101,64 @@ provideChartLabel(() => title.value)
 </script>
 
 <template>
-  <VCard class="h-100 d-flex flex-column" :class="{ 'table-card': isTable }">
-    <div class="d-flex align-start ga-3 px-4 py-3">
-      <div class="min-w-0 flex-grow-1">
-        <div class="text-subtitle-2 font-weight-medium text-truncate" :title="title">{{ title }}</div>
-        <div v-if="subtitle" class="text-caption text-medium-emphasis text-truncate mt-1" :title="subtitle">
-          {{ subtitle }}
+  <ExpandFrame v-slot="{ expanded, toggle }" :label="title">
+    <VCard class="h-100 d-flex flex-column" :class="{ 'table-card': isTable }">
+      <div class="d-flex align-start ga-3 px-4 py-3">
+        <div class="min-w-0 flex-grow-1">
+          <div class="text-subtitle-2 font-weight-medium text-truncate" :title="title">{{ title }}</div>
+          <div v-if="subtitle" class="text-caption text-medium-emphasis text-truncate mt-1" :title="subtitle">
+            {{ subtitle }}
+          </div>
+        </div>
+
+        <ExpandButton :expanded="expanded" @toggle="toggle" />
+
+        <VBtn
+          v-if="removable && !expanded"
+          icon="mdi-delete-outline"
+          variant="text"
+          density="comfortable"
+          size="small"
+          class="flex-shrink-0"
+          :aria-label="t('dashboards.panel.delete')"
+          :title="t('dashboards.panel.delete')"
+          @click="$emit('remove')"
+        />
+      </div>
+
+      <VDivider />
+
+      <div class="flex-grow-1" :class="isTable ? 'pa-0' : 'pa-4'">
+        <div class="d-flex flex-column justify-center" :style="contentStyle">
+          <ChartRenderer
+            v-if="!supported"
+            kind="unsupported"
+            :data="EMPTY"
+            :raw-type="panel.chart?.type"
+            :height="height"
+          />
+          <StateBlock
+            v-else
+            :loading="loading"
+            :error="error"
+            :empty="empty"
+            :empty-text="emptyText"
+            :empty-hint="emptyHint"
+            empty-icon="mdi-chart-line-variant"
+            skeleton="card"
+            @retry="load"
+          >
+            <ChartRenderer
+              :kind="kind"
+              :data="data"
+              :units="units"
+              :height="height"
+              :area="variant.area"
+              :stacked="variant.stacked"
+            />
+          </StateBlock>
         </div>
       </div>
-
-      <VBtn
-        v-if="removable"
-        icon="mdi-delete-outline"
-        variant="text"
-        density="comfortable"
-        size="small"
-        class="flex-shrink-0"
-        :aria-label="t('dashboards.panel.delete')"
-        :title="t('dashboards.panel.delete')"
-        @click="$emit('remove')"
-      />
-    </div>
-
-    <VDivider />
-
-    <div class="flex-grow-1" :class="isTable ? 'pa-0' : 'pa-4'">
-      <div class="d-flex flex-column justify-center" :style="contentStyle">
-        <ChartRenderer
-          v-if="!supported"
-          kind="unsupported"
-          :data="EMPTY"
-          :raw-type="panel.chart?.type"
-          :height="height"
-        />
-        <StateBlock
-          v-else
-          :loading="loading"
-          :error="error"
-          :empty="empty"
-          :empty-text="emptyText"
-          :empty-hint="emptyHint"
-          empty-icon="mdi-chart-line-variant"
-          skeleton="card"
-          @retry="load"
-        >
-          <ChartRenderer
-            :kind="kind"
-            :data="data"
-            :units="units"
-            :height="height"
-            :area="variant.area"
-            :stacked="variant.stacked"
-          />
-        </StateBlock>
-      </div>
-    </div>
-  </VCard>
+    </VCard>
+  </ExpandFrame>
 </template>

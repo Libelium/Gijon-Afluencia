@@ -25,7 +25,7 @@ import pandas as pd
 from crowd_predictions.config import settings
 from crowd_predictions.helpers.uploader import TIMESTAMP_COLUMN, TYPE_COLUMN, URN_COLUMN
 from crowd_predictions.lidar_estimation import estimate_zone_totals
-from crowd_predictions.zones_config import ZONES, location_cell
+from crowd_predictions.zones_config import ZONES, zone_location_cell
 
 # The entity type comes from CROWD_FLOW_ZONE_ENTITY_TYPE, read per call: per deployment.
 
@@ -87,8 +87,9 @@ class CrowdTransform:
                 "smartspotSignal": totals["smartspot_signal"],
                 "smartspotDeltaPct": totals["smartspot_delta_pct"],
             }
-            if zone.location is not None:
-                row_data["location"] = location_cell(zone.location)
+            location = zone_location_cell(zone)
+            if location is not None:
+                row_data["location"] = location
 
             row_data["lidarSerial"] = json.dumps(zone.lidar_ids)
             row_data["smartspotSerial"] = json.dumps(

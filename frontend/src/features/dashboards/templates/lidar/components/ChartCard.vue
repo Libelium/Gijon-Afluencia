@@ -2,6 +2,8 @@
 import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import { provideChartLabel } from '../../../charts/chartLabel'
+import ExpandButton from '../../../components/ExpandButton.vue'
+import ExpandFrame from '../../../components/ExpandFrame.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -26,29 +28,34 @@ provideChartLabel(() => props.title)
 </script>
 
 <template>
-  <VCard class="h-100 d-flex flex-column">
-    <div class="px-4 py-3 min-w-0">
-      <div class="text-subtitle-2 font-weight-medium text-truncate" :title="title">{{ title }}</div>
-      <div v-if="subtitle" class="text-caption text-medium-emphasis text-truncate mt-1" :title="subtitle">
-        {{ subtitle }}
+  <ExpandFrame v-slot="{ expanded, toggle }" :label="title">
+    <VCard class="h-100 d-flex flex-column">
+      <div class="d-flex align-start ga-2 px-4 py-3">
+        <div class="min-w-0 flex-grow-1">
+          <div class="text-subtitle-2 font-weight-medium text-truncate" :title="title">{{ title }}</div>
+          <div v-if="subtitle" class="text-caption text-medium-emphasis text-truncate mt-1" :title="subtitle">
+            {{ subtitle }}
+          </div>
+        </div>
+        <ExpandButton :expanded="expanded" @toggle="toggle" />
       </div>
-    </div>
-    <VDivider />
-    <div class="flex-grow-1 pa-4">
-      <div class="d-flex flex-column justify-center" :style="{ minHeight: `${minHeight}px` }">
-        <StateBlock
-          :loading="loading"
-          :error="error"
-          :empty="empty"
-          :empty-text="emptyText || t('dashboards.panel.noData')"
-          :empty-hint="emptyHint"
-          :empty-icon="emptyIcon"
-          skeleton="card"
-          @retry="$emit('retry')"
-        >
-          <slot />
-        </StateBlock>
+      <VDivider />
+      <div class="flex-grow-1 pa-4">
+        <div class="d-flex flex-column justify-center" :style="{ minHeight: `${minHeight}px` }">
+          <StateBlock
+            :loading="loading"
+            :error="error"
+            :empty="empty"
+            :empty-text="emptyText || t('dashboards.panel.noData')"
+            :empty-hint="emptyHint"
+            :empty-icon="emptyIcon"
+            skeleton="card"
+            @retry="$emit('retry')"
+          >
+            <slot />
+          </StateBlock>
+        </div>
       </div>
-    </div>
-  </VCard>
+    </VCard>
+  </ExpandFrame>
 </template>

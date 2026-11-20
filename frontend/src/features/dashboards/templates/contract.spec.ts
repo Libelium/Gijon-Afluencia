@@ -40,7 +40,8 @@ describe('identificadores de plantilla', () => {
 
   it('el filtro del listado recibe todos los identificadores soportados', () => {
     expect(supportedTypeIds()).toContain(typeIdOf('transits'))
-    expect(supportedTypeIds()).toHaveLength(9)
+    expect(supportedTypeIds()).toContain(typeIdOf('lidarChoropleth'))
+    expect(supportedTypeIds()).toHaveLength(10)
   })
 
   it('los modelos de datos se descodifican en el orden pedido', () => {

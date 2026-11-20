@@ -14,7 +14,7 @@ import pandas as pd
 
 from crowd_predictions.config import settings
 from crowd_predictions.helpers.uploader import TIMESTAMP_COLUMN, TYPE_COLUMN, URN_COLUMN, upload_csv_files
-from crowd_predictions.zones_config import ZONES, lidar_location, location_cell
+from crowd_predictions.zones_config import ZONES, lidar_location, location_cell, zone_location_cell
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,9 @@ class OteLoad:
             zone = ZONES.get(zone_id)
             if zone is not None:
                 row["name"] = zone.name
-                if zone.location is not None:
-                    row["location"] = location_cell(zone.location)
+                location = zone_location_cell(zone)
+                if location is not None:
+                    row["location"] = location
             for key, value in attributes.items():
                 # Transits go as a JSON string in one cell: one attribute per pair would
                 # be hundreds of attributes with a few dozen sensors.

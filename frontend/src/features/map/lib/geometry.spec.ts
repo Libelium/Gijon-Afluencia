@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Entity } from '@/types'
-import { mergePlaced, placeEntities, type LatLng, type PlacedEntity } from './geometry'
+import { mergePlaced, placeEntities, polygonLatLngs, type LatLng, type PlacedEntity } from './geometry'
 
 const placed = (id: number, latLng: LatLng): PlacedEntity => ({
   entity: { id, name: `E${id}`, urn: `urn:ngsi-ld:Thing:E${id}` } as Entity,
@@ -82,5 +82,20 @@ describe('placeEntities', () => {
     ])
     expect(result.placed.map((item) => item.entity.id)).toEqual([7])
     expect(result.withoutLocation).toBe(6)
+  })
+})
+
+describe('polygonLatLngs', () => {
+  it('pasa el contorno de GeoJSON a [lat, lon] y descarta lo que no es un area', () => {
+    const ring: [number, number][] = [
+      [-5.66, 43.54],
+      [-5.65, 43.54],
+      [-5.65, 43.55],
+      [-5.66, 43.54],
+    ]
+    expect(polygonLatLngs({ type: 'Polygon', coordinates: [ring] })?.[1]).toEqual([43.54, -5.65])
+    expect(polygonLatLngs({ type: 'Point', coordinates: [-5.66, 43.54] })).toBeNull()
+    expect(polygonLatLngs({ type: 'Polygon', coordinates: [ring.slice(0, 2)] })).toBeNull()
+    expect(polygonLatLngs(null)).toBeNull()
   })
 })

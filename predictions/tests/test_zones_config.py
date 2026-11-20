@@ -215,3 +215,49 @@ def test_a_measured_multiplier_on_the_zone_overrides_the_formula(monkeypatch):
     monkeypatch.setattr(zones_config, "_load_payload", lambda: payload)
     zones_config.reset_cache()
     assert lidar_coverage_multiplier("Z01") == 1.5
+
+
+# --- Zone outline ---------------------------------------------------------------
+
+SQUARE = [[10.0000, 20.0000], [10.0000, 20.0020], [10.0020, 20.0020], [10.0020, 20.0000]]
+
+
+def test_a_zone_publishes_its_outline_as_a_closed_geojson_polygon():
+    zone = parse_zones({"Z01": {"name": "Plaza", "location": [10.001, 20.001], "polygon": SQUARE}})["Z01"]
+    assert zone.polygon == [tuple(vertex) for vertex in SQUARE]
+
+    cell = json.loads(zones_config.zone_location_cell(zone))
+    assert cell["type"] == "Polygon"
+    ring = cell["coordinates"][0]
+    # GeoJSON order is [lon, lat], and the ring ends where it starts.
+    assert ring[0] == [20.0, 10.0]
+    assert ring[-1] == ring[0]
+    assert len(ring) == len(SQUARE) + 1
+
+
+def test_an_outline_already_closed_is_not_closed_twice():
+    closed = SQUARE + [SQUARE[0]]
+    zone = parse_zones({"Z01": {"name": "Plaza", "polygon": closed}})["Z01"]
+    ring = json.loads(zones_config.zone_location_cell(zone))["coordinates"][0]
+    assert len(ring) == len(closed)
+
+
+def test_without_an_outline_the_zone_keeps_publishing_its_point_or_nothing():
+    zones = parse_zones({"Z01": {"name": "Plaza", "location": [10.001, 20.001]}, "Z02": {"name": "Sin nada"}})
+    assert json.loads(zones_config.zone_location_cell(zones["Z01"])) == {
+        "type": "Point", "coordinates": [20.001, 10.001]}
+    assert zones_config.zone_location_cell(zones["Z02"]) is None
+
+
+@pytest.mark.parametrize("bad", [
+    [[10.0, 20.0], [10.0, 20.1]],                       # two vertices are a line
+    [[10.0, 20.0], [10.0, 20.0], [10.0, 20.0], [10.0, 20.0]],  # one point repeated
+    [[10.0, 20.0], [10.1, 20.0], ["norte", 20.1]],      # not a number
+    [[10.0, 20.0], [10.1, 20.0], [95.0, 20.1]],         # latitude out of range
+    "10.0,20.0",
+])
+def test_a_malformed_outline_is_dropped_and_the_point_stays(bad, caplog):
+    zone = parse_zones({"Z01": {"name": "Plaza", "location": [10.001, 20.001], "polygon": bad}})["Z01"]
+    assert zone.polygon is None
+    assert json.loads(zones_config.zone_location_cell(zone))["type"] == "Point"
+    assert "polygon ignored" in caplog.text

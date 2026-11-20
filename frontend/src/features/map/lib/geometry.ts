@@ -57,6 +57,15 @@ function ringCentroid(ring: [number, number][] | undefined): LatLng | null {
   return toLatLng([x * factor, y * factor])
 }
 
+/** Contorno [lat, lon] de un poligono, el orden de Leaflet, o null si no es un poligono util. */
+export function polygonLatLngs(geolocation?: Geolocation | null): LatLng[] | null {
+  if (geolocation?.type !== 'Polygon') return null
+  const ring = (geolocation.coordinates?.[0] ?? [])
+    .map((coordinates) => toLatLng(coordinates))
+    .filter((latLng): latLng is LatLng => latLng !== null)
+  return ring.length >= 3 ? ring : null
+}
+
 export function geolocationLatLng(geolocation?: Geolocation | null): LatLng | null {
   if (!geolocation) return null
   if (geolocation.type === 'Point') return toLatLng(geolocation.coordinates)

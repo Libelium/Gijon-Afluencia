@@ -19,6 +19,7 @@ never drift apart:
         "name": "Zone 01",
         "priority": 1,
         "location": [10.0010, 20.0010],
+        "polygon": [[10.0000, 20.0000], [10.0000, 20.0020], [10.0020, 20.0020], [10.0020, 20.0000]],
         "lidars": [
           {"id": "L1", "lat": 10.0010, "lon": 20.0010, "fov_degrees": 300}
         ],
@@ -28,7 +29,10 @@ never drift apart:
       }
     }
 
-Everything except `name` is optional. `fov_degrees` per LIDAR feeds the coverage
+Everything except `name` is optional. `polygon` is the outline of the zone as
+[lat, lon] vertices, in the same order as `location`; when present it is what the
+zone publishes as its `location`, so maps can paint the area instead of a dot.
+`fov_degrees` per LIDAR feeds the coverage
 correction (see lidar_coverage_multiplier); `coverage_multiplier` on the zone
 overrides that formula outright for a zone measured in the field. No orientation:
 the installed sensors are omnidirectional, so where they point is not a parameter.
@@ -82,6 +86,7 @@ class Zone:
     smartspot_ids: list = field(default_factory=list)
     lidar_ids: list = field(default_factory=list)
     location: tuple = None          # (lat, lon) centroid, or None
+    polygon: list = None            # [(lat, lon), ...] outline, or None
     coverage_multiplier: float = None   # measured in the field; overrides the formula
     fov_by_lidar: dict = field(default_factory=dict)
 
@@ -102,6 +107,23 @@ def zones_key() -> str:
 def _device_entries(raw: dict, key: str) -> list:
     entries = raw.get(key) or []
     return [e for e in entries if isinstance(e, dict) and e.get("id")]
+
+
+def _polygon(zone_id: str, raw) -> list:
+    """The zone outline as [(lat, lon), ...], or None. A malformed one is dropped with
+    a warning rather than failing the run: the zone still publishes its point."""
+    if raw is None:
+        return None
+    try:
+        vertices = [(float(lat), float(lon)) for lat, lon in raw]
+    except (TypeError, ValueError):
+        vertices = []
+    distinct = set(vertices)
+    if len(distinct) < 3 or not all(-90 <= lat <= 90 and -180 <= lon <= 180 for lat, lon in distinct):
+        logger.warning("zone '%s': polygon ignored, it needs at least 3 distinct [lat, lon] "
+                       "vertices", zone_id)
+        return None
+    return vertices
 
 
 def parse_zones(payload: dict) -> dict:
@@ -126,6 +148,7 @@ def parse_zones(payload: dict) -> dict:
             smartspot_ids=[str(d["id"]) for d in smartspots],
             lidar_ids=[str(d["id"]) for d in lidars],
             location=tuple(location) if location else None,
+            polygon=_polygon(zone_id, raw.get("polygon")),
             coverage_multiplier=raw.get("coverage_multiplier"),
             fov_by_lidar={str(d["id"]): d["fov_degrees"] for d in lidars
                           if d.get("fov_degrees")},
@@ -258,3 +281,17 @@ def location_cell(lat_lon) -> str:
     from flat lat/lon columns."""
     lat, lon = lat_lon
     return json.dumps({"type": "Point", "coordinates": [lon, lat]})
+
+
+def zone_location_cell(zone: Zone):
+    """The `location` cell of a zone: its outline if it has one, else its point, else
+    None. GeoJSON wants [lon, lat] and a closed ring, so the first vertex is repeated
+    at the end when zones.json does not."""
+    if zone.polygon:
+        ring = [[lon, lat] for lat, lon in zone.polygon]
+        if ring[0] != ring[-1]:
+            ring.append(ring[0])
+        return json.dumps({"type": "Polygon", "coordinates": [ring]})
+    if zone.location is not None:
+        return location_cell(zone.location)
+    return None
