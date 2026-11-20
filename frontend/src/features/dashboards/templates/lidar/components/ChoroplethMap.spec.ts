@@ -44,11 +44,13 @@ describe('ChoroplethMap', () => {
     expect(mountMap([zone({ polygon: null })]).text()).toContain('sin polígono')
   })
 
-  it('la leyenda da los tramos de aforo y el gris de las zonas sin aforo', () => {
-    const text = mountMap([zone({})]).text()
-    expect(text).toContain('De 0 a 20 %')
-    expect(text).toContain('80 % o más')
-    expect(text).toContain('Sin aforo')
+  it('la leyenda es la escala continua del calor, con el aviso de las zonas sin aforo', () => {
+    const wrapper = mountMap([zone({})])
+    const text = wrapper.text()
+    expect(text).toContain('100 % del aforo o más')
+    expect(text).toContain('Sin aforo: no se colorea')
+    // Ya no hay modo por tramos que elegir.
+    expect(wrapper.findAll('button').some((button) => button.text() === 'Zonas')).toBe(false)
   })
 
   it('elegir una zona en la lista la selecciona', async () => {

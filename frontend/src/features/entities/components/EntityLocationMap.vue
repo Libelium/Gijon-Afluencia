@@ -31,6 +31,9 @@ const props = withDefaults(
 
 const theme = useTheme()
 const areaColor = computed(() => theme.global.current.value.colors.primary)
+// Mismo array mientras no cambie la ubicacion: uno nuevo en cada repintado haria que vue-leaflet
+// devolviera el mapa al punto despues de encuadrar el area.
+const center = computed<[number, number]>(() => [props.lat, props.lon])
 
 const tiles = tilesUrl()
 const attribution = tilesAttribution()
@@ -65,7 +68,7 @@ function onReady(map: LeafletMap) {
   >
     <LMap
       :zoom="props.zoom"
-      :center="[props.lat, props.lon]"
+      :center="center"
       :scroll-wheel-zoom="false"
       :style="{ height: '100%' }"
       @ready="onReady"

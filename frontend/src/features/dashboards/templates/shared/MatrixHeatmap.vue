@@ -11,10 +11,11 @@ import { formatMeasure } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { occupancyColors, INK, MUTED, SURFACE } from '../../palette'
 import { useChartTheme } from '../../charts/useChartTheme'
-import { asItems, axisValue, chartStyle, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
+import { asItems, axisValue, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
 import { useChartLabel } from '../../charts/chartLabel'
 import { ariaOption, rowsTable } from '../../charts/a11y'
 import type { MatrixCell } from './types'
+import { useChartStyle } from '../../charts/expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent, AriaComponent])
@@ -114,7 +115,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 /**
  * Tabla equivalente de la matriz: fila, columna y valor. Igual que en el resto de mapas de

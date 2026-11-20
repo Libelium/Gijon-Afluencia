@@ -26,7 +26,6 @@ import { useChartTheme } from './useChartTheme'
 import {
   asItems,
   chartGrid,
-  chartStyle,
   dashFor,
   nonNull,
   scrollLegend,
@@ -41,6 +40,7 @@ import {
 import { useChartLabel } from './chartLabel'
 import { ariaOption, seriesTable } from './a11y'
 import type { ChartSeries } from './types'
+import { useChartStyle } from './expanded'
 
 // `AriaComponent` es lo que hace que ECharts ponga `role="img"` y un nombre accesible en el
 // contenedor del lienzo. Sin el, el `<canvas>` no tiene nombre (WCAG 1.1.1, ACC-002).
@@ -147,7 +147,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 // La misma serie que dibuja el lienzo, en tabla: es la alternativa textual, no un resumen.
 const table = computed(() =>

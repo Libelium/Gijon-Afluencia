@@ -10,28 +10,38 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Ampliar cualquier gráfico de un panel a pantalla completa.** Cada gráfico de los paneles
+  propios y de las plantillas, y los mapas de las plantillas, tienen un botón para verlo a casi toda
+  la pantalla y otro para volver; Escape también cierra. La gráfica o el mapa crecen en alto sin
+  recargarse y conservan lo elegido (zona, hora de la barra, zoom), así que da igual el tamaño que
+  tengan en el panel. Mientras está ampliado, el foco del teclado no sale de él y al cerrar vuelve
+  al botón.
 - **Las zonas pueden publicar su contorno.** `zones.json` admite en cada zona un campo opcional
   `polygon`, con los vértices `[lat, lon]` del área. Si lo tiene, la fusión y la ETL de los LIDAR
   publican como `location` de la zona un `Polygon` de GeoJSON, con el anillo cerrado; si no, el
   punto de `location`, como hasta ahora. `location` se sigue leyendo para lo demás. Un contorno
   mal formado se descarta con un aviso y la zona sigue con su punto. La ficha de una entidad
   dibuja el área cuando su ubicación es un contorno, y el mapa general la dibuja bajo su marcador.
-- **Nueva plantilla «Zona · Mapa de coropletas».** Pinta cada zona de afluencia con el color del
-  porcentaje de su aforo que está ocupado, de verde a rojo en tramos de 20 %, según la cifra de la
-  zona que combina sus LIDAR y sus sensores WiFi/BLE. El aforo máximo se toma de la zona o, si no
-  lo trae, de su gemela con la analítica del LIDAR (`maxCapacity`); sin ninguno, la zona sale en
-  gris. Encima se sitúan los dispositivos de cada zona (los que declara la fusión en
-  `lidarSerial` y `smartspotSerial`), con una tabla que los lista por zona. Muestra la ocupación
-  de ahora y, con una barra que se puede reproducir y pausar, la de cada hora o cada día del rango
-  elegido: por horas hasta un mes de rango, y por defecto por horas hasta una semana y por días a
-  partir de ahí. Al reproducir, los cambios de color muestran cómo sube y baja la gente. Arriba
-  resume la ocupación conjunta, cuántas zonas están al 80 % o más, la más llena y la
-  seleccionada. Solo se pintan las zonas cuya ubicación es su contorno (un polígono); las que solo
-  tienen un punto lo avisan y siguen, con su ocupación, en la lista de debajo del mapa, que es
-  también la forma de elegir zona con el teclado. El mapa es apaisado y cabe en la pantalla, con
-  el borde de cada zona en un tono más oscuro de su color. Los dispositivos se pueden ocultar, y el
-  navegador lo recuerda. El doble clic en una zona, o elegirla en la lista, la encuadra; la rueda
-  del ratón y los botones acercan con pasos más cortos que en el resto de mapas.
+- **Nueva plantilla «Zona · Mapa de coropletas».** Pinta como un mapa de calor el porcentaje del
+  aforo que está ocupado en cada zona de afluencia, según la cifra de la zona que combina sus
+  LIDAR y sus sensores WiFi/BLE. El color es continuo, de verde (vacía) a rojo oscuro (llena),
+  con el amarillo en el 50 %. Las zonas se pintan sin líneas de contorno, con las esquinas
+  redondeadas y el borde difuminado hacia dentro y hacia fuera, solo al dibujarlas. El aforo
+  máximo se toma de la zona o, si no lo trae, de su gemela con la analítica del LIDAR
+  (`maxCapacity`); sin ninguno, la zona no se colorea. Encima se sitúan los dispositivos de cada
+  zona (los que declara la fusión en `lidarSerial` y `smartspotSerial`), con una tabla que los
+  lista por zona; se pueden ocultar, y el navegador lo recuerda. Muestra la ocupación de ahora y,
+  con una barra que se puede reproducir y pausar, la de cada hora o cada día del rango elegido:
+  por horas hasta un mes de rango, y por defecto por horas hasta una semana y por días a partir de
+  ahí. Junto a la barra se ven el principio y el fin del rango, el momento que se muestra y qué es
+  exactamente el valor: la media de las lecturas de esa hora o ese día, con su intervalo, o la
+  última lectura de cada zona, sin promediar. Arriba resume la ocupación conjunta, cuántas zonas
+  están al 80 % o más, la más llena y la seleccionada. Solo se pintan las zonas cuya ubicación es
+  su contorno (un polígono); las que solo tienen un punto lo avisan y siguen, con su ocupación,
+  en la lista de debajo del mapa, que es también la forma de elegir zona con el teclado. La zona
+  elegida se marca con una línea fina y discontinua. El mapa es apaisado y cabe en la pantalla; el
+  doble clic en una zona, o elegirla en la lista, la encuadra, y la rueda del ratón y los botones
+  acercan con pasos más cortos que en el resto de mapas.
 - **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
   botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
   `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,

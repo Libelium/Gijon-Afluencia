@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, useId } from 'vue'
+import { computed, nextTick, shallowRef, useId, watch } from 'vue'
+import type { Map as LeafletMap } from 'leaflet'
 import { LCircleMarker, LMap, LPolygon, LTileLayer, LTooltip } from '@vue-leaflet/vue-leaflet'
 import 'leaflet/dist/leaflet.css'
 import StateBlock from '@/components/StateBlock.vue'
@@ -8,6 +9,7 @@ import { formatMeasure } from '@/lib/format'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { useChartTheme } from '../../../charts'
 import { MUTED, occupancyColor } from '../../../palette'
+import { useChartHeight } from '../../../charts/expanded'
 
 export interface ZoneMarker {
   id: number
@@ -37,6 +39,16 @@ const MARKER_RADIUS = 12
 const MARKER_RADIUS_SELECTED = 14
 
 const listId = useId()
+
+/** Alto del mapa: el suyo, o casi toda la pantalla con la tarjeta ampliada. */
+const mapHeight = useChartHeight(() => props.height)
+const map = shallowRef<LeafletMap | null>(null)
+
+// Leaflet cachea el tamano de su contenedor: al ampliar o reducir hay que avisarle.
+watch(mapHeight, async () => {
+  await nextTick()
+  map.value?.invalidateSize()
+})
 
 // Las mismas teselas, filtro oscuro y limites que el resto de mapas de la aplicacion.
 const tiles = computed(() => tilesForTheme(isDark.value))
@@ -73,7 +85,7 @@ function markerLabel(marker: ZoneMarker): string {
     <div
       class="rounded-lg overflow-hidden"
       :class="{ 'map-tiles--dark': tiles.darken }"
-      :style="{ height: `${height}px` }"
+      :style="{ height: typeof mapHeight === 'number' ? `${mapHeight}px` : mapHeight }"
     >
       <StateBlock
         :loading="loading"
@@ -90,7 +102,8 @@ function markerLabel(marker: ZoneMarker): string {
           :center="center"
           :max-zoom="MAX_ZOOM"
           :scroll-wheel-zoom="false"
-          :style="{ height: `${height}px` }"
+          :style="{ height: typeof mapHeight === 'number' ? `${mapHeight}px` : mapHeight }"
+          @ready="map = $event"
           role="group"
           :aria-label="t('dashboards.lidar.heatmap.mapLabel')"
         >

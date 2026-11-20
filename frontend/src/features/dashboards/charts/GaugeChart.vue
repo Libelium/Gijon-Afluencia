@@ -11,10 +11,11 @@ import { t } from '@/i18n'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { LINE, occupancyColors, seriesColors } from '../palette'
 import { useChartTheme } from './useChartTheme'
-import { axisValue, chartStyle, lastPoint, niceCeil } from './chartOptions'
+import { axisValue, lastPoint, niceCeil } from './chartOptions'
 import { useChartLabel } from './chartLabel'
 import { ariaOption, seriesTable } from './a11y'
 import type { ChartSeries } from './types'
+import { useChartStyle } from './expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, GaugeSeries, AriaComponent])
@@ -103,7 +104,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 // La aguja marca el ultimo valor, pero la serie completa es el dato que llega: se ofrece entera,
 // que es mas —no menos— de lo que el dibujo deja leer.

@@ -13,6 +13,11 @@ const props = defineProps<{
   timeZone?: string
   /** Pasos de un dia: se rotulan con la fecha, sin hora. */
   daily?: boolean
+  /** Principio y fin del rango elegido, que se rotulan bajo la barra. */
+  start?: string
+  end?: string
+  /** Que es exactamente el valor que se muestra: una media o una lectura. */
+  detail?: string
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [value: number | null] }>()
@@ -92,7 +97,10 @@ onBeforeUnmount(stop)
         {{ playing ? t('templates.common.timelinePause') : t('templates.common.timelinePlay') }}
       </VBtn>
       <VSpacer />
-      <span class="text-body-2 font-weight-medium">{{ label }}</span>
+      <span class="text-body-2">
+        {{ t('templates.common.timelineShowing') }}
+        <span class="font-weight-medium">{{ label }}</span>
+      </span>
     </div>
     <template v-if="steps.length">
       <label :for="id" class="d-sr-only">{{ t('templates.common.timelineHour') }}</label>
@@ -109,6 +117,14 @@ onBeforeUnmount(stop)
       />
     </template>
     <div v-else class="text-caption text-medium-emphasis mt-1">{{ t('templates.common.timelineNoHours') }}</div>
+    <div v-if="start || end" class="d-flex flex-wrap justify-space-between ga-2 text-caption text-medium-emphasis">
+      <span>{{ t('templates.common.timelineStart', { date: formatDateTime(start, timeZone) }) }}</span>
+      <span>{{ t('templates.common.timelineEnd', { date: formatDateTime(end, timeZone) }) }}</span>
+    </div>
+    <div v-if="detail" class="d-flex align-start ga-1 text-body-2 mt-2">
+      <VIcon icon="mdi-information-outline" size="16" class="text-medium-emphasis mt-1" aria-hidden="true" />
+      <span>{{ detail }}</span>
+    </div>
   </div>
 </template>
 

@@ -9,8 +9,11 @@ import { t } from '@/i18n'
 import { formatMeasure, formatNumber } from '@/lib/format'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { rowsTable } from '../../../charts/a11y'
-import { AFORO_SCALE, INK, MUTED, aforoColor, darken } from '../../../palette'
+import { useExpanded } from '../../../charts/expanded'
+import { INK, MUTED } from '../../../palette'
 import type { DeviceKind, ZoneDevice, ZoneState } from '../choropleth'
+import { HEAT_STOPS, heatColor } from '../heatField'
+import { createHeatLayer, type HeatLayer } from '../heatLayer'
 
 const props = withDefaults(
   defineProps<{ zones: ZoneState[]; devices?: ZoneDevice[]; selectedId?: number | null }>(),
@@ -27,34 +30,27 @@ const listId = useId()
 
 const painted = computed(() => props.zones.filter((zone) => zone.polygon))
 
-/** Cuanto se oscurece el borde: lo bastante para separar zonas vecinas del mismo tramo. */
-const BORDER_DARKEN = 0.4
-
 function colorOf(zone: ZoneState): string {
   if (zone.ratio === null) return isDark.value ? MUTED.dark : MUTED.light
-  return aforoColor(zone.ratio)
+  return `rgb(${heatColor(zone.ratio).join(', ')})`
 }
+
+/** La zona elegida se marca con una linea fina y discontinua: se ve sin calcar su contorno exacto. */
+const SELECTED_OUTLINE = { weight: 2, dash: '6 5' }
+
+const heatGradient = computed(
+  () => `linear-gradient(to right, ${HEAT_STOPS.map(([at, color]) => `${color} ${at * 100}%`).join(', ')})`,
+)
 
 function labelOf(zone: ZoneState): string {
   const people = formatMeasure(zone.value, t('dashboards.lidar.people'))
   return zone.ratio === null ? people : `${people} · ${formatMeasure(zone.ratio * 100, '%')}`
 }
 
-const legend = computed(() => [
-  ...AFORO_SCALE.map((color, index) => ({
-    color,
-    label:
-      index === AFORO_SCALE.length - 1
-        ? t('dashboards.lidar.choropleth.levelFrom', { from: index * 20 })
-        : t('dashboards.lidar.choropleth.level', { from: index * 20, to: (index + 1) * 20 }),
-  })),
-  { color: isDark.value ? MUTED.dark : MUTED.light, label: t('dashboards.lidar.choropleth.noCapacity') },
-])
-
 /**
  * Los dispositivos se distinguen por la forma de pintarlos, no por el color, que es del aforo:
  * el LIDAR relleno de tinta y el sensor WiFi/BLE hueco, los dos con borde para verse sobre cualquier
- * tramo.
+ * color del calor.
  */
 const DEVICE_STYLE: Record<DeviceKind, { radius: number; fill: string; stroke: string }> = {
   lidar: { radius: 7, fill: INK.light, stroke: '#FFFFFF' },
@@ -131,6 +127,29 @@ function chooseFromList(zone: ZoneState) {
 
 const map = shallowRef<LeafletMap | null>(null)
 
+// Una sola vez: un array nuevo en cada repintado es para vue-leaflet un centro nuevo, y devolveria
+// el mapa al centro por defecto, fuera de las zonas, al cambiar de paso o de modo.
+const INITIAL_CENTER = defaultCenter()
+const INITIAL_ZOOM = defaultZoom()
+let heat: HeatLayer | null = null
+
+/**
+ * Lo que pinta la capa de calor: las zonas con aforo. El poligono de cada zona no se ve, pero sigue
+ * en el mapa para el clic, el doble clic y el tooltip.
+ */
+const heatSources = computed(() =>
+  painted.value.flatMap((zone) => (zone.ratio === null ? [] : [{ polygon: zone.polygon!, value: zone.ratio }])),
+)
+
+function onReady(instance: LeafletMap) {
+  map.value = instance
+  heat = createHeatLayer(instance)
+  heat.update(heatSources.value)
+  fit()
+}
+
+watch(heatSources, (sources) => heat?.update(sources))
+
 /** Encuadra todas las zonas pintadas. Solo cuando cambia cuales son, no a cada hora. */
 function fit() {
   const instance = map.value
@@ -146,6 +165,8 @@ watch(() => painted.value.map((zone) => zone.id).join(','), fit)
  * enterarse y se vuelven a encuadrar todas las zonas para que se vean enteras.
  */
 const frame = ref<HTMLElement | null>(null)
+const expanded = useExpanded()
+
 let observer: ResizeObserver | undefined
 let resizeTimer: ReturnType<typeof setTimeout> | undefined
 /** Pixeles que tiene que cambiar el mapa para volver a encuadrar las zonas. */
@@ -171,6 +192,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  heat?.remove()
   clearTimeout(resizeTimer)
   observer?.disconnect()
 })
@@ -181,12 +203,12 @@ onBeforeUnmount(() => {
     <div
       ref="frame"
       class="choropleth rounded-lg overflow-hidden"
-      :class="{ 'map-tiles--dark': tiles.darken }"
+      :class="{ 'map-tiles--dark': tiles.darken, 'choropleth--expanded': expanded }"
     >
       <!-- `group` y no `img`: dentro quedan el zoom y la atribucion, que deben seguir alcanzables. -->
       <LMap
-        :center="defaultCenter()"
-        :zoom="defaultZoom()"
+        :center="INITIAL_CENTER"
+        :zoom="INITIAL_ZOOM"
         :max-zoom="MAX_ZOOM"
         :scroll-wheel-zoom="true"
         :double-click-zoom="false"
@@ -194,7 +216,7 @@ onBeforeUnmount(() => {
         :style="{ height: '100%' }"
         role="group"
         :aria-label="t('dashboards.lidar.choropleth.mapLabel')"
-        @ready="(instance: LeafletMap) => { map = instance; fit() }"
+        @ready="onReady"
       >
         <!-- La key recrea la capa al cambiar de tema: vue-leaflet solo aplica `options` al crearla. -->
         <LTileLayer :key="tiles.url" :url="tiles.url" :attribution="tiles.attribution" :options="tiles.options" />
@@ -202,10 +224,11 @@ onBeforeUnmount(() => {
           v-for="zone in painted"
           :key="zone.id"
           :lat-lngs="zone.polygon!"
-          :fill-color="colorOf(zone)"
-          :fill-opacity="0.65"
-          :color="zone.id === selectedId ? highlight : darken(colorOf(zone), BORDER_DARKEN)"
-          :weight="zone.id === selectedId ? 4 : 2.5"
+          :fill-opacity="0"
+          :color="highlight"
+          :opacity="zone.id === selectedId ? 1 : 0"
+          :weight="SELECTED_OUTLINE.weight"
+          :dash-array="zone.id === selectedId ? SELECTED_OUTLINE.dash : undefined"
           @click="$emit('select', zone.id)"
           @dblclick="frameZone(zone)"
         >
@@ -233,13 +256,19 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="d-flex flex-wrap align-center ga-4 mt-3">
-      <span
-        v-for="item in legend"
-        :key="item.label"
-        class="d-inline-flex align-center ga-2 text-caption text-medium-emphasis"
-      >
-        <span class="choropleth__swatch" :style="{ background: item.color }" />
-        {{ item.label }}
+      <span class="d-inline-flex align-center ga-2 text-caption text-medium-emphasis">
+        0 %
+        <span
+          class="choropleth__gradient"
+          :style="{ background: heatGradient }"
+          role="img"
+          :aria-label="t('dashboards.lidar.choropleth.heatLegend')"
+        />
+        {{ t('dashboards.lidar.choropleth.heatMax') }}
+      </span>
+      <span class="d-inline-flex align-center ga-2 text-caption text-medium-emphasis">
+        <span class="choropleth__swatch" :style="{ background: isDark ? MUTED.dark : MUTED.light }" />
+        {{ t('dashboards.lidar.choropleth.heatNoCapacity') }}
       </span>
       <span
         v-for="item in showDevices ? deviceLegend : []"
@@ -316,12 +345,24 @@ onBeforeUnmount(() => {
   inline-size: 100%;
 }
 
+/* Ampliado ocupa el alto de la ventana menos la barra de horas que va encima. */
+.choropleth--expanded {
+  max-block-size: calc(100vh - 300px);
+}
+
 .choropleth__swatch {
   display: inline-block;
   inline-size: 12px;
   block-size: 12px;
   border-radius: 3px;
   flex: 0 0 auto;
+}
+
+.choropleth__gradient {
+  display: inline-block;
+  inline-size: 140px;
+  block-size: 10px;
+  border-radius: 5px;
 }
 
 .choropleth__swatch--round {

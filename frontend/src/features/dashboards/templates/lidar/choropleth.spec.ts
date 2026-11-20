@@ -1,19 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aforoColor, aforoLevel, AFORO_SCALE, darken } from '../../palette'
-import { deviceUrn, polygonOf, ratioOf, summarize, timeSteps, twinUrn, valueAt, zoneSerials, type ZoneState } from './choropleth'
-
-describe('aforoLevel', () => {
-  it('un tramo por cada 20 % del aforo, y lo que pasa del 80 % es el ultimo', () => {
-    expect(aforoLevel(0)).toBe(0)
-    expect(aforoLevel(0.19)).toBe(0)
-    expect(aforoLevel(0.2)).toBe(1)
-    expect(aforoLevel(0.79)).toBe(3)
-    expect(aforoLevel(0.8)).toBe(4)
-    expect(aforoLevel(1.4)).toBe(4)
-    expect(aforoLevel(Number.NaN)).toBe(0)
-    expect(aforoColor(0.5)).toBe(AFORO_SCALE[2])
-  })
-})
+import { deviceUrn, latest, polygonOf, ratioOf, smoothPolygon, stepEnd, summarize, timeSteps, twinUrn, valueAt, zoneSerials, type ZoneState } from './choropleth'
 
 describe('polygonOf', () => {
   it('pasa el contorno de GeoJSON a [lat, lon] y descarta lo que no es poligono', () => {
@@ -102,19 +88,67 @@ describe('dispositivos de la zona', () => {
   })
 })
 
-describe('darken', () => {
-  it('mezcla el color con negro en la proporcion pedida', () => {
-    expect(darken('#FC8D59', 0)).toBe('#FC8D59')
-    expect(darken('#FC8D59', 1)).toBe('#000000')
-    expect(darken('#FFFFFF', 0.5)).toBe('#808080')
-  })
-})
-
 describe('twinUrn', () => {
   it('cambia el modelo de datos y conserva el id de la zona', () => {
     expect(twinUrn('urn:ngsi-ld:CrowdFlowZone:P03', 'CrowdFlowZone', 'CrowdFlowLidarZone')).toBe(
       'urn:ngsi-ld:CrowdFlowLidarZone:P03',
     )
     expect(twinUrn('urn:ngsi-ld:Otra:P03', 'CrowdFlowZone', 'CrowdFlowLidarZone')).toBeNull()
+  })
+})
+
+describe('intervalo de cada paso', () => {
+  it('el paso resume una hora o un dia desde su marca, tambien con el formato de la API', () => {
+    expect(stepEnd('2026-11-17T10:00:00Z', 'hour')).toBe('2026-11-17T11:00:00.000Z')
+    expect(stepEnd('2026-11-17 00:00:00', 'day')).toBe('2026-11-18T00:00:00.000Z')
+    expect(stepEnd('no es fecha', 'hour')).toBeNull()
+  })
+
+  it('la lectura mas reciente es la de marca mayor, sin contar las que faltan', () => {
+    expect(latest(['2026-09-04 23:45:00', null, '2026-09-04T22:00:00Z', 'mal'])).toBe('2026-09-04 23:45:00')
+    expect(latest([undefined, null])).toBeNull()
+  })
+})
+
+describe('smoothPolygon', () => {
+  const square: [number, number][] = [
+    [0, 0],
+    [0, 4],
+    [4, 4],
+    [4, 0],
+    [0, 0],
+  ]
+
+  it('recorta cada esquina al 25 % de sus lados y no deja vertices del contorno original', () => {
+    expect(smoothPolygon(square, 1)).toEqual([
+      [0, 1],
+      [0, 3],
+      [1, 4],
+      [3, 4],
+      [4, 3],
+      [4, 1],
+      [3, 0],
+      [1, 0],
+    ])
+  })
+
+  it('con las pasadas por defecto no se sale del contorno, pierde las esquinas y conserva el centro', () => {
+    const ring = smoothPolygon(square)!
+    expect(ring.length).toBe(4 * 2 ** 3)
+    expect(ring.every(([a, b]) => a >= 0 && a <= 4 && b >= 0 && b <= 4)).toBe(true)
+    // Las esquinas desaparecen: ningun punto queda en un vertice del cuadrado.
+    expect(ring.some(([a, b]) => (a === 0 || a === 4) && (b === 0 || b === 4))).toBe(false)
+    const mean = (i: 0 | 1) => ring.reduce((sum, p) => sum + p[i], 0) / ring.length
+    expect(mean(0)).toBeCloseTo(2, 9)
+    expect(mean(1)).toBeCloseTo(2, 9)
+  })
+
+  it('sin contorno, o con menos de tres vertices, lo devuelve tal cual', () => {
+    const segment: [number, number][] = [
+      [0, 0],
+      [1, 1],
+    ]
+    expect(smoothPolygon(segment)).toBe(segment)
+    expect(smoothPolygon(null)).toBeNull()
   })
 })

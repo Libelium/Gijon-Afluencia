@@ -5,7 +5,7 @@ import StatTile from '@/components/StatTile.vue'
 import { getEntityMeasures, listEntities } from '@/features/entities/api/entities'
 import { geolocationLatLng } from '@/features/map/lib/geometry'
 import { t } from '@/i18n'
-import { formatNumber, urnTail } from '@/lib/format'
+import { formatDateTime, formatNumber, urnTail } from '@/lib/format'
 import type { Dashboard, Entity } from '@/types'
 import type { ChartPoint } from '../../charts'
 import { rangeHours, type DateRange } from '../../lib/range'
@@ -14,9 +14,12 @@ import { fetchSeries } from '../shared/series'
 import { datamodelOf } from '../contract'
 import {
   deviceUrn,
+  latest,
   NEAR_FULL,
   polygonOf,
   ratioOf,
+  smoothPolygon,
+  stepEnd,
   summarize,
   timeSteps,
   twinUrn,
@@ -26,6 +29,8 @@ import {
   type ZoneDevice,
   type ZoneState,
 } from './choropleth'
+import ExpandButton from '../../components/ExpandButton.vue'
+import ExpandFrame from '../../components/ExpandFrame.vue'
 import ChoroplethMap from './components/ChoroplethMap.vue'
 import LidarControlBar from './components/LidarControlBar.vue'
 import LidarNotice from './components/LidarNotice.vue'
@@ -45,6 +50,8 @@ const { zones, zoneId, preset, custom, range, ownRange, timeZone, loading, error
 
 interface LiveZone {
   value: number | null
+  /** Instante de esa lectura. */
+  at: string | null
   capacity: number | null
   /** Medida de ocupacion de la zona, para pedir su serie por horas. */
   measureId: string | null
@@ -83,6 +90,7 @@ async function loadLive() {
         const profile = describeZone(result.value)
         next[batch[index].id] = {
           value: profile.current,
+          at: profile.occupancy?.timestamp ?? null,
           capacity: profile.capacity,
           measureId: profile.occupancy?.id ?? null,
           serials: zoneSerials(result.value),
@@ -219,7 +227,8 @@ const states = computed<ZoneState[]>(() =>
     return {
       id: zone.id,
       name: zone.name || urnTail(zone.urn),
-      polygon: polygonOf(zone.geolocation),
+      // Con las esquinas redondeadas: el GeoJSON tiene picos que en el mapa quedan bastos.
+      polygon: smoothPolygon(polygonOf(zone.geolocation)),
       value,
       capacity,
       ratio: ratioOf(value, capacity),
@@ -236,6 +245,25 @@ const withoutCapacity = computed(() => states.value.filter((state) => state.capa
 function percent(ratio: number | null): string {
   return ratio === null ? t('common.noValue') : formatNumber(ratio * 100, 0)
 }
+
+/**
+ * Que es exactamente lo que pinta el mapa: la ultima lectura de cada zona, tal cual, o la media de
+ * sus lecturas en el tramo del paso elegido.
+ */
+const shown = computed(() => {
+  const tz = timeZone.value
+  if (step.value === null) {
+    const at = latest(zones.value.map((zone) => live.value[zone.id]?.at))
+    return at
+      ? t('dashboards.lidar.choropleth.shownNow', { at: formatDateTime(at, tz) })
+      : t('dashboards.lidar.choropleth.shownNowUndated')
+  }
+  const from = steps.value[step.value]
+  return t('dashboards.lidar.choropleth.shownMean', {
+    from: formatDateTime(from, tz),
+    to: formatDateTime(stepEnd(from, granularity.value), tz),
+  })
+})
 
 const moment = computed(() =>
   step.value === null
@@ -325,45 +353,51 @@ const moment = computed(() =>
         />
       </div>
 
-      <VCard>
-        <div class="d-flex align-center ga-2 px-4 pt-4 pb-2">
-          <VIcon icon="mdi-map-legend" size="18" class="text-medium-emphasis" />
-          <div class="min-w-0">
-            <div class="text-subtitle-2 font-weight-medium">{{ t('dashboards.lidar.choropleth.title') }}</div>
-            <div class="text-caption text-medium-emphasis">{{ t('dashboards.lidar.choropleth.hint') }}</div>
+      <ExpandFrame v-slot="{ expanded, toggle }" :label="t('dashboards.lidar.choropleth.title')">
+        <VCard>
+          <div class="d-flex align-center ga-2 px-4 pt-4 pb-2">
+            <VIcon icon="mdi-map-legend" size="18" class="text-medium-emphasis" />
+            <div class="min-w-0 flex-grow-1">
+              <div class="text-subtitle-2 font-weight-medium">{{ t('dashboards.lidar.choropleth.title') }}</div>
+              <div class="text-caption text-medium-emphasis">{{ t('dashboards.lidar.choropleth.hint') }}</div>
+            </div>
+            <ExpandButton :expanded="expanded" @toggle="toggle" />
           </div>
-        </div>
-        <VDivider />
-        <div class="pa-4">
-          <div class="d-flex flex-wrap align-center ga-3 mb-3">
-            <span id="choropleth-step" class="text-body-2">{{ t('dashboards.lidar.choropleth.step') }}</span>
-            <VBtnToggle
-              :model-value="granularity"
-              mandatory
-              density="compact"
-              variant="outlined"
-              divided
-              aria-labelledby="choropleth-step"
-              @update:model-value="chosenStep = $event"
-            >
-              <VBtn value="hour" size="small" :disabled="!hourlyAllowed">{{ t('dashboards.lidar.choropleth.stepHour') }}</VBtn>
-              <VBtn value="day" size="small">{{ t('dashboards.lidar.choropleth.stepDay') }}</VBtn>
-            </VBtnToggle>
-            <span v-if="!hourlyAllowed" class="text-caption text-medium-emphasis">
-              {{ t('dashboards.lidar.choropleth.hourlyLimit') }}
-            </span>
+          <VDivider />
+          <div class="pa-4">
+            <div class="d-flex flex-wrap align-center ga-3 mb-3">
+              <span id="choropleth-step" class="text-body-2">{{ t('dashboards.lidar.choropleth.step') }}</span>
+              <VBtnToggle
+                :model-value="granularity"
+                mandatory
+                density="compact"
+                variant="outlined"
+                divided
+                aria-labelledby="choropleth-step"
+                @update:model-value="chosenStep = $event"
+              >
+                <VBtn value="hour" size="small" :disabled="!hourlyAllowed">{{ t('dashboards.lidar.choropleth.stepHour') }}</VBtn>
+                <VBtn value="day" size="small">{{ t('dashboards.lidar.choropleth.stepDay') }}</VBtn>
+              </VBtnToggle>
+              <span v-if="!hourlyAllowed" class="text-caption text-medium-emphasis">
+                {{ t('dashboards.lidar.choropleth.hourlyLimit') }}
+              </span>
+            </div>
+            <HourTimeline
+              v-model="step"
+              class="mb-3"
+              :steps="steps"
+              :daily="granularity === 'day'"
+              :summary-label="t('dashboards.lidar.choropleth.now')"
+              :time-zone="timeZone"
+              :start="range.start"
+              :end="range.end"
+              :detail="shown"
+            />
+            <ChoroplethMap :zones="states" :devices="devices" :selected-id="zoneId" @select="zoneId = $event" />
           </div>
-          <HourTimeline
-            v-model="step"
-            class="mb-3"
-            :steps="steps"
-            :daily="granularity === 'day'"
-            :summary-label="t('dashboards.lidar.choropleth.now')"
-            :time-zone="timeZone"
-          />
-          <ChoroplethMap :zones="states" :devices="devices" :selected-id="zoneId" @select="zoneId = $event" />
-        </div>
-      </VCard>
+        </VCard>
+      </ExpandFrame>
     </StateBlock>
   </div>
 </template>

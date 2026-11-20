@@ -1,4 +1,5 @@
 import { polygonLatLngs } from '@/features/map/lib/geometry'
+import { parseApiDateTime } from '@/lib/format'
 import type { ChartPoint } from '../../charts'
 
 /** Lo que el mapa sabe de una zona en el momento que muestra. */
@@ -18,6 +19,34 @@ export interface ZoneState {
 /** Contorno de una zona en [lat, lon], el orden de Leaflet. GeoJSON lo guarda como [lon, lat]. */
 export const polygonOf = polygonLatLngs
 
+/** Pasadas de suavizado: con tres las esquinas ya se ven curvas y el contorno no se engorda. */
+const SMOOTH_PASSES = 3
+
+/**
+ * Contorno [lat, lon] con las esquinas redondeadas (corte de esquinas de Chaikin): cada lado se
+ * sustituye por sus puntos al 25 % y al 75 %. Conserva la forma y el sitio de la zona; solo se usa
+ * para dibujar. El recorte es igual en grados que en metros, asi que no hace falta proyectar.
+ */
+export function smoothPolygon(polygon: [number, number][] | null, passes = SMOOTH_PASSES): [number, number][] | null {
+  if (!polygon) return polygon
+  let ring = polygon
+  const [first, last] = [ring[0], ring[ring.length - 1]]
+  // GeoJSON repite el primer vertice al final: con el duplicado, esa esquina no se redondearia.
+  if (ring.length > 1 && first[0] === last[0] && first[1] === last[1]) ring = ring.slice(0, -1)
+  if (ring.length < 3) return polygon
+  for (let pass = 0; pass < passes; pass++) {
+    const next: [number, number][] = []
+    for (let i = 0; i < ring.length; i++) {
+      const [lat1, lon1] = ring[i]
+      const [lat2, lon2] = ring[(i + 1) % ring.length]
+      next.push([0.75 * lat1 + 0.25 * lat2, 0.75 * lon1 + 0.25 * lon2])
+      next.push([0.25 * lat1 + 0.75 * lat2, 0.25 * lon1 + 0.75 * lon2])
+    }
+    ring = next
+  }
+  return ring
+}
+
 export function ratioOf(value: number | null, capacity: number | null): number | null {
   return value === null || !capacity || capacity <= 0 ? null : value / capacity
 }
@@ -32,6 +61,29 @@ export function timeSteps(series: Iterable<ChartPoint[]>): string[] {
 /** Valor de una serie en una marca exacta, o null si esa hora no tiene lectura. */
 export function valueAt(points: ChartPoint[], timestamp: string): number | null {
   return points.find((point) => point.t === timestamp)?.v ?? null
+}
+
+/**
+ * Fin del intervalo que resume un paso de la barra: la serie llega agregada en tramos que empiezan
+ * en la marca del paso y duran una hora o un dia.
+ */
+export function stepEnd(timestamp: string, granularity: 'hour' | 'day'): string | null {
+  const start = parseApiDateTime(timestamp, 'utc')
+  return start ? start.plus(granularity === 'hour' ? { hours: 1 } : { days: 1 }).toISO() : null
+}
+
+/** Marca mas reciente de una lista, o null si no hay ninguna valida. */
+export function latest(timestamps: (string | null | undefined)[]): string | null {
+  let best: string | null = null
+  let bestTime = -Infinity
+  for (const timestamp of timestamps) {
+    const time = parseApiDateTime(timestamp)?.toMillis()
+    if (time !== undefined && time > bestTime) {
+      best = timestamp as string
+      bestTime = time
+    }
+  }
+  return best
 }
 
 /** A partir de esta proporcion la zona cuenta como llena en los indicadores. */

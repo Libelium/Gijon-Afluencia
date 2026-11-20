@@ -30,4 +30,7 @@ export default {
   'templates.common.timelinePlay': 'Reproducir',
   'templates.common.timelinePause': 'Pausar',
   'templates.common.timelineNoHours': 'No hay lecturas en este rango',
+  'templates.common.timelineShowing': 'Se muestra:',
+  'templates.common.timelineStart': 'Inicio: {date}',
+  'templates.common.timelineEnd': 'Fin: {date}',
 } as const
