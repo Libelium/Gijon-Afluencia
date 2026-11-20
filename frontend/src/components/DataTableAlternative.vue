@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { t } from '@/i18n'
 import type { AlternativeTable } from '@/features/dashboards/charts/a11y'
+import { csvFileName, downloadCsv } from '@/lib/csv'
 
 /**
  * Alternativa textual de un contenido grafico: la misma informacion, en una tabla de datos.
@@ -35,43 +36,65 @@ const props = withDefaults(
 const summaryText = computed(() => props.label ?? t('a11y.dataTable.show'))
 const truncated = computed(() => props.table.total > props.table.rows.length)
 const hasRows = computed(() => props.table.rows.length > 0)
+const canDownload = computed(() => !!props.table.download?.rows.length)
+
+/** Los mismos datos que la tabla, pero todos: la tabla se recorta para poder recorrerla. */
+function download() {
+  const data = props.table.download
+  if (data) downloadCsv(csvFileName(props.title), data.columns, data.rows)
+}
 </script>
 
 <template>
-  <details class="data-alt">
-    <summary class="data-alt__summary text-caption">
-      <VIcon icon="mdi-table" size="14" class="me-1" />
-      {{ summaryText }}
-    </summary>
+  <div class="data-alt">
+    <div class="d-flex align-start ga-2">
+      <details class="flex-grow-1 min-w-0">
+        <summary class="data-alt__summary text-caption">
+          <VIcon icon="mdi-table" size="14" class="me-1" />
+          {{ summaryText }}
+        </summary>
 
-    <div class="data-alt__body" :style="{ maxHeight: `${maxHeight}px` }">
-      <p v-if="!hasRows" class="text-caption text-medium-emphasis pa-2 mb-0">
-        {{ t('a11y.dataTable.empty') }}
-      </p>
+        <div class="data-alt__body" :style="{ maxHeight: `${maxHeight}px` }">
+          <p v-if="!hasRows" class="text-caption text-medium-emphasis pa-2 mb-0">
+            {{ t('a11y.dataTable.empty') }}
+          </p>
 
-      <table v-else class="data-alt__table text-caption">
-        <caption class="data-alt__caption">
-          {{ t('a11y.dataTable.caption', { title }) }}
-          <template v-if="truncated">
-            {{ t('a11y.dataTable.truncated', { shown: table.rows.length, total: table.total }) }}
-          </template>
-        </caption>
-        <thead>
-          <tr>
-            <th v-for="column in table.columns" :key="column" scope="col">{{ column }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in table.rows" :key="index">
-            <!-- La primera celda identifica la fila (el instante, la zona…): es cabecera de
-                 fila, y con `scope="row"` el lector la repite al leer cada valor. -->
-            <th scope="row">{{ row[0] }}</th>
-            <td v-for="(cell, column) in row.slice(1)" :key="column">{{ cell }}</td>
-          </tr>
-        </tbody>
-      </table>
+          <table v-else class="data-alt__table text-caption">
+            <caption class="data-alt__caption">
+              {{ t('a11y.dataTable.caption', { title }) }}
+              <template v-if="truncated">
+                {{ t('a11y.dataTable.truncated', { shown: table.rows.length, total: table.total }) }}
+              </template>
+            </caption>
+            <thead>
+              <tr>
+                <th v-for="column in table.columns" :key="column" scope="col">{{ column }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, index) in table.rows" :key="index">
+                <!-- La primera celda identifica la fila (el instante, la zona…): es cabecera de
+                     fila, y con `scope="row"` el lector la repite al leer cada valor. -->
+                <th scope="row">{{ row[0] }}</th>
+                <td v-for="(cell, column) in row.slice(1)" :key="column">{{ cell }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <VBtn
+        v-if="canDownload"
+        variant="text"
+        size="x-small"
+        prepend-icon="mdi-download"
+        class="flex-shrink-0"
+        :aria-label="t('a11y.dataTable.downloadLabel', { title })"
+        @click="download"
+      >
+        {{ t('a11y.dataTable.download') }}
+      </VBtn>
     </div>
-  </details>
+  </div>
 </template>
 
 <style scoped>

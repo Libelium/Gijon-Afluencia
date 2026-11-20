@@ -167,3 +167,25 @@ describe('ariaOption', () => {
     expect(description).toContain('tabla')
   })
 })
+
+describe('descarga de la tabla', () => {
+  it('lleva todas las filas aunque la tabla se recorte, con los números sin formatear y la zona', () => {
+    const points = Array.from({ length: MAX_ALTERNATIVE_ROWS + 50 }, (_, i) => ({
+      t: new Date(Date.UTC(2026, 10, 1) + i * 3_600_000).toISOString(),
+      v: 1000 + i + 0.5,
+    }))
+    const table = seriesTable([{ name: 'Ocupación', units: 'personas', points }], { timeZone: 'Europe/Madrid' })
+    expect(table.rows).toHaveLength(MAX_ALTERNATIVE_ROWS)
+    expect(table.download?.rows).toHaveLength(MAX_ALTERNATIVE_ROWS + 50)
+    expect(table.download?.columns).toEqual(['Fecha y hora (Europe/Madrid)', 'Ocupación (personas)'])
+    // 1 de noviembre a las 00:00 UTC es la 01:00 en Madrid; el valor va tal cual, sin separador de miles.
+    expect(table.download?.rows[0]).toEqual(['2026-11-01 01:00', 1000.5])
+  })
+
+  it('las tablas de pares y de filas descargan todas sus filas', () => {
+    const pairs = Array.from({ length: MAX_ALTERNATIVE_ROWS + 1 }, (_, i) => ({ label: `z${i}`, value: String(i) }))
+    expect(pairsTable(pairs, ['Zona', 'Valor']).download?.rows).toHaveLength(MAX_ALTERNATIVE_ROWS + 1)
+    const rows = Array.from({ length: MAX_ALTERNATIVE_ROWS + 1 }, (_, i) => [`f${i}`, '1'])
+    expect(rowsTable(['Fila', 'Valor'], rows).download?.rows).toHaveLength(MAX_ALTERNATIVE_ROWS + 1)
+  })
+})

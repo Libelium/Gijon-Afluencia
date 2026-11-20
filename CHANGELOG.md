@@ -10,6 +10,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Descargar en CSV los datos de cada gráfico.** Junto a «Ver los datos en una tabla», cada
+  gráfico de los paneles y las plantillas, y el histórico de una medida, ofrece «Descargar CSV»
+  con los mismos datos que dibuja, todas las filas aunque la tabla en pantalla se recorte. El
+  fichero abre bien en una hoja de cálculo en castellano: columnas separadas por punto y coma,
+  coma decimal, fechas `2026-11-17 13:00` en la zona del panel, que se indica en la cabecera, y
+  tildes correctas. En rangos largos los valores son los agregados que pinta el gráfico (medias
+  por hora o por día), no las lecturas una a una.
 - **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
   botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
   `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,
