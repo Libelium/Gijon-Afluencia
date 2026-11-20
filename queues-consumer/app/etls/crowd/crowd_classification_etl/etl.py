@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from etls.base_etl import BaseETL
 import datetime
 import pandas as pd
+from config.config import settings
 from config.logging import appLogging as logging
 import helpers.aether_link.aether_link_helper as aether_link_helper
 from schemas.crowd_classification_request_schema import CrowdClassificationRequest
@@ -11,9 +12,16 @@ from models.crud.crud_crowd_visitors import (
     get_user_crowd_visitor,
     create_or_update_crowd_visitors_batch,
 )
-import dateutil.parser
-from helpers.crowd.crowd_utils import crowd_row_processing_lambda, crowd_df_columns_rename
-import os
+from helpers.crowd.crowd_utils import (
+    crowd_row_processing_lambda,
+    crowd_df_columns_rename,
+    aggregate_visitor_days,
+    merge_visitor_days,
+    classify_visitor_days,
+)
+
+# Merge pending window summaries every N windows to bound memory.
+WINDOWS_PER_MERGE = 24
 
 
 class CrowdClassificationETL(BaseETL):
@@ -25,7 +33,7 @@ class CrowdClassificationETL(BaseETL):
         realtime_db: Session = next(realtime_db.get_db_realtime()),
     ):
         self.processed_info = None
-        self.df_raw = None
+        self.visitor_days = None
         self.entities = request.entities
         self.start_date = request.start_date
         self.end_date = request.end_date
@@ -42,12 +50,12 @@ class CrowdClassificationETL(BaseETL):
 
         return True
 
-    def __timeseries_response_to_dataframe(self):
+    def __timeseries_response_to_dataframe(self, timeseries_request):
         """
         Function to convert timeseries response to dataframe
         """
         df = aether_link_helper.get_time_series_in_df_format(
-            self.timeseries_request,
+            timeseries_request,
             df_live_row_processing_lambda=crowd_row_processing_lambda,
             skip_aether=True,
             drop_nan=True,
@@ -65,7 +73,7 @@ class CrowdClassificationETL(BaseETL):
         """
         return ["visitorId", "visitorid", "detectionType", "random", "cfeBlock"]
 
-    def __build_timeseries_request(self):
+    def __build_timeseries_request(self, start_date, end_date):
         """
         Function to build the request for the timeseries API
 
@@ -77,7 +85,7 @@ class CrowdClassificationETL(BaseETL):
             - period (defaults to 5)
             - municipality (defaults to 'NA')
 
-        Between self.start_date and self.end_date
+        Between start_date and end_date
 
 
         """
@@ -88,27 +96,59 @@ class CrowdClassificationETL(BaseETL):
                 "measure_ids": self.__get_timeseries_variables(),
                 "options": {
                     "limit": 200000,
-                    "start_date": self.start_date.isoformat(),
-                    "end_date": self.end_date.isoformat(),
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
                     "tenant": self.entities_tenant_and_scope[0],
                     "scope": self.entities_tenant_and_scope[1],
                 },
             }
         ]
 
-    def __get_data(self):
-        self.timeseries_request = self.__build_timeseries_request()
+    def __get_windows(self):
+        """Yields consecutive [start, end) windows of CROWD_CLASSIFICATION_BATCH_HOURS."""
+        step = datetime.timedelta(hours=max(settings.CROWD_CLASSIFICATION_BATCH_HOURS, 1))
+        window_start = self.start_date
 
-        self.df_raw = self.__timeseries_response_to_dataframe()
+        while window_start < self.end_date:
+            window_end = min(window_start + step, self.end_date)
+            yield window_start, window_end
+            window_start = window_end
+
+    def __get_visitor_days(self):
+        """Streams the cache window by window, keeping only per-visitor/day summaries."""
+        pending = []
+        windows_with_data = 0
+
+        for window_start, window_end in self.__get_windows():
+            df = self.__timeseries_response_to_dataframe(
+                self.__build_timeseries_request(window_start, window_end)
+            )
+
+            if df is None or df.empty:
+                continue
+
+            windows_with_data += 1
+            pending.append(aggregate_visitor_days(df))
+            del df
+
+            if len(pending) >= WINDOWS_PER_MERGE:
+                pending = [merge_visitor_days(pending)]
+
+        logging.info(
+            f"Classification data read for user {self.user_id}: "
+            f"{windows_with_data} windows with data between {self.start_date} and {self.end_date}"
+        )
+
+        return merge_visitor_days(pending)
 
     def __extract_visitors(self):
-        self.__get_data()
+        self.visitor_days = self.__get_visitor_days()
 
-        if self.df_raw is None or self.df_raw.empty:
+        if self.visitor_days is None or self.visitor_days.empty:
             logging.error("No data to work with")
             return False
 
-        self.visitors = self.df_raw["visitorid"].unique()
+        self.visitors = self.visitor_days["visitorid"].unique()
         self.previous_visitors = get_user_crowd_visitor(self.main_db, self.user_id)
         self.previous_visitor_types = {
             visitor.visitor_id: visitor.visitor_type
@@ -149,89 +189,12 @@ class CrowdClassificationETL(BaseETL):
 
         logging.info("Visitor insertion process completed")
 
-    def __classify_visitors(
-        self, df: pd.DataFrame, resident_threshold_days=2, tourist_min_hours=3
-    ) -> pd.DataFrame:
-        """
-        Classifies visitors as 'Resident' or 'Tourist' based on their presence over time.
-
-        Criteria:
-        - If a visitor appears on more than 3 different days, they are classified as 'Resident'.
-        - If a visitor appears only on 1-2 days but spends more than 6 hours in total, they are classified as 'Tourist'.
-        - Otherwise, they are classified as 'ShortTermVisitor' (optional).
-
-        Args:
-            df (pd.DataFrame): DataFrame containing visitor records with 'timeinstant' and 'visitorid'.
-            resident_threshold_days (int): Threshold clasifiy a visitor as resident
-            tourist_min_hours (int): Threshold clasifiy a visitor as tourist
-
-
-        Returns:
-            pd.DataFrame: The input DataFrame with a new column 'visitortype' assigned.
-        """
-
-        # Preproces to ensure that timeinstant is in datetime format
-        df["timeinstant"] = df["timeinstant"].apply(
-            lambda x: dateutil.parser.parse(x) if isinstance(x, str) else x
-        )
-        # Convert 'timeinstant' to datetime
-        df["timeinstant"] = pd.to_datetime(df["timeinstant"])
-
-        # Extract date from timeinstant
-        df["date"] = df["timeinstant"].dt.date
-
-        # Compute unique days visited per visitor
-        visitor_days = df.groupby("visitorid")["date"].nunique()
-
-        # Compute time spent per visitor per day
-        visitor_time_spent = df.groupby(["visitorid", "date"])["timeinstant"].agg(
-            ["min", "max"]
-        )
-        visitor_time_spent["hours_spent"] = (
-            visitor_time_spent["max"] - visitor_time_spent["min"]
-        ).dt.total_seconds() / 3600
-
-        # Sum the total hours spent by each visitor
-        total_hours_spent = visitor_time_spent.groupby("visitorid")["hours_spent"].sum()
-
-        # Classification logic
-        def classify_visitor(vid):
-            days = visitor_days[vid]
-            hours = total_hours_spent.get(
-                vid, 0
-            )  # Some visitors might not have time data
-            prev = self.previous_visitor_types.get(vid, None)
-
-            if (
-                days > resident_threshold_days
-                or prev == "Resident"
-                or prev == "Tourist"
-            ):
-                return "Resident"
-            elif days <= 2 and hours > tourist_min_hours:
-                return "Tourist"
-            else:
-                return "ShortTermVisitor"
-
-        df["visitortype"] = df["visitorid"].map(classify_visitor)
-
-        # Drop temporary 'date' column
-        df.drop(columns=["date"], inplace=True)
-
-        self.visitors_df = pd.DataFrame({"visitorid": self.visitors})
-
-        self.visitors_df["visitortype"] = self.visitors_df["visitorid"].map(
-            classify_visitor
-        )
-
-        return self.visitors_df
-
     def __calculate_visitor_class(self):
-        """
-        Function to calculate visitor flows
-        """
+        """Classifies over the whole period (Resident needs >2 distinct days)."""
 
-        self.classified_visitors = self.__classify_visitors(self.df_raw)
+        self.classified_visitors = classify_visitor_days(
+            self.visitor_days, self.previous_visitor_types
+        )
 
         return self.classified_visitors
 

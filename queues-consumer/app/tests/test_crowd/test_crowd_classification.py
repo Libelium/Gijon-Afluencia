@@ -6,7 +6,7 @@ that are not common with other crowd ETLs.
 
 Classification ETL differences:
 - Returns bool from extract() instead of dict
-- Stores data internally: self.df_raw, self.visitors, self.previous_visitor_types
+- Stores data internally: self.visitor_days (per-visitor/day summary), self.visitors, self.previous_visitor_types
 - Uses mode "monthly" or "weekly" instead of "tourism"
 """
 
@@ -27,6 +27,16 @@ from etls.crowd.crowd_classification_etl.etl import CrowdClassificationETL
 
 # --- Job ---
 from jobs.crowd.all_crowd_classification_jobs import CrowdClassificationAll
+
+from helpers.crowd.crowd_utils import (
+    aggregate_visitor_days,
+    classify_visitors,
+)
+
+
+def _visitor_days(raw: dict) -> pd.DataFrame:
+    """Per-visitor/day summary of raw detections."""
+    return aggregate_visitor_days(pd.DataFrame(raw))
 
 
 @pytest.fixture
@@ -176,10 +186,10 @@ class TestClassificationExtract:
             assert etl.visitors is not None
             assert len(etl.visitors) == 3  # 3 unique visitors in test data
 
-    def test_extract_stores_df_raw_internally(
+    def test_extract_stores_visitor_days_internally(
         self, base_request_params, timeseries_data_camelcase, mock_main_db, mock_realtime_db
     ):
-        """Test that df_raw is stored internally after extract."""
+        """Extract keeps per-visitor/day summary, not raw rows."""
         request = CrowdClassificationRequest(**base_request_params)
 
         with patch(
@@ -197,8 +207,9 @@ class TestClassificationExtract:
 
             etl.extract()
 
-            assert etl.df_raw is not None
-            assert not etl.df_raw.empty
+            assert list(etl.visitor_days.columns) == ["visitorid", "date", "first_seen", "last_seen"]
+            # 3 visitors, same day
+            assert len(etl.visitor_days) == 3
 
     def test_extract_stores_previous_visitor_types_internally(
         self, base_request_params, timeseries_data_camelcase, mock_main_db, mock_realtime_db
@@ -228,34 +239,6 @@ class TestClassificationExtract:
             assert etl.previous_visitor_types is not None
             assert "visitor_001" in etl.previous_visitor_types
             assert etl.previous_visitor_types["visitor_001"] == "Resident"
-
-    def test_extract_normalizes_columns(
-        self, base_request_params, timeseries_data_camelcase, mock_main_db, mock_realtime_db
-    ):
-        """Test that columns are normalized to lowercase after extract."""
-        request = CrowdClassificationRequest(**base_request_params)
-
-        with patch(
-            "etls.crowd.crowd_classification_etl.etl.aether_link_helper.get_time_series_in_df_format",
-            return_value=timeseries_data_camelcase,
-        ), patch(
-            "etls.crowd.crowd_classification_etl.etl.get_user_crowd_visitor",
-            return_value=[],
-        ):
-            etl = CrowdClassificationETL(
-                request=request,
-                main_db=mock_main_db,
-                realtime_db=mock_realtime_db,
-            )
-
-            etl.extract()
-
-            df = etl.df_raw
-            # Check columns are normalized to lowercase
-            assert "entityid" in df.columns
-            assert "visitorid" in df.columns
-            assert "detectiontype" in df.columns
-            assert "israndommac" in df.columns
 
     @pytest.mark.parametrize("mode", ["monthly", "weekly"])
     def test_extract_supports_monthly_and_weekly_modes(
@@ -328,7 +311,7 @@ class TestClassificationTransform:
         """Test visitor is classified as Resident when appearing on >2 days."""
         etl = etl_with_extracted_data
         # Visitor appears on 3 different days
-        etl.df_raw = pd.DataFrame(
+        etl.visitor_days = _visitor_days(
             {
                 "timeinstant": [
                     "2023-01-01T10:00:00",
@@ -356,7 +339,7 @@ class TestClassificationTransform:
         """Test visitor is classified as Resident when previously was Resident."""
         etl = etl_with_extracted_data
         # Visitor appears on only 1 day but was previously Resident
-        etl.df_raw = pd.DataFrame(
+        etl.visitor_days = _visitor_days(
             {
                 "timeinstant": ["2023-01-01T10:00:00"],
                 "visitorid": ["visitor_001"],
@@ -379,7 +362,7 @@ class TestClassificationTransform:
         """Test visitor is classified as Resident when previously was Tourist."""
         etl = etl_with_extracted_data
         # Visitor appears on only 1 day but was previously Tourist
-        etl.df_raw = pd.DataFrame(
+        etl.visitor_days = _visitor_days(
             {
                 "timeinstant": ["2023-01-01T10:00:00"],
                 "visitorid": ["visitor_001"],
@@ -402,7 +385,7 @@ class TestClassificationTransform:
         """Test visitor is classified as Tourist when 1-2 days but >3 hours total."""
         etl = etl_with_extracted_data
         # Visitor appears on 1 day, spends 5 hours
-        etl.df_raw = pd.DataFrame(
+        etl.visitor_days = _visitor_days(
             {
                 "timeinstant": [
                     "2023-01-01T08:00:00",
@@ -428,7 +411,7 @@ class TestClassificationTransform:
         """Test visitor is classified as ShortTermVisitor when not meeting other criteria."""
         etl = etl_with_extracted_data
         # Visitor appears on 1 day, spends only 1 hour
-        etl.df_raw = pd.DataFrame(
+        etl.visitor_days = _visitor_days(
             {
                 "timeinstant": [
                     "2023-01-01T10:00:00",
@@ -453,7 +436,7 @@ class TestClassificationTransform:
     ):
         """Test transform correctly classifies multiple visitors with different behaviors."""
         etl = etl_with_extracted_data
-        etl.df_raw = pd.DataFrame(
+        etl.visitor_days = _visitor_days(
             {
                 "timeinstant": [
                     # Resident: appears on 3 days
@@ -495,6 +478,148 @@ class TestClassificationTransform:
         assert classifications["resident_001"] == "Resident"
         assert classifications["tourist_001"] == "Tourist"
         assert classifications["short_term_001"] == "ShortTermVisitor"
+
+
+# =======================================================================
+# --- STREAMING TESTS ---
+# =======================================================================
+
+
+class TestClassificationStreaming:
+    """Windowed reads must classify the same as reading everything at once."""
+
+    @pytest.fixture
+    def week_request(self, sample_entities):
+        return CrowdClassificationRequest(
+            entities=sample_entities,
+            start_date=datetime(2023, 1, 4, 0, 0, 0),
+            end_date=datetime(2023, 1, 11, 0, 0, 0),
+            user_id=1,
+            mode="weekly",
+        )
+
+    @staticmethod
+    def _detections():
+        rows = [
+            # Resident: 3 different days
+            ("2023-01-04T10:05:00", "resident_001"),
+            ("2023-01-06T12:10:00", "resident_001"),
+            ("2023-01-09T18:30:00", "resident_001"),
+            # Tourist: 1 day, 5 h
+            ("2023-01-05T08:00:00", "tourist_001"),
+            ("2023-01-05T10:30:00", "tourist_001"),
+            ("2023-01-05T13:00:00", "tourist_001"),
+            # Tourist across midnight: 2 days, 4 h
+            ("2023-01-07T21:00:00", "night_001"),
+            ("2023-01-07T23:00:00", "night_001"),
+            ("2023-01-08T00:30:00", "night_001"),
+            ("2023-01-08T02:30:00", "night_001"),
+            # ShortTermVisitor: same hour
+            ("2023-01-10T09:00:00", "short_term_001"),
+            ("2023-01-10T09:40:00", "short_term_001"),
+        ]
+        return pd.DataFrame(
+            {
+                "timeinstant": pd.to_datetime([t for t, _ in rows]),
+                "visitorId": [v for _, v in rows],
+                "entityId": ["urn:ngsi-ld:CrowdFlowEvent:sensor-01_CFE"] * len(rows),
+            }
+        )
+
+    def _run(self, request, mock_main_db, mock_realtime_db, batch_hours=1, previous=None):
+        detections = self._detections()
+        captured = []
+
+        def window_data(timeseries_request, **kwargs):
+            options = timeseries_request[0]["options"]
+            captured.append(options)
+            start = datetime.fromisoformat(options["start_date"])
+            end = datetime.fromisoformat(options["end_date"])
+            in_window = (detections["timeinstant"] >= start) & (detections["timeinstant"] < end)
+            return detections[in_window].copy()
+
+        with patch(
+            "etls.crowd.crowd_classification_etl.etl.aether_link_helper.get_time_series_in_df_format",
+            side_effect=window_data,
+        ), patch(
+            "etls.crowd.crowd_classification_etl.etl.get_user_crowd_visitor",
+            return_value=previous or [],
+        ), patch(
+            "etls.crowd.crowd_classification_etl.etl.settings.CROWD_CLASSIFICATION_BATCH_HOURS",
+            batch_hours,
+        ):
+            etl = CrowdClassificationETL(
+                request=request, main_db=mock_main_db, realtime_db=mock_realtime_db
+            )
+            assert etl.extract() is True
+            assert etl.transform() is True
+
+        return etl, captured
+
+    def test_reads_the_period_in_contiguous_hourly_windows(
+        self, week_request, mock_main_db, mock_realtime_db
+    ):
+        _, captured = self._run(week_request, mock_main_db, mock_realtime_db)
+
+        assert len(captured) == 7 * 24
+        assert captured[0]["start_date"] == "2023-01-04T00:00:00"
+        assert captured[-1]["end_date"] == "2023-01-11T00:00:00"
+        for previous, current in zip(captured, captured[1:]):
+            assert previous["end_date"] == current["start_date"]
+
+    def test_window_size_follows_setting(self, week_request, mock_main_db, mock_realtime_db):
+        _, captured = self._run(week_request, mock_main_db, mock_realtime_db, batch_hours=24)
+
+        assert len(captured) == 7
+
+    @pytest.mark.parametrize("batch_hours", [1, 6, 24, 24 * 7])
+    def test_classification_matches_reading_everything_at_once(
+        self, week_request, mock_main_db, mock_realtime_db, batch_hours
+    ):
+        etl, _ = self._run(week_request, mock_main_db, mock_realtime_db, batch_hours=batch_hours)
+
+        raw = self._detections().rename(columns={"visitorId": "visitorid"})
+        expected = dict(
+            zip(*classify_visitors(raw, {}).set_index("visitorid")["visitortype"].reset_index().values.T)
+        )
+        streamed = dict(
+            zip(etl.classified_visitors["visitorid"], etl.classified_visitors["visitortype"])
+        )
+
+        assert streamed == expected
+        assert streamed == {
+            "resident_001": "Resident",
+            "tourist_001": "Tourist",
+            "night_001": "Tourist",
+            "short_term_001": "ShortTermVisitor",
+        }
+
+    def test_previous_classification_still_promotes_to_resident(
+        self, week_request, mock_main_db, mock_realtime_db
+    ):
+        previous = MagicMock()
+        previous.visitor_id = "short_term_001"
+        previous.visitor_type = "Tourist"
+
+        etl, _ = self._run(week_request, mock_main_db, mock_realtime_db, previous=[previous])
+
+        types = dict(zip(etl.classified_visitors["visitorid"], etl.classified_visitors["visitortype"]))
+        assert types["short_term_001"] == "Resident"
+
+    def test_returns_false_when_no_window_has_data(
+        self, week_request, mock_main_db, mock_realtime_db
+    ):
+        with patch(
+            "etls.crowd.crowd_classification_etl.etl.aether_link_helper.get_time_series_in_df_format",
+            return_value=pd.DataFrame(),
+        ), patch(
+            "etls.crowd.crowd_classification_etl.etl.get_user_crowd_visitor",
+            return_value=[],
+        ):
+            etl = CrowdClassificationETL(
+                request=week_request, main_db=mock_main_db, realtime_db=mock_realtime_db
+            )
+            assert etl.extract() is False
 
 
 # =======================================================================

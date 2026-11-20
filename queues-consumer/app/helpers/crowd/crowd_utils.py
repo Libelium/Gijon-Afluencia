@@ -74,6 +74,79 @@ def crowd_row_processing_lambda(df, measures_renames = None):
     result = pd.concat([df_without_cfe, df_with_cfe], ignore_index=True)
     return result
 
+VISITOR_DAY_KEYS = ["visitorid", "date"]
+
+
+def aggregate_visitor_days(df: pd.DataFrame) -> pd.DataFrame:
+    """Reduces detections to one row per visitor/day with first and last detection."""
+    if df is None or df.empty:
+        return pd.DataFrame(columns=VISITOR_DAY_KEYS + ["first_seen", "last_seen"])
+
+    times = pd.to_datetime(df["timeinstant"], format="mixed")
+    detections = pd.DataFrame(
+        {
+            "visitorid": df["visitorid"].to_numpy(),
+            "date": times.dt.date.to_numpy(),
+            "timeinstant": times.to_numpy(),
+        }
+    )
+
+    return detections.groupby(VISITOR_DAY_KEYS, as_index=False).agg(
+        first_seen=("timeinstant", "min"), last_seen=("timeinstant", "max")
+    )
+
+
+def merge_visitor_days(visitor_days: list) -> pd.DataFrame:
+    """Merges partial per-visitor/day summaries."""
+    frames = [frame for frame in visitor_days if frame is not None and not frame.empty]
+    if not frames:
+        return pd.DataFrame(columns=VISITOR_DAY_KEYS + ["first_seen", "last_seen"])
+
+    return (
+        pd.concat(frames, ignore_index=True)
+        .groupby(VISITOR_DAY_KEYS, as_index=False)
+        .agg(first_seen=("first_seen", "min"), last_seen=("last_seen", "max"))
+    )
+
+
+def classify_visitor_days(
+    visitor_days: pd.DataFrame,
+    previous_visitor_types: dict = None,
+    resident_threshold_days: int = 2,
+    tourist_min_hours: int = 3,
+) -> pd.DataFrame:
+    """Classifies visitors from per-day summaries. Same rules as classify_visitors."""
+    if previous_visitor_types is None:
+        previous_visitor_types = {}
+
+    if visitor_days is None or visitor_days.empty:
+        return pd.DataFrame(columns=["visitorid", "visitortype"])
+
+    hours_per_day = (
+        pd.to_datetime(visitor_days["last_seen"]) - pd.to_datetime(visitor_days["first_seen"])
+    ).dt.total_seconds() / 3600
+
+    per_visitor = (
+        visitor_days.assign(hours=hours_per_day)
+        .groupby("visitorid", sort=False)
+        .agg(days=("date", "nunique"), hours=("hours", "sum"))
+    )
+
+    previous = per_visitor.index.map(lambda vid: previous_visitor_types.get(vid))
+    resident = (per_visitor["days"] > resident_threshold_days) | pd.Series(
+        previous, index=per_visitor.index
+    ).isin(["Resident", "Tourist"])
+    tourist = ~resident & (per_visitor["days"] <= 2) & (per_visitor["hours"] > tourist_min_hours)
+
+    visitor_types = pd.Series("ShortTermVisitor", index=per_visitor.index)
+    visitor_types[tourist] = "Tourist"
+    visitor_types[resident] = "Resident"
+
+    return pd.DataFrame(
+        {"visitorid": per_visitor.index.to_numpy(), "visitortype": visitor_types.to_numpy()}
+    )
+
+
 def classify_visitors(df: pd.DataFrame, previous_visitor_types: dict = None, resident_threshold_days: int = 2, tourist_min_hours: int = 3) -> pd.DataFrame:
         """
         Classifies visitors as 'Resident' or 'Tourist' based on their presence over time.

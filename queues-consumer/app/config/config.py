@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     CROWD_CLASSIFICATION_INTERVAL: int = int(
         os.getenv("CROWD_CLASSIFICATION_INTERVAL", 60 * 60 * 24)
     )
+    CROWD_CLASSIFICATION_BATCH_HOURS: int = int(
+        os.getenv("CROWD_CLASSIFICATION_BATCH_HOURS", 1)
+    )
     CROWD_UNIQUE_VISITORS_INTERVAL: int = int(
         os.getenv("CROWD_UNIQUE_VISITORS_INTERVAL", 60 * 60 * 24)
     )
