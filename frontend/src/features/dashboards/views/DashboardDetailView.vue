@@ -186,7 +186,6 @@ onMounted(load)
             v-model="autoRefresh"
             :label="t('templates.common.autoRefreshLabel')"
             :aria-label="t('templates.common.autoRefreshLabel')"
-            :title="t('templates.common.autoRefreshHint')"
             color="primary"
             density="compact"
             hide-details
@@ -260,7 +259,6 @@ onMounted(load)
         v-model="autoRefresh"
         :label="t('templates.common.autoRefreshLabel')"
         :aria-label="t('templates.common.autoRefreshLabel')"
-        :title="t('templates.common.autoRefreshHint')"
         color="primary"
         density="compact"
         hide-details

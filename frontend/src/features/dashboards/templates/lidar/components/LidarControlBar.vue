@@ -58,7 +58,6 @@ const { enabled: autoRefresh } = useAutoRefresh(
       v-model="autoRefresh"
       :label="t('templates.common.autoRefreshLabel')"
       :aria-label="t('templates.common.autoRefreshLabel')"
-      :title="t('templates.common.autoRefreshHint')"
       color="primary"
       density="compact"
       hide-details
