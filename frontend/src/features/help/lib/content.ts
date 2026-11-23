@@ -80,6 +80,10 @@ export const SECTIONS: HelpSection[] = [
       { term: 'Zona LIDAR Analítica', text: 'Indicadores de la zona LIDAR: ocupación, aforo, permanencia y series históricas.' },
       { term: 'Zona LIDAR Mapa de calor', text: 'Densidad de ocupación en vivo sobre la zona monitorizada.' },
       {
+        term: 'Zona Mapa de coropletas',
+        text: 'Mapa con cada zona pintada según el porcentaje de su aforo que está ocupado, de verde a rojo en tramos de 20 %, con sus LIDAR y sus sensores WiFi/BLE encima. La ocupación es la cifra de la zona que combina los dos tipos de sensor. Muestra la de ahora y, con la barra, la media de cada hora o de cada día del rango elegido; al reproducirla, los cambios de color muestran cómo sube y baja la gente. Se asignan las zonas de afluencia. Solo se pintan las que tienen como ubicación el contorno de la zona; las que solo tienen un punto, o no publican su aforo, siguen en la lista de debajo del mapa con su ocupación.',
+      },
+      {
         term: 'Zona LIDAR Predicción',
         text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo. Incluye un simulador de escenarios: se añaden uno o varios eventos (tipo, hora, duración, meteorología e intensidad) y se ve cómo cambiaría la ocupación prevista de la zona y si superaría su aforo. Sus cifras son orientativas, para comparar escenarios, y solo llegan hasta donde llega la previsión. Los eventos del registro de eventos de la plataforma salen ya como «Registrado» y se suman siempre: la previsión es la de un día normal, porque el modelo no aprende de los días con evento.',
       },

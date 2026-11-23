@@ -175,15 +175,18 @@ visitantes que ya existen en la base de datos.
 
 **Pasos:**
 
-1.  **Construir la petición de series**: se construye una petición para la API de series temporales
-    indicando los identificadores de dispositivo y el rango de tiempo (`start_date`, `end_date`).
-    Las variables que se piden son `visitorId`, `detectionType`, `random` y `cfeBlock`.
-2.  **Obtener las series**: se envía la petición a la API y la respuesta se convierte en un
-    DataFrame de pandas.
+1.  **Leer por ventanas**: el periodo (`start_date`, `end_date`) se recorre en ventanas seguidas de
+    `CROWD_CLASSIFICATION_BATCH_HOURS` horas (1). Para cada ventana se construye una petición a la
+    API de series temporales con los identificadores de dispositivo; las variables que se piden son
+    `visitorId`, `detectionType`, `random` y `cfeBlock`.
+2.  **Resumir cada ventana**: la respuesta de cada ventana se convierte en un DataFrame y se reduce a
+    una fila por visitante y día, con la primera y la última detección. Los resúmenes se van
+    juntando cada 24 ventanas. Así solo hay en memoria una ventana de detecciones y los resúmenes,
+    y no la semana entera; la clasificación sale igual que leyendo todo de una vez.
 3.  **Obtener los visitantes anteriores**: se consulta la base de datos para obtener la lista de
     visitantes y sus clasificaciones actuales para el `user_id` indicado. Ese histórico se usa en la
     lógica de clasificación.
-4.  **Extraer los visitantes únicos**: se extraen los `visitorid` únicos de los datos nuevos.
+4.  **Extraer los visitantes únicos**: se extraen los `visitorid` únicos de los resúmenes.
 
 ### 3.2. Transformación
 
@@ -191,8 +194,9 @@ Toma los datos en bruto de las series y clasifica a cada visitante único.
 
 **Pasos:**
 
-1.  **Clasificar visitantes**: la lógica central recorre cada visitante único y lo clasifica según
-    su presencia a lo largo del tiempo.
+1.  **Clasificar visitantes**: a partir de los resúmenes por día, se clasifica cada visitante único
+    según los días distintos en que aparece y las horas que suma (de la primera a la última detección
+    de cada día).
     -   Si aparece en más de 2 días distintos, se clasifica como **«residente»**.
     -   Si ya estaba clasificado como **«residente»** o **«turista»**, se promociona a
         **«residente»**.

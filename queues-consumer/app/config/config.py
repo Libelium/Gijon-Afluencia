@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     CROWD_CLASSIFICATION_INTERVAL: int = int(
         os.getenv("CROWD_CLASSIFICATION_INTERVAL", 60 * 60 * 24)
     )
+    CROWD_CLASSIFICATION_BATCH_HOURS: int = int(
+        os.getenv("CROWD_CLASSIFICATION_BATCH_HOURS", 1)
+    )
     CROWD_UNIQUE_VISITORS_INTERVAL: int = int(
         os.getenv("CROWD_UNIQUE_VISITORS_INTERVAL", 60 * 60 * 24)
     )
@@ -125,6 +128,11 @@ class Settings(BaseSettings):
     )
     DATA_CACHE_DELETE_AFTER_UPLOAD: bool = (
         os.getenv("DATA_CACHE_DELETE_AFTER_UPLOAD", "false") == "true"
+    )
+    # Closed hours re-read on every periodic run to cache notifications that
+    # reached Timescale after their hour was cached (merged into the CSV)
+    DATA_CACHE_CROWD_LOOKBACK_HOURS: int = int(
+        os.getenv("DATA_CACHE_CROWD_LOOKBACK_HOURS", 24)
     )
 
     IS_ON_PREMISE: bool = os.getenv("IS_ON_PREMISE", "false") == "true"

@@ -26,4 +26,12 @@ export default {
   'templates.common.flowPause': 'Detener el movimiento',
   'templates.common.flowResume': 'Mover los recorridos',
   'templates.common.autoRefreshLabel': 'Auto-refresco',
+  'templates.common.timeline': 'Momento que muestra el mapa',
+  'templates.common.timelineHour': 'Paso que muestra el mapa',
+  'templates.common.timelinePlay': 'Reproducir',
+  'templates.common.timelinePause': 'Pausar',
+  'templates.common.timelineNoHours': 'No hay lecturas en este rango',
+  'templates.common.timelineShowing': 'Se muestra:',
+  'templates.common.timelineStart': 'Inicio: {date}',
+  'templates.common.timelineEnd': 'Fin: {date}',
 } as const

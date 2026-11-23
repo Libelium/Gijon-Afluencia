@@ -114,6 +114,8 @@ const messages = {
   'dashboards.panel.unsupported': 'Tipo de gráfico no disponible en esta edición',
   'dashboards.panel.unsupportedHint': 'El resto del panel se muestra con normalidad.',
   'dashboards.panel.delete': 'Borrar el gráfico',
+  'dashboards.panel.expand': 'Ampliar a pantalla completa',
+  'dashboards.panel.collapse': 'Volver al tamaño normal',
   'dashboards.panel.deleteTitle': '¿Borrar el gráfico?',
   'dashboards.panel.deleteText': 'Se va a borrar «{title}». Los datos de la entidad no se ven afectados.',
   'dashboards.panel.deleteConfirm': 'Borrar',

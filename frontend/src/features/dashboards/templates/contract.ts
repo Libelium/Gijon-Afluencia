@@ -24,6 +24,8 @@ const ENCODED = {
   lidarHeatmap: 'Q3Jvd2QgTElEQVIgfCBab25lIEhlYXRtYXA=',
   lidarPrediction: 'Q3Jvd2QgTElEQVIgfCBab25lIFByZWRpY3Rpb24=',
   lidarAnalytics: 'Q3Jvd2QgTElEQVIgfCBab25lIEFuYWx5dGljcw==',
+  // Esta no viene del origen: se creo aqui, con el mismo formato que las de zona.
+  lidarChoropleth: 'Q3Jvd2QgTElEQVIgfCBab25lIENob3JvcGxldGg=',
 } as const
 
 export type TemplateKey = keyof typeof ENCODED

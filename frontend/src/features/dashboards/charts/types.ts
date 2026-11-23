@@ -9,6 +9,8 @@ export interface ChartSeries {
   name: string
   units?: string
   points: ChartPoint[]
+  /** Solo puntos, sin linea: instantes sueltos marcados sobre otra serie (las horas anomalas). */
+  markers?: boolean
 }
 
 export interface ChartData {

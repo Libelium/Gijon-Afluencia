@@ -48,6 +48,49 @@ export default {
   'dashboards.lidar.weekdayShort.6': 'Sáb',
   'dashboards.lidar.weekdayShort.7': 'Dom',
 
+  // --- mapa de coropletas ---
+  'dashboards.lidar.choropleth.title': 'Ocupación de cada zona sobre su aforo',
+  'dashboards.lidar.choropleth.hint':
+    'Cada zona se pinta con el porcentaje de su aforo ocupado, según la cifra que combina sus LIDAR y sus sensores WiFi/BLE. Encima, sus dispositivos.',
+  'dashboards.lidar.choropleth.mapLabel': 'Mapa de las zonas pintadas según su aforo',
+  'dashboards.lidar.choropleth.now': 'Ahora',
+  'dashboards.lidar.choropleth.momentNow': 'Ahora mismo',
+  'dashboards.lidar.choropleth.momentHour': 'Media de la hora elegida',
+  'dashboards.lidar.choropleth.momentDay': 'Media del día elegido',
+  'dashboards.lidar.choropleth.shownNow':
+    'Valor exacto: la última lectura publicada por cada zona, sin promediar. La más reciente es del {at}.',
+  'dashboards.lidar.choropleth.shownNowUndated': 'Valor exacto: la última lectura publicada por cada zona, sin promediar.',
+  'dashboards.lidar.choropleth.shownMean':
+    'Media de las lecturas de cada zona entre el {from} y el {to}. No es el valor exacto de un instante.',
+  'dashboards.lidar.choropleth.step': 'Paso de la reproducción',
+  'dashboards.lidar.choropleth.stepHour': 'Cada hora',
+  'dashboards.lidar.choropleth.stepDay': 'Cada día',
+  'dashboards.lidar.choropleth.hourlyLimit': 'Por horas, como mucho un mes de rango',
+  'dashboards.lidar.choropleth.smartspot': 'Sensor WiFi/BLE',
+  'dashboards.lidar.choropleth.lidar': 'LIDAR',
+  'dashboards.lidar.choropleth.devicesTable': 'Dispositivos de cada zona',
+  'dashboards.lidar.choropleth.showDevices': 'Mostrar dispositivos',
+  'dashboards.lidar.choropleth.heatLegend': 'Escala de color del mapa de calor: de verde claro, vacía, a rojo oscuro, llena',
+  'dashboards.lidar.choropleth.heatMax': '100 % del aforo o más',
+  'dashboards.lidar.choropleth.heatNoCapacity': 'Sin aforo: no se colorea',
+  'dashboards.lidar.choropleth.zoneColumn': 'Zona',
+  'dashboards.lidar.choropleth.kindColumn': 'Tipo',
+  'dashboards.lidar.choropleth.deviceColumn': 'Dispositivo',
+  'dashboards.lidar.choropleth.coordinatesColumn': 'Coordenadas',
+  'dashboards.lidar.choropleth.zoneListHint': 'Zonas del mapa, con su ocupación. Elige una para resaltarla.',
+  'dashboards.lidar.choropleth.notPainted': 'sin polígono',
+  'dashboards.lidar.choropleth.unpainted': '{count} de {total} zonas no tienen polígono y no se pintan en el mapa',
+  'dashboards.lidar.choropleth.unpaintedHint':
+    'Una zona se pinta cuando su ubicación es el contorno de la zona, no un punto. Siguen en la lista de debajo del mapa, con su ocupación.',
+  'dashboards.lidar.choropleth.withoutCapacity': '{count} zonas no publican su aforo y se pintan en gris',
+  'dashboards.lidar.choropleth.withoutCapacityHint':
+    'El aforo máximo se busca en la zona y en su entidad de analítica del LIDAR. Sin él no se puede calcular qué porcentaje está ocupado; su ocupación en personas sigue en la lista.',
+  'dashboards.lidar.choropleth.combined': 'Ocupación conjunta',
+  'dashboards.lidar.choropleth.nearFull': 'Zonas al {percent} % o más',
+  'dashboards.lidar.choropleth.fullest': 'Zona más llena',
+  'dashboards.lidar.choropleth.selected': 'Zona seleccionada',
+  'dashboards.lidar.choropleth.people': '{value} de {capacity} personas',
+
   // --- mapa de calor ---
   'dashboards.lidar.heatmap.map': 'Zonas monitorizadas',
   'dashboards.lidar.heatmap.mapHint': 'El color indica el nivel de ocupación actual de cada zona',
@@ -203,6 +246,7 @@ export default {
   'dashboards.lidar.analytics.trend': 'Evolución de la ocupación',
   'dashboards.lidar.analytics.trendMean': 'Media',
   'dashboards.lidar.analytics.trendMax': 'Máximo',
+  'dashboards.lidar.analytics.anomalies': 'Anomalía',
   'dashboards.lidar.analytics.byHour': 'Media por hora del día',
   'dashboards.lidar.analytics.byWeekday': 'Media por día de la semana',
   'dashboards.lidar.analytics.profileWindow': 'Los perfiles por hora y por día se calculan sobre los últimos {days} días del rango: la consulta horaria no admite más puntos.',

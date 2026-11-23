@@ -50,13 +50,16 @@ const origin = computed(() => {
       skeleton="card"
     >
       <div class="pa-4">
-        <EntityLocationMap v-if="location" :lat="location.lat" :lon="location.lon" />
+        <EntityLocationMap v-if="location" :lat="location.lat" :lon="location.lon" :polygon="location.polygon" />
 
         <div class="d-flex flex-wrap align-center ga-2 mt-4 min-w-0">
           <div class="flex-grow-1 min-w-0">
             <div class="text-body-2 text-truncate" :title="detailed">{{ coordinates }}</div>
             <div class="text-caption text-medium-emphasis text-truncate" :title="origin">
               {{ origin }}
+            </div>
+            <div v-if="location?.polygon" class="text-caption text-medium-emphasis">
+              {{ t('entities.detail.areaCenter') }}
             </div>
           </div>
           <CopyButton :value="coordinates" :label="t('entities.detail.copyCoordinates')" />

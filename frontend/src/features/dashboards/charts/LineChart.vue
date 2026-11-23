@@ -26,7 +26,6 @@ import { useChartTheme } from './useChartTheme'
 import {
   asItems,
   chartGrid,
-  chartStyle,
   dashFor,
   nonNull,
   scrollLegend,
@@ -41,6 +40,7 @@ import {
 import { useChartLabel } from './chartLabel'
 import { ariaOption, seriesTable } from './a11y'
 import type { ChartSeries } from './types'
+import { useChartStyle } from './expanded'
 
 // `AriaComponent` es lo que hace que ECharts ponga `role="img"` y un nombre accesible en el
 // contenedor del lienzo. Sin el, el `<canvas>` no tiene nombre (WCAG 1.1.1, ACC-002).
@@ -96,13 +96,14 @@ const option = computed<EChartsOption>(() => {
     name: serie.name,
     type: 'line',
     // Con dos puntos o menos la linea no se ve: hay que marcar el dato con su simbolo.
-    showSymbol: nonNull(serie.points).length <= 2,
-    symbolSize: 6,
-    sampling: 'lttb',
+    showSymbol: serie.markers || nonNull(serie.points).length <= 2,
+    symbolSize: serie.markers ? 10 : 6,
+    // Muestrear una serie de puntos sueltos podria quitar justo los que hay que ver.
+    sampling: serie.markers ? undefined : 'lttb',
     connectNulls: false,
     smooth: props.area ? 0.2 : false,
-    lineStyle: { width: 2, type: dashFor(index, props.series.length) },
-    areaStyle: props.area ? { opacity: 0.12 } : undefined,
+    lineStyle: serie.markers ? { width: 0, opacity: 0 } : { width: 2, type: dashFor(index, props.series.length) },
+    areaStyle: props.area && !serie.markers ? { opacity: 0.12 } : undefined,
     emphasis: { focus: 'series' },
     data: serie.points.map((point) => [toMillis(point.t), point.v]),
     markLine: reachesFuture && index === 0 ? nowLine : undefined,
@@ -147,7 +148,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 // La misma serie que dibuja el lienzo, en tabla: es la alternativa textual, no un resumen.
 const table = computed(() =>

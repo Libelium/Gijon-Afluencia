@@ -17,9 +17,10 @@ import { formatMeasure } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { INK, seriesColors } from '../../palette'
 import { useChartTheme } from '../../charts/useChartTheme'
-import { asItems, chartStyle, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
+import { asItems, tooltipHeader, tooltipRow } from '../../charts/chartOptions'
 import { useChartLabel } from '../../charts/chartLabel'
 import { ariaOption, rowsTable } from '../../charts/a11y'
+import { useChartStyle } from '../../charts/expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, SankeyChart, TooltipComponent, AriaComponent])
@@ -99,7 +100,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 /**
  * El diagrama de flujos no tiene series temporales: su dato es «de donde a donde, cuanto». La

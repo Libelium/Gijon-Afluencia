@@ -10,11 +10,12 @@ import { t } from '@/i18n'
 import { formatNumber } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from '../../../charts'
-import { axisValue, chartStyle } from '../../../charts/chartOptions'
+import { axisValue } from '../../../charts/chartOptions'
 import { ariaOption, pairsTable } from '../../../charts/a11y'
 import { useChartLabel } from '../../../charts/chartLabel'
 import { INK, MUTED, occupancyColors } from '../../../palette'
 import { occupancyRatio } from '../data'
+import { useChartStyle } from '../../../charts/expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, GaugeSeries, AriaComponent])
@@ -94,7 +95,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 // La aguja y el porcentaje solo existen dibujados: la tabla da las tres cifras en texto.
 const table = computed(() =>

@@ -10,11 +10,12 @@ import { t } from '@/i18n'
 import { formatMeasure } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { useChartTheme } from '../../../charts'
-import { axisValue, chartStyle, tooltipHeader, tooltipRow } from '../../../charts/chartOptions'
+import { axisValue, tooltipHeader, tooltipRow } from '../../../charts/chartOptions'
 import { useChartLabel } from '../../../charts/chartLabel'
 import { ariaOption, rowsTable } from '../../../charts/a11y'
 import { INK, LINE, MUTED, occupancyColors, SURFACE } from '../../../palette'
 import type { MatrixCell } from '../data'
+import { useChartStyle } from '../../../charts/expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent, AriaComponent])
@@ -118,7 +119,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 /**
  * Tabla equivalente del mapa de calor. Aqui el color ES el dato, asi que sin tabla no hay

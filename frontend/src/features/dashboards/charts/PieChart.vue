@@ -13,7 +13,6 @@ import { useChartTheme } from './useChartTheme'
 import {
   asItems,
   categoryLabel,
-  chartStyle,
   lastPoint,
   nonNull,
   timeFormatOf,
@@ -22,6 +21,7 @@ import {
 import { useChartLabel } from './chartLabel'
 import { ariaOption, pairsTable } from './a11y'
 import type { ChartSeries } from './types'
+import { useChartHeight, useChartStyle } from './expanded'
 
 // Ver LineChart.vue: `AriaComponent` da nombre accesible al lienzo (WCAG 1.1.1, ACC-002).
 use([CanvasRenderer, PieSeries, TitleComponent, TooltipComponent, LegendComponent, AriaComponent])
@@ -69,7 +69,8 @@ const showLegend = computed(() => slices.value.length > 1 && slices.value.length
  * El anillo se centra en pixeles, no en porcentaje: la cifra total tiene que caer justo en su
  * hueco y el porcentaje se desplazaria con cada altura de panel distinta.
  */
-const pixels = computed(() => (typeof props.height === 'number' ? props.height : 280))
+const effectiveHeight = useChartHeight(() => props.height)
+const pixels = computed(() => (typeof effectiveHeight.value === 'number' ? effectiveHeight.value : 280))
 const centerY = computed(() => Math.round(pixels.value * (showLegend.value ? 0.44 : 0.5)))
 
 const label = useChartLabel(() => props.title, () => t('dashboards.chart.pie'))
@@ -122,7 +123,7 @@ const option = computed<EChartsOption>(() => {
   }
 })
 
-const style = computed(() => chartStyle(props.height))
+const style = useChartStyle(() => props.height)
 
 /**
  * La tabla equivalente lista los mismos sectores que dibuja el anillo, con su valor y su

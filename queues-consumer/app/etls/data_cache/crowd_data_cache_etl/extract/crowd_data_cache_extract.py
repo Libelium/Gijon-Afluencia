@@ -1,4 +1,4 @@
-from helpers.crowd.crowd_utils import CFE_BLOCK_MEASURES, crowd_row_processing_lambda
+from helpers.crowd.crowd_utils import CFE_BLOCK_MEASURES, crowd_row_processing_lambda, to_crowd_cache_schema
 from config.logging import appLogging as logging
 import helpers.aether_link.aether_link_helper as aether_link_helper
 from sqlalchemy.orm import Session
@@ -30,9 +30,9 @@ class CrowdDataCacheExtract:
         Function to get the variables renames for the timeseries API
         """
         return {
-            "r_cfe_random": "israndommac",
-            "r_cfe_visitorId": "visitorid",
-            "r_cfe_detectType": "detectiontype",
+            "r_cfe_random": "random",
+            "r_cfe_visitorId": "visitorId",
+            "r_cfe_detectType": "detectionType",
             "r_cfe_timeinstant": "timeinstant",
             "r_cfe_rssi": "rssi",
             "r_cfe_ssid": "ssid",
@@ -95,7 +95,10 @@ class CrowdDataCacheExtract:
             self.timeseries_request = self.__build_timeseries_request()
             self.timeseries_response = self.__get_timeseries()
             self.df_raw = self.__timeseries_response_to_dataframe()
-            self.df_raw = crowd_row_processing_lambda(self.df_raw, self.__get_variables_renames())
+            self.df_raw = crowd_row_processing_lambda(
+                self.df_raw, self.__get_variables_renames(), keep_unmapped_fields=True
+            )
+            self.df_raw = to_crowd_cache_schema(self.df_raw)
             self.df_by_entity = {
                 entity_id: df_group
                 for entity_id, df_group in self.df_raw.groupby("entityId")

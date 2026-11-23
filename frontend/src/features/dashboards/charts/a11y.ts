@@ -1,5 +1,7 @@
 import type { AriaComponentOption } from 'echarts'
 import { t } from '@/i18n'
+import { DateTime } from 'luxon'
+import type { CsvCell } from '@/lib/csv'
 import { formatDateTime, formatNumber } from '@/lib/format'
 import { toMillis } from './chartOptions'
 import type { ChartSeries } from './types'
@@ -24,6 +26,8 @@ export interface AlternativeTable {
   rows: string[][]
   /** Filas que habria sin recortar. Si es mayor que `rows.length`, la tabla esta truncada. */
   total: number
+  /** Lo mismo para descargar: todas las filas y los numeros sin formatear. Sin el, no se ofrece. */
+  download?: { columns: string[]; rows: CsvCell[][] }
 }
 
 export const EMPTY_TABLE: AlternativeTable = { columns: [], rows: [], total: 0 }
@@ -99,7 +103,18 @@ export function seriesTable(series: ChartSeries[], options: SeriesTableOptions):
       ...values.map((map) => formatNumber(map.get(stamp) ?? null)),
     ])
 
-  return { columns, rows, total: sorted.length }
+  // La descarga lleva la zona en la cabecera y la fecha en un formato que las hojas de calculo ordenan.
+  const download = {
+    columns: [`${columns[0]} (${timeZone})`, ...columns.slice(1)],
+    rows: sorted.map((stamp) => [csvStamp(stamp, timeZone), ...values.map((map) => map.get(stamp) ?? null)]),
+  }
+
+  return { columns, rows, total: sorted.length, download }
+}
+
+function csvStamp(raw: string, timeZone: string): string {
+  const ms = toMillis(raw)
+  return Number.isFinite(ms) ? DateTime.fromMillis(ms, { zone: timeZone }).toFormat('yyyy-MM-dd HH:mm') : raw
 }
 
 /** Tabla equivalente de una lista de pares etiqueta/valor (reparto, marcadores, nodos…). */
@@ -108,11 +123,8 @@ export function pairsTable(
   columns: [string, string],
   limit = MAX_ALTERNATIVE_ROWS,
 ): AlternativeTable {
-  return {
-    columns,
-    rows: pairs.slice(0, limit).map((pair) => [pair.label, pair.value]),
-    total: pairs.length,
-  }
+  const all = pairs.map((pair) => [pair.label, pair.value])
+  return { columns, rows: all.slice(0, limit), total: pairs.length, download: { columns, rows: all } }
 }
 
 /** Tabla equivalente a partir de filas ya formateadas. Para graficas con estructura propia. */
@@ -121,5 +133,5 @@ export function rowsTable(
   rows: string[][],
   limit = MAX_ALTERNATIVE_ROWS,
 ): AlternativeTable {
-  return { columns, rows: rows.slice(0, limit), total: rows.length }
+  return { columns, rows: rows.slice(0, limit), total: rows.length, download: { columns, rows } }
 }

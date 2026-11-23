@@ -27,12 +27,13 @@ crowd_predictions/     el paquete instalable — todo lo importable vive aquí
   train_pipeline.py      el entrenamiento (frío/caliente, selección de características)
   predict_pipeline.py    un ciclo de predicción por destino
   daily_pipeline.py      entrenar + predecir en una pasada: lo que invoca el CronJob
-  anomaly_detection/     la vertical de anomalías (núcleo, almacenamiento, pipeline)
+  anomaly_detection/     la vertical de anomalías (núcleo, almacenamiento, pipeline, zonas)
 scripts/               puntos de entrada finos, los que invoca el contenedor
   run_daily.py           <- CronJob diario: entrena y predice
   run_ote.py             <- CronJob horario: compacta e ingesta el archivo LIDAR
   main.py                <- CronJob horario: la fusión, después de la ingesta
-  train.py  predict.py  post_measures.py  run_anomalies.py
+  run_anomalies.py       <- CronJob diario: anomalías de la ocupación de cada zona
+  train.py  predict.py  post_measures.py
   run_ingest.py  compact_ote_archive.py  update_weather.py
 tests/                 importa el paquete INSTALADO, igual que producción
 pyproject.toml         única fuente de dependencias y de la configuración de pytest
@@ -45,7 +46,11 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
   **filtra por este registro**, así que un `zones.json` que falte es un fallo duro y nunca un valor
   por defecto: un registro vacío se parece demasiado a una ejecución correcta que no publicó nada.
   El formato no admite aforo máximo ni porcentaje de ocupación: un aforo que nadie ha medido es un
-  número que parece oficial y es inventado.
+  número que parece oficial y es inventado. Cada zona puede llevar su contorno en `polygon`, una
+  lista de vértices `[lat, lon]`: si lo tiene, es lo que la zona publica como `location` (un
+  `Polygon` de GeoJSON, con el anillo cerrado) y los mapas pintan el área; si no, publica el punto de
+  `location`. Un contorno mal formado se descarta con un aviso en el log y la zona sigue con su
+  punto.
 - `lidar_estimation.py` — recuento por zona según tres casos (`classify_zone_case`):
   - **mixto** (LIDAR + Smart Spot): manda el LIDAR cuando tiene lectura en la ventana. La señal de
     Smart Spot se reporta aparte como `smartspot_delta_pct` (diagnóstico: cuánto se desvía del
@@ -130,11 +135,27 @@ pyproject.toml         única fuente de dependencias y de la configuración de p
 
 ## Detección de anomalías
 
-Una **vertical separada** (`crowd_predictions/anomaly_detection/`): no está enganchada a los ETL de
-fusión ni de predicción y no añade ninguna columna a lo que éstos publican. No sabe nada de zonas ni
-de aforo —sólo identificadores de entidad, medidas y marcas de tiempo—, así que se puede apuntar a
-cualquier modelo de datos. Responde al requisito de detección adaptativa que aprende la
-estacionalidad sin umbrales manuales fijos.
+Una **vertical separada** (`crowd_predictions/anomaly_detection/`): no toca los ETL de fusión ni de
+predicción. El núcleo no sabe nada de zonas ni de aforo —sólo identificadores de entidad, medidas y
+marcas de tiempo—, así que se puede apuntar a cualquier modelo de datos. Responde al requisito de
+detección adaptativa que aprende la estacionalidad sin umbrales manuales fijos.
+
+`scripts/run_anomalies.py` (CronJob `anomalies`, diario) hace dos cosas por cada destino:
+
+1. **Zonas** (`zones.py`), si `ANOMALY_CONFIG` declara medidas para `CrowdFlowZone`: lee de la
+   plataforma esas medidas de cada zona en los últimos `ANOMALY_LOOKBACK_DAYS` días **cerrados**
+   (3, en UTC), las puntúa y publica `isOutlier` (0/1) en la propia `CrowdFlowZone`, por la misma vía
+   de importación que la fusión y con la hora que juzga. Diario y sobre días cerrados a propósito:
+   la fusión publica las zonas cada hora, y una pasada horaria puntuaría muy pocos puntos y podría
+   cruzarse con ella. Un día ya aprendido se vuelve a puntuar pero no se aprende dos veces (la marca
+   de agua de cada entidad), así que una pasada perdida la recoge la siguiente; publicar la misma
+   hora dos veces no cambia nada, porque la serie temporal guarda el primer punto.
+2. **Carpeta**: puntúa los csv que alguien haya dejado en `anomalies_detection/{tenant}/{scope}/` y
+   los deja en `processed/` con la columna `isOutlier`.
+
+Un pico de una sola hora marca también las horas siguientes mientras siga dentro de la ventana de
+volatilidad (`rolling_hours`): por eso el despliegue usa 2 h para las zonas. El modelo se guarda
+firmado con `ANOMALY_STATE_HMAC_KEY`: sin esa clave no se carga el del día anterior y no aprende.
 
 `core.py` usa `sklearn.cluster.Birch`: su *Clustering Feature* por subgrupo es (N, LS, SS), de modo
 que los centroides se actualizan a partir de un estadístico acumulado y nunca releyendo el
