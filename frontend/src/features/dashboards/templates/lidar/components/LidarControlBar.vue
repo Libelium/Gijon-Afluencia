@@ -5,6 +5,7 @@ import { urnTail } from '@/lib/format'
 import type { Entity } from '@/types'
 import RangeSelector from '../../../components/RangeSelector.vue'
 import type { DateRange, RangePresetId } from '../../../lib/range'
+import { useAutoRefresh } from '../../shared/useAutoRefresh'
 
 const props = defineProps<{
   zones: Entity[]
@@ -16,7 +17,7 @@ const props = defineProps<{
   loading?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'update:zoneId': [value: number | null]
   'update:preset': [value: RangePresetId]
   'update:custom': [value: DateRange | null]
@@ -24,6 +25,12 @@ defineEmits<{
 }>()
 
 const zoneItems = computed(() => props.zones.map((z) => ({ value: z.id, title: z.name || urnTail(z.urn) })))
+
+// Pausa el auto-refresco mientras carga (no solapar peticiones) y con un rango fijo (no cambia).
+const { enabled: autoRefresh } = useAutoRefresh(
+  () => emit('refresh'),
+  () => Boolean(props.loading) || props.custom != null,
+)
 </script>
 
 <template>
@@ -44,6 +51,19 @@ const zoneItems = computed(() => props.zones.map((z) => ({ value: z.id, title: z
       :time-zone="timeZone"
       @update:preset="$emit('update:preset', $event)"
       @update:custom="$emit('update:custom', $event)"
+    />
+    <VSpacer />
+    <!-- Opt-in y apagado por defecto: contenido que se actualiza solo y se puede parar (WCAG 2.2.2). -->
+    <VSwitch
+      v-model="autoRefresh"
+      :label="t('templates.common.autoRefreshLabel')"
+      :aria-label="t('templates.common.autoRefreshLabel')"
+      :title="t('templates.common.autoRefreshHint')"
+      color="primary"
+      density="compact"
+      hide-details
+      inset
+      class="flex-grow-0 me-1"
     />
     <VBtn
       icon="mdi-refresh"

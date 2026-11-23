@@ -15,8 +15,10 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
   página ni perder el rango, la medida ni los filtros. Arranca desactivado y se puede volver a
   desactivar en cualquier momento, de modo que el contenido nunca se actualiza solo sin que el
   usuario lo pida y siempre se puede parar (WCAG 2.2.2). No refresca con la pestaña en segundo
-  plano ni mientras una carga está en curso. La elección se recuerda en cada dispositivo. Afecta a
-  los paneles de ocupación, mapa de calor, clasificación y tránsitos.
+  plano ni mientras una carga está en curso. La elección se recuerda en cada dispositivo y es común
+  a todos los paneles. Está en todos los dashboards: los de aforo (ocupación, clasificación, mapa de
+  calor y tránsitos), los de zona LIDAR (mapa de calor, predicción y analítica) y los que crea el
+  usuario con sus propios paneles.
 - **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
   botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
   `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,
