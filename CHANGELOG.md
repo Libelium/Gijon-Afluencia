@@ -10,14 +10,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
-- **Auto-refresco opcional en los paneles.** La barra de cada panel tiene un selector
-  «Auto-refresco» con las opciones *Desactivado* (por defecto), *Cada 1 min*, *Cada 5 min* y
-  *Cada 10 min*: con una cadencia elegida el panel vuelve a pedir los datos solo, sin recargar la
+- **Auto-refresco opcional en los paneles.** La barra de cada panel tiene un interruptor
+  «Auto-refresco». Activado, el panel vuelve a pedir los datos solo cada minuto, sin recargar la
   página ni perder el rango, la medida ni los filtros. Arranca desactivado y se puede volver a
-  *Desactivado* en cualquier momento, de modo que el contenido nunca se actualiza solo sin que el
-  usuario lo pida (WCAG 2.2.2). No refresca con la pestaña en segundo plano ni mientras una carga
-  está en curso. La elección se recuerda en cada dispositivo. Afecta a los paneles de ocupación,
-  mapa de calor, clasificación y tránsitos.
+  desactivar en cualquier momento, de modo que el contenido nunca se actualiza solo sin que el
+  usuario lo pida y siempre se puede parar (WCAG 2.2.2). No refresca con la pestaña en segundo
+  plano ni mientras una carga está en curso. La elección se recuerda en cada dispositivo. Afecta a
+  los paneles de ocupación, mapa de calor, clasificación y tránsitos.
 - **Descargar el manual de la plataforma desde la ayuda.** La página «Ayuda» tiene arriba el
   botón «Descargar manual (PDF)». El backend lo sirve desde el almacenamiento de objetos, en
   `documentation/manual-plataforma.pdf`, sin necesidad de sesión. Mientras nadie lo haya subido,

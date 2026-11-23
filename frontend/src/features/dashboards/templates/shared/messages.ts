@@ -26,6 +26,5 @@ export default {
   'templates.common.flowPause': 'Detener el movimiento',
   'templates.common.flowResume': 'Mover los recorridos',
   'templates.common.autoRefreshLabel': 'Auto-refresco',
-  'templates.common.autoRefreshOff': 'Desactivado',
-  'templates.common.autoRefreshEvery': 'Cada {minutes} min',
+  'templates.common.autoRefreshHint': 'Actualiza el panel solo cada 1 min',
 } as const

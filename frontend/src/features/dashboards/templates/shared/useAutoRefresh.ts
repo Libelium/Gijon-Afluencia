@@ -1,28 +1,24 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-// Se guarda en el navegador, no como preferencia de cuenta: «cada cuánto refresca esta pantalla»
-// es un ajuste por dispositivo (una pantalla fija y un portátil quieren cadencias distintas).
+// Se guarda en el navegador, no como preferencia de cuenta: «si esta pantalla se refresca sola»
+// es un ajuste por dispositivo (una pantalla fija y un portátil quieren cosas distintas).
 const STORAGE_KEY = 'iris360-dashboard-auto-refresh'
 
-/** Minutos entre refrescos. `0` es «desactivado» y es el valor por defecto que exige WCAG 2.2.2. */
-export const AUTO_REFRESH_INTERVALS = [0, 1, 5, 10] as const
-export type AutoRefreshMinutes = (typeof AUTO_REFRESH_INTERVALS)[number]
+/** Cadencia fija del modo automático. No hay push: se sondea cada minuto. */
+export const AUTO_REFRESH_INTERVAL_MS = 60_000
 
-function readStored(): AutoRefreshMinutes {
+function readStored(): boolean {
   try {
-    const raw = Number(localStorage.getItem(STORAGE_KEY))
-    if ((AUTO_REFRESH_INTERVALS as readonly number[]).includes(raw)) {
-      return raw as AutoRefreshMinutes
-    }
+    return localStorage.getItem(STORAGE_KEY) === 'on'
   } catch {
     // Sin localStorage (modo privado, almacenamiento bloqueado): queda desactivado.
+    return false
   }
-  return 0
 }
 
-function writeStored(minutes: AutoRefreshMinutes): void {
+function writeStored(enabled: boolean): void {
   try {
-    localStorage.setItem(STORAGE_KEY, String(minutes))
+    localStorage.setItem(STORAGE_KEY, enabled ? 'on' : 'off')
   } catch {
     // Sin persistencia el valor sigue vivo en memoria durante la sesión; no es un error.
   }
@@ -30,12 +26,12 @@ function writeStored(minutes: AutoRefreshMinutes): void {
 
 /**
  * Refresco automático de un panel, opt-in y pausable (WCAG 2.2.2 «Pause, Stop, Hide»): arranca
- * desactivado, el usuario elige la cadencia y puede volver a «Desactivado», que es a la vez parar
- * y controlar la frecuencia. Nunca refresca con la pestaña oculta —ahorra peticiones— ni cuando
- * `paused()` lo indica (una carga en curso, para no solapar; un rango fijo, que no cambia).
+ * desactivado y el usuario lo activa; «Desactivado» es a la vez parar el refresco. Mientras está
+ * activo vuelve a pedir los datos cada minuto, nunca con la pestaña oculta —ahorra peticiones— ni
+ * cuando `paused()` lo indica (una carga en curso, para no solapar; un rango fijo, que no cambia).
  */
 export function useAutoRefresh(onTick: () => void, paused: () => boolean) {
-  const minutes = ref<AutoRefreshMinutes>(readStored())
+  const enabled = ref<boolean>(readStored())
   let timer: ReturnType<typeof setInterval> | undefined
 
   function stop(): void {
@@ -47,15 +43,15 @@ export function useAutoRefresh(onTick: () => void, paused: () => boolean) {
 
   function start(): void {
     stop()
-    if (minutes.value === 0) return
+    if (!enabled.value) return
     timer = setInterval(() => {
       if (typeof document !== 'undefined' && document.hidden) return
       if (paused()) return
       onTick()
-    }, minutes.value * 60_000)
+    }, AUTO_REFRESH_INTERVAL_MS)
   }
 
-  watch(minutes, (value) => {
+  watch(enabled, (value) => {
     writeStored(value)
     start()
   })
@@ -63,5 +59,5 @@ export function useAutoRefresh(onTick: () => void, paused: () => boolean) {
   start()
   onBeforeUnmount(stop)
 
-  return { minutes }
+  return { enabled }
 }

@@ -3,7 +3,7 @@ import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import RangeSelector from '../../components/RangeSelector.vue'
 import type { DateRange, RangePresetId } from '../../lib/range'
-import { AUTO_REFRESH_INTERVALS, useAutoRefresh } from './useAutoRefresh'
+import { useAutoRefresh } from './useAutoRefresh'
 
 const props = withDefaults(
   defineProps<{
@@ -33,15 +33,10 @@ const emit = defineEmits<{
 }>()
 
 // Pausa el auto-refresco mientras carga (no solapar peticiones) y con un rango fijo (no cambia).
-const { minutes: autoRefresh } = useAutoRefresh(
+const { enabled: autoRefresh } = useAutoRefresh(
   () => emit('refresh'),
   () => Boolean(props.loading) || props.custom != null,
 )
-
-const autoRefreshItems = AUTO_REFRESH_INTERVALS.map((minutes) => ({
-  value: minutes,
-  title: minutes === 0 ? t('templates.common.autoRefreshOff') : t('templates.common.autoRefreshEvery', { minutes }),
-}))
 </script>
 
 <template>
@@ -58,19 +53,17 @@ const autoRefreshItems = AUTO_REFRESH_INTERVALS.map((minutes) => ({
         <!-- Selectores propios de cada plantilla: medida, categorias… -->
         <slot name="controls" />
         <VSpacer />
-        <!-- Opt-in y con «Desactivado» por defecto: contenido que se actualiza solo (WCAG 2.2.2). -->
-        <VSelect
+        <!-- Opt-in y apagado por defecto: contenido que se actualiza solo y se puede parar (WCAG 2.2.2). -->
+        <VSwitch
           v-model="autoRefresh"
-          :items="autoRefreshItems"
+          :label="t('templates.common.autoRefreshLabel')"
           :aria-label="t('templates.common.autoRefreshLabel')"
-          :title="t('templates.common.autoRefreshLabel')"
-          prepend-inner-icon="mdi-autorenew"
+          :title="t('templates.common.autoRefreshHint')"
+          color="primary"
           density="compact"
-          variant="outlined"
           hide-details
-          min-width="160"
-          max-width="190"
-          class="flex-grow-0"
+          inset
+          class="flex-grow-0 me-1"
         />
         <VBtn
           icon="mdi-refresh"
