@@ -21,6 +21,7 @@ import TemplateHost from '../components/TemplateHost.vue'
 import { placePanels, type LayoutBreakpoint } from '../lib/layout'
 import { DEFAULT_RANGE, resolveRange, type DateRange, type RangePresetId } from '../lib/range'
 import { datamodelNames, resolveTemplate } from '../templates/registry'
+import { useAutoRefresh } from '../templates/shared/useAutoRefresh'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,6 +91,13 @@ function refresh() {
   applyRange()
   reloadKey.value += 1
 }
+
+// Solo para los dashboards de usuario: las plantillas ya refrescan desde su propia barra.
+// Pausa mientras carga (no solapar) y con un rango fijo (no cambia).
+const { enabled: autoRefresh } = useAutoRefresh(
+  () => refresh(),
+  () => loading.value || custom.value != null || isTemplate.value,
+)
 
 async function load() {
   loading.value = true
@@ -173,6 +181,17 @@ onMounted(load)
       <template #actions>
         <template v-if="!isTemplate && !xs">
           <RangeSelector v-model:preset="preset" v-model:custom="custom" :time-zone="timeZone" />
+          <!-- Opt-in y apagado por defecto: contenido que se actualiza solo y se puede parar (WCAG 2.2.2). -->
+          <VSwitch
+            v-model="autoRefresh"
+            :label="t('templates.common.autoRefreshLabel')"
+            :aria-label="t('templates.common.autoRefreshLabel')"
+            color="primary"
+            density="compact"
+            hide-details
+            inset
+            class="flex-grow-0 me-1"
+          />
           <VBtn
             icon="mdi-refresh"
             variant="tonal"
@@ -236,6 +255,16 @@ onMounted(load)
     <!-- A 390 px el selector no cabe junto al titulo: pasa a su propia fila. -->
     <div v-if="xs && !isTemplate" class="d-flex align-center ga-3 mb-4">
       <RangeSelector v-model:preset="preset" v-model:custom="custom" :time-zone="timeZone" block />
+      <VSwitch
+        v-model="autoRefresh"
+        :label="t('templates.common.autoRefreshLabel')"
+        :aria-label="t('templates.common.autoRefreshLabel')"
+        color="primary"
+        density="compact"
+        hide-details
+        inset
+        class="flex-grow-0"
+      />
       <VBtn
         icon="mdi-refresh"
         variant="tonal"

@@ -10,6 +10,15 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Auto-refresco opcional en los paneles.** La barra de cada panel tiene un interruptor
+  «Auto-refresco». Activado, el panel vuelve a pedir los datos solo cada minuto, sin recargar la
+  página ni perder el rango, la medida ni los filtros. Arranca desactivado y se puede volver a
+  desactivar en cualquier momento, de modo que el contenido nunca se actualiza solo sin que el
+  usuario lo pida y siempre se puede parar (WCAG 2.2.2). No refresca con la pestaña en segundo
+  plano ni mientras una carga está en curso. La elección se recuerda en cada dispositivo y es común
+  a todos los paneles. Está en todos los dashboards: los de aforo (ocupación, clasificación, mapa de
+  calor y tránsitos), los de zona LIDAR (mapa de calor, predicción y analítica) y los que crea el
+  usuario con sus propios paneles.
 - **Ampliar cualquier gráfico de un panel a pantalla completa.** Cada gráfico de los paneles
   propios y de las plantillas, y los mapas de las plantillas, tienen un botón para verlo a casi toda
   la pantalla y otro para volver; Escape también cierra. La gráfica o el mapa crecen en alto sin

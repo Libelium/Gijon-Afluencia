@@ -3,8 +3,9 @@ import StateBlock from '@/components/StateBlock.vue'
 import { t } from '@/i18n'
 import RangeSelector from '../../components/RangeSelector.vue'
 import type { DateRange, RangePresetId } from '../../lib/range'
+import { useAutoRefresh } from './useAutoRefresh'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     preset: RangePresetId
     custom?: DateRange | null
@@ -30,6 +31,12 @@ const emit = defineEmits<{
   refresh: []
   retry: []
 }>()
+
+// Pausa el auto-refresco mientras carga (no solapar peticiones) y con un rango fijo (no cambia).
+const { enabled: autoRefresh } = useAutoRefresh(
+  () => emit('refresh'),
+  () => Boolean(props.loading) || props.custom != null,
+)
 </script>
 
 <template>
@@ -46,6 +53,17 @@ const emit = defineEmits<{
         <!-- Selectores propios de cada plantilla: medida, categorias… -->
         <slot name="controls" />
         <VSpacer />
+        <!-- Opt-in y apagado por defecto: contenido que se actualiza solo y se puede parar (WCAG 2.2.2). -->
+        <VSwitch
+          v-model="autoRefresh"
+          :label="t('templates.common.autoRefreshLabel')"
+          :aria-label="t('templates.common.autoRefreshLabel')"
+          color="primary"
+          density="compact"
+          hide-details
+          inset
+          class="flex-grow-0 me-1"
+        />
         <VBtn
           icon="mdi-refresh"
           variant="tonal"

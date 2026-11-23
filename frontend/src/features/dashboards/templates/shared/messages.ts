@@ -25,6 +25,7 @@ export default {
   'templates.common.levelVeryHigh': 'Muy alto',
   'templates.common.flowPause': 'Detener el movimiento',
   'templates.common.flowResume': 'Mover los recorridos',
+  'templates.common.autoRefreshLabel': 'Auto-refresco',
   'templates.common.timeline': 'Momento que muestra el mapa',
   'templates.common.timelineHour': 'Paso que muestra el mapa',
   'templates.common.timelinePlay': 'Reproducir',
