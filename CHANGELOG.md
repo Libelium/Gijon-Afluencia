@@ -225,6 +225,14 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **La clasificación de visitantes por horas vuelve a contar todas las detecciones.** La caché
+  guarda cada hora lo que se notificó en ella, y cada detección conserva su propia hora, que puede
+  ser de la hora anterior (una detección de las 10:59:58 notificada a las 11:00:00 está en el
+  fichero de las 11). Al leer la semana hora a hora, cada hora solo se quedaba con las detecciones
+  de esa hora y la anterior no lee ese fichero, así que nadie las contaba (con datos sintéticos,
+  en el peor caso, un 5 % de los visitantes). Ahora cada hora lee sus ficheros y se queda con todo lo
+  que es de la semana: el resultado vuelve a ser el mismo que leyendo la semana de golpe, con la
+  misma memoria.
 - **El mapa general ya no pierde las entidades cuya ubicación es un área.** El filtro por área
   visible del listado de entidades solo reconocía ubicaciones de tipo punto: una entidad con un
   polígono no aparecía nunca en el mapa. Ahora un polígono cuenta por su primer vértice.

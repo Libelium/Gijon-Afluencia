@@ -52,13 +52,18 @@ class CrowdClassificationETL(BaseETL):
 
     def __timeseries_response_to_dataframe(self, timeseries_request):
         """
-        Function to convert timeseries response to dataframe
+        Function to convert timeseries response to dataframe.
+
+        A window reads the cache files of its own hours but keeps every row of the
+        whole period: a detection can be cached in the file of the hour after its
+        own time (it was reported then), and no other window reads that file.
         """
         df = aether_link_helper.get_time_series_in_df_format(
             timeseries_request,
             df_live_row_processing_lambda=crowd_row_processing_lambda,
             skip_aether=True,
             drop_nan=True,
+            cache_keep_between=(self.start_date, self.end_date),
         )
 
         if df.empty:
