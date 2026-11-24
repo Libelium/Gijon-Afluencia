@@ -39,10 +39,10 @@ CROWD_CACHE_COLUMNS = [
     "schemaVersion",
 ]
 CROWD_CACHE_TIMEINSTANT_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
-# What identifies one reported row. The firmware repeats a visitor in every
-# report with the same first-seen timeinstant, so those repeats are real rows:
-# only the full set of reported values tells a row apart. fields is left out
-# because files cached before schema 2 never had it.
+# What identifies one reported row. The same visitor shows up in many reports,
+# so a visitor's repeats are real rows: only the full set of reported values
+# tells a row apart. fields is left out because files cached before schema 2
+# never had it.
 CROWD_CACHE_ROW_KEYS = [
     c for c in CROWD_CACHE_COLUMNS if c not in ("fields", "schemaVersion")
 ]

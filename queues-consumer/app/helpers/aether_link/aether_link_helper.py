@@ -318,9 +318,17 @@ def get_time_series_from_data_cache(
     time_series_request: dict,
     s3_data_cache_path: str = "data_cache/crowd",
     batch_hours: int = 24,
+    keep_between: Tuple[datetime, datetime] | None = None,
 ) -> pd.DataFrame:
     """
     Retrieves and combines time series data from the S3 cache.
+
+    The files read are those of the requested hours. Each cached file holds the
+    rows notified in its hour, and a row keeps the time of its own detection,
+    which can fall in an earlier hour. By default only the rows whose time is
+    within the requested dates are kept; keep_between widens that filter, so a
+    reader that walks a longer period in windows keeps every row of its files
+    that belongs to the period.
     """
     import pandas as pd
     from helpers.crowd.crowd_utils import coalesce_legacy_crowd_columns
@@ -375,6 +383,11 @@ def get_time_series_from_data_cache(
     final_df = pd.concat(all_cached_dfs, ignore_index=True)
     final_df = _normalize_timeinstant_column(final_df)
 
+    if keep_between:
+        global_start_date, global_end_date = (
+            d.replace(tzinfo=None) for d in keep_between
+        )
+
     if "timeinstant" in final_df.columns and global_start_date and global_end_date:
         final_df = final_df[
             (final_df["timeinstant"] >= global_start_date)
@@ -392,9 +405,11 @@ def get_time_series_in_df_format(
     df_live_row_processing_lambda=None,
     skip_aether=False,
     drop_nan=True,
+    cache_keep_between: Tuple[datetime, datetime] | None = None,
 ) -> pd.DataFrame:
     """
     Returns the time series obtained from the Aether Link as a DataFrame.
+    cache_keep_between is passed to the cache reader as keep_between.
     """
     import pandas as pd
 
@@ -410,7 +425,9 @@ def get_time_series_in_df_format(
 
     df_cache = pd.DataFrame()
     if get_from_cache:
-        df_cache = get_time_series_from_data_cache(time_series_request)
+        df_cache = get_time_series_from_data_cache(
+            time_series_request, keep_between=cache_keep_between
+        )
 
     # Combine cached and live data
     df = pd.concat([df_cache, df_live], ignore_index=True)

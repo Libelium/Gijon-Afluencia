@@ -622,6 +622,96 @@ class TestClassificationStreaming:
             assert etl.extract() is False
 
 
+class TestClassificationReadsTheCacheFiles:
+    """
+    The cache keeps one file per hour of NOTIFICATION, and each row keeps the time
+    of its own detection, which can fall in the hour before: a detection stamped
+    10:59:58 and reported at 11:00:00 is in the 11:00 file. Each window reads only
+    its own files, so it must keep every row of the period, not only the rows of
+    its hour, or nobody counts that detection.
+    """
+
+    ENTITY = _create_entity(1, "sensor-01_CFE").urn
+
+    # Files by the hour they cover, as the cache names them.
+    FILES = {
+        "2023-01-04T10_00_00": [
+            ("2023-01-04T09:59:59.000000", "early_001"),  # before the period: not counted
+            ("2023-01-04T10:20:00.000000", "visitor_a"),
+        ],
+        "2023-01-04T11_00_00": [
+            ("2023-01-04T10:59:58.000000", "visitor_b"),  # its own time is in the 10:00 hour
+            ("2023-01-04T11:10:00.000000", "visitor_a"),
+        ],
+        "2023-01-04T12_00_00": [
+            ("2023-01-04T11:59:59.000000", "visitor_c"),
+        ],
+    }
+
+    @pytest.fixture
+    def request_10_to_13(self, sample_entities):
+        return CrowdClassificationRequest(
+            entities=sample_entities,
+            start_date=datetime(2023, 1, 4, 10, 0, 0),
+            end_date=datetime(2023, 1, 4, 13, 0, 0),
+            user_id=1,
+            mode="weekly",
+        )
+
+    def _cached_file(self, local_path, s3_path):
+        hour = s3_path.rsplit("/", 1)[-1].split("_to_")[0]
+        rows = self.FILES.get(hour)
+        if rows is None:
+            return None
+        return pd.DataFrame(
+            {
+                "timeinstant": [t for t, _ in rows],
+                "entityId": [self.ENTITY] * len(rows),
+                "detectionType": [2] * len(rows),
+                "random": [0] * len(rows),
+                "visitorId": [v for _, v in rows],
+                "period": [5] * len(rows),
+                "schemaVersion": [2] * len(rows),
+            }
+        )
+
+    def _visitor_days(self, request, mock_main_db, mock_realtime_db, batch_hours):
+        with patch(
+            "helpers.aether_link.aether_link_helper._download_and_load_cache_file",
+            side_effect=self._cached_file,
+        ), patch(
+            "etls.crowd.crowd_classification_etl.etl.get_user_crowd_visitor",
+            return_value=[],
+        ), patch(
+            "etls.crowd.crowd_classification_etl.etl.settings.CROWD_CLASSIFICATION_BATCH_HOURS",
+            batch_hours,
+        ):
+            etl = CrowdClassificationETL(
+                request=request, main_db=mock_main_db, realtime_db=mock_realtime_db
+            )
+            assert etl.extract() is True
+        days = etl.visitor_days.set_index("visitorid")
+        return {
+            v: (str(days.loc[v, "first_seen"]), str(days.loc[v, "last_seen"])) for v in days.index
+        }
+
+    def test_hourly_windows_count_a_detection_reported_in_the_next_hour(
+        self, request_10_to_13, mock_main_db, mock_realtime_db
+    ):
+        days = self._visitor_days(request_10_to_13, mock_main_db, mock_realtime_db, batch_hours=1)
+
+        assert sorted(days) == ["visitor_a", "visitor_b", "visitor_c"]
+        assert days["visitor_a"] == ("2023-01-04 10:20:00", "2023-01-04 11:10:00")
+
+    def test_hourly_windows_read_the_same_as_the_whole_period(
+        self, request_10_to_13, mock_main_db, mock_realtime_db
+    ):
+        hourly = self._visitor_days(request_10_to_13, mock_main_db, mock_realtime_db, batch_hours=1)
+        whole = self._visitor_days(request_10_to_13, mock_main_db, mock_realtime_db, batch_hours=3)
+
+        assert hourly == whole
+
+
 # =======================================================================
 # --- LOAD TESTS ---
 # =======================================================================

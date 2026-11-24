@@ -183,6 +183,10 @@ visitantes que ya existen en la base de datos.
     una fila por visitante y día, con la primera y la última detección. Los resúmenes se van
     juntando cada 24 ventanas. Así solo hay en memoria una ventana de detecciones y los resúmenes,
     y no la semana entera; la clasificación sale igual que leyendo todo de una vez.
+    Cada ventana lee los ficheros de la caché de sus horas, pero se queda con todas las detecciones
+    del periodo y no solo con las de su hora: la caché guarda cada detección en el fichero de la
+    hora en que se notificó, que puede ser la siguiente a la de la detección, y ninguna otra
+    ventana lee ese fichero.
 3.  **Obtener los visitantes anteriores**: se consulta la base de datos para obtener la lista de
     visitantes y sus clasificaciones actuales para el `user_id` indicado. Ese histórico se usa en la
     lógica de clasificación.
