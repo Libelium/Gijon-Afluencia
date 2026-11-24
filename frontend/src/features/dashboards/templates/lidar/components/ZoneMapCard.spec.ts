@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
+import { defineComponent, h, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import vuetify from '@/plugins/vuetify'
 import { useUiStore } from '@/stores/ui'
+import { provideExpanded } from '../../../charts/expanded'
 import ZoneMapCard, { type ZoneMarker } from './ZoneMapCard.vue'
 
 /**
@@ -49,5 +51,23 @@ describe('ZoneMapCard', () => {
   it('en tema oscuro aplica el mismo filtro de teselas que el resto de mapas', () => {
     expect(mountCard([marker({})], 'dark').find('.map-tiles--dark').exists()).toBe(true)
     expect(mountCard([marker({})], 'light').find('.map-tiles--dark').exists()).toBe(false)
+  })
+
+  it('ampliada, crece el contenedor y el mapa ocupa todo su alto', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    // vue-leaflet copia los atributos del mapa al crearlo: si la altura fuera en el mapa, al
+    // ampliar la tarjeta se quedaria con la de antes, arriba del recuadro.
+    const Expanded = defineComponent({
+      setup() {
+        provideExpanded(ref(true))
+        return () => h(ZoneMapCard, { markers: [marker({})] })
+      },
+    })
+    const wrapper = mount(Expanded, { global: { plugins: [pinia, vuetify] } })
+    const container = wrapper.find('.rounded-lg').element as HTMLElement
+    const map = wrapper.find('[role="group"]').element as HTMLElement
+    expect(Number.parseFloat(container.style.height)).toBeGreaterThan(340)
+    expect(map.style.height).toBe('100%')
   })
 })
