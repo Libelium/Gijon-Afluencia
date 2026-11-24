@@ -225,6 +225,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **El mapa del «Mapa de calor LIDAR» ocupa toda la tarjeta al ampliarla.** El recuadro ampliado
+  crecía, pero el mapa se quedaba con su alto de antes en la parte de arriba: la biblioteca del
+  mapa toma sus atributos al crearlo y no aplicaba el alto nuevo. Ahora el alto va en el
+  contenedor y el mapa ocupa todo su espacio, y se recoloca cada vez que el contenedor cambia de
+  tamaño, también al plegar el menú lateral. Al ampliar o reducir cualquier tarjeta, sus gráficas
+  y mapas recalculan su tamaño en cuanto la tarjeta está colocada.
 - **La clasificación de visitantes por horas vuelve a contar todas las detecciones.** La caché
   guarda cada hora lo que se notificó en ella, y cada detección conserva su propia hora, que puede
   ser de la hora anterior (una detección de las 10:59:58 notificada a las 11:00:00 está en el

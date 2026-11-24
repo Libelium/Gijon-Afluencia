@@ -44,10 +44,11 @@ function toggle() {
 
 watch(expanded, async (value) => {
   document.documentElement.classList.toggle('expand-frame-open', value)
-  if (value) {
-    await nextTick()
-    frame.value?.focus()
-  }
+  await nextTick()
+  if (value) frame.value?.focus()
+  // Leaflet y ECharts escuchan el redimensionado de la ventana: asi recalculan su tamano en cuanto
+  // la tarjeta ya esta colocada, ampliada o de vuelta en la rejilla.
+  requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
 })
 
 function focusables(): HTMLElement[] {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, shallowRef, useId, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, useId } from 'vue'
 import type { Map as LeafletMap } from 'leaflet'
 import { LCircleMarker, LMap, LPolygon, LTileLayer, LTooltip } from '@vue-leaflet/vue-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -44,10 +44,24 @@ const listId = useId()
 const mapHeight = useChartHeight(() => props.height)
 const map = shallowRef<LeafletMap | null>(null)
 
-// Leaflet cachea el tamano de su contenedor: al ampliar o reducir hay que avisarle.
-watch(mapHeight, async () => {
-  await nextTick()
-  map.value?.invalidateSize()
+// Leaflet cachea el tamano de su contenedor: hay que avisarle cada vez que cambia (al ampliar la
+// tarjeta, al plegar el menu lateral, al redimensionar la ventana), como en PointMap.
+const canvas = ref<HTMLElement | null>(null)
+let observer: ResizeObserver | undefined
+let resizeTimer: ReturnType<typeof setTimeout> | undefined
+
+onMounted(() => {
+  if (!canvas.value || typeof ResizeObserver === 'undefined') return
+  observer = new ResizeObserver(() => {
+    clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(() => map.value?.invalidateSize(), 120)
+  })
+  observer.observe(canvas.value)
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(resizeTimer)
+  observer?.disconnect()
 })
 
 // Las mismas teselas, filtro oscuro y limites que el resto de mapas de la aplicacion.
@@ -82,7 +96,10 @@ function markerLabel(marker: ZoneMarker): string {
          tambien el bloque de estado con su boton «Reintentar», y `role` sobre el conjunto
          convertiria ese boton en parte de una imagen. `group` —y no `img`— porque dentro hay
          controles que deben seguir siendo alcanzables: el zoom y el enlace de atribucion. -->
+    <!-- La altura va solo en este contenedor: vue-leaflet copia los atributos del mapa al crearlo
+         y no aplicaria un cambio de altura al ampliar la tarjeta. El mapa ocupa el 100 %. -->
     <div
+      ref="canvas"
       class="rounded-lg overflow-hidden"
       :class="{ 'map-tiles--dark': tiles.darken }"
       :style="{ height: typeof mapHeight === 'number' ? `${mapHeight}px` : mapHeight }"
@@ -102,7 +119,7 @@ function markerLabel(marker: ZoneMarker): string {
           :center="center"
           :max-zoom="MAX_ZOOM"
           :scroll-wheel-zoom="false"
-          :style="{ height: typeof mapHeight === 'number' ? `${mapHeight}px` : mapHeight }"
+          :style="{ height: '100%' }"
           @ready="map = $event"
           role="group"
           :aria-label="t('dashboards.lidar.heatmap.mapLabel')"
