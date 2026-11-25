@@ -4,7 +4,7 @@ nothing about zones, CrowdFlowZone or CrowdFlowPrediction - only entity_id + a d
 of raw measures + a timestamp.
 
   core.py     the algorithm: BIRCH clustering + the running statistics around it.
-  storage.py  one persisted state per entity, on helpers/model_storage.py's scheme.
+  storage.py  one persisted state per datamodel, on helpers/model_storage.py's scheme.
 
 The public surface is `evaluate_batch(storage, datamodel, points)`: everything else
 is an implementation detail of those two modules. Callers (the ETL transforms) only

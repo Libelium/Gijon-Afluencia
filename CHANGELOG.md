@@ -10,6 +10,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Las horas anómalas también en los gráficos propios, y explicadas en la Ayuda.** Un gráfico de
+  líneas de un panel propio que muestra la ocupación de una zona marca sus horas anómalas igual
+  que la analítica de zona LIDAR: puntos de la serie «Anomalía» sobre la línea, con la misma
+  ventana y el mismo intervalo que ella; un intervalo agregado (un día) sale marcado si lo está
+  alguna de sus horas. Si la zona no publica la detección o la consulta falla, el gráfico se pinta
+  como antes. La Ayuda tiene una sección «Anomalías» que explica cómo se decide, con cuatro
+  ejemplos, y una pregunta frecuente para cuando no se ve ninguna.
 - **Auto-refresco opcional en los paneles.** La barra de cada panel tiene un interruptor
   «Auto-refresco». Activado, el panel vuelve a pedir los datos solo cada minuto, sin recargar la
   página ni perder el rango, la medida ni los filtros. Arranca desactivado y se puede volver a
@@ -54,11 +61,12 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 - **Detección de anomalías en la ocupación de las zonas.** El módulo de anomalías existía pero no
   estaba enganchado a nada: nadie le daba datos, no se ejecutaba y su resultado no llegaba a la
   plataforma. Ahora un CronJob diario (`anomalies`) lee la ocupación por hora de cada zona en los
-  últimos días ya cerrados, la puntúa con un modelo que aprende lo normal de cada zona para cada hora
-  y día de la semana, sin umbrales fijos, y publica `isOutlier` (0/1) en la propia zona. En la
-  analítica de zona LIDAR, la evolución de la ocupación marca las horas anómalas como puntos, y la
-  medida «Hora anómala» se explica en la ficha de la zona. Necesita `ANOMALY_STATE_HMAC_KEY` en el
-  despliegue para que el modelo aprenda de un día para otro.
+  últimos días ya cerrados, la puntúa con un modelo que aprende lo habitual a cada hora y día de la
+  semana, sin umbrales fijos, y publica `isOutlier` (0/1) en la propia zona. El modelo es uno para
+  todas las zonas: lo habitual se aprende de todas juntas. En la analítica de zona LIDAR, la
+  evolución de la ocupación marca las horas anómalas como puntos, y la medida «Hora anómala» se
+  explica en la ficha de la zona. Necesita `ANOMALY_STATE_HMAC_KEY` en el despliegue: sin ella el
+  CronJob termina con error y no publica nada.
 - **Descargar en CSV los datos de cada gráfico.** Junto a «Ver los datos en una tabla», cada
   gráfico de los paneles y las plantillas, y el histórico de una medida, ofrece «Descargar CSV»
   con los mismos datos que dibuja, todas las filas aunque la tabla en pantalla se recorte. El

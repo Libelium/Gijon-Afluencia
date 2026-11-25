@@ -80,6 +80,13 @@ export function isPredictionEntity(entity?: { urn?: string; datamodel?: string }
   return entity.datamodel === model || entity.urn?.split(':')[2] === model
 }
 
+/** Si la entidad es una zona de afluencia, la que lleva la deteccion de anomalias. Igual que arriba. */
+export function isZoneEntity(entity?: { urn?: string; datamodel?: string } | null): boolean {
+  if (!entity) return false
+  const model = datamodelOf('zone')
+  return entity.datamodel === model || entity.urn?.split(':')[2] === model
+}
+
 /** Identificador que espera el servidor para una plantilla soportada. */
 export function typeIdOf(key: TemplateKey): string {
   return decode(ENCODED[key])

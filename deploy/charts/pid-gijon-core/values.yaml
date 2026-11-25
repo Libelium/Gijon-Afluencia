@@ -1441,7 +1441,7 @@ components:
     secrets: {}
     #   QUEUES_CONSUMER_API_TOKEN: ""   # TODO: set (the same /publish secret carrot has)
     #   ANOMALY_STATE_HMAC_KEY: ""      # TODO: set. Firma el modelo de anomalias guardado: sin
-    #                                   # ella no se carga el del dia anterior y no aprende nunca
+    #                                   # ella el CronJob anomalies falla y no publica nada
     #   STORAGE_TYPE s3:    AWS_S3_ACCESS_ID / AWS_S3_SECRET_KEY
     #   STORAGE_TYPE local: LOCAL_ACCESS_ID / LOCAL_SECRET_KEY
 

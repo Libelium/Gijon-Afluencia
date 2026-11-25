@@ -62,9 +62,9 @@ const MEASURES: Record<string, MeasureInfo> = {
   isoutlier: {
     name: 'Hora anómala',
     description:
-      'Vale 1 si la ocupación de esa hora se sale de lo normal en la zona para esa hora y ese día de la semana, y 0 si no.',
+      'Vale 1 si la ocupación de la zona en esa hora es muy distinta de la habitual a esa hora y ese día de la semana, o cambia de golpe, y 0 si no.',
     calculation:
-      'Lo calcula la plataforma una vez al día sobre los días ya cerrados. Aprende lo normal de cada zona con su historia, sin umbrales fijos, y marca lo que se aparta. Un pico de una sola hora marca también las dos horas siguientes.',
+      'Lo calcula la plataforma una vez al día sobre los días ya cerrados. Aprende lo habitual de todas las zonas juntas, sin umbrales fijos, y marca lo que se aparta. Un pico de una sola hora marca también las dos horas siguientes. Más detalle en la Ayuda, sección Anomalías.',
   },
   confidence: {
     name: 'Origen de la cifra',
