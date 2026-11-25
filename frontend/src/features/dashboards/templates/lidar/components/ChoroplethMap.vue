@@ -6,7 +6,7 @@ import type { LatLngBoundsExpression, Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { t } from '@/i18n'
-import { formatMeasure, formatNumber } from '@/lib/format'
+import { formatCoordinates, formatMeasure } from '@/lib/format'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
 import { rowsTable } from '../../../charts/a11y'
 import { useExpanded } from '../../../charts/expanded'
@@ -75,7 +75,7 @@ const devicesTable = computed(() =>
       device.zoneName,
       t(`dashboards.lidar.choropleth.${device.kind}`),
       device.serial,
-      `${formatNumber(device.lat, 5)}, ${formatNumber(device.lon, 5)}`,
+      formatCoordinates(device.lat, device.lon),
     ]),
   ),
 )

@@ -225,6 +225,11 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Corregido
 
+- **Las coordenadas van con punto decimal.** En la columna «Coordenadas» de las tablas de los
+  mapas, y en su descarga en CSV, la coma decimal se confundía con la coma que separa latitud y
+  longitud («43,54503, -5,66262»). Ahora se escriben con punto («43.54503, -5.66262»), como las
+  leen los mapas y los GPS. El resto de cifras del CSV sigue con coma decimal, para la hoja de
+  cálculo en castellano.
 - **El mapa del «Mapa de calor LIDAR» ocupa toda la tarjeta al ampliarla.** El recuadro ampliado
   crecía, pero el mapa se quedaba con su alto de antes en la parte de arriba: la biblioteca del
   mapa toma sus atributos al crearlo y no aplicaba el alto nuevo. Ahora el alto va en el

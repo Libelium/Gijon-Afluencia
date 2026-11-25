@@ -5,7 +5,7 @@ import { LMap, LTileLayer, LCircleMarker, LPolyline, LTooltip } from '@vue-leafl
 import 'leaflet/dist/leaflet.css'
 import type { Map as LeafletMap, LatLngBoundsExpression } from 'leaflet'
 import { t } from '@/i18n'
-import { formatNumber } from '@/lib/format'
+import { formatCoordinates } from '@/lib/format'
 import DataTableAlternative from '@/components/DataTableAlternative.vue'
 import { rowsTable } from '../../charts/a11y'
 import { MAX_ZOOM, defaultCenter, defaultZoom, tilesForTheme } from '@/lib/mapConfig'
@@ -159,7 +159,7 @@ const pointsTable = computed(() =>
     props.points.map((point) => [
       point.label,
       point.text,
-      `${formatNumber(point.lat, 5)}, ${formatNumber(point.lon, 5)}`,
+      formatCoordinates(point.lat, point.lon),
     ]),
   ),
 )
