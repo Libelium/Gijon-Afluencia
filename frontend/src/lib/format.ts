@@ -42,6 +42,15 @@ export function formatNumber(value: unknown, maxDecimals = 2): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: maxDecimals }).format(n)
 }
 
+/**
+ * Coordenadas «lat, lon» con punto decimal. Con la coma decimal del castellano no se distingue de
+ * la coma que separa las dos, ni en pantalla ni en el CSV; asi es tambien como las leen los mapas.
+ */
+export function formatCoordinates(lat: number, lon: number, decimals = 5): string {
+  const part = (n: number) => (Number.isFinite(n) ? String(Number(n.toFixed(decimals))) : NO_VALUE)
+  return `${part(lat)}, ${part(lon)}`
+}
+
 export function formatMeasure(value: unknown, units?: string): string {
   const n = formatNumber(value)
   return units && n !== NO_VALUE ? `${n} ${units}` : n

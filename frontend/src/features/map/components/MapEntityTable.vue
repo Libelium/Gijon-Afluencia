@@ -11,7 +11,7 @@
 import { computed } from 'vue'
 import { datamodelLabel } from '@/features/entities/lib/datamodel'
 import { t } from '@/i18n'
-import { formatNumber, urnTail } from '@/lib/format'
+import { formatCoordinates, formatNumber, urnTail } from '@/lib/format'
 import type { PlacedEntity } from '../lib/geometry'
 
 const props = defineProps<{ placed: PlacedEntity[]; emptyText: string }>()
@@ -27,7 +27,7 @@ const rows = computed(() =>
     id: item.entity.id,
     name: item.entity.name || urnTail(item.entity.urn),
     datamodel: item.entity.datamodel ? datamodelLabel(item.entity.datamodel) : t('common.noValue'),
-    coordinates: `${formatNumber(item.latLng[0], 5)}, ${formatNumber(item.latLng[1], 5)}`,
+    coordinates: formatCoordinates(item.latLng[0], item.latLng[1]),
   })),
 )
 
