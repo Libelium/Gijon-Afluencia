@@ -154,8 +154,11 @@ detección adaptativa que aprende la estacionalidad sin umbrales manuales fijos.
    los deja en `processed/` con la columna `isOutlier`.
 
 Un pico de una sola hora marca también las horas siguientes mientras siga dentro de la ventana de
-volatilidad (`rolling_hours`): por eso el despliegue usa 2 h para las zonas. El modelo se guarda
-firmado con `ANOMALY_STATE_HMAC_KEY`: sin esa clave no se carga el del día anterior y no aprende.
+volatilidad (`rolling_hours`): por eso el despliegue usa 2 h para las zonas. Hay un solo modelo por
+modelo de datos: todas las zonas comparten lo aprendido, así que una zona mucho más concurrida que las
+demás puede salir marcada en sus horas punta. El modelo se guarda firmado con
+`ANOMALY_STATE_HMAC_KEY`: sin esa clave no se puede guardar, la pasada termina con error y no publica
+ningún `isOutlier`.
 
 `core.py` usa `sklearn.cluster.Birch`: su *Clustering Feature* por subgrupo es (N, LS, SS), de modo
 que los centroides se actualizan a partir de un estadístico acumulado y nunca releyendo el

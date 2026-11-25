@@ -94,3 +94,127 @@ describe('fetchPanelData con previsiones', () => {
     expect(post).not.toHaveBeenCalled()
   })
 })
+
+describe('fetchPanelData con las horas anomalas de una zona', () => {
+  const sensor: Partial<Entity> = {
+    urn: `urn:ngsi-ld:${datamodelOf('flowObserved')}:SPT0001_CFO`,
+    datamodel: datamodelOf('flowObserved'),
+    tenant: 'demo',
+    scope: '/',
+  }
+
+  const occupancyPanel = (type: string, entity: Partial<Entity> = zone, measure = 'occupancy'): Panel => ({
+    id: 3,
+    chart: { type },
+    series: [{ entity, measure: { id: measure, name: 'Ocupacion', units: 'personas' } }],
+  })
+
+  const envelope = (urn: string | undefined, measure: string, values: { timestamp: string; value: number }[]) => ({
+    time_series: [{ device_id: urn, measure_id: measure, values }],
+  })
+
+  /** Responde a cada peticion segun la medida que pide: la ocupacion o las marcas. */
+  const answer = (flags: { timestamp: string; value: number }[]) =>
+    post.mockImplementation(async (_url: string, body: { measure_ids: string[] }[]) => ({
+      data: body.map((request) =>
+        request.measure_ids[0] === 'isOutlier'
+          ? envelope(zone.urn, 'isOutlier', flags)
+          : envelope(zone.urn, 'occupancy', [
+              { timestamp: '2026-10-27T09:00:00Z', value: 40 },
+              { timestamp: '2026-10-27T10:00:00Z', value: 300 },
+              { timestamp: '2026-10-27T11:00:00Z', value: 45 },
+            ]),
+      ),
+    }))
+
+  it('una linea con la ocupacion de una zona pide sus marcas con la misma ventana y por maximo', async () => {
+    await fetchPanelData(occupancyPanel('line'), '7d', 'UTC')
+    expect(post).toHaveBeenCalledTimes(2)
+    const [line] = post.mock.calls[0][1]
+    const [flags] = post.mock.calls[1][1]
+    expect(flags.device_ids).toEqual([zone.urn])
+    expect(flags.measure_ids).toEqual(['isOutlier'])
+    expect(flags.options).toMatchObject({
+      start_date: line.options.start_date,
+      end_date: line.options.end_date,
+      tenant: 'demo',
+      scope: '/',
+      aggregation: { type: 'max', interval: line.options.aggregation.interval },
+    })
+  })
+
+  it('las horas marcadas salen como puntos sueltos sobre la linea', async () => {
+    answer([
+      { timestamp: '2026-10-27T10:00:00Z', value: 1 },
+      { timestamp: '2026-10-27T11:00:00Z', value: 0 },
+    ])
+    const { series } = await fetchPanelData(occupancyPanel('line'), '24h', 'UTC')
+    expect(series).toHaveLength(2)
+    expect(series[1]).toEqual({
+      name: 'Anomalía',
+      units: 'personas',
+      markers: true,
+      points: [
+        { t: '2026-10-27T09:00:00Z', v: null },
+        { t: '2026-10-27T10:00:00Z', v: 300 },
+        { t: '2026-10-27T11:00:00Z', v: null },
+      ],
+    })
+  })
+
+  it('sin ninguna hora marcada no añade la serie', async () => {
+    answer([{ timestamp: '2026-10-27T10:00:00Z', value: 0 }])
+    const { series } = await fetchPanelData(occupancyPanel('line'), '24h', 'UTC')
+    expect(series).toHaveLength(1)
+  })
+
+  it('si la peticion de las marcas falla, la linea se pinta igual', async () => {
+    post.mockImplementation(async (_url: string, body: { measure_ids: string[] }[]) => {
+      if (body[0].measure_ids[0] === 'isOutlier') throw new Error('400')
+      return { data: [envelope(zone.urn, 'occupancy', [{ timestamp: '2026-10-27T10:00:00Z', value: 300 }])] }
+    })
+    const { series } = await fetchPanelData(occupancyPanel('line'), '24h', 'UTC')
+    expect(series).toHaveLength(1)
+    expect(series[0].points).toEqual([{ t: '2026-10-27T10:00:00Z', v: 300 }])
+  })
+
+  it('la misma zona pintada dos veces lleva una sola serie de marcas', async () => {
+    answer([{ timestamp: '2026-10-27T10:00:00Z', value: 1 }])
+    const twice: Panel = {
+      id: 4,
+      chart: { type: 'line' },
+      series: [
+        { entity: zone, measure: { id: 'occupancy' }, grouping_function: 'mean' },
+        { entity: zone, measure: { id: 'occupancy' }, grouping_function: 'max' },
+      ],
+    }
+    const { series } = await fetchPanelData(twice, '24h', 'UTC')
+    expect(post.mock.calls[1][1]).toHaveLength(1)
+    expect(series.filter((serie) => serie.markers)).toHaveLength(1)
+  })
+
+  it('con varias entidades, la serie de marcas lleva el nombre de la zona', async () => {
+    answer([{ timestamp: '2026-10-27T10:00:00Z', value: 1 }])
+    const mixed: Panel = {
+      id: 5,
+      chart: { type: 'line' },
+      series: [
+        { entity: { ...zone, name: 'Plaza Mayor' }, measure: { id: 'occupancy' } },
+        { entity: sensor, measure: { id: 'peopleCount' } },
+      ],
+    }
+    const { series } = await fetchPanelData(mixed, '24h', 'UTC')
+    expect(series.map((serie) => serie.name)).toContain('Plaza Mayor · Anomalía')
+  })
+
+  it.each([
+    ['otro tipo de grafico', occupancyPanel('bar')],
+    ['un grafico de ultimo valor', occupancyPanel('kpi')],
+    ['un sensor que no es una zona', occupancyPanel('line', sensor, 'peopleCount')],
+    ['una medida de la zona que no es su ocupacion', occupancyPanel('line', zone, 'dwellTime')],
+    ['una prevision de la zona', occupancyPanel('line', prediction, 'predictedOccupancy')],
+  ])('no pide marcas con %s', async (_case, target) => {
+    await fetchPanelData(target, '24h', 'UTC')
+    expect(post).toHaveBeenCalledTimes(1)
+  })
+})

@@ -77,7 +77,10 @@ export const SECTIONS: HelpSection[] = [
         text: 'Personas que un sensor de conteo WiFi/BLE detecta y que después aparecen en otro, con origen, destino y volumen por hora. Asigna al menos dos sensores: su entidad de «Visitas y recorridos» (la que termina en _CFE) o la de «Conteos WiFi/BLE (por sensor)» (la que termina en _CFO), que además los sitúa en el mapa. Las zonas LIDAR y las zonas de aforo no sirven para esta plantilla.',
       },
       { term: 'Tránsitos avanzado', text: 'Lo mismo, con matriz origen-destino, rutas principales y evolución. Se asignan las mismas entidades.' },
-      { term: 'Zona LIDAR Analítica', text: 'Indicadores de la zona LIDAR: ocupación, aforo, permanencia y series históricas.' },
+      {
+        term: 'Zona LIDAR Analítica',
+        text: 'Indicadores de la zona LIDAR: ocupación, aforo, permanencia y series históricas. La evolución de la ocupación marca las horas anómalas (ver Anomalías).',
+      },
       { term: 'Zona LIDAR Mapa de calor', text: 'Densidad de ocupación en vivo sobre la zona monitorizada.' },
       {
         term: 'Zona Mapa de coropletas',
@@ -86,6 +89,36 @@ export const SECTIONS: HelpSection[] = [
       {
         term: 'Zona LIDAR Predicción',
         text: 'Ocupación prevista frente a la medida, con banda de confianza: la proyección a futuro del aforo. Incluye un simulador de escenarios: se añaden uno o varios eventos (tipo, hora, duración, meteorología e intensidad) y se ve cómo cambiaría la ocupación prevista de la zona y si superaría su aforo. Sus cifras son orientativas, para comparar escenarios, y solo llegan hasta donde llega la previsión. Los eventos del registro de eventos de la plataforma salen ya como «Registrado» y se suman siempre: la previsión es la de un día normal, porque el modelo no aprende de los días con evento.',
+      },
+    ],
+    links: [{ label: 'Ir a Paneles', to: '/paneles' }],
+  },
+  {
+    id: 'anomalias',
+    title: 'Anomalías',
+    icon: 'mdi-alert-decagram-outline',
+    paragraphs: [
+      'Una hora anómala es una hora en la que la ocupación de una zona de afluencia es muy distinta de la habitual, o cambia de golpe de una hora a la siguiente. La plataforma las busca sola, una vez al día, de madrugada, sobre los días ya terminados: lo que pase hoy se marca mañana.',
+      'Para decidir, compara cada hora con lo que ha aprendido de las anteriores: cuánta gente suele haber en las zonas a esa hora y ese día de la semana, y cuánto suele cambiar la ocupación de una hora a la siguiente. No hay un número fijo de personas a partir del cual algo sea anómalo, y lo aprendido se va poniendo al día. Lo que marca como anómalo no lo aprende, para no acostumbrarse a ello; pero si un cambio se mantiene tres horas seguidas, empieza a tomarlo como lo nuevo normal.',
+      'Se ve en el panel «Zona LIDAR Analítica» y en los gráficos de líneas propios con la ocupación de una zona: son los puntos de la serie «Anomalía», sobre la ocupación. Con rangos de más de un mes la gráfica va por días, y un día sale marcado si lo está alguna de sus horas. En la ficha de la zona, la medida «Hora anómala» vale 1 en una hora anómala y 0 en una normal.',
+      'Lo habitual se aprende de todas las zonas juntas. Por eso una zona mucho más concurrida que las demás puede salir marcada en sus horas punta, aunque para ella sean normales.',
+    ],
+    items: [
+      {
+        term: 'Un pico de una hora',
+        text: 'Un concierto improvisado llena la plaza a las 18:00 y a las 19:00 ya está como siempre. Salen marcadas las 18:00 y también las 19:00 y las 20:00: la plataforma mira cuánto ha variado la ocupación en las dos horas anteriores, y el pico sigue dentro de esa ventana hasta las 20:00.',
+      },
+      {
+        term: 'Un mercado de toda la semana',
+        text: 'Un mercadillo navideño duplica la gente de 11:00 a 23:00 durante siete días. Cada día salen marcadas sobre todo las horas en que arranca y en que termina, cuando la ocupación cambia de golpe. Las del medio, con la plaza llena pero estable, casi nunca. La detección no consulta el registro de eventos: un evento registrado cuenta como cualquier otro cambio.',
+      },
+      {
+        term: 'Un martes cualquiera',
+        text: 'Una calle con poca gente un martes a las 8:00, como todos los martes: no sale nada. Que haya poca gente no es anómalo si a esa hora siempre hay poca.',
+      },
+      {
+        term: 'Horas sin datos',
+        text: 'Si una zona se queda unas horas sin datos, esas horas no se marcan ni como normales ni como anómalas: en la gráfica no aparece nada.',
       },
     ],
     links: [{ label: 'Ir a Paneles', to: '/paneles' }],
@@ -197,6 +230,11 @@ export const FAQ: FaqEntry[] = [
     question: 'Una gráfica sale vacía',
     answer:
       'Significa que no hay datos en el rango de fechas elegido. Amplía el rango con el selector de la gráfica o comprueba en la ficha de la entidad cuándo llegó su último dato.',
+  },
+  {
+    question: 'No veo ninguna anomalía',
+    answer:
+      'Puede que no haya ninguna en el rango elegido; que el rango sea solo de hoy, que se revisa de madrugada al día siguiente; o que la detección de anomalías no esté activada en esta instalación. La serie «Anomalía» solo aparece en la leyenda cuando hay al menos una.',
   },
   {
     question: 'El panel de tránsitos sale vacío',

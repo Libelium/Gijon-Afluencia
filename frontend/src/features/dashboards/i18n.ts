@@ -191,6 +191,7 @@ const messages = {
   'dashboards.chart.value': 'Valor',
   'dashboards.chart.share': 'Reparto',
   'dashboards.chart.now': 'Ahora',
+  'dashboards.chart.anomalies': 'Anomalía',
 } as const
 
 export default { ...messages, ...templates }
