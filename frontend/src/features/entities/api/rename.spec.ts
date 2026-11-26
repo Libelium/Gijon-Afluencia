@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const http = vi.hoisted(() => ({ post: vi.fn(), patch: vi.fn() }))
+const http = vi.hoisted(() => ({ post: vi.fn(), patch: vi.fn(), delete: vi.fn() }))
 
 vi.mock('@/api/http', () => ({ http }))
 
-const { canUpdateEntity, renameEntity } = await import('./entities')
+const { canUpdateEntity, renameEntity, setMaxCapacity } = await import('./entities')
 
 beforeEach(() => {
   http.post.mockReset()
   http.patch.mockReset().mockResolvedValue({ data: {} })
+  http.delete.mockReset().mockResolvedValue({ data: {} })
 })
 
 describe('renameEntity', () => {
@@ -39,5 +40,18 @@ describe('canUpdateEntity', () => {
   it('si la entidad no pasa el filtro, no se puede modificar', async () => {
     http.post.mockResolvedValue({ data: { count: 0, rows: [] } })
     await expect(canUpdateEntity(ref)).resolves.toBe(false)
+  })
+})
+
+describe('setMaxCapacity', () => {
+  it('guarda el aforo como la propiedad `maxCapacity` de la zona', async () => {
+    await setMaxCapacity(25, 220)
+    expect(http.patch).toHaveBeenCalledWith('/entities/25/properties', { maxCapacity: 220 })
+  })
+
+  it('sin valor borra la propiedad, y la zona se queda sin aforo', async () => {
+    await setMaxCapacity(25, null)
+    expect(http.delete).toHaveBeenCalledWith('/entities/25/properties/maxCapacity')
+    expect(http.patch).not.toHaveBeenCalled()
   })
 })

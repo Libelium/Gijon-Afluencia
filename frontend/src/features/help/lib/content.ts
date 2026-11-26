@@ -44,6 +44,7 @@ export const SECTIONS: HelpSection[] = [
     paragraphs: [
       'Una entidad es cada fuente de datos de la plataforma: un sensor LIDAR que cuenta y clasifica personas en una zona, o un dispositivo SmartSpot que detecta la presencia de visitantes.',
       'El listado se puede buscar por nombre o identificador y filtrar por modelo de datos y espacio de datos. La ficha de cada entidad muestra su identidad, su ubicación en un mapa, las medidas actuales con la hora de su última actualización y el histórico de cada medida en el rango de fechas que elijas.',
+      'Aforo máximo de una zona: en la ficha de una zona de afluencia, quien la administra o tiene acceso de «Edición» tiene el botón «Aforo máximo», junto a «Renombrar». Se escribe en personas y se guarda en la propia zona; también se puede quitar. Es el aforo con el que los paneles calculan qué parte de la zona está ocupada: sin él, la zona no se colorea en el mapa de calor de zonas y sus porcentajes no aparecen.',
     ],
     links: [{ label: 'Ir a Entidades', to: '/entidades' }],
   },
@@ -84,7 +85,7 @@ export const SECTIONS: HelpSection[] = [
       { term: 'Zona LIDAR Mapa de calor', text: 'Densidad de ocupación en vivo sobre la zona monitorizada.' },
       {
         term: 'Zona Mapa de coropletas',
-        text: 'Mapa con cada zona pintada según el porcentaje de su aforo que está ocupado, de verde a rojo en tramos de 20 %, con sus LIDAR y sus sensores WiFi/BLE encima. La ocupación es la cifra de la zona que combina los dos tipos de sensor. Muestra la de ahora y, con la barra, la media de cada hora o de cada día del rango elegido; al reproducirla, los cambios de color muestran cómo sube y baja la gente. Se asignan las zonas de afluencia. Solo se pintan las que tienen como ubicación el contorno de la zona; las que solo tienen un punto, o no publican su aforo, siguen en la lista de debajo del mapa con su ocupación.',
+        text: 'Mapa de calor con cada zona coloreada según el porcentaje de su aforo máximo que está ocupado, de verde (vacía) a rojo oscuro (llena), con sus LIDAR y sus sensores WiFi/BLE encima. La ocupación es la cifra de la zona que combina los dos tipos de sensor. Muestra la de ahora y, con la barra, la media de cada hora o de cada día del rango elegido; al reproducirla, los cambios de color muestran cómo sube y baja la gente. Se asignan las zonas de afluencia. Solo se colorean las que tienen como ubicación el contorno de la zona y un aforo máximo; las demás siguen en la lista de debajo del mapa con su ocupación. El aforo máximo se pone en la ficha de cada zona (ver Entidades).',
       },
       {
         term: 'Zona LIDAR Predicción',
@@ -162,7 +163,7 @@ export const SECTIONS: HelpSection[] = [
     icon: 'mdi-account-group-outline',
     paragraphs: [
       'La gestión de usuarios de la organización permite dar de alta cuentas nuevas, activarlas o desactivarlas y enviar el correo para restablecer la contraseña. Los datos personales (nombre y correo) aparecen ocultos por defecto y solo se muestran cuando se pide expresamente.',
-      'Cada usuario tiene un nivel de acceso a los datos de la organización. Con «Consulta» ve todas las entidades, el mapa, los paneles y las alarmas; con «Edición» además puede crear y modificar paneles y alarmas; «Sin acceso» deja solo lo que el propio usuario haya creado. Los paneles y alarmas nuevos llegan solos a quien tenga nivel. Quien administra la organización lo ve y lo gestiona todo.',
+      'Cada usuario tiene un nivel de acceso a los datos de la organización. Con «Consulta» ve todas las entidades, el mapa, los paneles y las alarmas; con «Edición» además puede crear y modificar paneles y alarmas, y cambiar el nombre de las entidades y el aforo máximo de las zonas (el resto de datos de una entidad, como su ubicación, solo lo cambia quien administra); «Sin acceso» deja solo lo que el propio usuario haya creado. Los paneles y alarmas nuevos llegan solos a quien tenga nivel. Quien administra la organización lo ve y lo gestiona todo.',
     ],
     links: [{ label: 'Ir a Usuarios', to: '/usuarios' }],
   },
@@ -225,6 +226,16 @@ export const FAQ: FaqEntry[] = [
     question: '¿Cómo creo una alarma?',
     answer:
       'En Alarmas → Nueva alarma: elige la entidad y la medida, define la condición (umbral o inactividad) y añade los avisos que quieres recibir, por ejemplo un correo electrónico o un SMS.',
+  },
+  {
+    question: '¿Cómo cambio el aforo máximo de una zona?',
+    answer:
+      'En Entidades, abre la zona de afluencia y pulsa «Aforo máximo», arriba a la derecha de su ficha. Escribe cuántas personas caben en la zona y guarda; con «Quitar el aforo» la zona se queda sin él. El valor nuevo puede tardar unos segundos en verse entre sus medidas. El botón solo aparece en las zonas, a quien administra la organización y a los usuarios con acceso de «Edición».',
+  },
+  {
+    question: 'El mapa de calor de zonas no colorea una zona',
+    answer:
+      'Para colorearla, la zona necesita su contorno como ubicación y un aforo máximo: el color es su ocupación sobre ese aforo. Si el aviso del panel dice que hay zonas sin aforo máximo, ponlo en la ficha de cada una con «Aforo máximo». Si el problema es el contorno, la zona aparece en la lista de debajo del mapa marcada como «sin polígono».',
   },
   {
     question: 'Una gráfica sale vacía',

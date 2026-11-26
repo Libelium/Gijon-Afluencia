@@ -34,6 +34,8 @@ class UpdateEntityRequest extends FormRequest
             "geolocation.coordinates" => "required_with:geolocation|array",
             "timestamp" => "nullable|string",
             "units" => "nullable|string",
+            // Aforo de una zona: lo editan las personas y colorea su mapa, asi que ha de ser un numero.
+            "maxCapacity" => "sometimes|numeric|min:0",
         ];
     }
 

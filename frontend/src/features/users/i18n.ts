@@ -28,7 +28,7 @@ export default {
   'users.access.read': 'Consulta',
   'users.access.read.help': 'Ve las entidades, el mapa, los paneles y las alarmas de la organización.',
   'users.access.edit': 'Edición',
-  'users.access.edit.help': 'Lo mismo que Consulta y además puede crear y modificar paneles y alarmas.',
+  'users.access.edit.help': 'Lo mismo que Consulta y además puede crear y modificar paneles y alarmas, y cambiar el nombre de las entidades y el aforo máximo de las zonas.',
   'users.access.none': 'Sin acceso',
   'users.access.done': 'Acceso actualizado.',
 

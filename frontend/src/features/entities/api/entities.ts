@@ -179,6 +179,15 @@ export async function renameEntity(id: number | string, name: string): Promise<v
 }
 
 /**
+ * Aforo maximo de una zona, en personas: se guarda en el broker como su propiedad `maxCapacity`.
+ * Sin valor, se borra la propiedad y la zona vuelve a no tener aforo.
+ */
+export async function setMaxCapacity(id: number | string, capacity: number | null): Promise<void> {
+  if (capacity === null) await http.delete(`/entities/${id}/properties/maxCapacity`)
+  else await http.patch(`/entities/${id}/properties`, { maxCapacity: capacity })
+}
+
+/**
  * Si el usuario puede modificar la entidad. El listado filtra por el permiso de modificacion con
  * `onlyCanUpdate`, asi que basta preguntar si esta entidad sigue saliendo. El filtro de URN es un
  * LIKE: se escapan sus comodines para que `P13_pred` no case tambien con `P13Xpred`.

@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
   getEntityMeasures: vi.fn(),
   canUpdateEntity: vi.fn(),
   renameEntity: vi.fn(),
+  setMaxCapacity: vi.fn(),
   latestTimestamp: () => null,
 }))
 
@@ -26,9 +27,9 @@ const entity: Entity = {
   scope: '/',
 }
 
-async function mountDetail(canUpdate: boolean | Error) {
-  api.getEntity.mockResolvedValue({ ...entity })
-  api.getEntityMeasures.mockResolvedValue([])
+async function mountDetail(canUpdate: boolean | Error, target: Entity = entity, measures: unknown[] = []) {
+  api.getEntity.mockResolvedValue({ ...target })
+  api.getEntityMeasures.mockResolvedValue(measures)
   if (canUpdate instanceof Error) api.canUpdateEntity.mockRejectedValue(canUpdate)
   else api.canUpdateEntity.mockResolvedValue(canUpdate)
   const router = createRouter({
@@ -85,5 +86,28 @@ describe('renombrar desde la ficha de entidad', () => {
     await flushPromises()
     expect(api.renameEntity).toHaveBeenCalledWith(453, 'Plaza Mayor')
     expect(wrapper.find('h1').text()).toBe('Plaza Mayor')
+  })
+})
+
+describe('aforo maximo desde la ficha de una zona', () => {
+  const zone: Entity = { ...entity, name: 'Plaza de la Colegiata', urn: 'urn:ngsi-ld:CrowdFlowZone:P07', datamodel: 'CrowdFlowZone' }
+  const capacityButton = (wrapper: Awaited<ReturnType<typeof mountDetail>>) =>
+    wrapper.findAll('button').find((b) => b.text().includes('Aforo máximo'))
+
+  it('una zona que se puede modificar ofrece editar su aforo', async () => {
+    expect(capacityButton(await mountDetail(true, zone))).toBeDefined()
+    expect(capacityButton(await mountDetail(true, { ...zone, datamodel: 'CrowdFlowLidarZone' }))).toBeDefined()
+  })
+
+  it('otra entidad, o quien no puede modificarla, no lo ve', async () => {
+    expect(capacityButton(await mountDetail(true))).toBeUndefined()
+    expect(capacityButton(await mountDetail(false, zone))).toBeUndefined()
+  })
+
+  it('el dialogo parte del aforo que ya tiene la zona', async () => {
+    const wrapper = await mountDetail(true, zone, [{ id: 'maxCapacity', name: 'maxCapacity', value: 220 }])
+    await capacityButton(wrapper)!.trigger('click')
+    await flushPromises()
+    expect(document.querySelector<HTMLInputElement>('.v-dialog input')!.value).toBe('220')
   })
 })

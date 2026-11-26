@@ -156,7 +156,7 @@ class EntityController extends Controller
         }
 
         $entity = Entity::findOrFail($id);
-        $this->authorize('update', $entity);
+        $this->authorize(self::onlyInfo(array_keys($payload)) ? 'updateInfo' : 'update', $entity);
 
         // The client sends the location as "geolocation"; the broker knows it as "location".
         $forBroker = $payload;
@@ -190,6 +190,17 @@ class EntityController extends Controller
         return response($payload, 200);
     }
 
+    /** Attributes an editor may change (EntityPolicy::updateInfo); the timestamp only dates them. */
+    private const INFO_ATTRIBUTES = ['name', 'maxCapacity'];
+
+    /** Whether a change touches nothing but the name and the maximum capacity. */
+    private static function onlyInfo(array $attributes): bool
+    {
+        $changed = array_diff($attributes, ['timestamp']);
+
+        return $changed && !array_diff($changed, self::INFO_ATTRIBUTES);
+    }
+
     /**
      * Deletes a specific property from an entity.
      *
@@ -200,7 +211,7 @@ class EntityController extends Controller
     public function deleteProperty(int $id, string $attributeName): Response
     {
         $entity = Entity::findOrFail($id);
-        $this->authorize('update', $entity);
+        $this->authorize(self::onlyInfo([$attributeName]) ? 'updateInfo' : 'update', $entity);
 
         // Prevent deletion of critical attributes
         if (in_array($attributeName, ['location', 'geolocation', 'name', 'id', 'type'])) {

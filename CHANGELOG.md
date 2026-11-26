@@ -10,6 +10,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Añadido
 
+- **Aforo máximo de una zona editable desde su ficha.** La ficha de una zona (la combinada y su
+  gemela del LIDAR) tiene el botón «Aforo máximo», para quien puede modificarla: se escribe en
+  personas, se guarda como su propiedad `maxCapacity` y se puede quitar. Es el aforo con el que el
+  mapa de calor de zonas calcula qué parte está ocupada; sin él la zona no se colorea, y el aviso
+  del panel explica dónde ponerlo. La API comprueba que sea un número no negativo. La Ayuda lo
+  explica en Entidades y en dos preguntas frecuentes (cómo cambiarlo y por qué una zona no se
+  colorea), y la descripción del mapa de calor de zonas ya no habla de tramos ni de gris.
 - **Las horas anómalas también en los gráficos propios, y explicadas en la Ayuda.** Un gráfico de
   líneas de un panel propio que muestra la ocupación de una zona marca sus horas anómalas igual
   que la analítica de zona LIDAR: puntos de la serie «Anomalía» sobre la línea, con la misma
@@ -194,6 +201,13 @@ manifiesto (`pyproject.toml`, `composer.json`); la versión de esta página es l
 
 ### Cambiado
 
+- **Con acceso de «Edición» se puede cambiar el nombre de las entidades y el aforo de las zonas.**
+  Hasta ahora solo podía quien administra, aunque la ficha también enseñaba «Renombrar» a los
+  editores y luego les negaba el permiso. Un permiso nuevo, `data_sources.entities.update_info`,
+  incluido en el nivel «Edición», deja cambiar o quitar el nombre y el aforo máximo (`maxCapacity`)
+  de las entidades de la organización y nada más: la ubicación y el resto de propiedades, o un
+  cambio que las mezcle con el nombre, siguen siendo solo de quien administra. Los usuarios que ya
+  tienen «Edición» lo reciben al desplegar, con la sincronización de permisos de las migraciones.
 - **La clasificación de visitantes ya no carga la semana entera en memoria.** Los miércoles leía
   de la caché los 7 días de detecciones de golpe en `generic-consumer`, que no tiene límite de
   memoria y comparte nodo. Ahora lee hora a hora (`CROWD_CLASSIFICATION_BATCH_HOURS`), guarda solo

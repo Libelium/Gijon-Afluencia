@@ -72,6 +72,33 @@ class EntityPolicy
         return $this->scope_policy->update($user, $entity->fiwareScope);
     }
 
+    /**
+     * The name of an entity and the maximum capacity of a zone, and nothing else: also open to
+     * whoever holds DATA_SOURCES_ENTITIES_UPDATE_INFO (the editors of the organization). The
+     * entity itself, or its scope or tenant, still has to be updatable for the user.
+     */
+    public function updateInfo(User $user, Entity $entity)
+    {
+        if ($user->can(AppPermission::APPLICATION_ADMIN->value)) {
+            return Response::allow();
+        }
+
+        $allowed = $user->can(AppPermission::DATA_SOURCES_ENTITIES_UPDATE->value)
+            || $user->can(AppPermission::DATA_SOURCES_ENTITIES_UPDATE_INFO->value);
+
+        if (!$allowed) {
+            return Response::deny('You are not allowed to update entities');
+        }
+
+        if ($user->hasResourcePermissionTo(AppResourcePermission::UPDATE, $entity)) {
+            return Response::allow();
+        }
+
+        $entity = $entity->loadMissing('fiwareScope');
+
+        return $this->scope_policy->update($user, $entity->fiwareScope);
+    }
+
     public function uploadData(User $user, Entity $entity)
     {
         if ($user->can(AppPermission::DATA_SOURCES_ENTITIES_UPLOAD_DATA->value)) {
