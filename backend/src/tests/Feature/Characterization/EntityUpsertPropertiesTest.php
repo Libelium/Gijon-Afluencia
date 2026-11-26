@@ -316,6 +316,27 @@ class EntityUpsertPropertiesTest extends TestCase
         $this->assertSame('CEL', $this->storedUnits('temperature', $other));
     }
 
+    // ----------------------------------------------------------------- aforo maximo
+
+    public function test_a_max_capacity_is_sent_to_the_broker_as_a_number(): void
+    {
+        $this->patchProperties(['maxCapacity' => 980])->assertOk();
+
+        $this->assertSentAttributes([
+            'maxCapacity' => ['type' => 'Property', 'value' => 980],
+        ]);
+    }
+
+    public function test_a_max_capacity_that_is_not_a_non_negative_number_is_rejected(): void
+    {
+        $this->fakeContextBroker();
+
+        $this->patchProperties(['maxCapacity' => -5])->assertStatus(422);
+        $this->patchProperties(['maxCapacity' => 'mucho'])->assertStatus(422);
+
+        Http::assertNothingSent();
+    }
+
     // ----------------------------------------------------------------- helpers
 
     private function patchProperties(array $payload, ?int $entityId = null)

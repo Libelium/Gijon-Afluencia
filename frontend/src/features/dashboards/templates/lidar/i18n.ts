@@ -82,9 +82,9 @@ export default {
   'dashboards.lidar.choropleth.unpainted': '{count} de {total} zonas no tienen polígono y no se pintan en el mapa',
   'dashboards.lidar.choropleth.unpaintedHint':
     'Una zona se pinta cuando su ubicación es el contorno de la zona, no un punto. Siguen en la lista de debajo del mapa, con su ocupación.',
-  'dashboards.lidar.choropleth.withoutCapacity': '{count} zonas no publican su aforo y se pintan en gris',
+  'dashboards.lidar.choropleth.withoutCapacity': '{count} zonas no tienen aforo máximo y no se colorean',
   'dashboards.lidar.choropleth.withoutCapacityHint':
-    'El aforo máximo se busca en la zona y en su entidad de analítica del LIDAR. Sin él no se puede calcular qué porcentaje está ocupado; su ocupación en personas sigue en la lista.',
+    'Sin aforo no se puede calcular qué porcentaje está ocupado; su ocupación en personas sigue en la lista. Se pone en la ficha de cada zona, con el botón «Aforo máximo».',
   'dashboards.lidar.choropleth.combined': 'Ocupación conjunta',
   'dashboards.lidar.choropleth.nearFull': 'Zonas al {percent} % o más',
   'dashboards.lidar.choropleth.fullest': 'Zona más llena',

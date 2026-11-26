@@ -5,12 +5,13 @@ import { errorMessage } from '@/api/http'
 import PageHeader from '@/components/PageHeader.vue'
 import StatTile from '@/components/StatTile.vue'
 import StateBlock from '@/components/StateBlock.vue'
-import { isPredictionEntity } from '@/features/dashboards/templates/contract'
+import { datamodelOf, isPredictionEntity } from '@/features/dashboards/templates/contract'
 import { t } from '@/i18n'
 import { formatDateTime, formatNumber, urnTail } from '@/lib/format'
 import { useSessionStore } from '@/stores/session'
 import type { Entity, EntityRef, Measure } from '@/types'
 import { canUpdateEntity, getEntity, getEntityMeasures, latestTimestamp } from '../api/entities'
+import EntityCapacityDialog from '../components/EntityCapacityDialog.vue'
 import EntityIdentityCard from '../components/EntityIdentityCard.vue'
 import EntityRenameDialog from '../components/EntityRenameDialog.vue'
 import EntityLocationCard from '../components/EntityLocationCard.vue'
@@ -33,6 +34,7 @@ const readAt = ref<string | null>(null)
 
 const canRename = ref(false)
 const renaming = ref(false)
+const editingCapacity = ref(false)
 const snack = ref({ open: false, text: '' })
 
 const entityId = computed(() => String(route.params.id ?? ''))
@@ -48,6 +50,18 @@ const title = computed(
 )
 
 const headerIcon = computed(() => datamodelIcon(entity.value?.datamodel))
+
+/** El aforo maximo solo tiene sentido en las zonas: la combinada y su gemela del LIDAR. */
+const isZone = computed(() =>
+  [datamodelOf('zone'), datamodelOf('zoneScan')].includes(entity.value?.datamodel ?? ''),
+)
+
+const CAPACITY_ID = 'maxCapacity'
+
+const capacity = computed(() => {
+  const value = Number(measures.value.find((m) => m.id === CAPACITY_ID)?.value)
+  return Number.isFinite(value) && value > 0 ? value : null
+})
 
 // La ubicacion puede venir de una medida, asi que se recalcula cuando llegan.
 const location = computed(() => resolveEntityLocation(entity.value, measures.value))
@@ -113,6 +127,16 @@ async function loadCanRename(target: EntityRef) {
   }
 }
 
+/** Refleja el aforo nuevo sin esperar a que el broker lo devuelva a la base de tiempo real. */
+function onCapacitySaved(value: number | null) {
+  const rest = measures.value.filter((m) => m.id !== CAPACITY_ID)
+  measures.value =
+    value === null
+      ? rest
+      : [...rest, { id: CAPACITY_ID, name: CAPACITY_ID, value, timestamp: new Date().toISOString() }]
+  snack.value = { open: true, text: t(value === null ? 'entities.capacity.cleared' : 'entities.capacity.saved') }
+}
+
 function onRenamed(name: string) {
   if (entity.value) entity.value = { ...entity.value, name }
   snack.value = { open: true, text: t('entities.rename.saved') }
@@ -145,6 +169,15 @@ watch(entityId, () => void load(), { immediate: true })
     back-to="/entidades"
   >
     <template v-if="canRename" #actions>
+      <VBtn
+        v-if="isZone"
+        variant="tonal"
+        color="primary"
+        prepend-icon="mdi-account-group-outline"
+        @click="editingCapacity = true"
+      >
+        {{ t('entities.capacity.action') }}
+      </VBtn>
       <VBtn variant="tonal" color="primary" prepend-icon="mdi-pencil-outline" @click="renaming = true">
         {{ t('entities.rename.action') }}
       </VBtn>
@@ -210,6 +243,13 @@ watch(entityId, () => void load(), { immediate: true })
   </StateBlock>
 
   <EntityRenameDialog v-if="entity" v-model="renaming" :entity="entity" @saved="onRenamed" />
+  <EntityCapacityDialog
+    v-if="entity && isZone"
+    v-model="editingCapacity"
+    :entity="entity"
+    :current="capacity"
+    @saved="onCapacitySaved"
+  />
 
   <VSnackbar v-model="snack.open" color="success" location="bottom">
     {{ snack.text }}

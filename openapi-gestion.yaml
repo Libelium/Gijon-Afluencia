@@ -2017,6 +2017,10 @@ paths:
                   type: string
                 units:
                   type: string
+                maxCapacity:
+                  type: number
+                  minimum: 0
+                  description: Aforo máximo de una zona, en personas. Colorea su mapa de calor.
       responses:
         '200':
           description: OK
