@@ -27,6 +27,9 @@ enum AppPermission: string
         //     DATA SOURCES - DEVICES
         //     DATA SOURCES - ENTITIES
     case DATA_SOURCES_ENTITIES_UPDATE = 'data_sources.entities.update';
+    //     Only the name and, in a zone, its maximum capacity: what an editor may change without
+    //     touching the location or any other attribute (EntityPolicy::updateInfo).
+    case DATA_SOURCES_ENTITIES_UPDATE_INFO = 'data_sources.entities.update_info';
     case DATA_SOURCES_ENTITIES_UPLOAD_DATA = 'data_sources.entities.upload_data';
     case DATA_SOURCES_ENTITIES_DECRYPT_READ = 'data_sources.entities.decrypt.read';
 
@@ -282,6 +285,7 @@ enum AppPermission: string
             ...self::orgViewerPermissions(),
             self::DASHBOARDS_UPDATE,
             self::ALARMS_UPDATE,
+            self::DATA_SOURCES_ENTITIES_UPDATE_INFO,
         ];
     }
 
